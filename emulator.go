@@ -3,6 +3,7 @@ package go3270
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"strconv"
@@ -191,4 +192,20 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+func (e *Emulator) ClearScreen() error {
+	return e.execCommand("Clear")
+}
+
+// SaveScreen captures the entire screen content and saves it to the specified filename.
+func (e *Emulator) SaveScreen(filename string) error {
+	// Get the entire screen content
+	screenContent, err := e.execCommandOutput("Snap(Ascii)")
+	if err != nil {
+		return fmt.Errorf("Failed to snap screen content: %w", err)
+	}
+
+	// Save the screen content to a file
+	return ioutil.WriteFile(filename, []byte(screenContent), 0644)
 }

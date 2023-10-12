@@ -1,6 +1,7 @@
 {
   "host": "10.27.27.62",
   "port": "30050",
+  "scriptPort": "5000",
   "login": "SYSAD",
   "password": "SYSAD",
   "steps": [
