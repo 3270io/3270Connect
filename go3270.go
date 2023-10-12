@@ -150,7 +150,7 @@ func startScriptingSession(host, port string) (*Session, error) {
 		if err != nil {
 			return nil, err
 		}
-
+		log.Printf("Attempt %d: s3270 process ended", i+1)
 		if strings.Contains(content, "Connected") {
 			log.Printf("Attempt %d: Connection established", i+1)
 			return session, nil
@@ -199,9 +199,18 @@ func clearScreen(stdin io.WriteCloser) {
 }
 
 func sendCmd(stdin io.WriteCloser, command string) {
+	log.Printf("Sending command: %s", command)
 	_, err := stdin.Write([]byte(command + "\n"))
 	if err != nil {
-		log.Fatalf("Failed to send command: %s", err)
+		log.Fatalf("Failed to send command via stdin method: %s", err)
+	}
+
+	cmd := exec.Command("x3270if", "exec", "ascii("+command+")")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failed to execute command: %s\nOutput: %s", err, out)
+	} else {
+		log.Printf("Command output:\n%s", out)
 	}
 }
 
