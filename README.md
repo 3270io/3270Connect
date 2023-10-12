@@ -1,0 +1,1 @@
+x3270 -script < test.script
