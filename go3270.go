@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,6 +26,22 @@ type Session struct {
 	stdout io.ReadCloser
 }
 
+type Config struct {
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Steps    []Step `json:"steps"`
+}
+
+type Step struct {
+	Action  string `json:"action"`
+	Message string `json:"message"`
+	X       int    `json:"x"`
+	Y       int    `json:"y"`
+	Data    string `json:"data"`
+}
+
 func main() {
 	filename := "App_Functional_Test_Results_" + time.Now().Format("20060102-150405") + ".html"
 
@@ -37,6 +54,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error starting scripting session: %s", err)
 	}
+	if session == nil {
+		log.Fatalf("Session is nil")
+	}
 	defer closeResources(session)
 
 	if err := createInitialHTML(filename); err != nil {
@@ -46,24 +66,31 @@ func main() {
 	saveScreen(filename, session)
 
 	for _, step := range config.Steps {
+		log.Printf("Executing step: %s", step.Action)
 		switch step.Action {
 		case "string_found":
 			verifyString(step.X, step.Y, step.Data, step.Message, session)
 		case "fill_field":
+			log.Printf("Filling field at X: %d, Y: %d with data: %s", step.X, step.Y, step.Data)
 			fillField(session.stdin, step.X, step.Y, step.Data)
 		case "send_enter":
+			log.Println("Sending Enter key")
 			sendEnter(session.stdin)
 		case "clear":
+			log.Println("Clearing screen")
 			clearScreen(session.stdin)
 			saveScreen(filename, session)
 		case "wait":
+			log.Printf("Waiting for %d seconds", step.X)
 			time.Sleep(time.Duration(step.X) * time.Second)
 		}
 		saveScreen(filename, session)
+		log.Printf("Step completed: %s", step.Action)
 	}
 
 	appendToFile(filename, "</body></html>")
 	sendCmd(session.stdin, "disconnect")
+	log.Println("Script execution completed")
 }
 
 func loadConfig(filename string) (Config, error) {
@@ -82,9 +109,38 @@ func loadConfig(filename string) (Config, error) {
 
 func startScriptingSession(host, port string) (*Session, error) {
 	session := &Session{}
+	timeout := 60 * time.Second
 
 	for i := 0; i < maxRetries; i++ {
-		// ... (rest of the code remains the same)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		cmd := exec.CommandContext(ctx, "s3270", "-script")
+
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get stdin pipe: %w", err)
+		}
+
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get stdout pipe: %w", err)
+		}
+
+		if err := cmd.Start(); err != nil {
+			log.Printf("Attempt %d: Failed to start s3270 in scripting mode: %s", i+1, err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		session.cmd = cmd
+		session.stdin = stdin
+		session.stdout = stdout
+
+		log.Printf("Attempt %d: s3270 process started", i+1)
+
+		// Add a delay to allow s3270 to initialize
+		time.Sleep(5 * time.Second)
 
 		session.lock.Lock()
 		sendCmd(session.stdin, "connect "+host+":"+port)
@@ -96,15 +152,29 @@ func startScriptingSession(host, port string) (*Session, error) {
 		}
 
 		if strings.Contains(content, "Connected") {
+			log.Printf("Attempt %d: Connection established", i+1)
 			return session, nil
 		}
+
+		// If the connection was not successful, close the session and retry
+		session.stdin.Close()
+		session.stdout.Close()
+		if session.cmd.Process != nil {
+			session.cmd.Process.Kill()
+		}
+		session.cmd.Wait()
+
+		log.Printf("Attempt %d: Connection failed, retrying...", i+1)
 	}
 
 	return nil, fmt.Errorf("Failed to establish connection after multiple attempts")
 }
 
 func verifyString(x, y int, data, message string, session *Session) {
-	screenContent := getScreenContent(session)
+	screenContent, err := getScreenContent(session)
+	if err != nil {
+		log.Fatalf("Failed getScreenContent: %s", err)
+	}
 	lines := strings.Split(screenContent, "\n")
 	if len(lines) <= y {
 		log.Fatalf("No such line %d in screen content", y)
@@ -171,7 +241,10 @@ func appendToFile(filename, content string) error {
 }
 
 func saveScreen(filename string, session *Session) {
-	screenContent := getScreenContent(session)
+	screenContent, err := getScreenContent(session)
+	if err != nil {
+		log.Fatalf("Failed getScreenContent: %s", err)
+	}
 	htmlContent := buildHTMLFromScreen(screenContent)
 	appendToFile(filename, htmlContent)
 }
