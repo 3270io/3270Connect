@@ -197,3 +197,13 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 	}
 	return string(b), nil
 }
+
+// AsciiScreenGrab captures an ASCII screen and returns it as a string
+func (e *Emulator) AsciiScreenGrab() (string, error) {
+	output, err := e.execCommandOutput("Ascii()") // Capture the entire screen
+	if err != nil {
+		return "", fmt.Errorf("error capturing ASCII screen: %v", err)
+	}
+
+	return output, nil
+}

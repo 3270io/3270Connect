@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -51,10 +52,28 @@ func main() {
 		log.Fatalf("Error setting password: %v\n", err)
 	}
 
+	// Capture the ASCII screen
+	asciiScreen, err := e.AsciiScreenGrab()
+	if err != nil {
+		log.Fatalf("Error capturing ASCII screen: %v", err)
+	}
+
+	// Print the captured ASCII screen using Printf
+	fmt.Printf("Captured ASCII Screen:\n%s\n", asciiScreen)
+
 	// Send the Enter key
 	if err := e.Press(go3270.Enter); err != nil {
 		log.Fatalf("Error pressing Enter: %v\n", err)
 	}
+
+	// Capture the ASCII screen
+	asciiScreen, err = e.AsciiScreenGrab()
+	if err != nil {
+		log.Fatalf("Error capturing ASCII screen: %v", err)
+	}
+
+	// Print the captured ASCII screen using Printf
+	fmt.Printf("Captured ASCII Screen:\n%s\n", asciiScreen)
 
 	// Disconnect from the terminal
 	if err := e.Disconnect(); err != nil {
