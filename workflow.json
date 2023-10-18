@@ -1,0 +1,43 @@
+{
+  "Host": "10.27.27.62",
+  "Port": 30050,
+  "HTMLFilePath": "output.html",
+  "Steps": [
+    {
+      "Type": "InitializeHTMLFile"
+    },
+    {
+      "Type": "Connect"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "CheckValue",
+      "Coordinates": {"Row": 1, "Column": 2, "Length": 12},
+      "Text": "Scrn: BANK10"
+    },
+    {
+      "Type": "FillString",
+      "Coordinates": {"Row": 10, "Column": 44},
+      "Text": "b0001"
+    },
+    {
+      "Type": "FillString",
+      "Coordinates": {"Row": 11, "Column": 44},
+      "Text": "mypass"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "PressEnter"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "Disconnect"
+    }
+  ]
+}
