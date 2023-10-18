@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"os"
 	"strings"
@@ -23,9 +24,28 @@ type Step struct {
 	Text        string
 }
 
+var (
+	configFile string
+	showHelp   bool // Define a flag for help
+)
+
+func init() {
+	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
+	flag.BoolVar(&showHelp, "help", false, "Show usage information") // Add the help flag
+}
+
 func main() {
+	// Parse command-line flags
+	flag.Parse()
+
+	// Display usage information and exit if -help is provided
+	if showHelp {
+		flag.Usage()
+		return
+	}
+
 	// Read the configuration from the external JSON file
-	configFile, err := os.Open("workflow.json")
+	configFile, err := os.Open(configFile)
 	if err != nil {
 		log.Fatalf("Error opening config file: %v", err)
 	}
