@@ -36,6 +36,13 @@ type Emulator struct {
 	ScriptPort string
 }
 
+// Coordinates represents the screen coordinates (row and column)
+type Coordinates struct {
+	Row    int
+	Column int
+	Length int
+}
+
 //moveCursor move cursor to especific row(x) and column(y)
 func (e *Emulator) moveCursor(x, y int) error {
 	// Adjust the values to start at 0 internally
