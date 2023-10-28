@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	go3270 "gitlab.jnnn.gs/jnnngs/go3270/x3270"
 
@@ -95,13 +96,6 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
 	}
 
-	// Log the command that will be executed
-	if go3270.Headless {
-		log.Println("Executing headless command: s3270")
-	} else {
-		log.Println("Executing interactive command: x3270if")
-	}
-
 	// Initialize the HTML file with run details (call this at the beginning)
 	htmlFilePath := config.HTMLFilePath
 	if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
@@ -125,7 +119,9 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				log.Fatalf("Error getting value: %v", err)
 			}
 			v = strings.TrimSpace(v)
-			log.Println("Retrieved value: " + v)
+			if go3270.Verbose {
+				log.Println("Retrieved value: " + v)
+			}
 			if v != step.Text {
 				log.Printf("Login failed. Expected: %s, Found: %s\n", step.Text, v)
 				if err := e.Disconnect(); err != nil {
@@ -195,7 +191,9 @@ func runAPIWorkflow() {
 					log.Fatalf("Error getting value: %v", err)
 				}
 				v = strings.TrimSpace(v)
-				log.Println("Retrieved value: " + v)
+				if go3270.Verbose {
+					log.Println("Retrieved value: " + v)
+				}
 				if v != step.Text {
 					log.Printf("Login failed. Expected: %s, Found: %s\n", step.Text, v)
 					if err := e.Disconnect(); err != nil {
@@ -255,20 +253,40 @@ func main() {
 		}
 	}
 
-	if runAPI {
-		runAPIWorkflow()
-	} else {
-		if concurrent > 1 {
-			for i := 1; i <= concurrent; i++ {
-				wg.Add(1)
-				go func(i int) {
-					defer wg.Done()
-					runWorkflow(5000+i, loadConfiguration(configFile))
-				}(i)
+	// Define a channel to communicate the active count
+	activeCountCh := make(chan int)
+
+	// Run the workflows in concurrent mode
+	if concurrent > 1 {
+		// Start a goroutine to periodically print the active count
+		go func() {
+			ticker := time.NewTicker(time.Second)
+			defer ticker.Stop()
+			activeCount := 0
+			for {
+				select {
+				case <-ticker.C:
+					log.Printf("%d workflows are active\n", activeCount)
+				case i := <-activeCountCh:
+					// Update the active count based on the workflow identifier
+					activeCount += i
+				}
 			}
-			wg.Wait()
-		} else {
-			runWorkflow(5000, loadConfiguration(configFile))
+		}()
+
+		for i := 1; i <= concurrent; i++ {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				// Notify that a workflow is active
+				activeCountCh <- 1
+				runWorkflow(5000+i, loadConfiguration(configFile))
+				// Notify that the workflow is no longer active
+				activeCountCh <- -1
+			}(i)
 		}
+		wg.Wait()
+	} else {
+		runWorkflow(5000, loadConfiguration(configFile))
 	}
 }
