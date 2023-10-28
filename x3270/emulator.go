@@ -16,6 +16,7 @@ var (
 	// Set this variable to true to enable headless mode.
 	Headless        bool
 	terminalCommand string // Stores the terminal command to use
+	Verbose         bool
 )
 
 // These constants represent the keyboard keys
@@ -167,7 +168,9 @@ func (e *Emulator) Connect() error {
 		e.ScriptPort = "5000"
 	}
 
-	log.Println("-scriptport: " + e.ScriptPort)
+	if Verbose {
+		log.Println("func Connect: using -scriptport: " + e.ScriptPort)
+	}
 
 	e.createApp()
 
@@ -195,11 +198,16 @@ func (e *Emulator) query(keyword string) (string, error) {
 // createApp creates a connection to the host using x3270 or s3270
 func (e *Emulator) createApp() {
 	var cmd *exec.Cmd
-	log.Println("-scriptport: " + e.ScriptPort)
+
+	if Verbose {
+		log.Println("func createApp: using -scriptport: " + e.ScriptPort)
+	}
+
 	if Headless {
-		cmd = exec.Command("s3270", "-scriptport", e.ScriptPort, e.hostname())
+		cmd = exec.Command("s3270", "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
 	} else {
-		cmd = exec.Command("x3270", "-scriptport", e.ScriptPort, e.hostname())
+		// Set the unlockDelay option for x3270 when running in headless mode
+		cmd = exec.Command("x3270", "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
 	go func() {
@@ -207,7 +215,20 @@ func (e *Emulator) createApp() {
 			log.Fatalf("Error creating an instance of 3270: %v\n", err)
 		}
 	}()
-	time.Sleep(6 * time.Second) // Adjust the sleep duration as needed
+	const maxAttempts = 10
+	const sleepDuration = time.Second
+
+	for i := 0; i < maxAttempts; i++ {
+		if e.IsConnected() {
+			break
+		}
+		time.Sleep(sleepDuration)
+	}
+
+	if !e.IsConnected() {
+		log.Fatalf("Failed to connect to %s\n", e.hostname())
+	}
+
 }
 
 //hostname return hostname formatted
@@ -219,12 +240,15 @@ func (e *Emulator) hostname() string {
 func (e *Emulator) execCommand(command string) error {
 	// Set terminalCommand based on Headless flag
 	if Headless {
-		terminalCommand = "s3270"
+		terminalCommand = "x3270if"
 	} else {
 		terminalCommand = "x3270if"
 	}
 
-	log.Println("terminalCommand: " + terminalCommand)
+	if Verbose {
+		log.Printf("func execCommand: Running CMD: %s -t %s %s\n", terminalCommand, e.ScriptPort, command)
+	}
+
 	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
 	if err := cmd.Run(); err != nil {
 		return err
@@ -238,9 +262,13 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 
 	// Set terminalCommand based on Headless flag
 	if Headless {
-		terminalCommand = "s3270"
+		terminalCommand = "x3270if"
 	} else {
 		terminalCommand = "x3270if"
+	}
+
+	if Verbose {
+		log.Printf("func execCommandOutput: Running CMD: %s -t %s %s\n", terminalCommand, e.ScriptPort, command)
 	}
 
 	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
