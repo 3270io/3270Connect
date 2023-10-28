@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+var (
+	// Headless controls whether go3270 runs in headless mode.
+	// Set this variable to true to enable headless mode.
+	Headless        bool
+	terminalCommand string // Stores the terminal command to use
+)
+
 // These constants represent the keyboard keys
 const (
 	Enter = "Enter"
@@ -41,6 +48,15 @@ type Coordinates struct {
 	Row    int
 	Column int
 	Length int
+}
+
+// NewEmulator creates a new Emulator instance.
+func NewEmulator(host string, port int, scriptPort string) *Emulator {
+	return &Emulator{
+		Host:       host,
+		Port:       port,
+		ScriptPort: scriptPort,
+	}
 }
 
 //moveCursor move cursor to especific row(x) and column(y)
@@ -137,22 +153,28 @@ func (e *Emulator) CursorPosition() (string, error) {
 	return e.query("cursor")
 }
 
-//Connect open an connection with x3270 and host
+// Connect opens a connection with x3270 or s3270 and the specified host and port
 func (e *Emulator) Connect() error {
 	if e.Host == "" {
-		return errors.New("Host need to be filled")
+		return errors.New("Host needs to be filled")
 	}
+
 	if e.IsConnected() {
-		return errors.New("addres already use")
+		return errors.New("Address already in use")
 	}
+
 	if e.ScriptPort == "" {
 		e.ScriptPort = "5000"
 	}
+
+	log.Println("-scriptport: " + e.ScriptPort)
+
 	e.createApp()
+
 	if !e.IsConnected() {
-		e.execCommand("quit")
-		log.Fatalf("error to connect in %s", e.hostname())
+		return fmt.Errorf("Failed to connect to %s", e.hostname())
 	}
+
 	return nil
 }
 
@@ -170,15 +192,22 @@ func (e *Emulator) query(keyword string) (string, error) {
 	return e.execCommandOutput(command)
 }
 
-//createApp create a connection of 3270 with host
+// createApp creates a connection to the host using x3270 or s3270
 func (e *Emulator) createApp() {
-	cmd := exec.Command("x3270", "-scriptport", e.ScriptPort, e.hostname())
+	var cmd *exec.Cmd
+	log.Println("-scriptport: " + e.ScriptPort)
+	if Headless {
+		cmd = exec.Command("s3270", "-scriptport", e.ScriptPort, e.hostname())
+	} else {
+		cmd = exec.Command("x3270", "-scriptport", e.ScriptPort, e.hostname())
+	}
+
 	go func() {
 		if err := cmd.Run(); err != nil {
-			log.Fatalf("error to create an instance of 3270\n%v\n", err)
+			log.Fatalf("Error creating an instance of 3270: %v\n", err)
 		}
 	}()
-	time.Sleep(6 * time.Second)
+	time.Sleep(6 * time.Second) // Adjust the sleep duration as needed
 }
 
 //hostname return hostname formatted
@@ -186,9 +215,17 @@ func (e *Emulator) hostname() string {
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
 }
 
-//execCommand executes a command on the connected x3270 instance
+// execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag
 func (e *Emulator) execCommand(command string) error {
-	cmd := exec.Command("x3270if", "-t", e.ScriptPort, command)
+	// Set terminalCommand based on Headless flag
+	if Headless {
+		terminalCommand = "s3270"
+	} else {
+		terminalCommand = "x3270if"
+	}
+
+	log.Println("terminalCommand: " + terminalCommand)
+	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -196,9 +233,17 @@ func (e *Emulator) execCommand(command string) error {
 	return nil
 }
 
-//execCommand executes a command on the connected x3270 instance and return output
+// execCommandOutput executes a command on the connected x3270 or s3270 instance based on Headless flag and returns output
 func (e *Emulator) execCommandOutput(command string) (string, error) {
-	cmd := exec.Command("x3270if", "-t", e.ScriptPort, command)
+
+	// Set terminalCommand based on Headless flag
+	if Headless {
+		terminalCommand = "s3270"
+	} else {
+		terminalCommand = "x3270if"
+	}
+
+	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
 	b, err := cmd.Output()
 	if err != nil {
 		return "", err

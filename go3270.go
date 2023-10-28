@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 
 	go3270 "gitlab.jnnn.gs/jnnngs/go3270/x3270"
 
@@ -33,6 +35,10 @@ var (
 	showHelp   bool
 	runAPI     bool
 	apiPort    int
+	concurrent int
+	headless   bool // Flag to run go3270 in headless mode
+	done       = make(chan bool)
+	wg         sync.WaitGroup
 )
 
 func init() {
@@ -40,28 +46,12 @@ func init() {
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
 	flag.BoolVar(&runAPI, "api", false, "Run as API")
 	flag.IntVar(&apiPort, "api-port", 8080, "API port")
+	flag.IntVar(&concurrent, "concurrent", 1, "Number of concurrent workflows")
+	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 }
 
-func main() {
-	flag.Parse()
-
-	if showHelp {
-		flag.Usage()
-		return
-	}
-
-	if runAPI {
-		// Run as an API
-		runAPIWorkflow()
-	} else {
-		// Run as CLI
-		runCLIWorkflow()
-	}
-}
-
-func runCLIWorkflow() {
-	// Read the configuration from the external JSON file
-	configFile, err := os.Open(configFile)
+func loadConfiguration(filePath string) *Configuration {
+	configFile, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalf("Error opening config file: %v", err)
 	}
@@ -74,10 +64,40 @@ func runCLIWorkflow() {
 		log.Fatalf("Error decoding config JSON: %v", err)
 	}
 
+	return &config
+}
+
+func runWorkflows(numOfWorkflows int, config *Configuration, concurrent bool) {
+	for i := 1; i <= numOfWorkflows; i++ {
+		if concurrent {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				runWorkflow(i, config)
+			}(i)
+		} else {
+			runWorkflow(i, config)
+		}
+	}
+
+	if concurrent {
+		wg.Wait()
+	}
+}
+
+func runWorkflow(scriptPort int, config *Configuration) {
 	// Create an emulator instance
 	e := go3270.Emulator{
-		Host: config.Host,
-		Port: config.Port,
+		Host:       config.Host,
+		Port:       config.Port,
+		ScriptPort: strconv.Itoa(5000 + scriptPort), // Convert int to string
+	}
+
+	// Log the command that will be executed
+	if go3270.Headless {
+		log.Println("Executing headless command: s3270")
+	} else {
+		log.Println("Executing interactive command: x3270if")
 	}
 
 	// Initialize the HTML file with run details (call this at the beginning)
@@ -98,10 +118,6 @@ func runCLIWorkflow() {
 				log.Fatalf("Error connecting to terminal: %v\n", err)
 			}
 		case "CheckValue":
-			//log.Printf("step.Coordinates.Row value: %d", step.Coordinates.Row)
-			//log.Printf("step.Coordinates.Column value: %d", step.Coordinates.Column)
-			//log.Printf("step.Length value: %d", step.Coordinates.Length)
-
 			v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
 			if err != nil {
 				log.Fatalf("Error getting value: %v", err)
@@ -135,14 +151,12 @@ func runCLIWorkflow() {
 			log.Printf("Unknown step type: %s\n", step.Type)
 		}
 	}
-
 }
 
 func runAPIWorkflow() {
 	r := gin.Default()
 
 	r.POST("/api/execute", func(c *gin.Context) {
-		// Read the JSON payload from the request body
 		var workflowConfig Configuration
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -174,10 +188,6 @@ func runAPIWorkflow() {
 					log.Fatalf("Error connecting to terminal: %v\n", err)
 				}
 			case "CheckValue":
-				//log.Printf("step.Coordinates.Row value: %d", step.Coordinates.Row)
-				//log.Printf("step.Coordinates.Column value: %d", step.Coordinates.Column)
-				//log.Printf("step.Length value: %d", step.Coordinates.Length)
-
 				v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
 				if err != nil {
 					log.Fatalf("Error getting value: %v", err)
@@ -218,4 +228,40 @@ func runAPIWorkflow() {
 	apiAddr := fmt.Sprintf(":%d", apiPort)
 	log.Printf("API server is running on %s", apiAddr)
 	r.Run(apiAddr)
+}
+
+func main() {
+	flag.Parse()
+
+	if showHelp {
+		flag.Usage()
+		return
+	}
+
+	// Set the headless flag in the go3270 package based on the global flag
+	go3270.Headless = headless
+
+	// Log whether headless mode is enabled
+	if go3270.Headless {
+		log.Println("Running in headless mode")
+	} else {
+		log.Println("Running in interactive mode")
+	}
+
+	if runAPI {
+		runAPIWorkflow()
+	} else {
+		if concurrent > 1 {
+			for i := 1; i <= concurrent; i++ {
+				wg.Add(1)
+				go func(i int) {
+					defer wg.Done()
+					runWorkflow(5000+i, loadConfiguration(configFile))
+				}(i)
+			}
+			wg.Wait()
+		} else {
+			runWorkflow(5000, loadConfiguration(configFile))
+		}
+	}
 }
