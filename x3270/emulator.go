@@ -3,12 +3,15 @@ package go3270
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.jnnn.gs/jnnngs/go3270/binaries"
 )
 
 var (
@@ -195,7 +198,7 @@ func (e *Emulator) query(keyword string) (string, error) {
 	return e.execCommandOutput(command)
 }
 
-// createApp creates a connection to the host using x3270 or s3270
+// createApp creates a connection to the host using embedded x3270 or s3270
 func (e *Emulator) createApp() {
 	var cmd *exec.Cmd
 
@@ -203,11 +206,30 @@ func (e *Emulator) createApp() {
 		log.Println("func createApp: using -scriptport: " + e.ScriptPort)
 	}
 
+	// Determine which binary to use based on Headless flag
+	binaryName := "x3270"
 	if Headless {
-		cmd = exec.Command("s3270", "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
+		binaryName = "s3270"
+	}
+
+	// Read the embedded binary data from bindata.go
+	binaryData, err := binaries.Asset(binaryName)
+	if err != nil {
+		log.Fatalf("Error reading embedded binary data: %v", err)
+	}
+
+	// Write the binary data to a temporary file
+	binaryFilePath := "/tmp/" + binaryName
+	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
+	if err != nil {
+		log.Fatalf("Error writing binary data to a temporary file: %v", err)
+	}
+
+	if Headless {
+		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
 	} else {
 		// Set the unlockDelay option for x3270 when running in headless mode
-		cmd = exec.Command("x3270", "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
+		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
 	go func() {
@@ -229,6 +251,8 @@ func (e *Emulator) createApp() {
 		log.Fatalf("Failed to connect to %s\n", e.hostname())
 	}
 
+	// Clean up the temporary binary file
+	defer os.Remove(binaryFilePath)
 }
 
 //hostname return hostname formatted
@@ -245,38 +269,73 @@ func (e *Emulator) execCommand(command string) error {
 		terminalCommand = "x3270if"
 	}
 
-	if Verbose {
-		log.Printf("func execCommand: Running CMD: %s -t %s %s\n", terminalCommand, e.ScriptPort, command)
+	// Determine which binary to use based on Headless flag
+	binaryName := "x3270if"
+	if Headless {
+		binaryName = "x3270if"
 	}
 
-	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
+	// Read the embedded binary data from bindata.go
+	binaryData, err := binaries.Asset(binaryName)
+	if err != nil {
+		return fmt.Errorf("error reading embedded binary data: %v", err)
+	}
+
+	// Write the binary data to a temporary file
+	binaryFilePath := "/tmp/" + binaryName
+	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
+	if err != nil {
+		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
+	}
+
+	cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 	time.Sleep(1 * time.Second)
+	defer os.Remove(binaryFilePath) // Clean up the temporary binary file when done
 	return nil
 }
 
 // execCommandOutput executes a command on the connected x3270 or s3270 instance based on Headless flag and returns output
 func (e *Emulator) execCommandOutput(command string) (string, error) {
 
-	// Set terminalCommand based on Headless flag
+	// Determine which binary to use based on Headless flag
+	binaryName := "x3270if"
 	if Headless {
-		terminalCommand = "x3270if"
-	} else {
-		terminalCommand = "x3270if"
+		binaryName = "x3270if"
+	}
+
+	// Read the embedded binary data from bindata.go
+	binaryData, err := binaries.Asset(binaryName)
+	if err != nil {
+		return "", fmt.Errorf("error reading embedded binary data: %v", err)
+	}
+
+	// Write the binary data to a temporary file
+	binaryFilePath := "/tmp/" + binaryName
+	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
+	if err != nil {
+		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
 	}
 
 	if Verbose {
-		log.Printf("func execCommandOutput: Running CMD: %s -t %s %s\n", terminalCommand, e.ScriptPort, command)
+		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
 	}
 
-	cmd := exec.Command(terminalCommand, "-t", e.ScriptPort, command)
-	b, err := cmd.Output()
+	cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
+	output, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
-	return string(b), nil
+
+	defer os.Remove(binaryFilePath) // Clean up the temporary binary file when done
+
+	return string(output), nil
 }
 
 var runDetailsAppended bool // Track if run details have been appended
