@@ -219,7 +219,7 @@ func (e *Emulator) createApp() {
 	}
 
 	// Write the binary data to a temporary file
-	binaryFilePath := "/tmp/" + binaryName
+	binaryFilePath := "/tmp/" + binaryName + fmt.Sprintf("_%d", time.Now().UnixNano())
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
 		log.Fatalf("Error writing binary data to a temporary file: %v", err)
@@ -282,7 +282,9 @@ func (e *Emulator) execCommand(command string) error {
 	}
 
 	// Write the binary data to a temporary file
-	binaryFilePath := "/tmp/" + binaryName
+
+	binaryFilePath := "/tmp/" + binaryName + fmt.Sprintf("_%d", time.Now().UnixNano())
+
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
 		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
@@ -317,7 +319,8 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 	}
 
 	// Write the binary data to a temporary file
-	binaryFilePath := "/tmp/" + binaryName
+	binaryFilePath := "/tmp/" + binaryName + fmt.Sprintf("_%d", time.Now().UnixNano())
+
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
 		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
