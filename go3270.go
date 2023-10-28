@@ -37,6 +37,7 @@ var (
 	apiPort    int
 	concurrent int
 	headless   bool // Flag to run go3270 in headless mode
+	verbose    bool
 	done       = make(chan bool)
 	wg         sync.WaitGroup
 )
@@ -48,6 +49,7 @@ func init() {
 	flag.IntVar(&apiPort, "api-port", 8080, "API port")
 	flag.IntVar(&concurrent, "concurrent", 1, "Number of concurrent workflows")
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
+	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 }
 
 func loadConfiguration(filePath string) *Configuration {
@@ -90,7 +92,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 	e := go3270.Emulator{
 		Host:       config.Host,
 		Port:       config.Port,
-		ScriptPort: strconv.Itoa(5000 + scriptPort), // Convert int to string
+		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
 	}
 
 	// Log the command that will be executed
@@ -241,11 +243,16 @@ func main() {
 	// Set the headless flag in the go3270 package based on the global flag
 	go3270.Headless = headless
 
+	// Set the verbose mode in your package
+	go3270.Verbose = verbose
+
 	// Log whether headless mode is enabled
-	if go3270.Headless {
-		log.Println("Running in headless mode")
-	} else {
-		log.Println("Running in interactive mode")
+	if go3270.Verbose {
+		if go3270.Headless {
+			log.Println("Running in headless mode")
+		} else {
+			log.Println("Running in interactive mode")
+		}
 	}
 
 	if runAPI {
