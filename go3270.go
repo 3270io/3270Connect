@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	go3270 "gitlab.jnnn.gs/jnnngs/go3270/x3270"
 
@@ -253,40 +252,20 @@ func main() {
 		}
 	}
 
-	// Define a channel to communicate the active count
-	activeCountCh := make(chan int)
-
-	// Run the workflows in concurrent mode
-	if concurrent > 1 {
-		// Start a goroutine to periodically print the active count
-		go func() {
-			ticker := time.NewTicker(time.Second)
-			defer ticker.Stop()
-			activeCount := 0
-			for {
-				select {
-				case <-ticker.C:
-					log.Printf("%d workflows are active\n", activeCount)
-				case i := <-activeCountCh:
-					// Update the active count based on the workflow identifier
-					activeCount += i
-				}
-			}
-		}()
-
-		for i := 1; i <= concurrent; i++ {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				// Notify that a workflow is active
-				activeCountCh <- 1
-				runWorkflow(5000+i, loadConfiguration(configFile))
-				// Notify that the workflow is no longer active
-				activeCountCh <- -1
-			}(i)
-		}
-		wg.Wait()
+	if runAPI {
+		runAPIWorkflow()
 	} else {
-		runWorkflow(5000, loadConfiguration(configFile))
+		if concurrent > 1 {
+			for i := 1; i <= concurrent; i++ {
+				wg.Add(1)
+				go func(i int) {
+					defer wg.Done()
+					runWorkflow(5000+i, loadConfiguration(configFile))
+				}(i)
+			}
+			wg.Wait()
+		} else {
+			runWorkflow(5000, loadConfiguration(configFile))
+		}
 	}
 }
