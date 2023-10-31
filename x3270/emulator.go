@@ -40,7 +40,7 @@ const (
 	F12   = "PF(12)"
 )
 
-//Emulator base struct to x3270 terminal emulator
+// Emulator base struct to x3270 terminal emulator
 type Emulator struct {
 	Host       string
 	Port       int
@@ -55,6 +55,7 @@ type Coordinates struct {
 }
 
 // NewEmulator creates a new Emulator instance.
+// It initializes an Emulator with the given host, port, and scriptPort.
 func NewEmulator(host string, port int, scriptPort string) *Emulator {
 	return &Emulator{
 		Host:       host,
@@ -63,8 +64,11 @@ func NewEmulator(host string, port int, scriptPort string) *Emulator {
 	}
 }
 
-//moveCursor move cursor to especific row(x) and column(y)
+// moveCursor move cursor to especific row(x) and column(y)
 func (e *Emulator) moveCursor(x, y int) error {
+	if Verbose {
+		log.Printf("Moving cursor to row %d and column %d", x, y)
+	}
 	// Adjust the values to start at 0 internally
 	xAdjusted := x - 1
 	yAdjusted := y - 1
@@ -72,9 +76,12 @@ func (e *Emulator) moveCursor(x, y int) error {
 	return e.execCommand(command)
 }
 
-//SetString fill field with value passed by parameter
-//setString will fill the field that the cursor is marked
+// SetString fill field with value passed by parameter
+// setString will fill the field that the cursor is marked
 func (e *Emulator) SetString(value string) error {
+	if Verbose {
+		log.Printf("Setting string value: %s", value)
+	}
 	command := fmt.Sprintf("String(%s)", value)
 	return e.execCommand(command)
 }
@@ -114,16 +121,16 @@ func (e *Emulator) FillString(x, y int, value string) error {
 	return e.SetString(value)
 }
 
-//Press press a keyboard key
+// Press press a keyboard key
 func (e *Emulator) Press(key string) error {
-	if !e.validaKeyboard(key) {
+	if !e.validateKeyboard(key) {
 		return fmt.Errorf("invalid key %s", key)
 	}
 	return e.execCommand(key)
 }
 
-//validaKeyboard valid if key passed by parameter if a key valid
-func (e *Emulator) validaKeyboard(key string) bool {
+// validateKeyboard valid if key passed by parameter if a key valid
+func (e *Emulator) validateKeyboard(key string) bool {
 	switch key {
 	case Tab:
 		return true
@@ -157,8 +164,11 @@ func (e *Emulator) CursorPosition() (string, error) {
 	return e.query("cursor")
 }
 
-// Connect opens a connection with x3270 or s3270 and the specified host and port
+// Connect opens a connection with x3270 or s3270 and the specified host and port.
 func (e *Emulator) Connect() error {
+	if Verbose {
+		log.Printf("Attempting to connect to host: %s", e.Host)
+	}
 	if e.Host == "" {
 		return errors.New("Host needs to be filled")
 	}
@@ -175,7 +185,10 @@ func (e *Emulator) Connect() error {
 		log.Println("func Connect: using -scriptport: " + e.ScriptPort)
 	}
 
-	e.createApp()
+	err := e.createApp()
+	if err != nil {
+		return fmt.Errorf("failed to create app: %v", err)
+	}
 
 	if !e.IsConnected() {
 		return fmt.Errorf("Failed to connect to %s", e.hostname())
@@ -186,6 +199,9 @@ func (e *Emulator) Connect() error {
 
 //Disconnect close connection with x3270
 func (e *Emulator) Disconnect() error {
+	if Verbose {
+		log.Println("Disconnecting from x3270")
+	}
 	if e.IsConnected() {
 		return e.execCommand("quit")
 	}
@@ -199,7 +215,7 @@ func (e *Emulator) query(keyword string) (string, error) {
 }
 
 // createApp creates a connection to the host using embedded x3270 or s3270
-func (e *Emulator) createApp() {
+func (e *Emulator) createApp() error {
 	var cmd *exec.Cmd
 
 	if Verbose {
@@ -232,11 +248,13 @@ func (e *Emulator) createApp() {
 		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
+	// Use Goroutines for potential concurrent operations
 	go func() {
 		if err := cmd.Run(); err != nil {
 			log.Fatalf("Error creating an instance of 3270: %v\n", err)
 		}
 	}()
+
 	const maxAttempts = 10
 	const sleepDuration = time.Second
 
@@ -248,11 +266,13 @@ func (e *Emulator) createApp() {
 	}
 
 	if !e.IsConnected() {
-		log.Fatalf("Failed to connect to %s\n", e.hostname())
+		return fmt.Errorf("Failed to connect to %s", e.hostname())
 	}
 
 	// Clean up the temporary binary file
 	defer os.Remove(binaryFilePath)
+
+	return nil
 }
 
 //hostname return hostname formatted
@@ -262,6 +282,9 @@ func (e *Emulator) hostname() string {
 
 // execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag
 func (e *Emulator) execCommand(command string) error {
+	if Verbose {
+		log.Printf("Executing command: %s", command)
+	}
 	// Set terminalCommand based on Headless flag
 	if Headless {
 		terminalCommand = "x3270if"
@@ -305,6 +328,9 @@ func (e *Emulator) execCommand(command string) error {
 
 // execCommandOutput executes a command on the connected x3270 or s3270 instance based on Headless flag and returns output
 func (e *Emulator) execCommandOutput(command string) (string, error) {
+	if Verbose {
+		log.Printf("Executing command with output: %s", command)
+	}
 
 	// Determine which binary to use based on Headless flag
 	binaryName := "x3270if"
@@ -345,6 +371,9 @@ var runDetailsAppended bool // Track if run details have been appended
 
 // Initialize HTML file with run details
 func (e *Emulator) InitializeHTMLFile(filePath string) error {
+	if Verbose {
+		log.Printf("Initializing HTML file at path: %s", filePath)
+	}
 	// Get the current date and time
 	currentTime := time.Now().Format("2006-01-02 15:04:05")
 
@@ -372,6 +401,9 @@ func (e *Emulator) InitializeHTMLFile(filePath string) error {
 
 // AsciiScreenGrab captures an ASCII screen and saves it to an HTML file with run details
 func (e *Emulator) AsciiScreenGrab(filePath string, append bool) error {
+	if Verbose {
+		log.Printf("Capturing ASCII screen and saving to file: %s", filePath)
+	}
 	output, err := e.execCommandOutput("Ascii()") // Capture the entire screen
 	if err != nil {
 		return fmt.Errorf("error capturing ASCII screen: %v", err)

@@ -7,16 +7,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	go3270 "gitlab.jnnn.gs/jnnngs/go3270/x3270"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Configuration struct to hold the configuration settings
+// Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
 	Host         string
 	Port         int
@@ -24,6 +26,7 @@ type Configuration struct {
 	Steps        []Step
 }
 
+// Step represents an individual action to be taken on the terminal.
 type Step struct {
 	Type        string
 	Coordinates go3270.Coordinates // Use go3270 package's Coordinates type
@@ -31,17 +34,27 @@ type Step struct {
 }
 
 var (
-	configFile string
-	showHelp   bool
-	runAPI     bool
-	apiPort    int
-	concurrent int
-	headless   bool // Flag to run go3270 in headless mode
-	verbose    bool
-	done       = make(chan bool)
-	wg         sync.WaitGroup
+	configFile      string
+	showHelp        bool
+	runAPI          bool
+	apiPort         int
+	concurrent      int
+	headless        bool // Flag to run go3270 in headless mode
+	verbose         bool
+	runtimeDuration int // Flag to determine if new workflows should be started when others finish
+	done            = make(chan bool)
+	wg              sync.WaitGroup
+	lastUsedPort    int       = 5000 // starting port number
+	closeDoneOnce   sync.Once        // Declare a sync.Once variable
 )
 
+var activeWorkflows int
+var mutex sync.Mutex
+
+const rampUpBatchSize = 5       // Number of work items to start in each batch
+const rampUpDelay = time.Second // Delay between starting batches
+
+// init initializes the command-line flags with default values.
 func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
@@ -50,9 +63,32 @@ func init() {
 	flag.IntVar(&concurrent, "concurrent", 1, "Number of concurrent workflows")
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
+	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
+
 }
 
+func clearTmpFiles() {
+	files, err := filepath.Glob("/tmp/x3270*")
+	if err != nil {
+		log.Fatalf("Error reading /tmp directory: %v", err)
+	}
+
+	for _, file := range files {
+		if err := os.Remove(file); err != nil {
+			log.Printf("Failed to remove %s: %v", file, err)
+		} else {
+			if go3270.Verbose {
+				log.Printf("Removed leftover file: %s", file)
+			}
+		}
+	}
+}
+
+// loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
 func loadConfiguration(filePath string) *Configuration {
+	if go3270.Verbose {
+		log.Printf("Loading configuration from %s", filePath)
+	}
 	configFile, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalf("Error opening config file: %v", err)
@@ -69,25 +105,48 @@ func loadConfiguration(filePath string) *Configuration {
 	return &config
 }
 
-func runWorkflows(numOfWorkflows int, config *Configuration, concurrent bool) {
-	for i := 1; i <= numOfWorkflows; i++ {
-		if concurrent {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				runWorkflow(i, config)
-			}(i)
-		} else {
-			runWorkflow(i, config)
-		}
+// runWorkflows executes the workflow multiple times, either concurrently or sequentially.
+func runWorkflows(numOfWorkflows int, config *Configuration) {
+	if go3270.Verbose {
+		log.Printf("Starting %d workflows", numOfWorkflows)
 	}
 
-	if concurrent {
-		wg.Wait()
+	tasks := make(chan int, numOfWorkflows) // Corrected this line
+
+	// Start workers
+	for i := 0; i < numOfWorkflows; i++ {
+		go func() {
+			for scriptPort := range tasks {
+				runWorkflow(scriptPort, config)
+				wg.Done()
+			}
+		}()
 	}
+
+	// Feed tasks to the channel
+	for i := 1; i <= numOfWorkflows; i++ {
+		wg.Add(1)
+		mutex.Lock()
+		lastUsedPort++
+		tasks <- lastUsedPort
+		mutex.Unlock()
+	}
+
+	wg.Wait()
+	close(tasks) // Close the tasks channel after all tasks have been fed
 }
 
+// runWorkflow executes the workflow steps for a single instance.
+// runWorkflow executes the workflow steps for a single instance.
 func runWorkflow(scriptPort int, config *Configuration) {
+	if go3270.Verbose {
+		log.Printf("Starting workflow for scriptPort %d", scriptPort)
+	}
+
+	mutex.Lock()
+	activeWorkflows++
+	mutex.Unlock()
+
 	// Create an emulator instance
 	e := go3270.Emulator{
 		Host:       config.Host,
@@ -98,7 +157,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 	// Initialize the HTML file with run details (call this at the beginning)
 	htmlFilePath := config.HTMLFilePath
 	if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-		log.Fatalf("Error initializing HTML file: %v\n", err)
+		log.Printf("Error initializing HTML file: %v", err)
 	}
 
 	// Iterate through the steps in the configuration
@@ -106,51 +165,63 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		switch step.Type {
 		case "InitializeHTMLFile":
 			if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-				log.Fatalf("Error initializing HTML file: %v\n", err)
+				log.Printf("Error initializing HTML file: %v", err)
 			}
 		case "Connect":
 			if err := e.Connect(); err != nil {
-				log.Fatalf("Error connecting to terminal: %v\n", err)
+				log.Printf("Error connecting to terminal: %v", err)
 			}
 		case "CheckValue":
 			v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
 			if err != nil {
-				log.Fatalf("Error getting value: %v", err)
+				log.Printf("Error getting value: %v", err)
 			}
 			v = strings.TrimSpace(v)
 			if go3270.Verbose {
 				log.Println("Retrieved value: " + v)
 			}
 			if v != step.Text {
-				log.Printf("Login failed. Expected: %s, Found: %s\n", step.Text, v)
+				log.Printf("Login failed. Expected: %s, Found: %s", step.Text, v)
 				if err := e.Disconnect(); err != nil {
-					log.Fatalf("Error disconnecting: %v", err)
+					log.Printf("Error disconnecting: %v", err)
 				}
 				return
 			}
 		case "FillString":
 			if err := e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text); err != nil {
-				log.Fatalf("Error setting text: %v\n", err)
+				log.Printf("Error setting text: %v", err)
 			}
 		case "AsciiScreenGrab":
 			if err := e.AsciiScreenGrab(htmlFilePath, true); err != nil {
-				log.Fatalf("Error capturing and appending ASCII screen: %v", err)
+				log.Printf("Error capturing and appending ASCII screen: %v", err)
 			}
 		case "PressEnter":
 			if err := e.Press(go3270.Enter); err != nil {
-				log.Fatalf("Error pressing Enter: %v\n", err)
+				log.Printf("Error pressing Enter: %v", err)
 			}
 		case "Disconnect":
 			if err := e.Disconnect(); err != nil {
-				log.Fatalf("Error disconnecting: %v\n", err)
+				log.Printf("Error disconnecting: %v", err)
 			}
 		default:
-			log.Printf("Unknown step type: %s\n", step.Type)
+			log.Printf("Unknown step type: %s", step.Type)
 		}
+	}
+
+	mutex.Lock()
+	activeWorkflows--
+	mutex.Unlock()
+
+	if go3270.Verbose {
+		log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
 	}
 }
 
+// runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 func runAPIWorkflow() {
+	if go3270.Verbose {
+		log.Println("Starting API server mode")
+	}
 	r := gin.Default()
 
 	r.POST("/api/execute", func(c *gin.Context) {
@@ -229,7 +300,14 @@ func runAPIWorkflow() {
 	r.Run(apiAddr)
 }
 
+// main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
+	if go3270.Verbose {
+		log.Println("Program started")
+	}
+
+	clearTmpFiles()
+
 	flag.Parse()
 
 	if showHelp {
@@ -237,35 +315,94 @@ func main() {
 		return
 	}
 
-	// Set the headless flag in the go3270 package based on the global flag
 	go3270.Headless = headless
-
-	// Set the verbose mode in your package
 	go3270.Verbose = verbose
-
-	// Log whether headless mode is enabled
-	if go3270.Verbose {
-		if go3270.Headless {
-			log.Println("Running in headless mode")
-		} else {
-			log.Println("Running in interactive mode")
-		}
-	}
 
 	if runAPI {
 		runAPIWorkflow()
 	} else {
+		config := loadConfiguration(configFile)
 		if concurrent > 1 {
-			for i := 1; i <= concurrent; i++ {
-				wg.Add(1)
-				go func(i int) {
-					defer wg.Done()
-					runWorkflow(5000+i, loadConfiguration(configFile))
-				}(i)
+			// Use a buffered channel to control the number of active workflows
+			activeChan := make(chan struct{}, concurrent)
+
+			// Goroutine to log active workflows
+			go func() {
+				for {
+					select {
+					case <-done:
+						return
+					default:
+						mutex.Lock()
+						log.Printf("Currently active workflows: %d", activeWorkflows)
+						mutex.Unlock()
+						time.Sleep(1 * time.Second)
+					}
+				}
+			}()
+
+			// Goroutine to handle runtime duration
+			if runtimeDuration > 0 {
+				go func() {
+					time.Sleep(time.Duration(runtimeDuration) * time.Second)
+					log.Println("Runtime duration reached. Not starting new workflows...")
+					closeDoneOnce.Do(func() {
+						close(done)
+					})
+				}()
 			}
-			wg.Wait()
+
+			// Ramp-up logic (continue to use rampUpBatchSize and rampUpDelay)
+			go func() {
+				for {
+					if activeWorkflows >= concurrent {
+						time.Sleep(1 * time.Second)
+						continue
+					}
+
+					for j := 0; j < rampUpBatchSize && activeWorkflows < concurrent; j++ {
+						select {
+						case <-done:
+							// If runtime duration is reached, don't start new workflows
+							return
+						default:
+							mutex.Lock()
+							lastUsedPort++
+							portToUse := lastUsedPort
+							mutex.Unlock()
+							activeChan <- struct{}{} // Block here if activeChan is full
+
+							// Increment the WaitGroup for the new goroutine
+							wg.Add(1)
+
+							// Start the work item in a goroutine
+							go func(port int) {
+								defer wg.Done() // Decrement the WaitGroup when the goroutine completes
+								runWorkflow(port, config)
+								<-activeChan // Release a spot in the channel once the workflow is done
+							}(portToUse)
+						}
+					}
+					time.Sleep(rampUpDelay)
+				}
+			}()
+
+			// Continue displaying active workflows after runtime duration message
+			<-done // Wait for runtime duration to end
+
+			// Wait until all active workflows have completed
+			for activeWorkflows > 0 {
+				time.Sleep(1 * time.Second)
+			}
+
+			// Close the 'done' channel using sync.Once to ensure it's only closed once
+			closeDoneOnce.Do(func() {
+				close(done)
+			})
+
 		} else {
-			runWorkflow(5000, loadConfiguration(configFile))
+			// Run concurrent workflows without runtime duration
+			runWorkflows(concurrent, config)
 		}
 	}
 }
