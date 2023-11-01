@@ -1,6 +1,8 @@
 site_name: 3270.io
 nav:
   - Home: index.md
+  - g3270:
+      - 1.go3270.md
   - Knowledge:
       - 1.mkdocs.md
 theme: material
