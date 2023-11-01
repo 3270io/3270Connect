@@ -6,11 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="User Guide for the go3270 Command-Line Utility">
+      
+      
+        <meta name="author" content="Jnnngs">
+      
+      
+        <link rel="canonical" href="https://3270.io/">
       
       
       
-      
-        <link rel="next" href="1.go3270/">
+        <link rel="next" href="installation/">
       
       
       <link rel="icon" href="assets/images/favicon.png">
@@ -18,7 +24,7 @@
     
     
       
-        <title>3270.io</title>
+        <title>go3270 User Guide</title>
       
     
     
@@ -63,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#3270io" class="md-skip">
+        <a href="#welcome-to-go3270-documentation" class="md-skip">
           Skip to content
         </a>
       
@@ -72,6 +78,10 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
     
       
 
@@ -79,7 +89,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="3270.io" class="md-header__button md-logo" aria-label="3270.io" data-md-component="logo">
+    <a href="." title="go3270 User Guide" class="md-header__button md-logo" aria-label="go3270 User Guide" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -93,13 +103,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            3270.io
+            go3270 User Guide
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Welcome
             
           </span>
         </div>
@@ -171,13 +181,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="3270.io" class="md-nav__button md-logo" aria-label="3270.io" data-md-component="logo">
+    <a href="." title="go3270 User Guide" class="md-nav__button md-logo" aria-label="go3270 User Guide" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
-    3270.io
+    go3270 User Guide
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -197,15 +207,73 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Welcome
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Home
+    Welcome
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    Introduction
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-features" class="md-nav__link">
+    Advanced Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    Conclusion
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -213,51 +281,15 @@
     
       
       
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    g3270
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            g3270
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
   
   
   
     <li class="md-nav__item">
-      <a href="1.go3270/" class="md-nav__link">
+      <a href="installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    go3270 Command-Line Utility
+    Installation
   </span>
   
 
@@ -265,62 +297,18 @@
     </li>
   
 
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
     
       
       
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Knowledge
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            Knowledge
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
   
   
   
     <li class="md-nav__item">
-      <a href="1.mkdocs/" class="md-nav__link">
+      <a href="basic-usage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    mkdocs build
+    Basic Usage
   </span>
   
 
@@ -328,11 +316,22 @@
     </li>
   
 
-              
-            
-          </ul>
-        </nav>
+    
       
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="advanced-features/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced Features
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -357,6 +356,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    Introduction
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-features" class="md-nav__link">
+    Advanced Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    Conclusion
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -370,8 +405,23 @@
                   
 
 
-<h1 id="3270io">3270.io</h1>
-<p>Documentation and knowledge for 3270.io applications.</p>
+<h1 id="welcome-to-go3270-documentation">Welcome to go3270 Documentation</h1>
+<h2 id="introduction">Introduction</h2>
+<p>Welcome to the official documentation for the go3270 command-line utility. This documentation provides comprehensive information on how to use go3270 for automating interactions with terminal emulators like x3270 or s3270.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>If you're new to go3270, you can start by exploring the following sections:</p>
+<ul>
+<li><a href="installation/">Installation</a>: Learn how to install go3270 on your system.</li>
+<li><a href="basic-usage/">Basic Usage</a>: Get started with basic usage and running workflows.</li>
+</ul>
+<h2 id="advanced-features">Advanced Features</h2>
+<p>Once you've mastered the basics, you can dive into more advanced features:</p>
+<ul>
+<li><a href="advanced-features/">API Mode</a>: Discover how to run go3270 as an API server for advanced automation.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>The go3270 command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the <a href="https://github.com/yourusername/go3270">GitHub repository</a> for more details.</p>
+<p>Let's get started with go3270!</p>
 
 
 
@@ -410,7 +460,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.0.0"}</script>
     
     
       <script src="assets/javascripts/bundle.aecac24b.min.js"></script>
