@@ -1,8 +1,25 @@
-site_name: 3270.io
+site_name: go3270 User Guide
+site_description: User Guide for the go3270 Command-Line Utility
+site_author: Jnnngs
+site_url: https://3270.io
+#repo_url: https://github.com/yourusername/go3270
+#edit_uri: edit/master/docs/
+docs_dir: docs
+theme:
+  name: material
+
 nav:
-  - Home: index.md
-  - g3270:
-      - 1.go3270.md
-  - Knowledge:
-      - 1.mkdocs.md
-theme: material
+  - Welcome: index.md
+  - Installation: installation.md
+  - Basic Usage: basic-usage.md
+  - Advanced Features: advanced-features.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - codehilite:
+      guess_lang: false
+
+extra:
+  version: 1.0.0
