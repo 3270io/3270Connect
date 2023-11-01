@@ -394,31 +394,34 @@ func main() {
 					time.Sleep(1 * time.Second)
 				}
 
+				log.Println("Active workflows is now zero. Shutting down...")
+
 				// Close the 'done' channel using sync.Once to ensure it's only closed once
 				closeDoneOnce.Do(func() {
 					close(done)
 				})
 
 			} else {
-				log.Printf("Else statement for runtime not > 0") // Debugging line
+				//log.Printf("Else statement for runtime not > 0") // Debugging line
 				// Run concurrent workflows without runtime duration
-				log.Printf("#concurrent %d", concurrent) // Debugging line
+				//log.Printf("#concurrent %d", concurrent) // Debugging line
 				go func() {
 					for i := 0; i < concurrent; i++ {
-						log.Printf("#1") // Debugging line
+						//log.Printf("#1") // Debugging line
 						mutex.Lock()
 						lastUsedPort++
 						portToUse := lastUsedPort
+						//activeWorkflows++
 						mutex.Unlock()
-						log.Printf("#2")         // Debugging line
+						//log.Printf("#2")         // Debugging line
 						activeChan <- struct{}{} // Block here if activeChan is full
-						log.Printf("#3")         // Debugging line
+						//log.Printf("#3")         // Debugging line
 						// Increment the WaitGroup for the new goroutine
 						wg.Add(1)
-						log.Printf("#4") // Debugging line
+						//log.Printf("#4") // Debugging line
 						// Start the work item in a goroutine
 						go func(port int) {
-							//log.Printf("#5")                                  // Debugging line
+							//log.Printf("#5") // Debugging line
 							defer wg.Done() // Decrement the WaitGroup when the goroutine completes
 							//log.Printf("Starting workflow for port %d", port) // Debugging line
 
@@ -433,8 +436,9 @@ func main() {
 
 							// Decrement the activeWorkflows counter
 							mutex.Lock()
-							activeWorkflows--
+							//activeWorkflows--
 							if activeWorkflows == 0 {
+								log.Println("Active workflows is now zero. Shutting down...")
 								close(done) // Close the 'done' channel when activeWorkflows reaches zero
 							}
 							mutex.Unlock()
@@ -443,16 +447,6 @@ func main() {
 				}()
 
 				<-done // Wait for runtime duration to end
-
-				// Wait until all active workflows have completed
-				for activeWorkflows > 0 {
-					time.Sleep(1 * time.Second)
-				}
-
-				// Close the 'done' channel using sync.Once to ensure it's only closed once
-				closeDoneOnce.Do(func() {
-					close(done)
-				})
 			}
 
 		} else {
