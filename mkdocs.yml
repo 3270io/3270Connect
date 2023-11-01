@@ -1,0 +1,6 @@
+site_name: 3270.io
+nav:
+  - Home: index.md
+  - Knowledge:
+      - 1.mkdocs.md
+theme: material

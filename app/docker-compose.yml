@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  3270_io:
+    container_name: 3270_io
+    image: reg.jnnn.gs/3270_io:latest
+    restart: unless-stopped
+    ports:
+      - "8686:80"
