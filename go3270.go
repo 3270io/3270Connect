@@ -350,55 +350,110 @@ func main() {
 						close(done)
 					})
 				}()
-			}
 
-			// Ramp-up logic (continue to use rampUpBatchSize and rampUpDelay)
-			go func() {
-				for {
-					if activeWorkflows >= concurrent {
-						time.Sleep(1 * time.Second)
-						continue
-					}
-
-					for j := 0; j < rampUpBatchSize && activeWorkflows < concurrent; j++ {
-						select {
-						case <-done:
-							// If runtime duration is reached, don't start new workflows
-							return
-						default:
-							mutex.Lock()
-							lastUsedPort++
-							portToUse := lastUsedPort
-							mutex.Unlock()
-							activeChan <- struct{}{} // Block here if activeChan is full
-
-							// Increment the WaitGroup for the new goroutine
-							wg.Add(1)
-
-							// Start the work item in a goroutine
-							go func(port int) {
-								defer wg.Done() // Decrement the WaitGroup when the goroutine completes
-								runWorkflow(port, config)
-								<-activeChan // Release a spot in the channel once the workflow is done
-							}(portToUse)
+				// Ramp-up logic (continue to use rampUpBatchSize and rampUpDelay)
+				go func() {
+					for {
+						if activeWorkflows >= concurrent {
+							time.Sleep(1 * time.Second)
+							continue
 						}
+
+						for j := 0; j < rampUpBatchSize && activeWorkflows < concurrent; j++ {
+							select {
+							case <-done:
+								// If runtime duration is reached, don't start new workflows
+								return
+							default:
+								mutex.Lock()
+								lastUsedPort++
+								portToUse := lastUsedPort
+								mutex.Unlock()
+								activeChan <- struct{}{} // Block here if activeChan is full
+
+								// Increment the WaitGroup for the new goroutine
+								wg.Add(1)
+
+								// Start the work item in a goroutine
+								go func(port int) {
+									defer wg.Done() // Decrement the WaitGroup when the goroutine completes
+									runWorkflow(port, config)
+									<-activeChan // Release a spot in the channel once the workflow is done
+								}(portToUse)
+							}
+						}
+						time.Sleep(rampUpDelay)
 					}
-					time.Sleep(rampUpDelay)
+				}()
+
+				// Continue displaying active workflows after runtime duration message
+				<-done // Wait for runtime duration to end
+
+				// Wait until all active workflows have completed
+				for activeWorkflows > 0 {
+					time.Sleep(1 * time.Second)
 				}
-			}()
 
-			// Continue displaying active workflows after runtime duration message
-			<-done // Wait for runtime duration to end
+				// Close the 'done' channel using sync.Once to ensure it's only closed once
+				closeDoneOnce.Do(func() {
+					close(done)
+				})
 
-			// Wait until all active workflows have completed
-			for activeWorkflows > 0 {
-				time.Sleep(1 * time.Second)
+			} else {
+				log.Printf("Else statement for runtime not > 0") // Debugging line
+				// Run concurrent workflows without runtime duration
+				log.Printf("#concurrent %d", concurrent) // Debugging line
+				go func() {
+					for i := 0; i < concurrent; i++ {
+						log.Printf("#1") // Debugging line
+						mutex.Lock()
+						lastUsedPort++
+						portToUse := lastUsedPort
+						mutex.Unlock()
+						log.Printf("#2")         // Debugging line
+						activeChan <- struct{}{} // Block here if activeChan is full
+						log.Printf("#3")         // Debugging line
+						// Increment the WaitGroup for the new goroutine
+						wg.Add(1)
+						log.Printf("#4") // Debugging line
+						// Start the work item in a goroutine
+						go func(port int) {
+							//log.Printf("#5")                                  // Debugging line
+							defer wg.Done() // Decrement the WaitGroup when the goroutine completes
+							//log.Printf("Starting workflow for port %d", port) // Debugging line
+
+							// Add more debugging lines here if needed
+
+							runWorkflow(port, config)
+
+							// Add more debugging lines here if needed
+
+							<-activeChan // Release a spot in the channel once the workflow is done
+							//log.Printf("Workflow for port %d completed", port) // Debugging line
+
+							// Decrement the activeWorkflows counter
+							mutex.Lock()
+							activeWorkflows--
+							if activeWorkflows == 0 {
+								close(done) // Close the 'done' channel when activeWorkflows reaches zero
+							}
+							mutex.Unlock()
+						}(portToUse)
+					}
+				}()
+
+				<-done // Wait for runtime duration to end
+
+				// Wait until all active workflows have completed
+				for activeWorkflows > 0 {
+					time.Sleep(1 * time.Second)
+				}
+
+				// Close the 'done' channel using sync.Once to ensure it's only closed once
+				closeDoneOnce.Do(func() {
+					close(done)
+				})
 			}
-
-			// Close the 'done' channel using sync.Once to ensure it's only closed once
-			closeDoneOnce.Do(func() {
-				close(done)
-			})
 
 		} else {
 			// Run concurrent workflows without runtime duration
