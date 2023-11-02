@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	connect3270 "gitlab.jnnn.gs/jnnngs/3270Connect"
+	connect3270 "gitlab.jnnn.gs/jnnngs/3270Connect/connect3270"
 
 	"github.com/gin-gonic/gin"
 )

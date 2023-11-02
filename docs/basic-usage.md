@@ -2,12 +2,12 @@
 
 ## Introduction
 
-The basic usage of `go3270` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. 
+The basic usage of `3270Connect` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. 
 
 To run a workflow, use the following command:
 
 ```bash
-go3270 -config workflow.json
+3270Connect -config workflow.json
 ```
 
 - `-config`: Specifies the path to the configuration file (default is "workflow.json").
@@ -60,17 +60,17 @@ You can run multiple workflows concurrently by specifying the `-concurrent` and 
 For example, to run two workflows concurrently for 60 seconds, use:
 
 ```bash
-go3270 -config workflow.json -concurrent 2 -runtime 60
+3270Connect -config workflow.json -concurrent 2 -runtime 60
 ```
 
 ## Configuration
 
 ### Headless Mode
 
-You can run `go3270` in headless mode using the `-headless` flag. Headless mode is useful for running workflows without a graphical user interface.
+You can run `3270Connect` in headless mode using the `-headless` flag. Headless mode is useful for running workflows without a graphical user interface.
 
 ```bash
-go3270 -config workflow.json -headless
+3270Connect -config workflow.json -headless
 ```
 
 ### Verbose Mode
@@ -78,7 +78,7 @@ go3270 -config workflow.json -headless
 To enable verbose mode for detailed output, use the `-verbose` flag.
 
 ```bash
-go3270 -config workflow.json -verbose
+3270Connect -config workflow.json -verbose
 ```
 
 ## Examples
@@ -90,7 +90,7 @@ Let's explore some common use cases with examples:
 Run a basic workflow defined in "workflow.json":
 
 ```bash
-go3270 -config workflow.json
+3270Connect -config workflow.json
 ```
 
 ### 2. Running Multiple Workflows Concurrently
@@ -98,7 +98,7 @@ go3270 -config workflow.json
 Run two workflows concurrently for 60 seconds:
 
 ```bash
-go3270 -config workflow.json -concurrent 2 -runtime 60
+3270Connect -config workflow.json -concurrent 2 -runtime 60
 ```
 
 ### 3. Running in Headless Mode
@@ -106,15 +106,15 @@ go3270 -config workflow.json -concurrent 2 -runtime 60
 Run a workflow in headless mode:
 
 ```bash
-go3270 -config workflow.json -headless
+3270Connect -config workflow.json -headless
 ```
 
 ### 4. Using the API Mode
 
-Run `go3270` in API mode and interact with it using HTTP requests.
+Run `3270Connect` in API mode and interact with it using HTTP requests.
 
 ## Conclusion
 
-The `go3270` command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, `go3270` has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.
+The `3270Connect` command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, `3270Connect` has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.
 
-That's it! You're now ready to use `go3270` for your terminal automation needs, including the API mode for more advanced automation scenarios.
+That's it! You're now ready to use `3270Connect` for your terminal automation needs, including the API mode for more advanced automation scenarios.
