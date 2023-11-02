@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.jnnn.gs/jnnngs/3270Connect"
+	connect3270 "gitlab.jnnn.gs/jnnngs/3270Connect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +29,7 @@ type Configuration struct {
 // Step represents an individual action to be taken on the terminal.
 type Step struct {
 	Type        string
-	Coordinates 3270Connect.Coordinates // Use go3270 package's Coordinates type
+	Coordinates connect3270.Coordinates // Use go3270 package's Coordinates type
 	Text        string
 }
 
@@ -77,7 +77,7 @@ func clearTmpFiles() {
 		if err := os.Remove(file); err != nil {
 			log.Printf("Failed to remove %s: %v", file, err)
 		} else {
-			if 3270Connect.Verbose {
+			if connect3270.Verbose {
 				log.Printf("Removed leftover file: %s", file)
 			}
 		}
@@ -86,7 +86,7 @@ func clearTmpFiles() {
 
 // loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
 func loadConfiguration(filePath string) *Configuration {
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Printf("Loading configuration from %s", filePath)
 	}
 	configFile, err := os.Open(filePath)
@@ -107,7 +107,7 @@ func loadConfiguration(filePath string) *Configuration {
 
 // runWorkflows executes the workflow multiple times, either concurrently or sequentially.
 func runWorkflows(numOfWorkflows int, config *Configuration) {
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Printf("Starting %d workflows", numOfWorkflows)
 	}
 
@@ -139,7 +139,7 @@ func runWorkflows(numOfWorkflows int, config *Configuration) {
 // runWorkflow executes the workflow steps for a single instance.
 // runWorkflow executes the workflow steps for a single instance.
 func runWorkflow(scriptPort int, config *Configuration) {
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Printf("Starting workflow for scriptPort %d", scriptPort)
 	}
 
@@ -148,7 +148,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 	mutex.Unlock()
 
 	// Create an emulator instance
-	e := 3270Connect.Emulator{
+	e := connect3270.Emulator{
 		Host:       config.Host,
 		Port:       config.Port,
 		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
@@ -177,7 +177,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				log.Printf("Error getting value: %v", err)
 			}
 			v = strings.TrimSpace(v)
-			if 3270Connect.Verbose {
+			if connect3270.Verbose {
 				log.Println("Retrieved value: " + v)
 			}
 			if v != step.Text {
@@ -196,7 +196,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				log.Printf("Error capturing and appending ASCII screen: %v", err)
 			}
 		case "PressEnter":
-			if err := e.Press(3270Connect.Enter); err != nil {
+			if err := e.Press(connect3270.Enter); err != nil {
 				log.Printf("Error pressing Enter: %v", err)
 			}
 		case "Disconnect":
@@ -212,14 +212,14 @@ func runWorkflow(scriptPort int, config *Configuration) {
 	activeWorkflows--
 	mutex.Unlock()
 
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
 	}
 }
 
 // runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 func runAPIWorkflow() {
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Println("Starting API server mode")
 	}
 	r := gin.Default()
@@ -232,7 +232,7 @@ func runAPIWorkflow() {
 		}
 
 		// Create an emulator instance
-		e := 3270Connect.Emulator{
+		e := connect3270.Emulator{
 			Host: workflowConfig.Host,
 			Port: workflowConfig.Port,
 		}
@@ -261,7 +261,7 @@ func runAPIWorkflow() {
 					log.Fatalf("Error getting value: %v", err)
 				}
 				v = strings.TrimSpace(v)
-				if 3270Connect.Verbose {
+				if connect3270.Verbose {
 					log.Println("Retrieved value: " + v)
 				}
 				if v != step.Text {
@@ -280,7 +280,7 @@ func runAPIWorkflow() {
 					log.Fatalf("Error capturing and appending ASCII screen: %v", err)
 				}
 			case "PressEnter":
-				if err := e.Press(3270Connect.Enter); err != nil {
+				if err := e.Press(connect3270.Enter); err != nil {
 					log.Fatalf("Error pressing Enter: %v\n", err)
 				}
 			case "Disconnect":
@@ -302,7 +302,7 @@ func runAPIWorkflow() {
 
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
-	if 3270Connect.Verbose {
+	if connect3270.Verbose {
 		log.Println("Program started")
 	}
 
@@ -315,8 +315,8 @@ func main() {
 		return
 	}
 
-	3270Connect.Headless = headless
-	3270Connect.Verbose = verbose
+	connect3270.Headless = headless
+	connect3270.Verbose = verbose
 
 	if runAPI {
 		runAPIWorkflow()
