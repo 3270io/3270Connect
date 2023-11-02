@@ -1,4 +1,4 @@
-package go3270
+package 3270Connect
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.jnnn.gs/jnnngs/go3270/binaries"
+	"github.com/3270io/3270Connect/binaries"
 )
 
 var (

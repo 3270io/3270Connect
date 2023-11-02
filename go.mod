@@ -1,4 +1,4 @@
-module gitlab.jnnn.gs/jnnngs/go3270
+module github.com/3270io/3270Connect
 
 go 1.18
 
