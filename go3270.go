@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/3270io/3270Connect"
+	3270Connect "github.com/3270io/3270Connect"
 
 	"github.com/gin-gonic/gin"
 )
