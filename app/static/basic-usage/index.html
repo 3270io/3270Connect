@@ -569,7 +569,7 @@
                   
 
 
-<h1 id="basic-usage">Basic Usage</h1>
+<div><h1 id="basic-usage">Basic Usage</h1>
 <h2 id="introduction">Introduction</h2>
 <p>The basic usage of <code>go3270</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. </p>
 <p>To run a workflow, use the following command:</p>
@@ -583,29 +583,29 @@
 <h3 id="single-workflow">Single Workflow</h3>
 <p>To run a single workflow, create a JSON configuration file that describes the workflow steps. Here's an example configuration file:</p>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.27.27.62&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30050</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;HTMLFilePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;output.html&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">30050</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"HTMLFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b0001&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b0001"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PressEnter&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
@@ -654,7 +654,7 @@
 <p>Run <code>go3270</code> in API mode and interact with it using HTTP requests.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>The <code>go3270</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>go3270</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>
-<p>That's it! You're now ready to use <code>go3270</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p>
+<p>That's it! You're now ready to use <code>go3270</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p></div>
 
 
 
