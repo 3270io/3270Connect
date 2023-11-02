@@ -22,3 +22,9 @@ Once you've mastered the basics, you can dive into more advanced features:
 The go3270 command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/yourusername/go3270) for more details.
 
 Let's get started with go3270!
+
+## Video example
+
+Lorem ipsum dolor sit amet
+
+![type:video](https://www.youtube.com/embed/LXb3EKWsInQ)
