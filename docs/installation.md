@@ -20,11 +20,4 @@ $ sudo mv go3270-darwin-amd64 /usr/local/bin/go3270
 
 ### Windows
 
-Download the latest go3270-windows-amd64.exe from the Releases page and add it to your system's PATH.
-
-Once installed, you can verify the installation by running:
-
-``` shell
-Copy code
-$ go3270 -help
-```
+Coming soon.
