@@ -1,4 +1,4 @@
-package 3270Connect
+package connect3270
 
 import (
 	"errors"
