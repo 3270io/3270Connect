@@ -571,9 +571,9 @@
 
 <div><h1 id="basic-usage">Basic Usage</h1>
 <h2 id="introduction">Introduction</h2>
-<p>The basic usage of <code>go3270</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. </p>
+<p>The basic usage of <code>3270Connect</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. </p>
 <p>To run a workflow, use the following command:</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
 
 <ul>
@@ -619,42 +619,42 @@
 <li><code>-runtime</code>: Specifies the duration to run workflows in seconds (only used in concurrent mode).</li>
 </ul>
 <p>For example, to run two workflows concurrently for 60 seconds, use:</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
 
 <h2 id="configuration">Configuration</h2>
 <h3 id="headless-mode">Headless Mode</h3>
-<p>You can run <code>go3270</code> in headless mode using the <code>-headless</code> flag. Headless mode is useful for running workflows without a graphical user interface.</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+<p>You can run <code>3270Connect</code> in headless mode using the <code>-headless</code> flag. Headless mode is useful for running workflows without a graphical user interface.</p>
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 
 <h3 id="verbose-mode">Verbose Mode</h3>
 <p>To enable verbose mode for detailed output, use the <code>-verbose</code> flag.</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
 </code></pre></div>
 
 <h2 id="examples">Examples</h2>
 <p>Let's explore some common use cases with examples:</p>
 <h3 id="1-running-a-basic-workflow">1. Running a Basic Workflow</h3>
 <p>Run a basic workflow defined in "workflow.json":</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
 
 <h3 id="2-running-multiple-workflows-concurrently">2. Running Multiple Workflows Concurrently</h3>
 <p>Run two workflows concurrently for 60 seconds:</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
 
 <h3 id="3-running-in-headless-mode">3. Running in Headless Mode</h3>
 <p>Run a workflow in headless mode:</p>
-<div class="codehilite"><pre><span></span><code>go3270<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 
 <h3 id="4-using-the-api-mode">4. Using the API Mode</h3>
-<p>Run <code>go3270</code> in API mode and interact with it using HTTP requests.</p>
+<p>Run <code>3270Connect</code> in API mode and interact with it using HTTP requests.</p>
 <h2 id="conclusion">Conclusion</h2>
-<p>The <code>go3270</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>go3270</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>
-<p>That's it! You're now ready to use <code>go3270</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p></div>
+<p>The <code>3270Connect</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>3270Connect</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>
+<p>That's it! You're now ready to use <code>3270Connect</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p></div>
 
 
 
