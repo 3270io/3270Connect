@@ -14,3 +14,56 @@ To run `3270Connect` in API mode, use the following command:
 ```
 
 Once the API is running, you can send HTTP requests to it to trigger workflows and retrieve information.
+
+POST:
+
+```bash
+http://localhost:8080/api/execute
+```
+
+Body:
+```bash
+{
+  "Host": "10.27.27.27",
+  "Port": 3270,
+  "HTMLFilePath": "output.html",
+  "Steps": [
+    {
+      "Type": "InitializeHTMLFile"
+    },
+    {
+      "Type": "Connect"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "CheckValue",
+      "Coordinates": {"Row": 1, "Column": 2, "Length": 11},
+      "Text": "Some: VALUE"
+    },
+    {
+      "Type": "FillString",
+      "Coordinates": {"Row": 10, "Column": 44},
+      "Text": "user1"
+    },
+    {
+      "Type": "FillString",
+      "Coordinates": {"Row": 11, "Column": 44},
+      "Text": "mypass"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "PressEnter"
+    },
+    {
+      "Type": "AsciiScreenGrab"
+    },
+    {
+      "Type": "Disconnect"
+    }
+  ]
+}
+```
