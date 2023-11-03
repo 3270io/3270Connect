@@ -113,6 +113,8 @@ Run a workflow in headless mode:
 
 Run `3270Connect` in API mode and interact with it using HTTP requests.
 
+- [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation.
+
 ## Conclusion
 
 The `3270Connect` command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, `3270Connect` has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.
