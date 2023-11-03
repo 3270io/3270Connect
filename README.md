@@ -7,7 +7,7 @@
 - **Terminal Automation**: Interact with terminal screens, send keys, and fill fields programmatically.
 - **Screen Captures**: Capture terminal screens in ASCII format and save them to HTML files.
 - **Cross-Platform**: Works on Linux, macOS, and Windows (soon).
-- **Performance Load Testing**: run a number of concurrent connections with an optional period of time 
+- **Performance Load Testing**: Run a number of concurrent connections with an optional period of time 
 
 ## Documentation
 

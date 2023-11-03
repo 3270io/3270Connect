@@ -2,7 +2,7 @@ site_name: 3270Connect User Guide
 site_description: User Guide for the 3270Connect Command-Line Utility
 site_author: Jnnngs
 site_url: https://3270.io
-#repo_url: https://github.com/yourusername/go3270
+repo_url: https://github.com/3270io/3270Connect
 #edit_uri: edit/master/docs/
 docs_dir: docs
 theme:
