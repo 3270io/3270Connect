@@ -19,12 +19,12 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 ## Conclusion
 
-The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/yourusername/3270Connect) for more details.
+The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
 
 Let's get started with 3270Connect!
 
 ## Video example
 
-Lorem ipsum dolor sit amet
+Video examples coming soon...
 
 ![type:video](https://www.youtube.com/embed/LXb3EKWsInQ)
