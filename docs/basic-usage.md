@@ -4,7 +4,9 @@
 
 The basic usage of `3270Connect` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. 
 
-As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the "github.com/racingmars/go3270" framework. Full credit go to racingmars for this excellent coding. "github.com/racingmars/go3270" is Copyright (c) 2020 Matthew R. Wilson, MIT License.
+As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the [github.com/racingmars/go3270](https://github.com/racingmars/go3270) framework. Full credit go to `racingmars` for this excellent coding. 
+
+`github.com/racingmars/go3270` is Copyright (c) 2020 Matthew R. Wilson, under MIT License.
 
 To run a workflow, use the following command:
 
@@ -144,6 +146,7 @@ Run a test 3270 sample application to assist with testing 3270Connect workflow f
 
 ```bash
 3270Connect -runApp
+```
 
 Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.
 
