@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.jnnn.gs/jnnngs/3270Connect/binaries"
+	"github.com/3270io/3270Connect/binaries"
 )
 
 var (
