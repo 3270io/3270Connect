@@ -26,7 +26,7 @@
     
     
       
-        <title>Basic Usage - 3270Connect User Guide</title>
+        <title>Basic Usage - 3270Connect</title>
       
     
     
@@ -91,7 +91,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="3270Connect User Guide" class="md-header__button md-logo" aria-label="3270Connect User Guide" data-md-component="logo">
+    <a href=".." title="3270Connect" class="md-header__button md-logo" aria-label="3270Connect" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -105,7 +105,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            3270Connect User Guide
+            3270Connect
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -195,13 +195,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="3270Connect User Guide" class="md-nav__button md-logo" aria-label="3270Connect User Guide" data-md-component="logo">
+    <a href=".." title="3270Connect" class="md-nav__button md-logo" aria-label="3270Connect" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
-    3270Connect User Guide
+    3270Connect
   </label>
   
     <div class="md-nav__source">
@@ -613,7 +613,8 @@
 <div><h1 id="basic-usage">Basic Usage</h1>
 <h2 id="introduction">Introduction</h2>
 <p>The basic usage of <code>3270Connect</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. </p>
-<p>As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the "github.com/racingmars/go3270" framework. Full credit go to racingmars for this excellent coding. "github.com/racingmars/go3270" is Copyright (c) 2020 Matthew R. Wilson, MIT License.</p>
+<p>As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the <a href="https://github.com/racingmars/go3270">github.com/racingmars/go3270</a> framework. Full credit go to <code>racingmars</code> for this excellent coding. </p>
+<p><code>github.com/racingmars/go3270</code> is Copyright (c) 2020 Matthew R. Wilson, under MIT License.</p>
 <p>To run a workflow, use the following command:</p>
 <div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
@@ -720,8 +721,9 @@
 </ul>
 <h3 id="5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features">5. Running a 3270 sample application to help with testing the workflow features</h3>
 <p>Run a test 3270 sample application to assist with testing 3270Connect workflow features:</p>
-<p>```bash
-3270Connect -runApp</p>
+<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp
+</code></pre></div>
+
 <p>Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>The <code>3270Connect</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>3270Connect</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>

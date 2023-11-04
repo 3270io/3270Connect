@@ -15,7 +15,7 @@ If you're new to 3270Connect, you can start by exploring the following sections:
 
 Once you've mastered the basics, you can dive into more advanced features:
 
-- [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation.
+- [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 
 ## Conclusion
 
