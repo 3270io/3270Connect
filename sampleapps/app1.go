@@ -2,7 +2,7 @@
 // Copyright 2020 by Matthew R. Wilson, licensed under the MIT license. See
 // LICENSE in the project root for license information.
 
-package bankapp
+package app1
 
 import (
 	"fmt"
@@ -58,7 +58,7 @@ var screen2 = go3270.Screen{
 	{Row: 22, Col: 0, Content: "PF3 Exit"},
 }
 
-func RunBankApplication() {
+func RunApplication() {
 	ln, err := net.Listen("tcp", ":3270")
 	if err != nil {
 		panic(err)

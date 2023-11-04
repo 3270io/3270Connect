@@ -9,7 +9,7 @@ Welcome to the official documentation for the 3270Connect command-line utility. 
 If you're new to 3270Connect, you can start by exploring the following sections:
 
 - [Installation](installation.md): Learn how to install 3270Connect on your system.
-- [Basic Usage](basic-usage.md): Get started with basic usage and running workflows.
+- [Basic Usage](basic-usage.md): Get started with basic usage, running workflows and sample 3270 application(s) to aid testing.
 
 ## Advanced Features
 
