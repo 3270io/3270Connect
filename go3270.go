@@ -18,6 +18,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const version = "1.0.0"
+
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
 	Host         string
@@ -308,9 +310,16 @@ func main() {
 
 	clearTmpFiles()
 
+	showVersion := flag.Bool("version", false, "Show the application version")
 	flag.Parse()
 
+	if *showVersion {
+		fmt.Printf("3270Connect Version: %s\n", version)
+		os.Exit(0)
+	}
+
 	if showHelp {
+		fmt.Printf("3270Connect Version: %s\n", version)
 		flag.Usage()
 		return
 	}
