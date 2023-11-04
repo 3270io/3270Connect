@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/3270io/3270Connect/bankapp"
 	connect3270 "github.com/3270io/3270Connect/connect3270"
+	app1 "github.com/3270io/3270Connect/sampleapps"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,7 +44,7 @@ var (
 	concurrent      int
 	headless        bool // Flag to run go3270 in headless mode
 	verbose         bool
-	bankApp         bool
+	runApp          bool
 	runtimeDuration int // Flag to determine if new workflows should be started when others finish
 	done            = make(chan bool)
 	wg              sync.WaitGroup
@@ -68,7 +68,7 @@ func init() {
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
-	flag.BoolVar(&bankApp, "bankapp", false, "Run the bank application")
+	flag.BoolVar(&runApp, "runApp", false, "Run app1 sample 3270 application")
 
 }
 
@@ -327,9 +327,9 @@ func main() {
 		return
 	}
 
-	if bankApp {
+	if runApp {
 		// Run the bank application
-		bankapp.RunBankApplication()
+		app1.RunApplication()
 		return
 	}
 

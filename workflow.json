@@ -1,5 +1,5 @@
 {
-  "Host": "10.27.27.27",
+  "Host": "10.27.27.62",
   "Port": 3270,
   "HTMLFilePath": "output.html",
   "Steps": [
@@ -14,24 +14,29 @@
     },
     {
       "Type": "CheckValue",
-      "Coordinates": {"Row": 1, "Column": 2, "Length": 11},
-      "Text": "Some: VALUE"
+      "Coordinates": {"Row": 1, "Column": 29, "Length": 24},
+      "Text": "3270 Example Application"
     },
     {
       "Type": "FillString",
-      "Coordinates": {"Row": 10, "Column": 44},
-      "Text": "user1"
+      "Coordinates": {"Row": 5, "Column": 21},
+      "Text": "user1-firstname"
     },
     {
       "Type": "FillString",
-      "Coordinates": {"Row": 11, "Column": 44},
-      "Text": "mypass"
+      "Coordinates": {"Row": 6, "Column": 21},
+      "Text": "user1-lastname"
     },
     {
       "Type": "AsciiScreenGrab"
     },
     {
       "Type": "PressEnter"
+    },
+    {
+      "Type": "CheckValue",
+      "Coordinates": {"Row": 1, "Column": 29, "Length": 24},
+      "Text": "3270 Example Application"
     },
     {
       "Type": "AsciiScreenGrab"

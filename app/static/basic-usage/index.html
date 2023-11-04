@@ -404,6 +404,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features" class="md-nav__link">
+    5. Running a 3270 sample application to help with testing the workflow features
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -566,6 +573,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features" class="md-nav__link">
+    5. Running a 3270 sample application to help with testing the workflow features
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -599,6 +613,7 @@
 <div><h1 id="basic-usage">Basic Usage</h1>
 <h2 id="introduction">Introduction</h2>
 <p>The basic usage of <code>3270Connect</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. </p>
+<p>As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the "github.com/racingmars/go3270" framework. Full credit go to racingmars for this excellent coding. "github.com/racingmars/go3270" is Copyright (c) 2020 Matthew R. Wilson, MIT License.</p>
 <p>To run a workflow, use the following command:</p>
 <div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
@@ -611,9 +626,12 @@
 <p>To run a single workflow, create a JSON configuration file that describes the workflow steps. Here's an example configuration file:</p>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">30050</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"HTMLFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"InitializeHTMLFile"</span>
+<span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
 <span class="w">    </span><span class="p">},</span>
@@ -621,12 +639,30 @@
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b0001"</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-firstname"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-lastname"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
@@ -682,6 +718,11 @@
 <ul>
 <li><a href="../advanced-features/">API Mode</a>: Discover how to run 3270Connect as an API server for advanced automation.</li>
 </ul>
+<h3 id="5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features">5. Running a 3270 sample application to help with testing the workflow features</h3>
+<p>Run a test 3270 sample application to assist with testing 3270Connect workflow features:</p>
+<p>```bash
+3270Connect -runApp</p>
+<p>Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>The <code>3270Connect</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>3270Connect</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>
 <p>That's it! You're now ready to use <code>3270Connect</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p></div>
