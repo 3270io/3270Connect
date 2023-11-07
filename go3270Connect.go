@@ -312,7 +312,7 @@ func main() {
 		log.Println("Program started")
 	}
 
-	clearTmpFiles()
+	//clearTmpFiles()
 
 	showVersion := flag.Bool("version", false, "Show the application version")
 	flag.Parse()
