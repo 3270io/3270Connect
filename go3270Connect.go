@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.2"
+const version = "1.0.3.3"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -250,6 +250,13 @@ func runAPIWorkflow() {
 			return
 		}
 
+		// Defer the disconnection of the emulator to ensure it's done regardless of error or not.
+		defer func() {
+			if err := e.Disconnect(); err != nil {
+				log.Printf("Error disconnecting: %v\n", err)
+			}
+		}()
+
 		// Iterate through the steps in the configuration
 		for _, step := range workflowConfig.Steps {
 			switch step.Type {
@@ -272,9 +279,6 @@ func runAPIWorkflow() {
 				}
 				if v != step.Text {
 					log.Printf("Login failed. Expected: %s, Found: %s\n", step.Text, v)
-					if err := e.Disconnect(); err != nil {
-						log.Fatalf("Error disconnecting: %v", err)
-					}
 					return
 				}
 			case "FillString":
