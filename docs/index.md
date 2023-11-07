@@ -31,4 +31,4 @@ Let's get started with 3270Connect!
 
 ### 3270Connect API Usage
 
-Coming soon...
+![type:video](3270Connect_API_1_0_3_8.mp4)
