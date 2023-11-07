@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -231,14 +232,21 @@ func (e *Emulator) createApp() error {
 	// Read the embedded binary data from bindata.go
 	binaryData, err := binaries.Asset(binaryName)
 	if err != nil {
-		log.Fatalf("Error reading embedded binary data: %v", err)
+		return fmt.Errorf("error reading embedded binary data: %v", err)
 	}
 
-	// Write the binary data to a temporary file
-	binaryFilePath := "/tmp/" + binaryName + fmt.Sprintf("_%d", time.Now().UnixNano())
+	// Create a temporary directory to store the binary file
+	tempDir, err := ioutil.TempDir("", "x3270_binary")
+	if err != nil {
+		return fmt.Errorf("error creating temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
+
+	// Create the binary file in the temporary directory
+	binaryFilePath := filepath.Join(tempDir, binaryName)
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
-		log.Fatalf("Error writing binary data to a temporary file: %v", err)
+		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
 	}
 
 	if Headless {
@@ -268,9 +276,6 @@ func (e *Emulator) createApp() error {
 	if !e.IsConnected() {
 		return fmt.Errorf("Failed to connect to %s", e.hostname())
 	}
-
-	// Clean up the temporary binary file
-	defer os.Remove(binaryFilePath)
 
 	return nil
 }
