@@ -41,6 +41,11 @@ const (
 	F12   = "PF(12)"
 )
 
+const (
+	maxRetries = 3           // Maximum number of retries
+	retryDelay = time.Second // Delay between retries (e.g., 1 second)
+)
+
 // Emulator base struct to x3270 terminal emulator
 type Emulator struct {
 	Host       string
@@ -324,15 +329,20 @@ func (e *Emulator) execCommand(command string) error {
 		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
 	}
 
-	// Execute the command using the temporary binary file
-	cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
-	if err := cmd.Run(); err != nil {
-		return err
+	// Retry logic for executing the command
+	for retries := 0; retries < maxRetries; retries++ {
+		cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
+		if err := cmd.Run(); err == nil {
+			return nil // Successfully executed, exit the retry loop
+		} else if strings.Contains(err.Error(), "text file busy") {
+			log.Printf("Error executing command (Retry %d): %v", retries+1, err)
+			time.Sleep(retryDelay)
+		} else {
+			return err // Exit and return error if it's not "text file busy"
+		}
 	}
-	time.Sleep(1 * time.Second)
-	defer os.Remove(binaryFilePath) // Clean up the temporary binary file when done
 
-	return nil
+	return fmt.Errorf("maximum command execution retries reached")
 }
 
 // execCommandOutput executes a command on the connected x3270 or s3270 instance based on Headless flag and returns output
