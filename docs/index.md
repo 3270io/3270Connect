@@ -27,4 +27,4 @@ Let's get started with 3270Connect!
 
 Video examples coming soon...
 
-![type:video](https://www.youtube.com/embed/LXb3EKWsInQ)
+![type:video](3270Connect_1_0_3_8.mp4)
