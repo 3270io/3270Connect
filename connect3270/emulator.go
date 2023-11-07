@@ -293,9 +293,9 @@ func (e *Emulator) execCommand(command string) error {
 
 	// Determine the appropriate terminal command based on the Headless flag
 	terminalCommand := "x3270if"
-	if Headless {
-		terminalCommand = "s3270if"
-	}
+	//if Headless {
+	//	terminalCommand = "s3270if"
+	//}
 
 	// Determine which binary to use based on Headless flag
 	binaryName := terminalCommand
