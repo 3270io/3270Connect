@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.4"
+const version = "1.0.3.5"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -213,6 +213,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		default:
 			log.Printf("Unknown step type: %s", step.Type)
 		}
+		time.Sleep(1 * time.Second)
 	}
 
 	mutex.Lock()
