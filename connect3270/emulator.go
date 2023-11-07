@@ -285,23 +285,20 @@ func (e *Emulator) hostname() string {
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
 }
 
-// execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag
+/// execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag
 func (e *Emulator) execCommand(command string) error {
 	if Verbose {
 		log.Printf("Executing command: %s", command)
 	}
-	// Set terminalCommand based on Headless flag
+
+	// Determine the appropriate terminal command based on the Headless flag
+	terminalCommand := "x3270if"
 	if Headless {
-		terminalCommand = "x3270if"
-	} else {
-		terminalCommand = "x3270if"
+		terminalCommand = "s3270if"
 	}
 
 	// Determine which binary to use based on Headless flag
-	binaryName := "x3270if"
-	if Headless {
-		binaryName = "x3270if"
-	}
+	binaryName := terminalCommand
 
 	// Read the embedded binary data from bindata.go
 	binaryData, err := binaries.Asset(binaryName)
@@ -309,10 +306,18 @@ func (e *Emulator) execCommand(command string) error {
 		return fmt.Errorf("error reading embedded binary data: %v", err)
 	}
 
-	// Write the binary data to a temporary file
+	// Create a temporary directory to store the binary file
+	tempDir, err := ioutil.TempDir("", "x3270_binary")
+	if err != nil {
+		return fmt.Errorf("error creating temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
 
-	binaryFilePath := "/tmp/" + binaryName + fmt.Sprintf("_%d", time.Now().UnixNano())
+	// Generate a random unique name for the binary file
+	binaryFileName := fmt.Sprintf("%s_%d", binaryName, time.Now().UnixNano())
+	binaryFilePath := filepath.Join(tempDir, binaryFileName)
 
+	// Write the binary data to the temporary file
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
 		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
@@ -322,12 +327,14 @@ func (e *Emulator) execCommand(command string) error {
 		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
 	}
 
+	// Execute the command using the temporary binary file
 	cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 	time.Sleep(1 * time.Second)
 	defer os.Remove(binaryFilePath) // Clean up the temporary binary file when done
+
 	return nil
 }
 
