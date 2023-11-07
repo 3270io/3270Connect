@@ -70,61 +70,116 @@ func NewEmulator(host string, port int, scriptPort string) *Emulator {
 	}
 }
 
-// moveCursor move cursor to especific row(x) and column(y)
+// moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.
 func (e *Emulator) moveCursor(x, y int) error {
-	if Verbose {
-		log.Printf("Moving cursor to row %d and column %d", x, y)
-	}
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
 	// Adjust the values to start at 0 internally
 	xAdjusted := x - 1
 	yAdjusted := y - 1
 	command := fmt.Sprintf("MoveCursor(%d,%d)", xAdjusted, yAdjusted)
-	return e.execCommand(command)
+
+	// Retry the MoveCursor operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		if err := e.execCommand(command); err == nil {
+			return nil // Successful operation, exit the retry loop
+		}
+		//log.Printf("Error moving cursor (Retry %d) to row %d, column %d\n", retries+1, x, y)
+
+		time.Sleep(retryDelay)
+	}
+
+	return fmt.Errorf("maximum MoveCursor retries reached")
 }
 
-// SetString fill field with value passed by parameter
-// setString will fill the field that the cursor is marked
+// SetString fills the field at the current cursor position with the given value and retries in case of failure.
 func (e *Emulator) SetString(value string) error {
-	if Verbose {
-		log.Printf("Setting string value: %s", value)
-	}
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
 	command := fmt.Sprintf("String(%s)", value)
-	return e.execCommand(command)
+
+	// Retry the SetString operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		if err := e.execCommand(command); err == nil {
+			return nil // Successful operation, exit the retry loop
+		}
+		//log.Printf("Error executing String command (Retry %d)\n", retries+1)
+		time.Sleep(retryDelay)
+	}
+
+	return fmt.Errorf("maximum SetString retries reached")
 }
 
-//GetRows returns the number of rows in the saved screen image.
+// GetRows returns the number of rows in the saved screen image with retry logic.
 func (e *Emulator) GetRows() (int, error) {
-	s, err := e.execCommandOutput("Snap(Rows)")
-	if err != nil {
-		return 0, err
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
+	// Retry the Snap(Rows) operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		s, err := e.execCommandOutput("Snap(Rows)")
+		if err == nil {
+			i, err := strconv.Atoi(s)
+			if err == nil {
+				return i, nil // Successful operation, exit the retry loop
+			}
+		}
+		//log.Printf("Error getting number of rows (Retry %d): %v\n", retries+1, err)
+		time.Sleep(retryDelay)
 	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, fmt.Errorf("error from x3270 to get numbers of row: %v", err)
-	}
-	return i, nil
+
+	return 0, fmt.Errorf("maximum GetRows retries reached")
 }
 
-//GetColumns returns the number of columns in the saved screen image.
+// GetColumns returns the number of columns in the saved screen image with retry logic.
 func (e *Emulator) GetColumns() (int, error) {
-	s, err := e.execCommandOutput("Snap(Cols)")
-	if err != nil {
-		return 0, err
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
+	// Retry the Snap(Cols) operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		s, err := e.execCommandOutput("Snap(Cols)")
+		if err == nil {
+			i, err := strconv.Atoi(s)
+			if err == nil {
+				return i, nil // Successful operation, exit the retry loop
+			}
+		}
+		//log.Printf("Error getting number of columns (Retry %d): %v\n", retries+1, err)
+		time.Sleep(retryDelay)
 	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, fmt.Errorf("error from x3270 to get numbers of columns: %v", err)
-	}
-	return i, nil
+
+	return 0, fmt.Errorf("maximum GetColumns retries reached")
 }
 
 // FillString fills the field at the specified row (x) and column (y) with the given value
 func (e *Emulator) FillString(x, y int, value string) error {
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
 	// Adjust the row and column values to start at 1 internally
 	if err := e.moveCursor(x, y); err != nil {
-		return fmt.Errorf("error to move cursor: %v", err)
+		return fmt.Errorf("error moving cursor: %v", err)
 	}
-	return e.SetString(value)
+
+	// Retry the SetString operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		err := e.SetString(value) // Declare and define err here
+		if err == nil {
+			return nil // Successful operation, exit the retry loop
+		}
+		//log.Printf("Error filling string (Retry %d) at row %d, column %d: %v\n", retries+1, x, y, err)
+		time.Sleep(retryDelay)
+	}
+
+	return fmt.Errorf("maximum FillString retries reached")
 }
 
 // Press press a keyboard key
@@ -149,6 +204,8 @@ func (e *Emulator) validateKeyboard(key string) bool {
 
 //IsConnected check if a connection with host exist
 func (e *Emulator) IsConnected() bool {
+
+	time.Sleep(1 * time.Second) // Optional: Add a delay between steps
 	s, err := e.query("ConnectionState")
 	if err != nil || len(strings.TrimSpace(s)) == 0 {
 		return false
@@ -156,13 +213,28 @@ func (e *Emulator) IsConnected() bool {
 	return true
 }
 
-// GetValue returns content of a specified length at the specified row (x) and column (y)
+// GetValue returns content of a specified length at the specified row (x) and column (y) with retry logic.
 func (e *Emulator) GetValue(x, y, length int) (string, error) {
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
 	// Adjust the row and column values to start at 1 internally
 	xAdjusted := x - 1
 	yAdjusted := y - 1
 	command := fmt.Sprintf("Ascii(%d,%d,%d)", xAdjusted, yAdjusted, length)
-	return e.execCommandOutput(command)
+
+	// Retry the Ascii command with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		output, err := e.execCommandOutput(command)
+		if err == nil {
+			return output, nil // Successful operation, exit the retry loop
+		}
+		//log.Printf("Error executing Ascii command (Retry %d): %v\n", retries+1, err)
+		time.Sleep(retryDelay)
+	}
+
+	return "", fmt.Errorf("maximum GetValue retries reached")
 }
 
 //CursorPosition return actual position by cursor
@@ -179,28 +251,35 @@ func (e *Emulator) Connect() error {
 		return errors.New("Host needs to be filled")
 	}
 
-	if e.IsConnected() {
-		return errors.New("Address already in use")
+	// Retry logic for connecting
+	for retries := 0; retries < maxRetries; retries++ {
+		if e.IsConnected() {
+			return nil // Successfully connected, exit the retry loop
+		}
+
+		if e.ScriptPort == "" {
+			e.ScriptPort = "5000"
+		}
+
+		if Verbose {
+			log.Println("func Connect: using -scriptport: " + e.ScriptPort)
+		}
+
+		err := e.createApp()
+		if err != nil {
+			log.Printf("Failed to create app: %v", err)
+		}
+
+		if !e.IsConnected() {
+			//log.Printf("Failed to connect to %s (Retry %d)...", e.hostname(), retries+1)
+		} else {
+			return nil // Successfully connected, exit the retry loop
+		}
+
+		time.Sleep(retryDelay)
 	}
 
-	if e.ScriptPort == "" {
-		e.ScriptPort = "5000"
-	}
-
-	if Verbose {
-		log.Println("func Connect: using -scriptport: " + e.ScriptPort)
-	}
-
-	err := e.createApp()
-	if err != nil {
-		return fmt.Errorf("failed to create app: %v", err)
-	}
-
-	if !e.IsConnected() {
-		return fmt.Errorf("Failed to connect to %s", e.hostname())
-	}
-
-	return nil
+	return fmt.Errorf("maximum connect retries reached")
 }
 
 //Disconnect close connection with x3270
@@ -261,11 +340,20 @@ func (e *Emulator) createApp() error {
 		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
+	// Retry logic parameters
+	maxRetries := 3
+	retryDelay := 2 * time.Second
+
 	// Use Goroutines for potential concurrent operations
 	go func() {
-		if err := cmd.Run(); err != nil {
-			log.Fatalf("Error creating an instance of 3270: %v\n", err)
+		for retries := 0; retries < maxRetries; retries++ {
+			if err := cmd.Run(); err == nil {
+				return // Successful execution, exit the Goroutine
+			}
+			//log.Printf("Error creating an instance of 3270 (Retry %d): %v\n", retries+1, err)
+			time.Sleep(retryDelay)
 		}
+		log.Printf("Max retries reached. Could not create an instance of 3270.\n")
 	}()
 
 	const maxAttempts = 10
@@ -335,7 +423,7 @@ func (e *Emulator) execCommand(command string) error {
 		if err := cmd.Run(); err == nil {
 			return nil // Successfully executed, exit the retry loop
 		} else if strings.Contains(err.Error(), "text file busy") {
-			log.Printf("Error executing command (Retry %d): %v", retries+1, err)
+			//log.Printf("Error executing command (Retry %d): %v", retries+1, err)
 			time.Sleep(retryDelay)
 		} else {
 			return err // Exit and return error if it's not "text file busy"
@@ -425,42 +513,52 @@ func (e *Emulator) InitializeHTMLFile(filePath string) error {
 	return nil
 }
 
-// AsciiScreenGrab captures an ASCII screen and saves it to an HTML file with run details
+// AsciiScreenGrab captures an ASCII screen and saves it to an HTML file with run details,
+// with added retry logic.
 func (e *Emulator) AsciiScreenGrab(filePath string, append bool) error {
 	if Verbose {
 		log.Printf("Capturing ASCII screen and saving to file: %s", filePath)
 	}
-	output, err := e.execCommandOutput("Ascii()") // Capture the entire screen
-	if err != nil {
-		return fmt.Errorf("error capturing ASCII screen: %v", err)
+
+	// Retry logic for capturing ASCII screen
+	for retries := 0; retries < maxRetries; retries++ {
+		output, err := e.execCommandOutput("Ascii()") // Capture the entire screen
+		if err == nil {
+			// Successfully captured, exit the retry loop
+			// Get the current date and time
+			//currentTime := time.Now().Format("2006-01-02 15:04:05")
+
+			// Create the HTML content with run details
+			//htmlContent := fmt.Sprintf("<html><head><title>ASCII Screen Capture</title></head><body>")
+			//htmlContent += fmt.Sprintf("<h1>ASCII Screen Capture</h1>")
+			//htmlContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
+			htmlContent := fmt.Sprintf("<pre>%s</pre>\n", output)
+			htmlContent += fmt.Sprintf("</body></html>")
+
+			// Open or create the HTML file for appending or overwriting
+			var file *os.File
+			var err error
+			if append {
+				file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			} else {
+				file, err = os.Create(filePath)
+			}
+			if err != nil {
+				log.Printf("Error opening or creating file: %v", err)
+				return err
+			}
+			defer file.Close()
+
+			// Write the HTML content to the file
+			if _, err := file.WriteString(htmlContent); err != nil {
+				log.Printf("Error writing to file: %v", err)
+				return err
+			}
+			return nil
+		}
+		//log.Printf("Error capturing ASCII screen (Retry %d): %v", retries+1, err)
+		time.Sleep(retryDelay)
 	}
 
-	// Get the current date and time
-	//currentTime := time.Now().Format("2006-01-02 15:04:05")
-
-	// Create the HTML content with run details
-	//htmlContent := fmt.Sprintf("<html><head><title>ASCII Screen Capture</title></head><body>")
-	//htmlContent += fmt.Sprintf("<h1>ASCII Screen Capture</h1>")
-	//htmlContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
-	htmlContent := fmt.Sprintf("<pre>%s</pre>\n", output)
-	htmlContent += fmt.Sprintf("</body></html>")
-
-	// Open or create the HTML file for appending or overwriting
-	var file *os.File
-	if append {
-		file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	} else {
-		file, err = os.Create(filePath)
-	}
-	if err != nil {
-		return fmt.Errorf("error opening or creating file: %v", err)
-	}
-	defer file.Close()
-
-	// Write the HTML content to the file
-	if _, err := file.WriteString(htmlContent); err != nil {
-		return fmt.Errorf("error writing to file: %v", err)
-	}
-
-	return nil
+	return fmt.Errorf("maximum capture retries reached")
 }
