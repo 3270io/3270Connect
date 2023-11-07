@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.6"
+const version = "1.0.3.7"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -142,7 +142,7 @@ func runWorkflows(numOfWorkflows int, config *Configuration) {
 	close(tasks) // Close the tasks channel after all tasks have been fed
 }
 
-// runWorkflow executes the workflow steps for a single instance with a retry mechanism.
+// runWorkflow executes the workflow steps for a single instance and skips the entire workflow if any step fails.
 func runWorkflow(scriptPort int, config *Configuration) {
 	if connect3270.Verbose {
 		log.Printf("Starting workflow for scriptPort %d", scriptPort)
@@ -165,68 +165,63 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		log.Printf("Error initializing HTML file: %v", err)
 	}
 
-	// Retry logic parameters
-	maxRetries := 3               // Maximum number of retries
-	retryDelay := 2 * time.Second // Delay between retries
+	// Flag to track if any step fails
+	workflowFailed := false
 
 	// Iterate through the steps in the configuration
 	for _, step := range config.Steps {
-		// Define a function to execute a step with retry
-		retryStep := func(action func() error, stepName string) {
-			for retries := 0; retries < maxRetries; retries++ {
-				if err := action(); err == nil {
-					// Step completed successfully, break out of the retry loop
-					return
-				}
-
-				log.Printf("Error in step '%s' (Retry %d) - Retrying in %s...", stepName, retries+1, retryDelay)
-				time.Sleep(retryDelay)
-			}
-
-			log.Printf("Maximum retries reached for step '%s'. Skipping this step.", stepName)
+		if workflowFailed {
+			// If any step has already failed, skip the remaining steps
+			break
 		}
 
 		switch step.Type {
 		case "InitializeHTMLFile":
-			retryStep(func() error {
-				return e.InitializeHTMLFile(htmlFilePath)
-			}, "InitializeHTMLFile")
+			if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
+				log.Printf("Error initializing HTML file: %v", err)
+				workflowFailed = true
+			}
 		case "Connect":
-			retryStep(func() error {
-				return e.Connect()
-			}, "Connect")
+			if err := e.Connect(); err != nil {
+				log.Printf("Error connecting to terminal: %v", err)
+				workflowFailed = true
+			}
 			time.Sleep(1 * time.Second)
 		case "CheckValue":
-			retryStep(func() error {
-				v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
-				if err != nil {
-					return err
-				}
-				v = strings.TrimSpace(v)
-				if connect3270.Verbose {
-					log.Println("Retrieved value: " + v)
-				}
-				if v != step.Text {
-					return fmt.Errorf("login failed. Expected: %s, Found: %s", step.Text, v)
-				}
-				return nil
-			}, "CheckValue")
+			v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
+			if err != nil {
+				log.Printf("Error getting value: %v", err)
+				workflowFailed = true
+				break // Skip remaining steps if CheckValue fails
+			}
+			v = strings.TrimSpace(v)
+			if connect3270.Verbose {
+				log.Println("Retrieved value: " + v)
+			}
+			if v != step.Text {
+				log.Printf("Login failed. Expected: %s, Found: %s", step.Text, v)
+				workflowFailed = true
+			}
 		case "FillString":
-			retryStep(func() error {
-				return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
-			}, "FillString")
+			if err := e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text); err != nil {
+				log.Printf("Error setting text: %v", err)
+				workflowFailed = true
+			}
 		case "AsciiScreenGrab":
-			retryStep(func() error {
-				return e.AsciiScreenGrab(htmlFilePath, true)
-			}, "AsciiScreenGrab")
+			if err := e.AsciiScreenGrab(htmlFilePath, true); err != nil {
+				log.Printf("Error capturing and appending ASCII screen: %v", err)
+				workflowFailed = true
+			}
 		case "PressEnter":
-			retryStep(func() error {
-				return e.Press(connect3270.Enter)
-			}, "PressEnter")
+			if err := e.Press(connect3270.Enter); err != nil {
+				log.Printf("Error pressing Enter: %v", err)
+				workflowFailed = true
+			}
 		case "Disconnect":
-			retryStep(func() error {
-				return e.Disconnect()
-			}, "Disconnect")
+			if err := e.Disconnect(); err != nil {
+				log.Printf("Error disconnecting: %v", err)
+				workflowFailed = true
+			}
 		default:
 			log.Printf("Unknown step type: %s", step.Type)
 		}
@@ -237,8 +232,13 @@ func runWorkflow(scriptPort int, config *Configuration) {
 	activeWorkflows--
 	mutex.Unlock()
 
-	if connect3270.Verbose {
-		log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
+	if workflowFailed {
+		// Log that the workflow failed and skip any additional processing
+		log.Printf("Workflow for scriptPort %d failed", scriptPort)
+	} else {
+		if connect3270.Verbose {
+			log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
+		}
 	}
 }
 
