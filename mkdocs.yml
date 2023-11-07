@@ -16,8 +16,9 @@ nav:
 
 plugins:
   - search
-  - mkdocs-video
-
+  - mkdocs-video:
+      is_video: True
+      video_autoplay: False
 markdown_extensions:
   - codehilite:
       guess_lang: false
