@@ -123,6 +123,7 @@ func runWorkflows(numOfWorkflows int, config *Configuration) {
 		go func() {
 			for scriptPort := range tasks {
 				runWorkflow(scriptPort, config)
+				time.Sleep(1 * time.Second)
 				wg.Done()
 			}
 		}()
