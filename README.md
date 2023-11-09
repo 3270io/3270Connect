@@ -2,7 +2,7 @@
   src="docs/logo.png"
   alt="3270Connect logo"
   title="3270Connect logo"
-  style="display: inline-block; margin: 0 auto; max-width: 120px">
+  style="display: inline-block; margin: 0 auto; max-width: 50%">
 
 # 3270Connect
 
