@@ -289,6 +289,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#known-issues-and-short-term-planned-changes" class="md-nav__link">
+    Known issues and short term planned changes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#conclusion" class="md-nav__link">
     Conclusion
   </a>
@@ -435,6 +442,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#known-issues-and-short-term-planned-changes" class="md-nav__link">
+    Known issues and short term planned changes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#conclusion" class="md-nav__link">
     Conclusion
   </a>
@@ -500,6 +514,24 @@
 <ul>
 <li><a href="advanced-features/">API Mode</a>: Discover how to run 3270Connect as an API server for advanced automation and load performance testing.</li>
 </ul>
+<h2 id="known-issues-and-short-term-planned-changes">Known issues and short term planned changes</h2>
+<ol>
+<li>
+<p>When running under concurrent mode with runtime and the volumes are high, the tactical logic to 'sleep and retry' on issue no longer works. This is planed to be replaced with wait_for_field logic.</p>
+</li>
+<li>
+<p>When running under concurrent mode with no runtime, the ramp logic is not in place.</p>
+</li>
+<li>
+<p>When running in API mode, make headless the default option.</p>
+</li>
+<li>
+<p>When running in API mode, provide a new option to return the HTML screen grab contents.</p>
+</li>
+<li>
+<p>Remake the videos in higher resolution.</p>
+</li>
+</ol>
 <h2 id="conclusion">Conclusion</h2>
 <p>The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the <a href="https://github.com/3270io/3270Connect">GitHub repository</a> for more details.</p>
 <p>Let's get started with 3270Connect!</p>
