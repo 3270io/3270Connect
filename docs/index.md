@@ -17,6 +17,18 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 
+## Known issues and short term planned changes
+
+1. When running under concurrent mode with runtime and the volumes are high, the tactical logic to 'sleep and retry' on issue no longer works. This is planed to be replaced with wait_for_field logic.
+
+2. When running under concurrent mode with no runtime, the ramp logic is not in place.
+
+3. When running in API mode, make headless the default option.
+
+4. When running in API mode, provide a new option to return the HTML screen grab contents.
+
+5. Remake the videos in higher resolution.
+
 ## Conclusion
 
 The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
