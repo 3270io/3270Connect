@@ -1,4 +1,4 @@
-site_name: logo.png
+site_name: 3270Connect
 site_description: User Guide for the 3270Connect Command-Line Utility
 site_author: Jnnngs
 site_url: https://3270.io
@@ -7,6 +7,7 @@ repo_url: https://github.com/3270io/3270Connect
 docs_dir: docs
 theme:
   name: material
+  logo: logo.png
 
 nav:
   - Welcome: index.md

@@ -1,3 +1,9 @@
+<img
+  src="logo.png"
+  alt="3270Connect logo"
+  title="3270Connect logo"
+  style="display: inline-block; margin: 0 auto; max-width: 300px">
+
 # 3270Connect
 
 3270Connect is a Go package and command-line utility for interacting with x3270 or s3270 terminal emulators, commonly used for mainframe and 3270 terminal applications. It provides a convenient way to automate terminal interactions, capture screens, and perform various tasks programmatically.
