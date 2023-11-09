@@ -19,7 +19,7 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 ## Known issues and short term planned changes
 
-1. When running under concurrent mode with runtime and the volumes are high, the tactical logic to 'sleep and retry' on issue no longer works. This is planed to be replaced with wait_for_field logic.
+1. When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.
 
 2. When running under concurrent mode with no runtime, the ramp logic is not in place.
 
