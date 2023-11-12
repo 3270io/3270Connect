@@ -23,9 +23,9 @@
 
 1. <s>When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.</s> Done
 
-2. When running under concurrent mode with no runtime, the ramp logic is not in place.
+2. <s>When running under concurrent mode with no runtime, the ramp logic is not in place.</s> Fixed
 
-3. When running in API mode, make headless the default option.
+3. <s>When running in API mode, make headless the default option.</s> Done
 
 4. When running in API mode, provide a new option to return the HTML screen grab contents.
 
