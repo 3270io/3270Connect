@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.8"
+const version = "1.0.3.9"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -186,7 +186,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				log.Printf("Error connecting to terminal: %v", err)
 				workflowFailed = true
 			}
-			time.Sleep(1 * time.Second)
+			e.WaitForField(30)
 		case "CheckValue":
 			v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
 			if err != nil {

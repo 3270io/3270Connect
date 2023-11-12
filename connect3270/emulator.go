@@ -70,6 +70,37 @@ func NewEmulator(host string, port int, scriptPort string) *Emulator {
 	}
 }
 
+// WaitForField waits until the screen is ready, the cursor has been positioned
+// on a modifiable field, and the keyboard is unlocked.
+func (e *Emulator) WaitForField(timeout time.Duration) error {
+	// Send the command to wait for a field with the specified timeout
+	command := fmt.Sprintf("Wait(%d, InputField)", int(timeout.Seconds()))
+
+	// Retry the MoveCursor operation with a delay in case of failure
+	for retries := 0; retries < maxRetries; retries++ {
+		output, err := e.execCommand(command)
+		if err == nil {
+			if output == "" {
+				fmt.Printf("Wait command executed successfully (no output)\n")
+				return nil
+			}
+
+			// Extract the keyboard status from the command output
+			statusParts := strings.Fields(output)
+			if len(statusParts) > 0 && statusParts[0] != "U" {
+				return fmt.Errorf("keyboard not unlocked, state was: %s", statusParts[0])
+			}
+			//fmt.Printf("Wait command executed successfully %s", statusParts[0])
+			//fmt.Printf("Wait command executed successfully\n")
+			return nil // Successful operation, exit the retry loop
+		}
+
+		time.Sleep(retryDelay)
+	}
+
+	return fmt.Errorf("maximum WaitForField retries reached")
+}
+
 // moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.
 func (e *Emulator) moveCursor(x, y int) error {
 	// Retry logic parameters
@@ -83,7 +114,7 @@ func (e *Emulator) moveCursor(x, y int) error {
 
 	// Retry the MoveCursor operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
-		if err := e.execCommand(command); err == nil {
+		if _, err := e.execCommand(command); err == nil {
 			return nil // Successful operation, exit the retry loop
 		}
 		//log.Printf("Error moving cursor (Retry %d) to row %d, column %d\n", retries+1, x, y)
@@ -104,7 +135,7 @@ func (e *Emulator) SetString(value string) error {
 
 	// Retry the SetString operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
-		if err := e.execCommand(command); err == nil {
+		if _, err := e.execCommand(command); err == nil {
 			return nil // Successful operation, exit the retry loop
 		}
 		//log.Printf("Error executing String command (Retry %d)\n", retries+1)
@@ -187,7 +218,13 @@ func (e *Emulator) Press(key string) error {
 	if !e.validateKeyboard(key) {
 		return fmt.Errorf("invalid key %s", key)
 	}
-	return e.execCommand(key)
+
+	_, err := e.execCommand(key)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // validateKeyboard valid if key passed by parameter if a key valid
@@ -282,14 +319,19 @@ func (e *Emulator) Connect() error {
 	return fmt.Errorf("maximum connect retries reached")
 }
 
-//Disconnect close connection with x3270
+// Disconnect closes the connection with x3270.
 func (e *Emulator) Disconnect() error {
 	if Verbose {
 		log.Println("Disconnecting from x3270")
 	}
+
 	if e.IsConnected() {
-		return e.execCommand("quit")
+		if _, err := e.execCommand("quit"); err != nil {
+			return fmt.Errorf("error executing quit command: %v", err)
+		}
+
 	}
+
 	return nil
 }
 
@@ -379,7 +421,7 @@ func (e *Emulator) hostname() string {
 }
 
 // execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag
-func (e *Emulator) execCommand(command string) error {
+func (e *Emulator) execCommand(command string) (string, error) {
 	if Verbose {
 		log.Printf("Executing command: %s", command)
 	}
@@ -393,13 +435,13 @@ func (e *Emulator) execCommand(command string) error {
 	// Read the embedded binary data from bindata.go
 	binaryData, err := binaries.Asset(binaryName)
 	if err != nil {
-		return fmt.Errorf("error reading embedded binary data: %v", err)
+		return "", fmt.Errorf("error reading embedded binary data: %v", err)
 	}
 
 	// Create a temporary directory to store the binary file
 	tempDir, err := ioutil.TempDir("", "x3270_binary")
 	if err != nil {
-		return fmt.Errorf("error creating temporary directory: %v", err)
+		return "", fmt.Errorf("error creating temporary directory: %v", err)
 	}
 	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
 
@@ -410,7 +452,7 @@ func (e *Emulator) execCommand(command string) error {
 	// Write the binary data to the temporary file
 	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
 	if err != nil {
-		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
+		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
 	}
 
 	if Verbose {
@@ -419,18 +461,18 @@ func (e *Emulator) execCommand(command string) error {
 
 	// Retry logic for executing the command
 	for retries := 0; retries < maxRetries; retries++ {
-		cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
-		if err := cmd.Run(); err == nil {
-			return nil // Successfully executed, exit the retry loop
+		cmd := exec.Command(binaryFilePath, "-S", "-t", e.ScriptPort, command)
+		if output, err := cmd.Output(); err == nil {
+			return string(output), nil
 		} else if strings.Contains(err.Error(), "text file busy") {
 			//log.Printf("Error executing command (Retry %d): %v", retries+1, err)
 			time.Sleep(retryDelay)
 		} else {
-			return err // Exit and return error if it's not "text file busy"
+			return "", err // Exit and return error if it's not "text file busy"
 		}
 	}
 
-	return fmt.Errorf("maximum command execution retries reached")
+	return "", fmt.Errorf("maximum command execution retries reached")
 }
 
 // execCommandOutput executes a command on the connected x3270 or s3270 instance based on Headless flag and returns output
