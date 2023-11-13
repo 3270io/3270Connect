@@ -343,8 +343,7 @@ func main() {
 
 	// Now showVersion is accessible here, and you can dereference it to get the value.
 	if *showVersion {
-		fmt.Printf("3270Connect Version: %s\n", version)
-		os.Exit(0)
+		printVersionAndExit()
 	}
 
 	if showHelp {
