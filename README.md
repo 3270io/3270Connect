@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="3270.io" width="50%">
+  <img src="docs/logo.png" alt="3270.io" width="25%">
 </p>
 
 # 3270Connect
