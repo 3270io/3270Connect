@@ -1,5 +1,9 @@
 # Welcome to 3270Connect Documentation
 
+<div style="text-align: center;">
+  <img src="logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
+</div>
+
 ## Introduction
 
 Welcome to the official documentation for the 3270Connect command-line utility. This documentation provides comprehensive information on how to use 3270Connect for automating interactions with terminal emulators like x3270 or s3270.

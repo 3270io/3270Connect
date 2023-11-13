@@ -1,8 +1,6 @@
-<img
-  src="docs/logo.png"
-  alt="3270Connect logo"
-  title="3270Connect logo"
-  style="display: inline-block; margin: 0 auto; max-width: 50%">
+<div style="text-align: center;">
+  <img src="docs/logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
+</div>
 
 # 3270Connect
 
