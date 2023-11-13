@@ -55,7 +55,7 @@ Let's get started with 3270Connect!
 
 ### 3270Connect Basic Usage
 
-![type:video](3270Connect_1_0_3_8.mp4)
+![type:video](3270Connect_1_0_3_9.mp4)
 
 ### 3270Connect API Usage
 
