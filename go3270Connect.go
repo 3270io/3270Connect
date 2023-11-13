@@ -366,7 +366,7 @@ func main() {
 		if concurrent > 1 {
 			runConcurrentWorkflows(config)
 		} else {
-			runWorkflow(0, config) // 0 or a default port for non-concurrent execution
+			runWorkflow(7000, config) // 7000 or a default port for non-concurrent execution
 		}
 	}
 }
