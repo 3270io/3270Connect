@@ -1,6 +1,6 @@
-<div style="text-align: center;">
-  <img src="docs/logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
-</div>
+<p align="center">
+  <img src="docs/logo.png" alt="3270.io" width="50%">
+</p>
 
 # 3270Connect
 
