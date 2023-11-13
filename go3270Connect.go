@@ -58,6 +58,9 @@ var mutex sync.Mutex
 const rampUpBatchSize = 5       // Number of work items to start in each batch
 const rampUpDelay = time.Second // Delay between starting batches
 
+// Define the showVersion flag at the package level
+var showVersion = flag.Bool("version", false, "Show the application version")
+
 // init initializes the command-line flags with default values.
 func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
@@ -335,164 +338,157 @@ func runAPIWorkflow() {
 
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
-	if connect3270.Verbose {
-		log.Println("Program started")
-	}
 
-	//clearTmpFiles()
-
-	showVersion := flag.Bool("version", false, "Show the application version")
 	flag.Parse()
 
+	// Now showVersion is accessible here, and you can dereference it to get the value.
 	if *showVersion {
 		fmt.Printf("3270Connect Version: %s\n", version)
 		os.Exit(0)
 	}
 
 	if showHelp {
-		fmt.Printf("3270Connect Version: %s\n", version)
-		flag.Usage()
-		return
+		printHelpAndExit()
 	}
 
 	if runApp {
-		// Run the bank application
 		app1.RunApplication()
 		return
 	}
 
-	connect3270.Headless = headless
-	connect3270.Verbose = verbose
+	setGlobalSettings()
+
+	config := loadConfiguration(configFile)
 
 	if runAPI {
 		runAPIWorkflow()
 	} else {
-		config := loadConfiguration(configFile)
 		if concurrent > 1 {
-			// Use a buffered channel to control the number of active workflows
-			activeChan := make(chan struct{}, concurrent)
-
-			// Goroutine to log active workflows
-			go func() {
-				for {
-					select {
-					case <-done:
-						return
-					default:
-						mutex.Lock()
-						log.Printf("Currently active workflows: %d", activeWorkflows)
-						mutex.Unlock()
-						time.Sleep(1 * time.Second)
-					}
-				}
-			}()
-
-			// Goroutine to handle runtime duration
-			if runtimeDuration > 0 {
-				go func() {
-					time.Sleep(time.Duration(runtimeDuration) * time.Second)
-					log.Println("Runtime duration reached. Not starting new workflows...")
-					closeDoneOnce.Do(func() {
-						close(done)
-					})
-				}()
-
-				// Ramp-up logic (continue to use rampUpBatchSize and rampUpDelay)
-				go func() {
-					for {
-						if activeWorkflows >= concurrent {
-							time.Sleep(1 * time.Second)
-							continue
-						}
-
-						for j := 0; j < rampUpBatchSize && activeWorkflows < concurrent; j++ {
-							select {
-							case <-done:
-								// If runtime duration is reached, don't start new workflows
-								return
-							default:
-								mutex.Lock()
-								lastUsedPort++
-								portToUse := lastUsedPort
-								mutex.Unlock()
-								activeChan <- struct{}{} // Block here if activeChan is full
-
-								// Increment the WaitGroup for the new goroutine
-								wg.Add(1)
-
-								// Start the work item in a goroutine
-								go func(port int) {
-									defer wg.Done() // Decrement the WaitGroup when the goroutine completes
-									runWorkflow(port, config)
-									<-activeChan // Release a spot in the channel once the workflow is done
-								}(portToUse)
-							}
-						}
-						time.Sleep(rampUpDelay)
-					}
-				}()
-
-				// Continue displaying active workflows after runtime duration message
-				<-done // Wait for runtime duration to end
-
-				// Wait until all active workflows have completed
-				for activeWorkflows > 0 {
-					time.Sleep(1 * time.Second)
-				}
-
-				log.Println("Active workflows is now zero. Shutting down...")
-
-				// Close the 'done' channel using sync.Once to ensure it's only closed once
-				closeDoneOnce.Do(func() {
-					close(done)
-				})
-
-			} else {
-				//log.Printf("Else statement for runtime not > 0") // Debugging line
-				// Run concurrent workflows without runtime duration
-				go func() {
-					for i := 0; i < concurrent; i += rampUpBatchSize {
-						for j := 0; j < rampUpBatchSize && i+j < concurrent; j++ {
-							// Acquire a lock to safely increment the shared lastUsedPort variable
-							mutex.Lock()
-							lastUsedPort++
-							portToUse := lastUsedPort
-							mutex.Unlock()
-
-							// Block if activeChan is full, effectively limiting the number of concurrent workflows
-							activeChan <- struct{}{}
-							// Increment the WaitGroup counter before starting the goroutine
-							wg.Add(1)
-
-							// Start the workflow in a new goroutine
-							go func(port int) {
-								defer wg.Done()           // Signal the WaitGroup that the goroutine has finished
-								runWorkflow(port, config) // Execute the workflow
-								<-activeChan              // Release the channel slot
-
-								// Lock to check and act on the activeWorkflows count
-								mutex.Lock()
-								// If this is the last active workflow, initiate shutdown
-								if activeWorkflows == 0 {
-									log.Println("Active workflows is now zero. Shutting down...")
-									close(done) // Close the done channel to signal completion
-								}
-								mutex.Unlock()
-							}(portToUse)
-						}
-						// Wait for the specified delay before starting the next batch
-						time.Sleep(time.Duration(rampUpDelay) * time.Second)
-					}
-				}()
-
-				// Wait for all workflows to finish
-				<-done
-
-			}
-
+			runConcurrentWorkflows(config)
 		} else {
-			// Run concurrent workflows without runtime duration
-			runWorkflows(concurrent, config)
+			runWorkflow(0, config) // 0 or a default port for non-concurrent execution
 		}
+	}
+}
+
+func printVersionAndExit() {
+	fmt.Printf("3270Connect Version: %s\n", version)
+	os.Exit(0)
+}
+
+func printHelpAndExit() {
+	fmt.Printf("3270Connect Version: %s\n", version)
+	flag.Usage()
+	os.Exit(0)
+}
+
+func setGlobalSettings() {
+	connect3270.Headless = headless
+	connect3270.Verbose = verbose
+}
+
+func runConcurrentWorkflows(config *Configuration) {
+	activeChan := make(chan struct{}, concurrent)
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	var closeDoneOnce sync.Once
+
+	// Goroutine for logging active workflows
+	go logActiveWorkflows(done)
+
+	// Goroutine to handle runtime duration
+	go handleRuntimeDuration(done, &closeDoneOnce)
+
+	// Ramp-up logic
+	go startWorkflowsRampUp(activeChan, config, done, &wg, &closeDoneOnce)
+
+	// Block until all workflows are done
+	wg.Wait()
+
+	// Close the 'done' channel using sync.Once to ensure it's only closed once
+	closeDoneOnce.Do(func() {
+		close(done)
+	})
+}
+
+func logActiveWorkflows(done chan struct{}) {
+	for {
+		select {
+		case <-done:
+			return
+		default:
+			activeCount := getActiveWorkflows() // Use your own counter with safe access
+			log.Printf("Currently active workflows: %d", activeCount)
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func handleRuntimeDuration(done chan struct{}, closeDoneOnce *sync.Once) {
+	if runtimeDuration > 0 {
+		time.Sleep(time.Duration(runtimeDuration) * time.Second)
+		log.Println("Runtime duration reached. Not starting new workflows...")
+		closeDoneOnce.Do(func() {
+			close(done)
+		})
+	}
+}
+
+func incrementActiveWorkflows() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	activeWorkflows++
+}
+
+func decrementActiveWorkflows() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	activeWorkflows--
+}
+
+func getActiveWorkflows() int {
+	mutex.Lock()
+	defer mutex.Unlock()
+	return activeWorkflows
+}
+
+func startWorkflowsRampUp(activeChan chan struct{}, config *Configuration, done chan struct{}, wg *sync.WaitGroup, closeDoneOnce *sync.Once) {
+	for {
+		select {
+		case <-done:
+			return
+		default:
+			if getActiveWorkflows() < concurrent {
+				startWorkflowBatch(activeChan, config, wg) // Pass config as a pointer
+			}
+			time.Sleep(rampUpDelay)
+		}
+	}
+}
+
+func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *sync.WaitGroup) {
+	for j := 0; j < rampUpBatchSize; j++ {
+		if getActiveWorkflows() >= concurrent {
+			// If the active workflows reach the limit, don't start more.
+			break
+		}
+
+		wg.Add(1)                  // Increment the WaitGroup counter before starting the goroutine
+		incrementActiveWorkflows() // Safely increment the active workflows count
+
+		go func() {
+			defer wg.Done()                  // Signal the WaitGroup that the goroutine has finished
+			defer decrementActiveWorkflows() // Safely decrement the active workflows count
+
+			// Acquire a lock to safely increment the shared port counter
+			mutex.Lock()
+			lastUsedPort++
+			portToUse := lastUsedPort
+			mutex.Unlock()
+
+			activeChan <- struct{}{}       // Block here if activeChan is full
+			runWorkflow(portToUse, config) // Execute the workflow, passing a pointer to config
+			<-activeChan                   // Release a spot in the channel once the workflow is done
+		}()
 	}
 }
