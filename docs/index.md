@@ -43,7 +43,7 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 4. When running in API mode, provide a new option to return the HTML screen grab contents.
 
-5. Remake the videos in higher resolution.
+5. <s>Remake the videos in higher resolution.</s> Done
 
 ## Conclusion
 
@@ -59,4 +59,4 @@ Let's get started with 3270Connect!
 
 ### 3270Connect API Usage
 
-![type:video](3270Connect_API_1_0_3_8.mp4)
+![type:video](3270Connect_API_1_0_3_9.mp4)
