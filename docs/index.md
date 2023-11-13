@@ -8,6 +8,18 @@
 
 Welcome to the official documentation for the 3270Connect command-line utility. This documentation provides comprehensive information on how to use 3270Connect for automating interactions with terminal emulators like x3270 or s3270.
 
+## Features
+
+Here are the key features of 3270Connect:
+
+- Running workflows defined in a configuration file.
+- Capturing the 3270 screens as the workflow executes.
+- Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
+- Headless mode for running workflows without a graphical user interface.
+- Verbose mode for detailed output.
+- API mode for advanced automation.
+- Running a 3270 sample application to assist with testing workflow features.
+
 ## Getting Started
 
 If you're new to 3270Connect, you can start by exploring the following sections:

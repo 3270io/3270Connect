@@ -8,10 +8,15 @@
 
 ## Features
 
-- **Terminal Automation**: Interact with terminal screens, send keys, and fill fields programmatically using a external workflow json file.
-- **Screen Captures**: Capture terminal screens in ASCII format and save them to HTML files.
-- **Cross-Platform**: Works on Linux, macOS, and Windows (soon).
-- **Performance Load Testing**: Run a number of concurrent connections with an optional period of time 
+Here are the key features of 3270Connect:
+
+- Running workflows defined in a configuration file.
+- Capturing the 3270 screens as the workflow executes.
+- Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
+- Headless mode for running workflows without a graphical user interface.
+- Verbose mode for detailed output.
+- API mode for advanced automation.
+- Running a 3270 sample application to assist with testing workflow features.
 
 ## Documentation
 
