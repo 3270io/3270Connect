@@ -10,8 +10,10 @@ theme:
   name: material
   logo: logo.png
   features:
-#  - navigation.instant
+  - navigation.instant
+  - navigation.instant.progress
   - navigation.indexes
+  - navigation.expand
 #  - navigation.tabs
 
 nav:
