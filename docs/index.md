@@ -1,6 +1,5 @@
-## Home
 
- <div style="text-align: center;">
+ <div style="text-align: left;">
   <img src="logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
 </div>
 
