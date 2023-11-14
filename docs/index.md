@@ -41,9 +41,11 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 3. <s>When running in API mode, make headless the default option.</s> Done
 
-4. When running in API mode, provide a new option to return the HTML screen grab contents.
+4. <s>Remake the videos in higher resolution.</s> Done
 
-5. <s>Remake the videos in higher resolution.</s> Done
+5. When running in API mode, provide a new option to return the HTML screen grab contents.
+
+6. App additional dynamic sample 3270 applications
 
 ## Conclusion
 
