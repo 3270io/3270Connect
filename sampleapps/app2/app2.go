@@ -15,6 +15,8 @@ import (
 const (
 	skyNewsFeedURL   = "https://feeds.skynews.com/feeds/rss/uk.xml"
 	metOfficeFeedURL = "https://www.metoffice.gov.uk/public/data/PWSCache/WarningsRSS/Region/UK"
+	ncscFeedURL      = "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml"
+	bbcFeedURL       = "https://feeds.bbci.co.uk/news/rss.xml"
 )
 
 var feedSelectionScreen = go3270.Screen{
@@ -22,9 +24,12 @@ var feedSelectionScreen = go3270.Screen{
 	{Row: 2, Col: 0, Content: "Select the RSS feed to view:"},
 	{Row: 4, Col: 0, Content: "(1) Sky UK News"},
 	{Row: 5, Col: 0, Content: "(2) Met Office UK Weather"},
-	{Row: 7, Col: 0, Content: "Enter the number of your choice and press enter."},
-	{Row: 9, Col: 0, Content: "Choice:"},
-	{Row: 9, Col: 8, Name: "feedChoice", Write: true, Highlighting: go3270.Underscore},
+	{Row: 6, Col: 0, Content: "(3) NCSC Latest"},
+	{Row: 7, Col: 0, Content: "(4) BBC Top Stories"},
+	//{Row: 9, Col: 0, Content: "Enter the number of your choice and press enter."},
+	{Row: 10, Col: 0, Content: "Choice:"},
+	{Row: 10, Col: 8, Name: "feedChoice", Write: true, Highlighting: go3270.Underscore},
+	{Row: 10, Col: 11, Autoskip: true}, // field "stop" character
 	{Row: 22, Col: 0, Content: "PF3 Exit"},
 }
 
@@ -49,14 +54,14 @@ func fetchRSSFeed(url string) ([]*gofeed.Item, error) {
 
 func displayHeadlines(conn net.Conn, items []*gofeed.Item) (string, error) {
 	const startRow = 2
-	const maxItems = 19 // Maximum number of items to display
+	const maxItems = 15 // Maximum number of items to display
 
 	// Build the dynamic screen with actual headlines
 	dynamicHeadlinesScreen := make(go3270.Screen, 0, maxItems+4)
 
 	// Title for the headlines
 	dynamicHeadlinesScreen = append(dynamicHeadlinesScreen, go3270.Field{
-		Row: 0, Col: 27, Intense: true, Content: "Headlines",
+		Row: 0, Col: 0, Intense: true, Content: "Headlines",
 	})
 
 	// Populate the screen with headlines
@@ -71,14 +76,23 @@ func displayHeadlines(conn net.Conn, items []*gofeed.Item) (string, error) {
 
 	// Input field for the selection
 	dynamicHeadlinesScreen = append(dynamicHeadlinesScreen, go3270.Field{
-		Row: maxItems + 2, Col: 0, Content: "Enter number to view details or press PF3 to return:",
+		Row: maxItems + 3, Col: 0, Content: "Choice:",
 	})
+
 	dynamicHeadlinesScreen = append(dynamicHeadlinesScreen, go3270.Field{
-		Row: maxItems + 3, Col: 0, Name: "selection", Write: true, Highlighting: go3270.Underscore,
+		Row: maxItems + 3, Col: 8, Name: "selection", Write: true, Highlighting: go3270.Underscore,
+	})
+
+	dynamicHeadlinesScreen = append(dynamicHeadlinesScreen, go3270.Field{
+		Row: maxItems + 3, Col: 11, Autoskip: true,
+	})
+
+	dynamicHeadlinesScreen = append(dynamicHeadlinesScreen, go3270.Field{
+		Row: maxItems + 5, Col: 0, Content: "PF3 Exit",
 	})
 
 	// Show the screen and wait for input
-	response, err := go3270.ShowScreen(dynamicHeadlinesScreen, nil, maxItems+3, 0, conn)
+	response, err := go3270.ShowScreen(dynamicHeadlinesScreen, nil, maxItems+3, 9, conn)
 	if err != nil {
 		return "", err // Return an empty string and error if something goes wrong
 	}
@@ -110,23 +124,17 @@ func displayDetails(conn net.Conn, item *gofeed.Item) {
 	desc := item.Description
 	for i := 0; i < descRows; i++ {
 		// Extract a substring for each row
-		startIdx := i * 80
-		endIdx := startIdx + 80
+		startIdx := i * 79
+		endIdx := startIdx + 79
 		if endIdx > len(desc) {
 			endIdx = len(desc)
 		}
-		detailsScreen[i+1] = go3270.Field{Row: i + 1, Col: 0, Content: desc[startIdx:endIdx]}
+
+		detailsScreen[i+1] = go3270.Field{Row: i + 2, Col: 0, Content: desc[startIdx:endIdx]}
 	}
 
 	// Footer row
-	detailsScreen[2+descRows] = go3270.Field{Row: 2 + descRows, Col: 0, Content: "PF3 - Return", Highlighting: go3270.ReverseVideo}
-
-	// Show the screen with article details
-	_, err := go3270.ShowScreen(detailsScreen, nil, 0, 0, conn)
-	if err != nil {
-		fmt.Println("Error displaying article details:", err)
-		return
-	}
+	detailsScreen[2+descRows] = go3270.Field{Row: 22, Col: 0, Content: "PF3 - Return"}
 
 	// Wait for the user to press PF3 to return to the headlines
 	for {
@@ -149,7 +157,7 @@ func handle(conn net.Conn) {
 	//var err error
 
 	for {
-		response, err := go3270.ShowScreen(feedSelectionScreen, nil, 9, 9, conn)
+		response, err := go3270.ShowScreen(feedSelectionScreen, nil, 10, 9, conn)
 		if err != nil {
 			fmt.Println("Error displaying feed selection screen:", err)
 			return
@@ -168,8 +176,12 @@ func handle(conn net.Conn) {
 				feedURL = skyNewsFeedURL
 			case "2":
 				feedURL = metOfficeFeedURL
+			case "3":
+				feedURL = ncscFeedURL
+			case "4":
+				feedURL = bbcFeedURL
 			default:
-				fmt.Println("Invalid selection. Please enter 1 or 2.")
+				fmt.Println("Invalid selection.")
 				continue
 			}
 
