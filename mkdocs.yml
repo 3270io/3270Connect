@@ -9,6 +9,8 @@ docs_dir: docs
 theme:
   name: material
   logo: logo.png
+  palette:
+    primary: green
   features:
   - navigation.instant
   - navigation.instant.progress
