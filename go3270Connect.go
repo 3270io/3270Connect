@@ -14,7 +14,8 @@ import (
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
-	app1 "github.com/3270io/3270Connect/sampleapps"
+	"github.com/3270io/3270Connect/sampleapps/app1"
+	app2 "github.com/3270io/3270Connect/sampleapps/app2"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,7 +45,7 @@ var (
 	concurrent      int
 	headless        bool // Flag to run go3270 in headless mode
 	verbose         bool
-	runApp          bool
+	runApp          string
 	runtimeDuration int // Flag to determine if new workflows should be started when others finish
 	done            = make(chan bool)
 	wg              sync.WaitGroup
@@ -71,8 +72,7 @@ func init() {
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
-	flag.BoolVar(&runApp, "runApp", false, "Run app1 sample 3270 application")
-
+	flag.StringVar(&runApp, "runApp", "1", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
 }
 
 func clearTmpFiles() {
@@ -339,6 +339,18 @@ func runAPIWorkflow() {
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
 
+	// Check if '-runApp' is provided without an argument and if so, set the default to "1".
+	foundRunApp := false
+	for i, arg := range os.Args {
+		if arg == "-runApp" {
+			foundRunApp = true
+			// If '-runApp' is the last argument or the next argument is another flag, set the default to "1".
+			if i+1 == len(os.Args) || strings.HasPrefix(os.Args[i+1], "-") {
+				os.Args[i] = "-runApp=1" // Correctly set the default value for '-runApp'.
+			}
+		}
+	}
+
 	flag.Parse()
 
 	// Now showVersion is accessible here, and you can dereference it to get the value.
@@ -350,12 +362,22 @@ func main() {
 		printHelpAndExit()
 	}
 
-	if runApp {
-		app1.RunApplication()
-		return
-	}
-
 	setGlobalSettings()
+
+	// If runApp is not empty and not "1" (which is default), then override the default value
+	if foundRunApp {
+		switch runApp {
+		case "1":
+			app1.RunApplication()
+			return
+		case "2":
+			app2.RunApplication()
+			return
+		// Add additional cases for other apps
+		default:
+			log.Fatalf("Invalid runApp value: %s. Please enter a valid app number.", runApp)
+		}
+	}
 
 	config := loadConfiguration(configFile)
 
