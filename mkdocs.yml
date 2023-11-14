@@ -10,9 +10,9 @@ theme:
   name: material
   logo: logo.png
   features:
-  - navigation.instant
+#  - navigation.instant
   - navigation.indexes
-  - navigation.tabs
+#  - navigation.tabs
 
 nav:
   - Welcome: index.md
