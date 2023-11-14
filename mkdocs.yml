@@ -10,7 +10,7 @@ theme:
   name: material
   logo: logo.png
   palette:
-    primary: green
+    primary: teal
   features:
   - navigation.instant
   - navigation.instant.progress
