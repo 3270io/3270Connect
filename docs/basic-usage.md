@@ -158,7 +158,7 @@ Once running and listening on port 3270, run a separate 3270 Connect to run a wo
 
 ### 3270Connect Basic Usage
 
-![type:video](3270Connect_1_0_3_9.mp4)
+![type:video](3270Connect_1_0_3_9.mp4){: style=''}
 
 ## Conclusion
 
