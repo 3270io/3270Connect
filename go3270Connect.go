@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.9"
+const version = "1.0.3.10"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
