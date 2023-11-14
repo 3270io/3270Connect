@@ -9,7 +9,7 @@
         <meta name="description" content="User Guide for the 3270Connect Command-Line Utility">
       
       
-        <meta name="author" content="Jnnngs">
+        <meta name="author" content="3270.io">
       
       
         <link rel="canonical" href="https://3270.io/advanced-features/">
@@ -85,9 +85,7 @@
     
       
 
-  
-
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="3270Connect" class="md-header__button md-logo" aria-label="3270Connect" data-md-component="logo">
       
@@ -176,6 +174,85 @@
       
         
           
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../basic-usage/" class="md-tabs__link">
+        
+  
+    
+  
+  Basic Usage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+    
+  
+  Advanced Features
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -189,8 +266,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="3270Connect" class="md-nav__button md-logo" aria-label="3270Connect" data-md-component="logo">
       
@@ -432,16 +511,14 @@
 <li><code>-api-port</code>: Specifies the port for the API (default is 8080).</li>
 </ul>
 <p>To run <code>3270Connect</code> in API mode, use the following command:</p>
-<div class="codehilite"><pre><span></span><code>3270Connect<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
 </code></pre></div>
-
 <p>Once the API is running, you can send HTTP requests to it to trigger workflows and retrieve information.</p>
 <p>POST:</p>
-<div class="codehilite"><pre><span></span><code>http://localhost:8080/api/execute
+<div class="highlight"><pre><span></span><code>http://localhost:8080/api/execute
 </code></pre></div>
-
-<p>Body:</p>
-<div class="codehilite"><pre><span></span><code><span class="o">{</span>
+<p>Body:
+</p><div class="highlight"><pre><span></span><code><span class="o">{</span>
 <span class="w">  </span><span class="s2">"Host"</span>:<span class="w"> </span><span class="s2">"10.27.27.27"</span>,
 <span class="w">  </span><span class="s2">"Port"</span>:<span class="w"> </span><span class="m">3270</span>,
 <span class="w">  </span><span class="s2">"HTMLFilePath"</span>:<span class="w"> </span><span class="s2">"output.html"</span>,
@@ -485,7 +562,6 @@
 <span class="w">  </span><span class="o">]</span>
 <span class="o">}</span>
 </code></pre></div>
-
 <h3 id="3270connect-api-usage">3270Connect API Usage</h3>
 <p><div class="video-container"><video style="position:relative;width:100%;height:22.172vw" controls alt="type:video"><source src="../3270Connect_API_1_0_3_9.mp4" type="video/mp4"></source></video></div></p></div>
 
@@ -508,6 +584,10 @@
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      © 2023 3270.io
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -526,7 +606,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.0.0"}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.indexes", "navigation.tabs"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.0.0"}</script>
     
     
       <script src="../assets/javascripts/bundle.aecac24b.min.js"></script>
