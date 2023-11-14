@@ -192,7 +192,9 @@
 
 
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="3270Connect" class="md-nav__button md-logo" aria-label="3270Connect" data-md-component="logo">
       
@@ -462,155 +464,6 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#introduction" class="md-nav__link">
-    Introduction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-workflows" class="md-nav__link">
-    Running Workflows
-  </a>
-  
-    <nav class="md-nav" aria-label="Running Workflows">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#single-workflow" class="md-nav__link">
-    Single Workflow
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#concurrent-workflows" class="md-nav__link">
-    Concurrent Workflows
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    Configuration
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#headless-mode" class="md-nav__link">
-    Headless Mode
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verbose-mode" class="md-nav__link">
-    Verbose Mode
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    Examples
-  </a>
-  
-    <nav class="md-nav" aria-label="Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-running-a-basic-workflow" class="md-nav__link">
-    1. Running a Basic Workflow
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-running-multiple-workflows-concurrently" class="md-nav__link">
-    2. Running Multiple Workflows Concurrently
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-running-in-headless-mode" class="md-nav__link">
-    3. Running in Headless Mode
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-using-the-api-mode" class="md-nav__link">
-    4. Using the API Mode
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features" class="md-nav__link">
-    5. Running a 3270 sample application to help with testing the workflow features
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3270connect-basic-usage" class="md-nav__link">
-    3270Connect Basic Usage
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#conclusion" class="md-nav__link">
-    Conclusion
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           
             <div class="md-content" data-md-component="content">
@@ -751,6 +604,12 @@ or
           
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -783,7 +642,7 @@ or
       <div class="md-progress" data-md-component="progress" role="progressbar"></div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.indexes", "navigation.expand"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.0.0"}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.progress", "toc.integrate", "navigation.expand", "navigation.top"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.0.0"}</script>
     
     
       <script src="../assets/javascripts/bundle.aecac24b.min.js"></script>
