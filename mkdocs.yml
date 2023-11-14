@@ -12,8 +12,9 @@ theme:
   features:
   - navigation.instant
   - navigation.instant.progress
-  - navigation.indexes
+  - toc.integrate
   - navigation.expand
+  - navigation.top
 #  - navigation.tabs
 
 nav:
