@@ -18,7 +18,7 @@ theme:
 #  - navigation.tabs
 
 nav:
-  - Welcome: index.md
+  - Home: index.md
   - Installation: installation.md
   - Basic Usage: basic-usage.md
   - Advanced Features: advanced-features.md
