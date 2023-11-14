@@ -14,6 +14,6 @@ sudo mv 3270Connect /usr/local/bin/3270Connect
 
 Coming soon.
 
-### Windows
+## Windows
 
 Coming soon.
