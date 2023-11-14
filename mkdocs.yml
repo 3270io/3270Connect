@@ -1,6 +1,7 @@
 site_name: 3270Connect
 site_description: User Guide for the 3270Connect Command-Line Utility
-site_author: Jnnngs
+site_author: 3270.io
+copyright: '© 2023 3270.io'
 site_url: https://3270.io
 repo_url: https://github.com/3270io/3270Connect
 #edit_uri: edit/master/docs/
@@ -8,6 +9,10 @@ docs_dir: docs
 theme:
   name: material
   logo: logo.png
+  features:
+  - navigation.instant
+  - navigation.indexes
+  - navigation.tabs
 
 nav:
   - Welcome: index.md
@@ -20,9 +25,33 @@ plugins:
   - mkdocs-video:
       is_video: True
       video_autoplay: False
+
 markdown_extensions:
   - codehilite:
       guess_lang: false
-
+  - admonition
+  - toc:
+      toc_depth: 3
+  - pymdownx.highlight:
+      use_pygments: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.keys
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - attr_list
+  - def_list
+  - pymdownx.tasklist:
+  - meta
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - footnotes
+  - pymdownx.snippets:
+      base_path:
+        - docs
+      url_download:
+        - true
 extra:
   version: 1.0.0

@@ -140,7 +140,9 @@ Run `3270Connect` in API mode and interact with it using HTTP requests.
 
 As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the [github.com/racingmars/go3270](https://github.com/racingmars/go3270) framework. Full credit go to `racingmars` for this great open source repo. 
 
-`github.com/racingmars/go3270` is Copyright (c) 2020 Matthew R. Wilson, under MIT License.
+!!! note
+
+    `github.com/racingmars/go3270` is Copyright (c) 2020 Matthew R. Wilson, under MIT License.
 
 Run a test 3270 sample application to assist with testing 3270Connect workflow features:
 
