@@ -1,5 +1,5 @@
-<div style="text-align: center;">
- <h2>Welcome to 3270Connect Documentation</h2>
+ <h2 style: "text-align: center;">Welcome to 3270Connect Documentation</h2>
+ <div style="text-align: center;">
   <img src="logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
 </div>
 
