@@ -70,4 +70,4 @@ Body:
 
 ### 3270Connect API Usage
 
-![type:video](3270Connect_API_1_0_3_9.mp4){: style=''}
+![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
