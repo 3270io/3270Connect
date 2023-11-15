@@ -60,4 +60,4 @@ Let's get started with 3270Connect!
 
 ### 3270Connect API Usage
 
-![type:video](3270Connect_API_1_0_4.mp4){: style=''}
+![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
