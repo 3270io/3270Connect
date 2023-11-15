@@ -42,9 +42,9 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 4. <s>Remake the videos in higher resolution.</s> Done
 
-5. When running in API mode, provide a new option to return the HTML screen grab contents.
+5. <s>When running in API mode, provide a new option to return the HTML screen grab contents.</s> Done
 
-6. App additional dynamic sample 3270 applications
+6. <s>App additional dynamic sample 3270 applications.</s> Done
 
 ## Conclusion
 
