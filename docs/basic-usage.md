@@ -146,6 +146,11 @@ As well as performing workflows on a 3270 running instance, 3270Connect can emul
 
 Run a test 3270 sample application to assist with testing 3270Connect workflow features:
 
+??? note "Available Apps"
+
+    [1] Example 1 application from https://github.com/racingmars/go3270
+    [2] Dynamic RSS Reader
+
 ```bash
 3270Connect -runApp
 ```

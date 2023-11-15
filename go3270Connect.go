@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.3.10"
+const version = "1.0.4.0"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -254,12 +254,19 @@ func runAPIWorkflow() {
 	// Set headless mode for API
 	connect3270.Headless = true
 
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
 
 	r.POST("/api/execute", func(c *gin.Context) {
 		var workflowConfig Configuration
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"returnCode": http.StatusBadRequest,
+				"status":     "error",
+				"message":    "Invalid request payload",
+				"error":      err.Error(),
+			})
 			return
 		}
 
@@ -269,10 +276,10 @@ func runAPIWorkflow() {
 			Port: workflowConfig.Port,
 		}
 
-		// Initialize the HTML file with run details (call this at the beginning)
+		// Attempt to initialize the HTML file with run details
 		htmlFilePath := workflowConfig.HTMLFilePath
 		if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize HTML file", err)
 			return
 		}
 
@@ -283,57 +290,70 @@ func runAPIWorkflow() {
 			}
 		}()
 
-		// Iterate through the steps in the configuration
+		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
-			switch step.Type {
-			case "InitializeHTMLFile":
-				if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-					log.Fatalf("Error initializing HTML file: %v\n", err)
-				}
-			case "Connect":
-				if err := e.Connect(); err != nil {
-					log.Fatalf("Error connecting to terminal: %v\n", err)
-				}
-			case "CheckValue":
-				v, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
-				if err != nil {
-					log.Fatalf("Error getting value: %v", err)
-				}
-				v = strings.TrimSpace(v)
-				if connect3270.Verbose {
-					log.Println("Retrieved value: " + v)
-				}
-				if v != step.Text {
-					log.Printf("Login failed. Expected: %s, Found: %s\n", step.Text, v)
-					return
-				}
-			case "FillString":
-				if err := e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text); err != nil {
-					log.Fatalf("Error setting text: %v\n", err)
-				}
-			case "AsciiScreenGrab":
-				if err := e.AsciiScreenGrab(htmlFilePath, true); err != nil {
-					log.Fatalf("Error capturing and appending ASCII screen: %v", err)
-				}
-			case "PressEnter":
-				if err := e.Press(connect3270.Enter); err != nil {
-					log.Fatalf("Error pressing Enter: %v\n", err)
-				}
-			case "Disconnect":
-				if err := e.Disconnect(); err != nil {
-					log.Fatalf("Error disconnecting: %v\n", err)
-				}
-			default:
-				log.Printf("Unknown step type: %s\n", step.Type)
+			if err := executeStep(&e, step, htmlFilePath); err != nil {
+				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
+				return
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Workflow executed successfully"})
+		// After executing the workflow, read the contents of the HTML file
+		htmlContents, err := e.ReadHTMLFile(htmlFilePath)
+		if err != nil {
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read HTML file", err)
+			return
+		}
+
+		// Return both the status message and the HTML file contents
+		c.JSON(http.StatusOK, gin.H{
+			"returnCode":   http.StatusOK,
+			"status":       "okay",
+			"message":      "Workflow executed successfully",
+			"htmlContents": htmlContents,
+		})
 	})
 
 	apiAddr := fmt.Sprintf(":%d", apiPort)
 	log.Printf("API server is running on %s", apiAddr)
 	r.Run(apiAddr)
+}
+
+func executeStep(e *connect3270.Emulator, step Step, htmlFilePath string) error {
+	// Implement the logic for each step type
+	switch step.Type {
+	case "InitializeHTMLFile":
+		// Return an error instead of using log.Fatalf, so it can be handled properly
+		err := e.InitializeHTMLFile(htmlFilePath)
+		if err != nil {
+			return fmt.Errorf("error initializing HTML file: %v", err)
+		}
+	case "Connect":
+		return e.Connect()
+	case "CheckValue":
+		_, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
+		return err
+	case "FillString":
+		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
+	case "AsciiScreenGrab":
+		return e.AsciiScreenGrab(htmlFilePath, true) // Use the passed htmlFilePath
+	case "PressEnter":
+		return e.Press(connect3270.Enter)
+	case "Disconnect":
+		return e.Disconnect()
+	default:
+		return fmt.Errorf("unknown step type: %s", step.Type)
+	}
+	return nil // No error occurred, return nil
+}
+
+func sendErrorResponse(c *gin.Context, statusCode int, message string, err error) {
+	c.JSON(statusCode, gin.H{
+		"returnCode": statusCode,
+		"status":     "error",
+		"message":    message,
+		"error":      err.Error(),
+	})
 }
 
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.

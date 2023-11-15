@@ -105,7 +105,7 @@ func (e *Emulator) WaitForField(timeout time.Duration) error {
 func (e *Emulator) moveCursor(x, y int) error {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	// Adjust the values to start at 0 internally
 	xAdjusted := x - 1
@@ -129,7 +129,7 @@ func (e *Emulator) moveCursor(x, y int) error {
 func (e *Emulator) SetString(value string) error {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	command := fmt.Sprintf("String(%s)", value)
 
@@ -149,7 +149,7 @@ func (e *Emulator) SetString(value string) error {
 func (e *Emulator) GetRows() (int, error) {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	// Retry the Snap(Rows) operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
@@ -171,7 +171,7 @@ func (e *Emulator) GetRows() (int, error) {
 func (e *Emulator) GetColumns() (int, error) {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	// Retry the Snap(Cols) operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
@@ -193,7 +193,7 @@ func (e *Emulator) GetColumns() (int, error) {
 func (e *Emulator) FillString(x, y int, value string) error {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	// Adjust the row and column values to start at 1 internally
 	if err := e.moveCursor(x, y); err != nil {
@@ -254,7 +254,7 @@ func (e *Emulator) IsConnected() bool {
 func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	// Retry logic parameters
 	maxRetries := 3
-	retryDelay := 2 * time.Second
+	retryDelay := 1 * time.Second
 
 	// Adjust the row and column values to start at 1 internally
 	xAdjusted := x - 1
@@ -305,6 +305,8 @@ func (e *Emulator) Connect() error {
 		err := e.createApp()
 		if err != nil {
 			log.Printf("Failed to create app: %v", err)
+			defer e.Disconnect()
+			return fmt.Errorf("failed to create client to connect: %v", err) // Return the error immediately
 		}
 
 		if !e.IsConnected() {
@@ -383,8 +385,8 @@ func (e *Emulator) createApp() error {
 	}
 
 	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 2 * time.Second
+	maxRetries := 1
+	retryDelay := 1 * time.Second
 
 	// Use Goroutines for potential concurrent operations
 	go func() {
@@ -398,7 +400,7 @@ func (e *Emulator) createApp() error {
 		log.Printf("Max retries reached. Could not create an instance of 3270.\n")
 	}()
 
-	const maxAttempts = 10
+	const maxAttempts = 1
 	const sleepDuration = time.Second
 
 	for i := 0; i < maxAttempts; i++ {
@@ -603,4 +605,28 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool) error {
 	}
 
 	return fmt.Errorf("maximum capture retries reached")
+}
+
+// ReadHTMLFile reads the contents of the specified HTML file and returns it as a string.
+func (e *Emulator) ReadHTMLFile(filePath string) (string, error) {
+	// Check if the file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("file does not exist: %s", filePath)
+	}
+
+	// Open the file for reading
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close() // Ensure the file is closed after the function finishes
+
+	// Read the contents of the file
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("error reading file: %v", err)
+	}
+
+	// Return the contents of the file as a string
+	return string(content), nil
 }
