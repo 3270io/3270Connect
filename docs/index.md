@@ -32,7 +32,7 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 
-## Known issues and short term planned changes
+## Prior to Release 1: Known issues and short term planned changes
 
 1. <s>When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.</s> Done
 
