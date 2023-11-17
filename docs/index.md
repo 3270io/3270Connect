@@ -46,6 +46,8 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 6. <s>App additional dynamic sample 3270 applications.</s> Done
 
+7. Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.
+
 ## Conclusion
 
 The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
