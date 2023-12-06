@@ -24,10 +24,10 @@ const version = "1.0.4.1"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
-	Host         string
-	Port         int
-	HTMLFilePath string `json:"HTMLFilePath"`
-	Steps        []Step
+	Host           string
+	Port           int
+	OutputFilePath string `json:"OutputFilePath"`
+	Steps          []Step
 }
 
 // Step represents an individual action to be taken on the terminal.
@@ -162,11 +162,13 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
 	}
 
-	// Initialize the HTML file with run details (call this at the beginning)
-	htmlFilePath := config.HTMLFilePath
-	if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-		log.Printf("Error initializing HTML file: %v", err)
+	// Initialize the output file with run details only if not in API mode
+	outputFilePath := config.OutputFilePath
+	//if !runAPI {
+	if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
+		log.Printf("Error initializing Output file: %v", err)
 	}
+	//}
 
 	// Flag to track if any step fails
 	workflowFailed := false
@@ -179,9 +181,9 @@ func runWorkflow(scriptPort int, config *Configuration) {
 		}
 
 		switch step.Type {
-		case "InitializeHTMLFile":
-			if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-				log.Printf("Error initializing HTML file: %v", err)
+		case "InitializeOutput":
+			if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
+				log.Printf("Error initializing output file: %v", err)
 				workflowFailed = true
 			}
 		case "Connect":
@@ -211,7 +213,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				workflowFailed = true
 			}
 		case "AsciiScreenGrab":
-			if err := e.AsciiScreenGrab(htmlFilePath, true, runAPI); err != nil {
+			if err := e.AsciiScreenGrab(outputFilePath, true, runAPI); err != nil {
 				log.Printf("Error capturing and appending ASCII screen: %v", err)
 				workflowFailed = true
 			}
@@ -276,10 +278,10 @@ func runAPIWorkflow() {
 			Port: workflowConfig.Port,
 		}
 
-		// Attempt to initialize the HTML file with run details
-		htmlFilePath := workflowConfig.HTMLFilePath
-		if err := e.InitializeHTMLFile(htmlFilePath); err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize HTML file", err)
+		// Attempt to initialize the output file with run details
+		outputFilePath := workflowConfig.OutputFilePath
+		if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
 			return
 		}
 
@@ -292,25 +294,25 @@ func runAPIWorkflow() {
 
 		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
-			if err := executeStep(&e, step, htmlFilePath); err != nil {
+			if err := executeStep(&e, step, outputFilePath); err != nil {
 				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
 				return
 			}
 		}
 
-		// After executing the workflow, read the contents of the HTML file
-		htmlContents, err := e.ReadHTMLFile(htmlFilePath)
+		// After executing the workflow, read the contents of the output file
+		outputContents, err := e.ReadOutputFile(outputFilePath)
 		if err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read HTML file", err)
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
 			return
 		}
 
-		// Return both the status message and the HTML file contents
+		// Return both the status message and the output file contents
 		c.JSON(http.StatusOK, gin.H{
-			"returnCode":   http.StatusOK,
-			"status":       "okay",
-			"message":      "Workflow executed successfully",
-			"htmlContents": htmlContents,
+			"returnCode": http.StatusOK,
+			"status":     "okay",
+			"message":    "Workflow executed successfully",
+			"output":     outputContents,
 		})
 	})
 
@@ -319,14 +321,14 @@ func runAPIWorkflow() {
 	r.Run(apiAddr)
 }
 
-func executeStep(e *connect3270.Emulator, step Step, htmlFilePath string) error {
+func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) error {
 	// Implement the logic for each step type
 	switch step.Type {
-	case "InitializeHTMLFile":
+	case "InitializeOutput":
 		// Return an error instead of using log.Fatalf, so it can be handled properly
-		err := e.InitializeHTMLFile(htmlFilePath)
+		err := e.InitializeOutput(outputFilePath, runAPI)
 		if err != nil {
-			return fmt.Errorf("error initializing HTML file: %v", err)
+			return fmt.Errorf("error initializing output file: %v", err)
 		}
 	case "Connect":
 		return e.Connect()
@@ -336,7 +338,7 @@ func executeStep(e *connect3270.Emulator, step Step, htmlFilePath string) error 
 	case "FillString":
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
 	case "AsciiScreenGrab":
-		return e.AsciiScreenGrab(htmlFilePath, true, runAPI) // Use the passed htmlFilePath
+		return e.AsciiScreenGrab(outputFilePath, true, runAPI) // Use the passed outputFilePath
 	case "PressEnter":
 		return e.Press(connect3270.Enter)
 	case "Disconnect":
