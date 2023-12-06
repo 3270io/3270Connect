@@ -76,6 +76,9 @@ func init() {
 }
 
 func clearTmpFiles() {
+	if connect3270.Verbose {
+		log.Println("Starting clearTmpFiles")
+	}
 	files, err := filepath.Glob("/tmp/x3270*")
 	if err != nil {
 		log.Fatalf("Error reading /tmp directory: %v", err)
@@ -99,7 +102,7 @@ func loadConfiguration(filePath string) *Configuration {
 	}
 	configFile, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("Error opening config file: %v", err)
+		log.Fatalf("Error opening config file at %s: %v", filePath, err)
 	}
 	defer configFile.Close()
 
@@ -146,7 +149,7 @@ func runWorkflows(numOfWorkflows int, config *Configuration) {
 }
 
 // runWorkflow executes the workflow steps for a single instance and skips the entire workflow if any step fails.
-func runWorkflow(scriptPort int, config *Configuration) {
+func runWorkflow(scriptPort int, config *Configuration) error {
 	if connect3270.Verbose {
 		log.Printf("Starting workflow for scriptPort %d", scriptPort)
 	}
@@ -245,6 +248,14 @@ func runWorkflow(scriptPort int, config *Configuration) {
 			log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
 		}
 	}
+
+	if workflowFailed {
+		return fmt.Errorf("workflow for scriptPort %d failed", scriptPort)
+	}
+	if connect3270.Verbose {
+		log.Printf("Completed workflow on scriptPort %d", scriptPort)
+	}
+	return nil
 }
 
 // runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
@@ -319,9 +330,15 @@ func runAPIWorkflow() {
 	apiAddr := fmt.Sprintf(":%d", apiPort)
 	log.Printf("API server is running on %s", apiAddr)
 	r.Run(apiAddr)
+	if err := r.Run(apiAddr); err != nil {
+		log.Fatalf("Failed to start API server: %v", err)
+	}
 }
 
 func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) error {
+	if connect3270.Verbose {
+		log.Println("Starting executeStep")
+	}
 	// Implement the logic for each step type
 	switch step.Type {
 	case "InitializeOutput":
@@ -350,6 +367,9 @@ func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) erro
 }
 
 func sendErrorResponse(c *gin.Context, statusCode int, message string, err error) {
+	if connect3270.Verbose {
+		log.Println("Starting sendErrorResponse")
+	}
 	c.JSON(statusCode, gin.H{
 		"returnCode": statusCode,
 		"status":     "error",
@@ -407,6 +427,7 @@ func main() {
 		runAPIWorkflow()
 	} else {
 		if concurrent > 1 {
+			//runWorkflows(concurrent, config)
 			runConcurrentWorkflows(config)
 		} else {
 			runWorkflow(7000, config) // 7000 or a default port for non-concurrent execution
@@ -432,106 +453,198 @@ func setGlobalSettings() {
 
 func runConcurrentWorkflows(config *Configuration) {
 	activeChan := make(chan struct{}, concurrent)
-	done := make(chan struct{})
 	var wg sync.WaitGroup
-	var closeDoneOnce sync.Once
+	var closeLogDoneOnce, closeRuntimeDoneOnce sync.Once
+	logDone := make(chan struct{})
+	runtimeDone := make(chan struct{})
 
-	// Goroutine for logging active workflows
-	go logActiveWorkflows(done)
+	// Always run logActiveWorkflows goroutine for the entire duration of concurrent workflows
+	go logActiveWorkflows(logDone)
 
-	// Goroutine to handle runtime duration
-	go handleRuntimeDuration(done, &closeDoneOnce)
+	// Handle runtime duration, controlling the initiation of new workflows
+	go handleRuntimeDuration(runtimeDone, &closeRuntimeDoneOnce)
 
-	// Ramp-up logic
-	go startWorkflowsRampUp(activeChan, config, done, &wg, &closeDoneOnce)
+	// Start the concurrent workflows
+	startWorkflowsRampUp(activeChan, config, runtimeDone, &wg)
 
-	// Block until all workflows are done
+	// Wait for all workflows to complete
 	wg.Wait()
 
-	// Close the 'done' channel using sync.Once to ensure it's only closed once
-	closeDoneOnce.Do(func() {
-		close(done)
+	// Close the logDone channel to stop logActiveWorkflows
+	closeLogDoneOnce.Do(func() {
+		close(logDone)
 	})
+
+	// Close the runtimeDone channel to stop startWorkflowsRampUp
+	closeRuntimeDoneOnce.Do(func() {
+		close(runtimeDone)
+	})
+
+	log.Println("All workflows completed")
 }
 
-func logActiveWorkflows(done chan struct{}) {
+func logActiveWorkflows(logDone chan struct{}) {
+	if connect3270.Verbose {
+		log.Println("Starting logActiveWorkflows")
+	}
 	for {
 		select {
-		case <-done:
+		case <-logDone:
+			if connect3270.Verbose {
+				log.Println("Stopping logActiveWorkflows")
+			}
 			return
 		default:
-			activeCount := getActiveWorkflows() // Use your own counter with safe access
+			activeCount := getActiveWorkflows()
 			log.Printf("Currently active workflows: %d", activeCount)
 			time.Sleep(1 * time.Second)
 		}
 	}
 }
 
-func handleRuntimeDuration(done chan struct{}, closeDoneOnce *sync.Once) {
+func handleRuntimeDuration(runtimeDone chan struct{}, closeDoneOnce *sync.Once) {
 	if runtimeDuration > 0 {
 		time.Sleep(time.Duration(runtimeDuration) * time.Second)
 		log.Println("Runtime duration reached. Not starting new workflows...")
-		closeDoneOnce.Do(func() {
-			close(done)
-		})
 	}
+	closeDoneOnce.Do(func() {
+		close(runtimeDone)
+	})
 }
 
 func incrementActiveWorkflows() {
+	if connect3270.Verbose {
+		log.Println("Starting incrementActiveWorkflows")
+	}
 	mutex.Lock()
 	defer mutex.Unlock()
 	activeWorkflows++
 }
 
 func decrementActiveWorkflows() {
+	if connect3270.Verbose {
+		log.Println("Starting decrementActiveWorkflows")
+	}
 	mutex.Lock()
 	defer mutex.Unlock()
 	activeWorkflows--
 }
 
 func getActiveWorkflows() int {
+	if connect3270.Verbose {
+		log.Println("Starting getActiveWorkflows")
+	}
 	mutex.Lock()
 	defer mutex.Unlock()
 	return activeWorkflows
 }
 
-func startWorkflowsRampUp(activeChan chan struct{}, config *Configuration, done chan struct{}, wg *sync.WaitGroup, closeDoneOnce *sync.Once) {
+func startWorkflowsRampUp(activeChan chan struct{}, config *Configuration, runtimeDone chan struct{}, wg *sync.WaitGroup) {
+	if connect3270.Verbose {
+		log.Println("Starting startWorkflowsRampUp")
+	}
 	for {
 		select {
-		case <-done:
+		case <-runtimeDone:
+			// When runtime is done, stop starting new workflows
+			if connect3270.Verbose {
+				log.Println("Runtime duration reached, stopping new workflow initiation")
+			}
 			return
 		default:
+			// Only start a new workflow if we haven't reached the concurrent limit
 			if getActiveWorkflows() < concurrent {
-				startWorkflowBatch(activeChan, config, wg) // Pass config as a pointer
+				if connect3270.Verbose {
+					log.Println("Initiating a new workflow")
+				}
+				startWorkflowBatch(activeChan, config, wg)
 			}
-			time.Sleep(rampUpDelay)
+			time.Sleep(rampUpDelay) // Sleep for a brief period before checking again
 		}
 	}
 }
 
 func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *sync.WaitGroup) {
-	for j := 0; j < rampUpBatchSize; j++ {
-		if getActiveWorkflows() >= concurrent {
-			// If the active workflows reach the limit, don't start more.
+	if connect3270.Verbose {
+		log.Println("Starting startWorkflowBatch")
+	}
+
+	availableSlots := concurrent - activeWorkflows
+	workflowsToStart := min(rampUpBatchSize, availableSlots)
+
+	for j := 0; j < workflowsToStart; j++ {
+		if activeWorkflows >= concurrent {
 			break
 		}
+		activeWorkflows++
 
-		wg.Add(1)                  // Increment the WaitGroup counter before starting the goroutine
-		incrementActiveWorkflows() // Safely increment the active workflows count
+		wg.Add(1)
 
 		go func() {
-			defer wg.Done()                  // Signal the WaitGroup that the goroutine has finished
-			defer decrementActiveWorkflows() // Safely decrement the active workflows count
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Recovered from panic in goroutine: %v", r)
+				}
+			}()
+			defer wg.Done()
+			activeWorkflows--
 
-			// Acquire a lock to safely increment the shared port counter
 			mutex.Lock()
 			lastUsedPort++
 			portToUse := lastUsedPort
 			mutex.Unlock()
 
-			activeChan <- struct{}{}       // Block here if activeChan is full
-			runWorkflow(portToUse, config) // Execute the workflow, passing a pointer to config
-			<-activeChan                   // Release a spot in the channel once the workflow is done
+			activeChan <- struct{}{}
+			runWorkflow(portToUse, config)
+			<-activeChan
 		}()
+
 	}
+	//time.Sleep(rampUpDelay)
+
+}
+
+// Helper function to find the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func validateConfiguration(config *Configuration) error {
+	if connect3270.Verbose {
+		log.Println("Starting validateConfiguration")
+	}
+	if config.Host == "" {
+		return fmt.Errorf("host is empty")
+	}
+
+	if config.Port <= 0 {
+		return fmt.Errorf("port is invalid")
+	}
+
+	if config.OutputFilePath == "" {
+		return fmt.Errorf("output file path is empty")
+	}
+
+	for _, step := range config.Steps {
+		switch step.Type {
+		case "Connect", "AsciiScreenGrab", "PressEnter", "Disconnect":
+			// These steps don't require additional fields.
+			continue
+		case "CheckValue", "FillString":
+			// These steps require Coordinates and Text.
+			if step.Coordinates.Row == 0 || step.Coordinates.Column == 0 {
+				return fmt.Errorf("coordinates are incomplete in a %s step", step.Type)
+			}
+			if step.Text == "" {
+				return fmt.Errorf("text is empty in a %s step", step.Type)
+			}
+		default:
+			return fmt.Errorf("unknown step type: %s", step.Type)
+		}
+	}
+
+	return nil
 }
