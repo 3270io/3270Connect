@@ -557,29 +557,28 @@ func (e *Emulator) InitializeHTMLFile(filePath string) error {
 	return nil
 }
 
-// AsciiScreenGrab captures an ASCII screen and saves it to an HTML file with run details,
-// with added retry logic.
-func (e *Emulator) AsciiScreenGrab(filePath string, append bool) error {
+// AsciiScreenGrab captures an ASCII screen and saves it to a file.
+// If apiMode is true, it saves plain ASCII text. Otherwise, it formats the output as HTML.
+func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) error {
 	if Verbose {
 		log.Printf("Capturing ASCII screen and saving to file: %s", filePath)
 	}
 
 	// Retry logic for capturing ASCII screen
 	for retries := 0; retries < maxRetries; retries++ {
-		output, err := e.execCommandOutput("Ascii()") // Capture the entire screen
+		output, err := e.execCommandOutput("Ascii()")
 		if err == nil {
-			// Successfully captured, exit the retry loop
-			// Get the current date and time
-			//currentTime := time.Now().Format("2006-01-02 15:04:05")
+			var content string
+			if apiMode {
+				// In API mode, just use plain ASCII output
+				content = output
+			} else {
+				// In non-API mode, format the output as HTML
+				content = fmt.Sprintf("<pre>%s</pre>\n", output)
+				content += "</body></html>"
+			}
 
-			// Create the HTML content with run details
-			//htmlContent := fmt.Sprintf("<html><head><title>ASCII Screen Capture</title></head><body>")
-			//htmlContent += fmt.Sprintf("<h1>ASCII Screen Capture</h1>")
-			//htmlContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
-			htmlContent := fmt.Sprintf("<pre>%s</pre>\n", output)
-			htmlContent += fmt.Sprintf("</body></html>")
-
-			// Open or create the HTML file for appending or overwriting
+			// Open or create the file for appending or overwriting
 			var file *os.File
 			var err error
 			if append {
@@ -593,14 +592,13 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool) error {
 			}
 			defer file.Close()
 
-			// Write the HTML content to the file
-			if _, err := file.WriteString(htmlContent); err != nil {
+			// Write the content to the file
+			if _, err := file.WriteString(content); err != nil {
 				log.Printf("Error writing to file: %v", err)
 				return err
 			}
 			return nil
 		}
-		//log.Printf("Error capturing ASCII screen (Retry %d): %v", retries+1, err)
 		time.Sleep(retryDelay)
 	}
 
