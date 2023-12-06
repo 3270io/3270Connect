@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.0"
+const version = "1.0.4.1"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -211,7 +211,7 @@ func runWorkflow(scriptPort int, config *Configuration) {
 				workflowFailed = true
 			}
 		case "AsciiScreenGrab":
-			if err := e.AsciiScreenGrab(htmlFilePath, true); err != nil {
+			if err := e.AsciiScreenGrab(htmlFilePath, true, runAPI); err != nil {
 				log.Printf("Error capturing and appending ASCII screen: %v", err)
 				workflowFailed = true
 			}
@@ -336,7 +336,7 @@ func executeStep(e *connect3270.Emulator, step Step, htmlFilePath string) error 
 	case "FillString":
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
 	case "AsciiScreenGrab":
-		return e.AsciiScreenGrab(htmlFilePath, true) // Use the passed htmlFilePath
+		return e.AsciiScreenGrab(htmlFilePath, true, runAPI) // Use the passed htmlFilePath
 	case "PressEnter":
 		return e.Press(connect3270.Enter)
 	case "Disconnect":
