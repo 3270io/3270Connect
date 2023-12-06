@@ -520,35 +520,38 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 		return "", err
 	}
 
-	defer os.Remove(binaryFilePath) // Clean up the temporary binary file when done
+	defer os.Remove(binaryFilePath) // Clean up the temporary binary filoutputContente when done
 
 	return string(output), nil
 }
 
 var runDetailsAppended bool // Track if run details have been appended
 
-// Initialize HTML file with run details
-func (e *Emulator) InitializeHTMLFile(filePath string) error {
+// Initialize output file with run details
+func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 	if Verbose {
-		log.Printf("Initializing HTML file at path: %s", filePath)
+		log.Printf("Initializing Output file at path: %s", filePath)
 	}
 	// Get the current date and time
 	currentTime := time.Now().Format("2006-01-02 15:04:05")
 
-	// Create the HTML content with run details
-	htmlContent := fmt.Sprintf("<html><head><title>ASCII Screen Capture</title></head><body>")
-	htmlContent += fmt.Sprintf("<h1>ASCII Screen Capture</h1>")
-	htmlContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
+	// Create the output content with run details
+	outputContent := ""
+	if !runAPI {
+		outputContent += fmt.Sprintf("<html><head><title>ASCII Screen Capture</title></head><body>")
+		outputContent += fmt.Sprintf("<h1>ASCII Screen Capture</h1>")
+		outputContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
+	}
 
-	// Open or create the HTML file for overwriting
+	// Open or create the output file for overwriting
 	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("error opening or creating file: %v", err)
 	}
 	defer file.Close()
 
-	// Write the HTML content to the file
-	if _, err := file.WriteString(htmlContent); err != nil {
+	// Write the output content to the file
+	if _, err := file.WriteString(outputContent); err != nil {
 		return fmt.Errorf("error writing to file: %v", err)
 	}
 
@@ -558,7 +561,7 @@ func (e *Emulator) InitializeHTMLFile(filePath string) error {
 }
 
 // AsciiScreenGrab captures an ASCII screen and saves it to a file.
-// If apiMode is true, it saves plain ASCII text. Otherwise, it formats the output as HTML.
+// If apiMode is true, it saves plain ASCII text. Otherwise, it formats the output as output.
 func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) error {
 	if Verbose {
 		log.Printf("Capturing ASCII screen and saving to file: %s", filePath)
@@ -573,7 +576,7 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) e
 				// In API mode, just use plain ASCII output
 				content = output
 			} else {
-				// In non-API mode, format the output as HTML
+				// In non-API mode, format the output as output
 				content = fmt.Sprintf("<pre>%s</pre>\n", output)
 				content += "</body></html>"
 			}
@@ -605,8 +608,8 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) e
 	return fmt.Errorf("maximum capture retries reached")
 }
 
-// ReadHTMLFile reads the contents of the specified HTML file and returns it as a string.
-func (e *Emulator) ReadHTMLFile(filePath string) (string, error) {
+// ReadOutputFile reads the contents of the specified HTML file and returns it as a string.
+func (e *Emulator) ReadOutputFile(filePath string) (string, error) {
 	// Check if the file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("file does not exist: %s", filePath)

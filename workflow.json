@@ -1,11 +1,8 @@
 {
-  "Host": "10.27.27.62",
+  "Host": "127.0.0.1",
   "Port": 3270,
-  "HTMLFilePath": "output.html",
+  "OutputFilePath": "output.html",
   "Steps": [
-    {
-      "Type": "InitializeHTMLFile"
-    },
     {
       "Type": "Connect"
     },
