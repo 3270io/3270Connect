@@ -1,7 +1,3 @@
- <div style="text-align: left;">
-  <img src="logo.png" alt="3270.io" style="max-width: 200px; height: auto;">
-</div>
-
 # Workflow Steps Documentation
 
 This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.
