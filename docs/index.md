@@ -40,6 +40,7 @@ If you're new to 3270Connect, you can start by exploring the following sections:
 
 - [Installation](installation.md): Learn how to install 3270Connect on your system.
 - [Basic Usage](basic-usage.md): Get started with basic usage, running workflows and sample 3270 application(s) to aid testing.
+- [Workflow Steps](workflow.md): Overview of the various workflow steps available in the 3270Connect application
 
 ## Advanced Features
 
