@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/3270io/3270Connect/binaries"
+	"github.com/google/uuid"
 )
 
 var (
@@ -58,6 +59,12 @@ type Coordinates struct {
 	Row    int
 	Column int
 	Length int
+}
+
+// result struct to handle success and error from goroutines
+type result struct {
+	success bool
+	err     error
 }
 
 // NewEmulator creates a new Emulator instance.
@@ -345,8 +352,6 @@ func (e *Emulator) query(keyword string) (string, error) {
 
 // createApp creates a connection to the host using embedded x3270 or s3270
 func (e *Emulator) createApp() error {
-	var cmd *exec.Cmd
-
 	if Verbose {
 		log.Println("func createApp: using -scriptport: " + e.ScriptPort)
 	}
@@ -363,24 +368,17 @@ func (e *Emulator) createApp() error {
 		return fmt.Errorf("error reading embedded binary data: %v", err)
 	}
 
-	// Create a temporary directory to store the binary file
-	tempDir, err := ioutil.TempDir("", "x3270_binary")
+	binaryFilePath, err := createBinaryFile(binaryName, binaryData)
 	if err != nil {
-		return fmt.Errorf("error creating temporary directory: %v", err)
+		return err
 	}
-	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
+	defer cleanupTempFile(binaryFilePath)
 
-	// Create the binary file in the temporary directory
-	binaryFilePath := filepath.Join(tempDir, binaryName)
-	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
-	if err != nil {
-		return fmt.Errorf("error writing binary data to a temporary file: %v", err)
-	}
-
+	// Prepare the command based on headless mode
+	var cmd *exec.Cmd
 	if Headless {
 		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
 	} else {
-		// Set the unlockDelay option for x3270 when running in headless mode
 		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
@@ -440,22 +438,11 @@ func (e *Emulator) execCommand(command string) (string, error) {
 		return "", fmt.Errorf("error reading embedded binary data: %v", err)
 	}
 
-	// Create a temporary directory to store the binary file
-	tempDir, err := ioutil.TempDir("", "x3270_binary")
+	binaryFilePath, err := createBinaryFile(binaryName, binaryData)
 	if err != nil {
-		return "", fmt.Errorf("error creating temporary directory: %v", err)
+		return "", err
 	}
-	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
-
-	// Generate a random unique name for the binary file
-	binaryFileName := fmt.Sprintf("%s_%d", binaryName, time.Now().UnixNano())
-	binaryFilePath := filepath.Join(tempDir, binaryFileName)
-
-	// Write the binary data to the temporary file
-	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
-	if err != nil {
-		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
-	}
+	defer cleanupTempFile(binaryFilePath)
 
 	if Verbose {
 		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
@@ -630,4 +617,33 @@ func (e *Emulator) ReadOutputFile(filePath string) (string, error) {
 
 	// Return the contents of the file as a string
 	return string(content), nil
+}
+
+func generateTempFilePath(binaryName string) (string, error) {
+	uniqueID := uuid.New().String()
+	fileName := fmt.Sprintf("%s_%s", binaryName, uniqueID)
+
+	tempDir, err := ioutil.TempDir("", "x3270_binary")
+	if err != nil {
+		return "", fmt.Errorf("error creating temporary directory: %v", err)
+	}
+
+	return filepath.Join(tempDir, fileName), nil
+}
+
+func createBinaryFile(binaryName string, data []byte) (string, error) {
+	filePath, err := generateTempFilePath(binaryName)
+	if err != nil {
+		return "", err
+	}
+
+	if err := ioutil.WriteFile(filePath, data, 0755); err != nil {
+		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
+	}
+
+	return filePath, nil
+}
+
+func cleanupTempFile(filePath string) {
+	os.Remove(filePath) // Ignore error, as it's a cleanup operation
 }

@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.1"
+const version = "1.0.4.2"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -56,7 +56,7 @@ var (
 var activeWorkflows int
 var mutex sync.Mutex
 
-const rampUpBatchSize = 5       // Number of work items to start in each batch
+const rampUpBatchSize = 10      // Number of work items to start in each batch
 const rampUpDelay = time.Second // Delay between starting batches
 
 // Define the showVersion flag at the package level
@@ -569,8 +569,16 @@ func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *syn
 		log.Println("Starting startWorkflowBatch")
 	}
 
+	mutex.Lock()
 	availableSlots := concurrent - activeWorkflows
+	if availableSlots <= 0 {
+		mutex.Unlock()
+		time.Sleep(rampUpDelay) // Throttle batch initiation
+	}
+
 	workflowsToStart := min(rampUpBatchSize, availableSlots)
+	//activeWorkflows += workflowsToStart
+	mutex.Unlock()
 
 	for j := 0; j < workflowsToStart; j++ {
 		if activeWorkflows >= concurrent {
@@ -601,7 +609,13 @@ func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *syn
 
 	}
 	//time.Sleep(rampUpDelay)
+}
 
+func getNextAvailablePort() int {
+	mutex.Lock()
+	defer mutex.Unlock()
+	lastUsedPort++
+	return lastUsedPort
 }
 
 // Helper function to find the minimum of two integers
