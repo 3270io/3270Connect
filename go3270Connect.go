@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.2"
+const version = "1.0.4.3"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -259,12 +259,13 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 }
 
 // runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
+// runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 func runAPIWorkflow() {
 	if connect3270.Verbose {
 		log.Println("Starting API server mode")
 	}
 
-	// Set headless mode for API
+	// Set the global Headless mode for all emulator instances
 	connect3270.Headless = true
 
 	gin.SetMode(gin.ReleaseMode)
@@ -274,51 +275,33 @@ func runAPIWorkflow() {
 	r.POST("/api/execute", func(c *gin.Context) {
 		var workflowConfig Configuration
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"returnCode": http.StatusBadRequest,
-				"status":     "error",
-				"message":    "Invalid request payload",
-				"error":      err.Error(),
-			})
+			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload", err)
 			return
 		}
 
-		// Create an emulator instance
-		e := connect3270.Emulator{
-			Host: workflowConfig.Host,
-			Port: workflowConfig.Port,
-		}
-
-		// Attempt to initialize the output file with run details
-		outputFilePath := workflowConfig.OutputFilePath
-		if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
-			return
-		}
-
-		// Defer the disconnection of the emulator to ensure it's done regardless of error or not.
-		defer func() {
-			if err := e.Disconnect(); err != nil {
-				log.Printf("Error disconnecting: %v\n", err)
-			}
-		}()
+		// Create a new Emulator instance for each request
+		scriptPort := getNextAvailablePort()
+		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
 
 		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
-			if err := executeStep(&e, step, outputFilePath); err != nil {
+			if err := executeStep(e, step, workflowConfig.OutputFilePath); err != nil {
 				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
+				e.Disconnect() // Ensure disconnection in case of error
 				return
 			}
 		}
 
-		// After executing the workflow, read the contents of the output file
-		outputContents, err := e.ReadOutputFile(outputFilePath)
+		// Read the contents of the output file after executing the workflow
+		outputContents, err := e.ReadOutputFile(workflowConfig.OutputFilePath)
 		if err != nil {
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
 			return
 		}
 
-		// Return both the status message and the output file contents
+		e.Disconnect() // Disconnect after completing the workflow
+
+		// Return the output file contents
 		c.JSON(http.StatusOK, gin.H{
 			"returnCode": http.StatusOK,
 			"status":     "okay",
@@ -329,24 +312,62 @@ func runAPIWorkflow() {
 
 	apiAddr := fmt.Sprintf(":%d", apiPort)
 	log.Printf("API server is running on %s", apiAddr)
-	r.Run(apiAddr)
 	if err := r.Run(apiAddr); err != nil {
 		log.Fatalf("Failed to start API server: %v", err)
 	}
 }
 
-func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) error {
+func executeAPIWorkflow(e *connect3270.Emulator, workflowConfig *Configuration, c *gin.Context) error {
 	if connect3270.Verbose {
-		log.Println("Starting executeStep")
+		log.Println("Starting executeAPIWorkflow")
 	}
+
+	// Initialize the output file with run details
+	outputFilePath := workflowConfig.OutputFilePath
+	if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
+		sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
+		return err
+	}
+
+	// Defer the disconnection of the emulator to ensure it's done regardless of error or not.
+	defer func() {
+		if err := e.Disconnect(); err != nil {
+			log.Printf("Error disconnecting: %v\n", err)
+		}
+	}()
+
+	// Execute the workflow steps
+	for _, step := range workflowConfig.Steps {
+		if err := executeStep(e, step, outputFilePath); err != nil {
+			sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
+			return err
+		}
+	}
+
+	// After executing the workflow, read the contents of the output file
+	outputContents, err := e.ReadOutputFile(outputFilePath)
+	if err != nil {
+		sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
+		return err
+	}
+
+	// Return both the status message and the output file contents
+	c.JSON(http.StatusOK, gin.H{
+		"returnCode": http.StatusOK,
+		"status":     "okay",
+		"message":    "Workflow executed successfully",
+		"output":     outputContents,
+	})
+
+	return nil // Workflow executed successfully
+}
+
+// executeStep executes a single step in the workflow.
+func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) error {
 	// Implement the logic for each step type
 	switch step.Type {
 	case "InitializeOutput":
-		// Return an error instead of using log.Fatalf, so it can be handled properly
-		err := e.InitializeOutput(outputFilePath, runAPI)
-		if err != nil {
-			return fmt.Errorf("error initializing output file: %v", err)
-		}
+		return e.InitializeOutput(outputFilePath, runAPI)
 	case "Connect":
 		return e.Connect()
 	case "CheckValue":
@@ -355,7 +376,7 @@ func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) erro
 	case "FillString":
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
 	case "AsciiScreenGrab":
-		return e.AsciiScreenGrab(outputFilePath, true, runAPI) // Use the passed outputFilePath
+		return e.AsciiScreenGrab(outputFilePath, true, runAPI)
 	case "PressEnter":
 		return e.Press(connect3270.Enter)
 	case "Disconnect":
@@ -363,7 +384,6 @@ func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) erro
 	default:
 		return fmt.Errorf("unknown step type: %s", step.Type)
 	}
-	return nil // No error occurred, return nil
 }
 
 func sendErrorResponse(c *gin.Context, statusCode int, message string, err error) {
