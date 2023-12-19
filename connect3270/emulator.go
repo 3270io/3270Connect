@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/3270io/3270Connect/binaries"
@@ -22,6 +23,8 @@ var (
 	Headless        bool
 	terminalCommand string // Stores the terminal command to use
 	Verbose         bool
+	binaryFilePath  string
+	binaryFileMutex sync.Mutex
 )
 
 // These constants represent the keyboard keys
@@ -356,23 +359,23 @@ func (e *Emulator) createApp() error {
 		log.Println("func createApp: using -scriptport: " + e.ScriptPort)
 	}
 
+	binaryFileMutex.Lock()
+	defer binaryFileMutex.Unlock()
+
 	// Determine which binary to use based on Headless flag
 	binaryName := "x3270"
 	if Headless {
 		binaryName = "s3270"
 	}
 
-	// Read the embedded binary data from bindata.go
-	binaryData, err := binaries.Asset(binaryName)
-	if err != nil {
-		return fmt.Errorf("error reading embedded binary data: %v", err)
+	// Check if the binary file already exists and create it if not
+	if binaryFilePath == "" {
+		var err error
+		binaryFilePath, err = getOrCreateBinaryFile(binaryName)
+		if err != nil {
+			return err
+		}
 	}
-
-	binaryFilePath, err := createBinaryFile(binaryName, binaryData)
-	if err != nil {
-		return err
-	}
-	defer cleanupTempFile(binaryFilePath)
 
 	// Prepare the command based on headless mode
 	var cmd *exec.Cmd
@@ -646,4 +649,30 @@ func createBinaryFile(binaryName string, data []byte) (string, error) {
 
 func cleanupTempFile(filePath string) {
 	os.Remove(filePath) // Ignore error, as it's a cleanup operation
+}
+
+// getOrCreateBinaryFile checks if a binary file exists for the given binary name, and creates it if it doesn't
+func getOrCreateBinaryFile(binaryName string) (string, error) {
+	filePath := filepath.Join("/tmp", binaryName) // Define the path to store the binary
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		// File does not exist, create it
+		binaryData, err := binaries.Asset(binaryName)
+		if err != nil {
+			return "", fmt.Errorf("error reading embedded binary data: %v", err)
+		}
+
+		if err := ioutil.WriteFile(filePath, binaryData, 0755); err != nil {
+			return "", fmt.Errorf("error writing binary data to a file: %v", err)
+		}
+	}
+
+	return filePath, nil
+}
+
+// binaryFileExists checks if a binary file exists for the given binary name
+func binaryFileExists(binaryName string) bool {
+	filePath := filepath.Join("/tmp", binaryName)
+	_, err := os.Stat(filePath)
+	return !os.IsNotExist(err)
 }
