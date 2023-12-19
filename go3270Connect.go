@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.4"
+const version = "1.0.4.3"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -165,13 +166,16 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
 	}
 
-	// Initialize the output file with run details only if not in API mode
-	outputFilePath := config.OutputFilePath
-	//if !runAPI {
-	if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
-		log.Printf("Error initializing Output file: %v", err)
+	// Create a temporary file for this workflow run
+	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
+	if err != nil {
+		log.Printf("Error creating temporary file: %v", err)
+		return err
 	}
-	//}
+	defer tmpFile.Close()
+	tmpFileName := tmpFile.Name()
+
+	e.InitializeOutput(tmpFileName, runAPI)
 
 	// Flag to track if any step fails
 	workflowFailed := false
@@ -185,10 +189,12 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 
 		switch step.Type {
 		case "InitializeOutput":
-			if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
-				log.Printf("Error initializing output file: %v", err)
-				workflowFailed = true
+			// Return an error instead of using log.Fatalf, so it can be handled properly
+			err := e.InitializeOutput(tmpFileName, runAPI)
+			if err != nil {
+				return fmt.Errorf("error initializing output file: %v", err)
 			}
+
 		case "Connect":
 			if err := e.Connect(); err != nil {
 				log.Printf("Error connecting to terminal: %v", err)
@@ -216,8 +222,8 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 				workflowFailed = true
 			}
 		case "AsciiScreenGrab":
-			if err := e.AsciiScreenGrab(outputFilePath, true, runAPI); err != nil {
-				log.Printf("Error capturing and appending ASCII screen: %v", err)
+			if err := e.AsciiScreenGrab(tmpFileName, runAPI); err != nil {
+				log.Printf("Error in AsciiScreenGrab: %v", err)
 				workflowFailed = true
 			}
 		case "PressEnter":
@@ -250,15 +256,23 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	}
 
 	if workflowFailed {
-		return fmt.Errorf("workflow for scriptPort %d failed", scriptPort)
+		// Log that the workflow failed and skip any additional processing
+		log.Printf("Workflow for scriptPort %d failed", scriptPort)
+	} else {
+		if connect3270.Verbose {
+			log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
+		}
+		// Rename the temporary file to the desired output file path
+		err := os.Rename(tmpFileName, config.OutputFilePath)
+		if err != nil {
+			log.Printf("Error renaming temporary file to output file: %v", err)
+			return err
+		}
 	}
-	if connect3270.Verbose {
-		log.Printf("Completed workflow on scriptPort %d", scriptPort)
-	}
+
 	return nil
 }
 
-// runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 // runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 func runAPIWorkflow() {
 	if connect3270.Verbose {
@@ -267,6 +281,14 @@ func runAPIWorkflow() {
 
 	// Set the global Headless mode for all emulator instances
 	connect3270.Headless = true
+
+	// Create a temporary file for this workflow run
+	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
+	if err != nil {
+		log.Printf("Error creating temporary file: %v", err)
+	}
+	defer tmpFile.Close()
+	tmpFileName := tmpFile.Name()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -285,7 +307,7 @@ func runAPIWorkflow() {
 
 		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
-			if err := executeStep(e, step, workflowConfig.OutputFilePath); err != nil {
+			if err := executeStep(e, step, tmpFileName); err != nil {
 				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
 				e.Disconnect() // Ensure disconnection in case of error
 				return
@@ -293,7 +315,7 @@ func runAPIWorkflow() {
 		}
 
 		// Read the contents of the output file after executing the workflow
-		outputContents, err := e.ReadOutputFile(workflowConfig.OutputFilePath)
+		outputContents, err := e.ReadOutputFile(tmpFileName)
 		if err != nil {
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
 			return
@@ -317,57 +339,12 @@ func runAPIWorkflow() {
 	}
 }
 
-func executeAPIWorkflow(e *connect3270.Emulator, workflowConfig *Configuration, c *gin.Context) error {
-	if connect3270.Verbose {
-		log.Println("Starting executeAPIWorkflow")
-	}
-
-	// Initialize the output file with run details
-	outputFilePath := workflowConfig.OutputFilePath
-	if err := e.InitializeOutput(outputFilePath, runAPI); err != nil {
-		sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
-		return err
-	}
-
-	// Defer the disconnection of the emulator to ensure it's done regardless of error or not.
-	defer func() {
-		if err := e.Disconnect(); err != nil {
-			log.Printf("Error disconnecting: %v\n", err)
-		}
-	}()
-
-	// Execute the workflow steps
-	for _, step := range workflowConfig.Steps {
-		if err := executeStep(e, step, outputFilePath); err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
-			return err
-		}
-	}
-
-	// After executing the workflow, read the contents of the output file
-	outputContents, err := e.ReadOutputFile(outputFilePath)
-	if err != nil {
-		sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
-		return err
-	}
-
-	// Return both the status message and the output file contents
-	c.JSON(http.StatusOK, gin.H{
-		"returnCode": http.StatusOK,
-		"status":     "okay",
-		"message":    "Workflow executed successfully",
-		"output":     outputContents,
-	})
-
-	return nil // Workflow executed successfully
-}
-
 // executeStep executes a single step in the workflow.
-func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) error {
+func executeStep(e *connect3270.Emulator, step Step, tmpFileName string) error {
 	// Implement the logic for each step type
 	switch step.Type {
 	case "InitializeOutput":
-		return e.InitializeOutput(outputFilePath, runAPI)
+		return e.InitializeOutput(tmpFileName, runAPI)
 	case "Connect":
 		return e.Connect()
 	case "CheckValue":
@@ -376,7 +353,7 @@ func executeStep(e *connect3270.Emulator, step Step, outputFilePath string) erro
 	case "FillString":
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
 	case "AsciiScreenGrab":
-		return e.AsciiScreenGrab(outputFilePath, true, runAPI)
+		return e.AsciiScreenGrab(tmpFileName, runAPI)
 	case "PressEnter":
 		return e.Press(connect3270.Enter)
 	case "Disconnect":
