@@ -50,6 +50,8 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 ## Prior to Release 1: Known issues and short term planned changes
 
+### UPDATE: Version 1.0.4 has now been tagged as the first stable release
+
 1. <s>When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.</s> Done
 
 2. <s>When running under concurrent mode with no runtime, the ramp logic is not in place.</s> Fixed
@@ -62,7 +64,7 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 6. <s>App additional dynamic sample 3270 applications.</s> Done
 
-7. Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.
+7. <s>Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.</s>
 
 ## Conclusion
 
