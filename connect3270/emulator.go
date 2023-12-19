@@ -508,7 +508,7 @@ func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 
 // AsciiScreenGrab captures an ASCII screen and saves it to a file.
 // If apiMode is true, it saves plain ASCII text. Otherwise, it formats the output as output.
-func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) error {
+func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 	if Verbose {
 		log.Printf("Capturing ASCII screen and saving to file: %s", filePath)
 	}
@@ -530,11 +530,11 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) e
 			// Open or create the file for appending or overwriting
 			var file *os.File
 			var err error
-			if append {
-				file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			} else {
-				file, err = os.Create(filePath)
-			}
+			//if append {
+			file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			//} else {
+			//file, err = os.Create(filePath)
+			//}
 			if err != nil {
 				log.Printf("Error opening or creating file: %v", err)
 				return err
@@ -555,26 +555,18 @@ func (e *Emulator) AsciiScreenGrab(filePath string, append bool, apiMode bool) e
 }
 
 // ReadOutputFile reads the contents of the specified HTML file and returns it as a string.
-func (e *Emulator) ReadOutputFile(filePath string) (string, error) {
-	// Check if the file exists
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("file does not exist: %s", filePath)
-	}
-
-	// Open the file for reading
-	file, err := os.Open(filePath)
+func (e *Emulator) ReadOutputFile(tempFilePath string) (string, error) {
+	file, err := os.Open(tempFilePath)
 	if err != nil {
-		return "", fmt.Errorf("error opening file: %v", err)
+		return "", fmt.Errorf("error opening temporary file: %v", err)
 	}
-	defer file.Close() // Ensure the file is closed after the function finishes
+	defer file.Close()
 
-	// Read the contents of the file
 	content, err := ioutil.ReadAll(file)
 	if err != nil {
-		return "", fmt.Errorf("error reading file: %v", err)
+		return "", fmt.Errorf("error reading temporary file: %v", err)
 	}
 
-	// Return the contents of the file as a string
 	return string(content), nil
 }
 
