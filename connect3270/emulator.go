@@ -23,7 +23,8 @@ var (
 	Headless        bool
 	terminalCommand string // Stores the terminal command to use
 	Verbose         bool
-	binaryFilePath  string
+	x3270BinaryPath string
+	s3270BinaryPath string
 	binaryFileMutex sync.Mutex
 )
 
@@ -364,14 +365,18 @@ func (e *Emulator) createApp() error {
 
 	// Determine which binary to use based on Headless flag
 	binaryName := "x3270"
+	var binaryFilePath *string
 	if Headless {
 		binaryName = "s3270"
+		binaryFilePath = &s3270BinaryPath
+	} else {
+		binaryFilePath = &x3270BinaryPath
 	}
 
 	// Check if the binary file already exists and create it if not
-	if binaryFilePath == "" {
+	if *binaryFilePath == "" {
 		var err error
-		binaryFilePath, err = getOrCreateBinaryFile(binaryName)
+		*binaryFilePath, err = getOrCreateBinaryFile(binaryName)
 		if err != nil {
 			return err
 		}
@@ -380,9 +385,9 @@ func (e *Emulator) createApp() error {
 	// Prepare the command based on headless mode
 	var cmd *exec.Cmd
 	if Headless {
-		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
+		cmd = exec.Command(*binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
 	} else {
-		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
+		cmd = exec.Command(*binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
 	// Retry logic parameters
