@@ -20,12 +20,13 @@ import (
 var (
 	// Headless controls whether go3270 runs in headless mode.
 	// Set this variable to true to enable headless mode.
-	Headless        bool
-	terminalCommand string // Stores the terminal command to use
-	Verbose         bool
-	x3270BinaryPath string
-	s3270BinaryPath string
-	binaryFileMutex sync.Mutex
+	Headless          bool
+	terminalCommand   string // Stores the terminal command to use
+	Verbose           bool
+	x3270BinaryPath   string
+	s3270BinaryPath   string
+	x3270ifBinaryPath string
+	binaryFileMutex   sync.Mutex
 )
 
 // These constants represent the keyboard keys
@@ -360,34 +361,20 @@ func (e *Emulator) createApp() error {
 		log.Println("func createApp: using -scriptport: " + e.ScriptPort)
 	}
 
-	binaryFileMutex.Lock()
-	defer binaryFileMutex.Unlock()
-
-	// Determine which binary to use based on Headless flag
-	binaryName := "x3270"
-	var binaryFilePath *string
-	if Headless {
-		binaryName = "s3270"
-		binaryFilePath = &s3270BinaryPath
-	} else {
-		binaryFilePath = &x3270BinaryPath
+	binaryFilePath, err := e.prepareBinaryFilePath()
+	if err != nil {
+		log.Printf("Error preparing binary file path: %v", err)
+		return err
+	}
+	if Verbose {
+		log.Println("createApp binaryFilePath: %s" + binaryFilePath)
 	}
 
-	// Check if the binary file already exists and create it if not
-	if *binaryFilePath == "" {
-		var err error
-		*binaryFilePath, err = getOrCreateBinaryFile(binaryName)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Prepare the command based on headless mode
 	var cmd *exec.Cmd
 	if Headless {
-		cmd = exec.Command(*binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
+		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
 	} else {
-		cmd = exec.Command(*binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
+		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
 	}
 
 	// Retry logic parameters
@@ -434,31 +421,18 @@ func (e *Emulator) execCommand(command string) (string, error) {
 		log.Printf("Executing command: %s", command)
 	}
 
-	// Determine the appropriate terminal command based on the Headless flag
-	terminalCommand := "x3270if"
-
-	// Determine which binary to use based on Headless flag
-	binaryName := terminalCommand
-
-	// Read the embedded binary data from bindata.go
-	binaryData, err := binaries.Asset(binaryName)
-	if err != nil {
-		return "", fmt.Errorf("error reading embedded binary data: %v", err)
-	}
-
-	binaryFilePath, err := createBinaryFile(binaryName, binaryData)
+	x3270ifBinaryPath, err := e.getX3270ifPath()
 	if err != nil {
 		return "", err
 	}
-	defer cleanupTempFile(binaryFilePath)
 
 	if Verbose {
-		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
+		log.Printf("func execCommand: CMD: %s -t %s %s\n", x3270ifBinaryPath, e.ScriptPort, command)
 	}
 
 	// Retry logic for executing the command
 	for retries := 0; retries < maxRetries; retries++ {
-		cmd := exec.Command(binaryFilePath, "-S", "-t", e.ScriptPort, command)
+		cmd := exec.Command(x3270ifBinaryPath, "-S", "-t", e.ScriptPort, command)
 		if output, err := cmd.Output(); err == nil {
 			return string(output), nil
 		} else if strings.Contains(err.Error(), "text file busy") {
@@ -478,44 +452,21 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 		log.Printf("Executing command with output: %s", command)
 	}
 
-	// Determine which binary to use based on Headless flag
-	binaryName := "x3270if"
-
-	// Read the embedded binary data from bindata.go
-	binaryData, err := binaries.Asset(binaryName)
-	if err != nil {
-		return "", fmt.Errorf("error reading embedded binary data: %v", err)
-	}
-
-	// Create a temporary directory to store the binary file
-	tempDir, err := ioutil.TempDir("", "x3270_binary")
-	if err != nil {
-		return "", fmt.Errorf("error creating temporary directory: %v", err)
-	}
-	defer os.RemoveAll(tempDir) // Clean up the temporary directory when done
-
-	// Generate a random unique name for the binary file
-	binaryFileName := fmt.Sprintf("%s_%d", binaryName, time.Now().UnixNano())
-	binaryFilePath := filepath.Join(tempDir, binaryFileName)
-
-	// Write the binary data to the temporary file
-	err = ioutil.WriteFile(binaryFilePath, binaryData, 0755)
-	if err != nil {
-		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
-	}
-
-	if Verbose {
-		log.Printf("func execCommand: CMD: %s -t %s %s\n", binaryFilePath, e.ScriptPort, command)
-	}
-
-	// Execute the command using the temporary binary file
-	cmd := exec.Command(binaryFilePath, "-t", e.ScriptPort, command)
-	output, err := cmd.Output()
+	x3270ifBinaryPath, err := e.getX3270ifPath()
 	if err != nil {
 		return "", err
 	}
 
-	defer os.Remove(binaryFilePath) // Clean up the temporary binary filoutputContente when done
+	if Verbose {
+		log.Printf("func execCommandOutput: CMD: %s -t %s %s\n", x3270ifBinaryPath, e.ScriptPort, command)
+	}
+
+	// Execute the command using the selected binary file
+	cmd := exec.Command(x3270ifBinaryPath, "-t", e.ScriptPort, command)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
 
 	return string(output), nil
 }
@@ -658,7 +609,15 @@ func cleanupTempFile(filePath string) {
 
 // getOrCreateBinaryFile checks if a binary file exists for the given binary name, and creates it if it doesn't
 func getOrCreateBinaryFile(binaryName string) (string, error) {
-	filePath := filepath.Join("/tmp", binaryName) // Define the path to store the binary
+	var filePath string
+	switch binaryName {
+	case "x3270", "s3270":
+		filePath = filepath.Join("/tmp", binaryName) // Path for x3270 or s3270 binaries
+	case "x3270if":
+		filePath = filepath.Join("/tmp", binaryName) // Separate path for x3270if
+	default:
+		return "", fmt.Errorf("unknown binary name: %s", binaryName)
+	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// File does not exist, create it
@@ -680,4 +639,49 @@ func binaryFileExists(binaryName string) bool {
 	filePath := filepath.Join("/tmp", binaryName)
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
+}
+
+// prepareBinaryFilePath prepares and returns the path for the appropriate binary file based on the Headless flag.
+func (e *Emulator) prepareBinaryFilePath() (string, error) {
+	binaryFileMutex.Lock()
+	defer binaryFileMutex.Unlock()
+
+	var binaryName string
+	var binaryFilePath *string
+	if Headless {
+		binaryName = "s3270"
+		binaryFilePath = &s3270BinaryPath
+	} else {
+		binaryName = "x3270"
+		binaryFilePath = &x3270BinaryPath
+	}
+
+	if *binaryFilePath == "" {
+		var err error
+		*binaryFilePath, err = getOrCreateBinaryFile(binaryName)
+		if err != nil {
+			if Verbose {
+				log.Printf("Error in getOrCreateBinaryFile: %v", err)
+			}
+			return "", err
+		}
+	}
+
+	return *binaryFilePath, nil
+}
+
+// getX3270ifPath retrieves the path for the x3270if binary.
+func (e *Emulator) getX3270ifPath() (string, error) {
+	binaryFileMutex.Lock()
+	defer binaryFileMutex.Unlock()
+
+	if x3270ifBinaryPath == "" {
+		var err error
+		x3270ifBinaryPath, err = getOrCreateBinaryFile("x3270if")
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return x3270ifBinaryPath, nil
 }
