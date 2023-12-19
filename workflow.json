@@ -1,5 +1,5 @@
 {
-  "Host": "127.0.0.1",
+  "Host": "localhost",
   "Port": 3270,
   "OutputFilePath": "output.html",
   "Steps": [
