@@ -330,6 +330,11 @@ func runAPIWorkflow() {
 			"message":    "Workflow executed successfully",
 			"output":     outputContents,
 		})
+
+		// Delete the temporary file after sending the response
+		if err := os.Remove(tmpFileName); err != nil {
+			log.Printf("Error deleting temporary file: %v", err)
+		}
 	})
 
 	apiAddr := fmt.Sprintf(":%d", apiPort)
