@@ -1,4 +1,4 @@
-<p align="center">
+<p align="left">
   <img src="docs/logo.png" alt="3270.io" width="25%">
 </p>
 
@@ -37,7 +37,7 @@ Here are the key features of 3270Connect:
 
 - [ Documentation](https://3270.io)
 
-## Prior to Release 1: Known issues and short term planned changes
+### UPDATE: Version 1.0.4 has now been tagged as the first stable release
 
 1. <s>When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.</s> Done
 
@@ -51,7 +51,7 @@ Here are the key features of 3270Connect:
 
 6. <s>App additional dynamic sample 3270 applications.</s> Done
 
-7. Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.
+7. <s>Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.</s>
 
 ## License
 
