@@ -14,14 +14,12 @@ import (
 	"time"
 
 	"github.com/3270io/3270Connect/binaries"
-	"github.com/google/uuid"
 )
 
 var (
 	// Headless controls whether go3270 runs in headless mode.
 	// Set this variable to true to enable headless mode.
 	Headless          bool
-	terminalCommand   string // Stores the terminal command to use
 	Verbose           bool
 	x3270BinaryPath   string
 	s3270BinaryPath   string
@@ -64,12 +62,6 @@ type Coordinates struct {
 	Row    int
 	Column int
 	Length int
-}
-
-// result struct to handle success and error from goroutines
-type result struct {
-	success bool
-	err     error
 }
 
 // NewEmulator creates a new Emulator instance.
@@ -471,8 +463,6 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 	return string(output), nil
 }
 
-var runDetailsAppended bool // Track if run details have been appended
-
 // Initialize output file with run details
 func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 	if Verbose {
@@ -500,8 +490,6 @@ func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 	if _, err := file.WriteString(outputContent); err != nil {
 		return fmt.Errorf("error writing to file: %v", err)
 	}
-
-	runDetailsAppended = true // Mark run details as appended
 
 	return nil
 }
@@ -570,35 +558,6 @@ func (e *Emulator) ReadOutputFile(tempFilePath string) (string, error) {
 	return string(content), nil
 }
 
-func generateTempFilePath(binaryName string) (string, error) {
-	uniqueID := uuid.New().String()
-	fileName := fmt.Sprintf("%s_%s", binaryName, uniqueID)
-
-	tempDir, err := ioutil.TempDir("", "x3270_binary")
-	if err != nil {
-		return "", fmt.Errorf("error creating temporary directory: %v", err)
-	}
-
-	return filepath.Join(tempDir, fileName), nil
-}
-
-func createBinaryFile(binaryName string, data []byte) (string, error) {
-	filePath, err := generateTempFilePath(binaryName)
-	if err != nil {
-		return "", err
-	}
-
-	if err := ioutil.WriteFile(filePath, data, 0755); err != nil {
-		return "", fmt.Errorf("error writing binary data to a temporary file: %v", err)
-	}
-
-	return filePath, nil
-}
-
-func cleanupTempFile(filePath string) {
-	os.Remove(filePath) // Ignore error, as it's a cleanup operation
-}
-
 // getOrCreateBinaryFile checks if a binary file exists for the given binary name, and creates it if it doesn't
 func getOrCreateBinaryFile(binaryName string) (string, error) {
 	var filePath string
@@ -624,13 +583,6 @@ func getOrCreateBinaryFile(binaryName string) (string, error) {
 	}
 
 	return filePath, nil
-}
-
-// binaryFileExists checks if a binary file exists for the given binary name
-func binaryFileExists(binaryName string) bool {
-	filePath := filepath.Join("/tmp", binaryName)
-	_, err := os.Stat(filePath)
-	return !os.IsNotExist(err)
 }
 
 // prepareBinaryFilePath prepares and returns the path for the appropriate binary file based on the Headless flag.

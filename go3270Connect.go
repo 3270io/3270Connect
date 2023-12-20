@@ -8,10 +8,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
@@ -21,7 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.5"
+const version = "1.0.4.6"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -76,26 +76,6 @@ func init() {
 	flag.StringVar(&runApp, "runApp", "1", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
 }
 
-func clearTmpFiles() {
-	if connect3270.Verbose {
-		log.Println("Starting clearTmpFiles")
-	}
-	files, err := filepath.Glob("/tmp/x3270*")
-	if err != nil {
-		log.Fatalf("Error reading /tmp directory: %v", err)
-	}
-
-	for _, file := range files {
-		if err := os.Remove(file); err != nil {
-			log.Printf("Failed to remove %s: %v", file, err)
-		} else {
-			if connect3270.Verbose {
-				log.Printf("Removed leftover file: %s", file)
-			}
-		}
-	}
-}
-
 // loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
 func loadConfiguration(filePath string) *Configuration {
 	if connect3270.Verbose {
@@ -115,38 +95,6 @@ func loadConfiguration(filePath string) *Configuration {
 	}
 
 	return &config
-}
-
-// runWorkflows executes the workflow multiple times, either concurrently or sequentially.
-func runWorkflows(numOfWorkflows int, config *Configuration) {
-	if connect3270.Verbose {
-		log.Printf("Starting %d workflows", numOfWorkflows)
-	}
-
-	tasks := make(chan int, numOfWorkflows) // Corrected this line
-
-	// Start workers
-	for i := 0; i < numOfWorkflows; i++ {
-		go func() {
-			for scriptPort := range tasks {
-				runWorkflow(scriptPort, config)
-				time.Sleep(1 * time.Second)
-				wg.Done()
-			}
-		}()
-	}
-
-	// Feed tasks to the channel
-	for i := 1; i <= numOfWorkflows; i++ {
-		wg.Add(1)
-		mutex.Lock()
-		lastUsedPort++
-		tasks <- lastUsedPort
-		mutex.Unlock()
-	}
-
-	wg.Wait()
-	close(tasks) // Close the tasks channel after all tasks have been fed
 }
 
 // runWorkflow executes the workflow steps for a single instance and skips the entire workflow if any step fails.
@@ -331,10 +279,6 @@ func runAPIWorkflow() {
 			"output":     outputContents,
 		})
 
-		// Delete the temporary file after sending the response
-		if err := os.Remove(tmpFileName); err != nil {
-			log.Printf("Error deleting temporary file: %v", err)
-		}
 	})
 
 	apiAddr := fmt.Sprintf(":%d", apiPort)
@@ -512,24 +456,6 @@ func handleRuntimeDuration(runtimeDone chan struct{}, closeDoneOnce *sync.Once) 
 	closeDoneOnce.Do(func() {
 		close(runtimeDone)
 	})
-}
-
-func incrementActiveWorkflows() {
-	if connect3270.Verbose {
-		log.Println("Starting incrementActiveWorkflows")
-	}
-	mutex.Lock()
-	defer mutex.Unlock()
-	activeWorkflows++
-}
-
-func decrementActiveWorkflows() {
-	if connect3270.Verbose {
-		log.Println("Starting decrementActiveWorkflows")
-	}
-	mutex.Lock()
-	defer mutex.Unlock()
-	activeWorkflows--
 }
 
 func getActiveWorkflows() int {
