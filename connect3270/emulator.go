@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -243,7 +244,7 @@ func (e *Emulator) validateKeyboard(key string) bool {
 	}
 }
 
-//IsConnected check if a connection with host exist
+// IsConnected check if a connection with host exist
 func (e *Emulator) IsConnected() bool {
 
 	time.Sleep(1 * time.Second) // Optional: Add a delay between steps
@@ -278,7 +279,7 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	return "", fmt.Errorf("maximum GetValue retries reached")
 }
 
-//CursorPosition return actual position by cursor
+// CursorPosition return actual position by cursor
 func (e *Emulator) CursorPosition() (string, error) {
 	return e.query("cursor")
 }
@@ -341,7 +342,7 @@ func (e *Emulator) Disconnect() error {
 	return nil
 }
 
-//query returns state information from x3270
+// query returns state information from x3270
 func (e *Emulator) query(keyword string) (string, error) {
 	command := fmt.Sprintf("query(%s)", keyword)
 	return e.execCommandOutput(command)
@@ -402,7 +403,7 @@ func (e *Emulator) createApp() error {
 	return nil
 }
 
-//hostname return hostname formatted
+// hostname return hostname formatted
 func (e *Emulator) hostname() string {
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
 }
@@ -562,17 +563,17 @@ func (e *Emulator) ReadOutputFile(tempFilePath string) (string, error) {
 func getOrCreateBinaryFile(binaryName string) (string, error) {
 	var filePath string
 	switch binaryName {
-	case "x3270", "s3270":
-		filePath = filepath.Join("/tmp", binaryName) // Path for x3270 or s3270 binaries
+	case "x3270", "s3270", "wc3270":
+		filePath = filepath.Join(os.TempDir(), binaryName+getExecutableExtension())
 	case "x3270if":
-		filePath = filepath.Join("/tmp", binaryName) // Separate path for x3270if
+		filePath = filepath.Join(os.TempDir(), binaryName+getExecutableExtension())
 	default:
 		return "", fmt.Errorf("unknown binary name: %s", binaryName)
 	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// File does not exist, create it
-		binaryData, err := binaries.Asset(binaryName)
+		binaryData, err := binaries.Asset(filepath.Join(getOSDirectory(), binaryName+getExecutableExtension()))
 		if err != nil {
 			return "", fmt.Errorf("error reading embedded binary data: %v", err)
 		}
@@ -583,6 +584,24 @@ func getOrCreateBinaryFile(binaryName string) (string, error) {
 	}
 
 	return filePath, nil
+}
+
+// getOSDirectory returns the appropriate directory name based on the OS
+func getOSDirectory() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "windows"
+	default:
+		return "linux"
+	}
+}
+
+// getExecutableExtension returns the appropriate file extension for executables based on the OS
+func getExecutableExtension() string {
+	if runtime.GOOS == "windows" {
+		return ".exe"
+	}
+	return ""
 }
 
 // prepareBinaryFilePath prepares and returns the path for the appropriate binary file based on the Headless flag.
@@ -596,7 +615,11 @@ func (e *Emulator) prepareBinaryFilePath() (string, error) {
 		binaryName = "s3270"
 		binaryFilePath = &s3270BinaryPath
 	} else {
-		binaryName = "x3270"
+		if runtime.GOOS == "windows" {
+			binaryName = "wc3270" // Assuming wc3270 combines functionalities on Windows
+		} else {
+			binaryName = "x3270"
+		}
 		binaryFilePath = &x3270BinaryPath
 	}
 
