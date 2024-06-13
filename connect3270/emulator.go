@@ -360,30 +360,60 @@ func (e *Emulator) createApp() error {
 		return err
 	}
 	if Verbose {
-		log.Println("createApp binaryFilePath: %s" + binaryFilePath)
+		log.Printf("createApp binaryFilePath: %s", binaryFilePath)
 	}
+
+	// Choose the correct model type
+	modelType := "3279-2" // Adjust this based on your application's requirements
 
 	var cmd *exec.Cmd
-	if Headless {
-		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
+	var resourceString string
+
+	// Conditional resource string based on OS
+	if runtime.GOOS == "windows" {
+		resourceString = "wc3270.unlockDelay: False"
 	} else {
-		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
+		resourceString = "x3270.unlockDelay: False"
 	}
 
-	// Retry logic parameters
-	maxRetries := 1
-	retryDelay := 1 * time.Second
+	if Headless {
+		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", resourceString, "-model", modelType, e.hostname())
+	} else {
+		cmd = exec.Command(binaryFilePath, "-xrm", resourceString, "-scriptport", e.ScriptPort, "-model", modelType, e.hostname())
+	}
 
-	// Use Goroutines for potential concurrent operations
+	if Verbose {
+		log.Printf("Executing command: %s %v", cmd.Path, cmd.Args)
+	}
+
+	// Capture stderr
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Printf("Failed to get stderr pipe: %v", err)
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Printf("Error starting 3270 instance: %v", err)
+		return err
+	}
+
 	go func() {
 		for retries := 0; retries < maxRetries; retries++ {
-			if err := cmd.Run(); err == nil {
+			errMsg, _ := ioutil.ReadAll(stderr)
+			if Verbose && len(errMsg) > 0 {
+				log.Printf("3270 stderr: %s", string(errMsg))
+			}
+			if err := cmd.Wait(); err == nil {
+				if Verbose {
+					log.Printf("Successfully started 3270 instance")
+				}
 				return // Successful execution, exit the Goroutine
 			}
-			//log.Printf("Error creating an instance of 3270 (Retry %d): %v\n", retries+1, err)
+			log.Printf("Error creating 3270 instance (Retry %d): %v", retries+1, err)
 			time.Sleep(retryDelay)
 		}
-		log.Printf("Max retries reached. Could not create an instance of 3270.\n")
+		log.Printf("Max retries reached. Could not create an instance of 3270.")
 	}()
 
 	const maxAttempts = 1
@@ -517,24 +547,20 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 			}
 
 			// Open or create the file for appending or overwriting
-			var file *os.File
-			var err error
-			//if append {
-			file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			//} else {
-			//file, err = os.Create(filePath)
-			//}
+			file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Printf("Error opening or creating file: %v", err)
 				return err
 			}
-			defer file.Close()
 
 			// Write the content to the file
 			if _, err := file.WriteString(content); err != nil {
 				log.Printf("Error writing to file: %v", err)
+				file.Close() // Ensure the file is closed in case of an error
 				return err
 			}
+
+			file.Close() // Ensure the file is properly closed
 			return nil
 		}
 		time.Sleep(retryDelay)

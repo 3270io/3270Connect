@@ -107,37 +107,31 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	activeWorkflows++
 	mutex.Unlock()
 
-	// Create an emulator instance
 	e := connect3270.Emulator{
 		Host:       config.Host,
 		Port:       config.Port,
-		ScriptPort: strconv.Itoa(scriptPort), // Convert int to string
+		ScriptPort: strconv.Itoa(scriptPort),
 	}
 
-	// Create a temporary file for this workflow run
 	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
 	if err != nil {
 		log.Printf("Error creating temporary file: %v", err)
 		return err
 	}
-	defer tmpFile.Close()
 	tmpFileName := tmpFile.Name()
+	tmpFile.Close() // Ensure the temporary file is closed immediately after creation
 
 	e.InitializeOutput(tmpFileName, runAPI)
 
-	// Flag to track if any step fails
 	workflowFailed := false
 
-	// Iterate through the steps in the configuration
 	for _, step := range config.Steps {
 		if workflowFailed {
-			// If any step has already failed, skip the remaining steps
 			break
 		}
 
 		switch step.Type {
 		case "InitializeOutput":
-			// Return an error instead of using log.Fatalf, so it can be handled properly
 			err := e.InitializeOutput(tmpFileName, runAPI)
 			if err != nil {
 				return fmt.Errorf("error initializing output file: %v", err)
@@ -154,7 +148,7 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 			if err != nil {
 				log.Printf("Error getting value: %v", err)
 				workflowFailed = true
-				break // Skip remaining steps if CheckValue fails
+				break
 			}
 			v = strings.TrimSpace(v)
 			if connect3270.Verbose {
@@ -187,7 +181,6 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		default:
 			log.Printf("Unknown step type: %s", step.Type)
 		}
-		//time.Sleep(1 * time.Second) // Optional: Add a delay between steps
 	}
 
 	mutex.Lock()
@@ -195,7 +188,6 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	mutex.Unlock()
 
 	if workflowFailed {
-		// Log that the workflow failed and skip any additional processing
 		log.Printf("Workflow for scriptPort %d failed", scriptPort)
 	} else {
 		if connect3270.Verbose {
@@ -204,13 +196,12 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	}
 
 	if workflowFailed {
-		// Log that the workflow failed and skip any additional processing
 		log.Printf("Workflow for scriptPort %d failed", scriptPort)
 	} else {
 		if connect3270.Verbose {
 			log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
 		}
-		// Rename the temporary file to the desired output file path
+		// Ensure the file is properly closed before renaming it
 		err := os.Rename(tmpFileName, config.OutputFilePath)
 		if err != nil {
 			log.Printf("Error renaming temporary file to output file: %v", err)
