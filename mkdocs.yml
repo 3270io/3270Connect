@@ -1,7 +1,7 @@
 site_name: 3270Connect
 site_description: User Guide for the 3270Connect Command-Line Utility
 site_author: 3270.io
-copyright: '© 2023 3270.io'
+copyright: '© 2023-2024 3270.io'
 site_url: https://3270.io
 repo_url: https://github.com/3270io/3270Connect
 #edit_uri: edit/master/docs/
@@ -60,4 +60,4 @@ markdown_extensions:
       url_download:
         - true
 extra:
-  version: 1.0.0
+  version: 1.0.4

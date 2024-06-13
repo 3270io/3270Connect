@@ -7,6 +7,8 @@ require (
 	github.com/racingmars/go3270 v0.0.0-20231019170216-d39b10e79d15
 )
 
+require github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
