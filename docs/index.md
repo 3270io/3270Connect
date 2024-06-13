@@ -48,21 +48,7 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 
-### UPDATE: Version 1.0.4 has now been tagged as the first stable release
-
-1. <s>When running under concurrent mode with runtime and the volumes are high, the tactical logic to `sleep and retry` on issue no longer works. This is planed to be replaced with wait_for_field logic.</s> Done
-
-2. <s>When running under concurrent mode with no runtime, the ramp logic is not in place.</s> Fixed
-
-3. <s>When running in API mode, make headless the default option.</s> Done
-
-4. <s>Remake the videos in higher resolution.</s> Done
-
-5. <s>When running in API mode, provide a new option to return the HTML screen grab contents.</s> Done
-
-6. <s>App additional dynamic sample 3270 applications.</s> Done
-
-7. <s>Give the option to return pure ASCII or HTML for the screen captures. API mode to default as pure.</s>
+### UPDATE: Version 1.0.6 now has Windows support
 
 ## Conclusion
 
