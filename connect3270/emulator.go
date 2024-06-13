@@ -573,7 +573,8 @@ func getOrCreateBinaryFile(binaryName string) (string, error) {
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// File does not exist, create it
-		binaryData, err := binaries.Asset(filepath.Join(getOSDirectory(), binaryName+getExecutableExtension()))
+		assetPath := filepath.Join("binaries", getOSDirectory(), binaryName+getExecutableExtension())
+		binaryData, err := binaries.Asset(assetPath)
 		if err != nil {
 			return "", fmt.Errorf("error reading embedded binary data: %v", err)
 		}
