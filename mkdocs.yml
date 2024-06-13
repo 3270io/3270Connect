@@ -6,6 +6,7 @@ site_url: https://3270.io
 repo_url: https://github.com/3270io/3270Connect
 #edit_uri: edit/master/docs/
 docs_dir: docs
+site_dir: app/static
 theme:
   name: material
   logo: logo.png
