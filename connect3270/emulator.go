@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -243,7 +244,7 @@ func (e *Emulator) validateKeyboard(key string) bool {
 	}
 }
 
-//IsConnected check if a connection with host exist
+// IsConnected check if a connection with host exist
 func (e *Emulator) IsConnected() bool {
 
 	time.Sleep(1 * time.Second) // Optional: Add a delay between steps
@@ -278,7 +279,7 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	return "", fmt.Errorf("maximum GetValue retries reached")
 }
 
-//CursorPosition return actual position by cursor
+// CursorPosition return actual position by cursor
 func (e *Emulator) CursorPosition() (string, error) {
 	return e.query("cursor")
 }
@@ -341,7 +342,7 @@ func (e *Emulator) Disconnect() error {
 	return nil
 }
 
-//query returns state information from x3270
+// query returns state information from x3270
 func (e *Emulator) query(keyword string) (string, error) {
 	command := fmt.Sprintf("query(%s)", keyword)
 	return e.execCommandOutput(command)
@@ -359,30 +360,60 @@ func (e *Emulator) createApp() error {
 		return err
 	}
 	if Verbose {
-		log.Println("createApp binaryFilePath: %s" + binaryFilePath)
+		log.Printf("createApp binaryFilePath: %s", binaryFilePath)
 	}
+
+	// Choose the correct model type
+	modelType := "3279-2" // Adjust this based on your application's requirements
 
 	var cmd *exec.Cmd
-	if Headless {
-		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", "x3270.unlockDelay: False", e.hostname())
+	var resourceString string
+
+	// Conditional resource string based on OS
+	if runtime.GOOS == "windows" {
+		resourceString = "wc3270.unlockDelay: False"
 	} else {
-		cmd = exec.Command(binaryFilePath, "-xrm", "x3270.unlockDelay: False", "-scriptport", e.ScriptPort, e.hostname())
+		resourceString = "x3270.unlockDelay: False"
 	}
 
-	// Retry logic parameters
-	maxRetries := 1
-	retryDelay := 1 * time.Second
+	if Headless {
+		cmd = exec.Command(binaryFilePath, "-scriptport", e.ScriptPort, "-xrm", resourceString, "-model", modelType, e.hostname())
+	} else {
+		cmd = exec.Command(binaryFilePath, "-xrm", resourceString, "-scriptport", e.ScriptPort, "-model", modelType, e.hostname())
+	}
 
-	// Use Goroutines for potential concurrent operations
+	if Verbose {
+		log.Printf("Executing command: %s %v", cmd.Path, cmd.Args)
+	}
+
+	// Capture stderr
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Printf("Failed to get stderr pipe: %v", err)
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Printf("Error starting 3270 instance: %v", err)
+		return err
+	}
+
 	go func() {
 		for retries := 0; retries < maxRetries; retries++ {
-			if err := cmd.Run(); err == nil {
+			errMsg, _ := ioutil.ReadAll(stderr)
+			if Verbose && len(errMsg) > 0 {
+				log.Printf("3270 stderr: %s", string(errMsg))
+			}
+			if err := cmd.Wait(); err == nil {
+				if Verbose {
+					log.Printf("Successfully started 3270 instance")
+				}
 				return // Successful execution, exit the Goroutine
 			}
-			//log.Printf("Error creating an instance of 3270 (Retry %d): %v\n", retries+1, err)
+			log.Printf("Error creating 3270 instance (Retry %d): %v", retries+1, err)
 			time.Sleep(retryDelay)
 		}
-		log.Printf("Max retries reached. Could not create an instance of 3270.\n")
+		log.Printf("Max retries reached. Could not create an instance of 3270.")
 	}()
 
 	const maxAttempts = 1
@@ -402,7 +433,7 @@ func (e *Emulator) createApp() error {
 	return nil
 }
 
-//hostname return hostname formatted
+// hostname return hostname formatted
 func (e *Emulator) hostname() string {
 	return fmt.Sprintf("%s:%d", e.Host, e.Port)
 }
@@ -516,24 +547,20 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 			}
 
 			// Open or create the file for appending or overwriting
-			var file *os.File
-			var err error
-			//if append {
-			file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			//} else {
-			//file, err = os.Create(filePath)
-			//}
+			file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Printf("Error opening or creating file: %v", err)
 				return err
 			}
-			defer file.Close()
 
 			// Write the content to the file
 			if _, err := file.WriteString(content); err != nil {
 				log.Printf("Error writing to file: %v", err)
+				file.Close() // Ensure the file is closed in case of an error
 				return err
 			}
+
+			file.Close() // Ensure the file is properly closed
 			return nil
 		}
 		time.Sleep(retryDelay)
@@ -562,17 +589,18 @@ func (e *Emulator) ReadOutputFile(tempFilePath string) (string, error) {
 func getOrCreateBinaryFile(binaryName string) (string, error) {
 	var filePath string
 	switch binaryName {
-	case "x3270", "s3270":
-		filePath = filepath.Join("/tmp", binaryName) // Path for x3270 or s3270 binaries
+	case "x3270", "s3270", "wc3270":
+		filePath = filepath.Join(os.TempDir(), binaryName+getExecutableExtension())
 	case "x3270if":
-		filePath = filepath.Join("/tmp", binaryName) // Separate path for x3270if
+		filePath = filepath.Join(os.TempDir(), binaryName+getExecutableExtension())
 	default:
 		return "", fmt.Errorf("unknown binary name: %s", binaryName)
 	}
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// File does not exist, create it
-		binaryData, err := binaries.Asset(binaryName)
+		assetPath := filepath.Join("binaries", getOSDirectory(), binaryName+getExecutableExtension())
+		binaryData, err := binaries.Asset(assetPath)
 		if err != nil {
 			return "", fmt.Errorf("error reading embedded binary data: %v", err)
 		}
@@ -583,6 +611,24 @@ func getOrCreateBinaryFile(binaryName string) (string, error) {
 	}
 
 	return filePath, nil
+}
+
+// getOSDirectory returns the appropriate directory name based on the OS
+func getOSDirectory() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "windows"
+	default:
+		return "linux"
+	}
+}
+
+// getExecutableExtension returns the appropriate file extension for executables based on the OS
+func getExecutableExtension() string {
+	if runtime.GOOS == "windows" {
+		return ".exe"
+	}
+	return ""
 }
 
 // prepareBinaryFilePath prepares and returns the path for the appropriate binary file based on the Headless flag.
@@ -596,7 +642,11 @@ func (e *Emulator) prepareBinaryFilePath() (string, error) {
 		binaryName = "s3270"
 		binaryFilePath = &s3270BinaryPath
 	} else {
-		binaryName = "x3270"
+		if runtime.GOOS == "windows" {
+			binaryName = "wc3270" // Assuming wc3270 combines functionalities on Windows
+		} else {
+			binaryName = "x3270"
+		}
 		binaryFilePath = &x3270BinaryPath
 	}
 
