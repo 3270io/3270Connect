@@ -1,0 +1,60 @@
+# This workflow will build a Golang project for both Linux and Windows
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Build for Linux
+        run: |
+          GOARCH=amd64 GOOS=linux go build -o 3270Connect go3270Connect.go
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Upload Linux Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: 3270Connect-linux
+          path: 3270Connect
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Build for Windows
+        shell: pwsh
+        run: |
+          $env:GOARCH="amd64"
+          $env:GOOS="windows"
+          go build -o 3270Connect.exe go3270Connect.go
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: 3270Connect-windows
+          path: 3270Connect.exe
