@@ -308,15 +308,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#macos" class="md-nav__link">
-    <span class="md-ellipsis">
-      macOS
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#windows" class="md-nav__link">
     <span class="md-ellipsis">
       Windows
@@ -414,14 +405,32 @@
 <div><h1 id="installation">Installation</h1>
 <p>To use the 3270Connect command-line utility, you need to install it on your system. Follow the steps below based on your platform:</p>
 <h2 id="linux">Linux</h2>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-LO<span class="w"> </span>https://github.com/3270io/3270Connect/releases/download/v1.0.4/3270Connect
+<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
+<span class="nv">LATEST_URL</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.assets[] | select(.name == "3270Connect") | .browser_download_url'</span><span class="k">)</span>
+
+<span class="c1"># Download the latest release</span>
+curl<span class="w"> </span>-LO<span class="w"> </span><span class="nv">$LATEST_URL</span>
+
+<span class="c1"># Make it executable</span>
 chmod<span class="w"> </span>+x<span class="w"> </span>3270Connect
+
+<span class="c1"># Move to a directory in PATH</span>
 sudo<span class="w"> </span>mv<span class="w"> </span>3270Connect<span class="w"> </span>/usr/local/bin/3270Connect
 </code></pre></div>
-<h2 id="macos">macOS</h2>
-<p>Coming soon.</p>
 <h2 id="windows">Windows</h2>
-<p>Coming soon.</p></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
+<span class="nv">$latest_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Invoke-RestMethod<span class="w"> </span>-Uri<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
+<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>assets<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
+<span class="w">    </span>Where-Object<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">$_</span>.name<span class="w"> </span>-eq<span class="w"> </span><span class="s2">"3270Connect.exe"</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
+<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>browser_download_url
+
+<span class="c1"># Download the latest release</span>
+Invoke-WebRequest<span class="w"> </span>-Uri<span class="w"> </span><span class="nv">$latest_url</span><span class="w"> </span>-OutFile<span class="w"> </span>3270Connect.exe
+
+<span class="c1"># Optionally, move to a directory in PATH (requires admin privileges)</span>
+<span class="c1"># Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"</span>
+</code></pre></div></div>
 
 
 
