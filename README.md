@@ -57,3 +57,4 @@ go build -o 3270Connect go3270Connect.go
 .\3270Connect -runApp 1
 ./3270Connect -verbose -headless
 
+mkdocs build
