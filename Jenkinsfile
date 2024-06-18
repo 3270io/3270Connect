@@ -20,6 +20,10 @@ node (agent){
         sh 'docker login --username=sysad --password=sysad reg.jnnn.gs'
         sh 'docker push reg.jnnn.gs/3270_io:latest' 
     }
+    stage('Prepare build script') {
+        /* Ensure the build script is executable */
+        sh 'chmod +x build.sh'
+    }
     stage('Run build script') {
         /* This stage runs the build.sh script to build both Linux and Windows images */
         sh './build.sh'
