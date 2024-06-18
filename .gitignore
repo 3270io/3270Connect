@@ -1,3 +1,8 @@
 output.html
 example.json
+<<<<<<< HEAD
 Jenkinsfile
+=======
+Jenkinsfile
+build.bat
+>>>>>>> 67d4430061f513b8289393ccdb7545002143dc5f
