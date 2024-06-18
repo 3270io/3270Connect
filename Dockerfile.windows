@@ -1,0 +1,11 @@
+# Use the Windows Server Core base image
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary into the container
+COPY 3270Connect.exe .
+
+# Set the entry point
+ENTRYPOINT ["./3270Connect.exe"]

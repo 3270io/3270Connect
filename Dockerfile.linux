@@ -1,0 +1,11 @@
+# Use the official Golang base image
+FROM golang:1.20
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary into the container
+COPY 3270Connect .
+
+# Set the entry point
+ENTRYPOINT ["./3270Connect"]
