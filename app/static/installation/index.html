@@ -455,8 +455,7 @@
 <h2 id="linux">Linux</h2>
 <h3 id="direct-installation">Direct Installation</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
-<span class="nv">LATEST_URL</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="se">\</span>
-<span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.assets[] | select(.name == "3270Connect") | .browser_download_url'</span><span class="k">)</span>
+<span class="nv">LATEST_URL</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.assets[] | select(.name == "3270Connect") | .browser_download_url'</span><span class="k">)</span>
 
 <span class="c1"># Download the latest release</span>
 curl<span class="w"> </span>-LO<span class="w"> </span><span class="nv">$LATEST_URL</span>
@@ -473,6 +472,25 @@ docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-lin
 
 <span class="c1"># Run the Docker container</span>
 docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-linux:latest
+</code></pre></div>
+<h4 id="additional-docker-run-examples-linux">Additional Docker Run Examples (Linux)</h4>
+<p>Run the container with a configuration file and expose the port:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
+</code></pre></div>
+<p>Run in headless mode:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
+</code></pre></div>
+<p>Run in verbose mode:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
+</code></pre></div>
+<p>Run multiple workflows concurrently:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+</code></pre></div>
+<p>Run a test 3270 sample application:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp
+</code></pre></div>
+<p>Run a specific test 3270 sample application:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
 </code></pre></div>
 <h2 id="windows">Windows</h2>
 <h3 id="direct-installation_1">Direct Installation</h3>
@@ -494,6 +512,25 @@ docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-win
 
 <span class="c1"># Run the Docker container</span>
 docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-windows:latest
+</code></pre></div>
+<h4 id="additional-docker-run-examples-windows">Additional Docker Run Examples (Windows)</h4>
+<p>Run the container with a configuration file and expose the port:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
+</code></pre></div>
+<p>Run in headless mode:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
+</code></pre></div>
+<p>Run in verbose mode:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
+</code></pre></div>
+<p>Run multiple workflows concurrently:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+</code></pre></div>
+<p>Run a test 3270 sample application:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp
+</code></pre></div>
+<p>Run a specific test 3270 sample application:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
 </code></pre></div></div>
 
 

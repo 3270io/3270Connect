@@ -437,49 +437,49 @@
 <div class="highlight"><pre><span></span><code>http://localhost:8080/api/execute
 </code></pre></div>
 <p>Body:
-</p><div class="highlight"><pre><span></span><code><span class="o">{</span>
-<span class="w">  </span><span class="s2">"Host"</span>:<span class="w"> </span><span class="s2">"10.27.27.27"</span>,
-<span class="w">  </span><span class="s2">"Port"</span>:<span class="w"> </span><span class="m">3270</span>,
-<span class="w">  </span><span class="s2">"HTMLFilePath"</span>:<span class="w"> </span><span class="s2">"output.html"</span>,
-<span class="w">  </span><span class="s2">"Steps"</span>:<span class="w"> </span><span class="o">[</span>
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"InitializeHTMLFile"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"Connect"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"CheckValue"</span>,
-<span class="w">      </span><span class="s2">"Coordinates"</span>:<span class="w"> </span><span class="o">{</span><span class="s2">"Row"</span>:<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="s2">"Column"</span>:<span class="w"> </span><span class="m">2</span>,<span class="w"> </span><span class="s2">"Length"</span>:<span class="w"> </span><span class="m">11</span><span class="o">}</span>,
-<span class="w">      </span><span class="s2">"Text"</span>:<span class="w"> </span><span class="s2">"Some: VALUE"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"FillString"</span>,
-<span class="w">      </span><span class="s2">"Coordinates"</span>:<span class="w"> </span><span class="o">{</span><span class="s2">"Row"</span>:<span class="w"> </span><span class="m">10</span>,<span class="w"> </span><span class="s2">"Column"</span>:<span class="w"> </span><span class="m">44</span><span class="o">}</span>,
-<span class="w">      </span><span class="s2">"Text"</span>:<span class="w"> </span><span class="s2">"user1"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"FillString"</span>,
-<span class="w">      </span><span class="s2">"Coordinates"</span>:<span class="w"> </span><span class="o">{</span><span class="s2">"Row"</span>:<span class="w"> </span><span class="m">11</span>,<span class="w"> </span><span class="s2">"Column"</span>:<span class="w"> </span><span class="m">44</span><span class="o">}</span>,
-<span class="w">      </span><span class="s2">"Text"</span>:<span class="w"> </span><span class="s2">"mypass"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"PressEnter"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
-<span class="w">    </span><span class="o">}</span>,
-<span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">"Type"</span>:<span class="w"> </span><span class="s2">"Disconnect"</span>
-<span class="w">    </span><span class="o">}</span>
-<span class="w">  </span><span class="o">]</span>
-<span class="o">}</span>
+</p><div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.27"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"HTMLFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"InitializeHTMLFile"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some: VALUE"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mypass"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
 </code></pre></div>
 <h3 id="api-mode-with-docker">API Mode with Docker</h3>
 <p><code>3270Connect</code> can also run as an API server using the <code>-api</code> and <code>-api-port</code> flags:</p>
@@ -489,11 +489,11 @@
 </ul>
 <p>To run <code>3270Connect</code> in API mode, use the following command:</p>
 <h4 id="linux">Linux</h4>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
 </code></pre></div>
 <h4 id="windows">Windows</h4>
-<p>```bash
-docker run --rm 3270io/3270connect-windows:latest -api -api-port 8080</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
+</code></pre></div>
 <h3 id="3270connect-api-usage">3270Connect API Usage</h3>
 <p><div class="video-container"><video style controls alt="type:video"><source src="../3270Connect_API_1_0_4_0.mp4" type="video/mp4"></source></video></div></p></div>
 
