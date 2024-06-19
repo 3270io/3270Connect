@@ -4,6 +4,8 @@ To use the 3270Connect command-line utility, you need to install it on your syst
 
 ## Linux
 
+### Direct Installation
+
 ```shell
 # Fetch the latest release URL
 LATEST_URL=$(curl -s https://api.github.com/repos/3270io/3270Connect/releases/latest \
@@ -17,10 +19,21 @@ chmod +x 3270Connect
 
 # Move to a directory in PATH
 sudo mv 3270Connect /usr/local/bin/3270Connect
+```
 
+### Docker Installation
+
+```shell
+# Pull the Docker image
+docker pull 3270io/3270connect-linux:latest
+
+# Run the Docker container
+docker run --rm -it 3270io/3270connect-linux:latest
 ```
 
 ## Windows
+
+### Direct Installation
 
 ```shell
 # Fetch the latest release URL
@@ -34,4 +47,14 @@ Invoke-WebRequest -Uri $latest_url -OutFile 3270Connect.exe
 
 # Optionally, move to a directory in PATH (requires admin privileges)
 # Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"
+```
+
+### Docker Installation
+
+```shell
+# Pull the Docker image
+docker pull 3270io/3270connect-windows:latest
+
+# Run the Docker container
+docker run --rm -it 3270io/3270connect-windows:latest
 ```

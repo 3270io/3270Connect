@@ -162,6 +162,97 @@ or
 
 Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.
 
+
+## Docker Usage
+
+### Linux
+
+Pull the latest image:
+
+```bash
+docker pull 3270io/3270connect-linux:latest
+```
+
+Run the container with a configuration file:
+
+```bash
+docker run -it -v $(pwd)/workflow.json:/app/workflow.json 3270io/3270connect-linux:latest -config /app/workflow.json
+```
+
+Run in headless mode:
+
+```bash
+docker run -it -v $(pwd)/workflow.json:/app/workflow.json 3270io/3270connect-linux:latest -config /app/workflow.json -headless
+```
+
+Run in verbose mode:
+
+```bash
+docker run -it -v $(pwd)/workflow.json:/app/workflow.json 3270io/3270connect-linux:latest -config /app/workflow.json -verbose
+```
+
+Run multiple workflows concurrently:
+
+```bash
+docker run -it -v $(pwd)/workflow.json:/app/workflow.json 3270io/3270connect-linux:latest -config /app/workflow.json -concurrent 2 -runtime 60
+```
+
+Run a test 3270 sample application:
+
+```bash
+docker run -it 3270io/3270connect-linux:latest -runApp
+```
+
+Run a specific test 3270 sample application:
+
+```bash
+docker run -it 3270io/3270connect-linux:latest -runApp [number]
+```
+
+### Windows
+
+Pull the latest image:
+
+```bash
+docker pull 3270io/3270connect-windows:latest
+```
+
+Run the container with a configuration file:
+
+```bash
+docker run -it -v ${PWD}/workflow.json:/app/workflow.json 3270io/3270connect-windows:latest -config /app/workflow.json
+```
+
+Run in headless mode:
+
+```bash
+docker run -it -v ${PWD}/workflow.json:/app/workflow.json 3270io/3270connect-windows:latest -config /app/workflow.json -headless
+```
+
+Run in verbose mode:
+
+```bash
+docker run -it -v ${PWD}/workflow.json:/app/workflow.json 3270io/3270connect-windows:latest -config /app/workflow.json -verbose
+```
+
+Run multiple workflows concurrently:
+
+```bash
+docker run -it -v ${PWD}/workflow.json:/app/workflow.json 3270io/3270connect-windows:latest -config /app/workflow.json -concurrent 2 -runtime 60
+```
+
+Run a test 3270 sample application:
+
+```bash
+docker run -it 3270io/3270connect-windows:latest -runApp
+```
+
+Run a specific test 3270 sample application:
+
+```bash
+docker run -it 3270io/3270connect-windows:latest -runApp [number]
+```
+
 ### 3270Connect Basic Usage
 
 ![type:video](3270Connect_1_0_3_9.mp4){: style=''}

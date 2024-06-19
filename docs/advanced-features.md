@@ -68,6 +68,24 @@ Body:
 }
 ```
 
+### API Mode with Docker
+
+`3270Connect` can also run as an API server using the `-api` and `-api-port` flags:
+
+- `-api`: Run `3270Connect` as an API.
+- `-api-port`: Specifies the port for the API (default is 8080).
+
+To run `3270Connect` in API mode, use the following command:
+
+#### Linux
+```bash
+docker run --rm 3270io/3270connect-linux:latest -api -api-port 8080
+```
+
+#### Windows
+```bash
+docker run --rm 3270io/3270connect-windows:latest -api -api-port 8080
+
 ### 3270Connect API Usage
 
 ![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
