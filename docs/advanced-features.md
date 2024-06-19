@@ -1,3 +1,4 @@
+
 ## Advanced Features
 
 ### API Mode
@@ -22,7 +23,7 @@ http://localhost:8080/api/execute
 ```
 
 Body:
-```bash
+```json
 {
   "Host": "10.27.27.27",
   "Port": 3270,
@@ -79,12 +80,13 @@ To run `3270Connect` in API mode, use the following command:
 
 #### Linux
 ```bash
-docker run --rm 3270io/3270connect-linux:latest -api -api-port 8080
+docker run --rm -p 8080:8080 3270io/3270connect-linux:latest -api -api-port 8080
 ```
 
 #### Windows
 ```bash
-docker run --rm 3270io/3270connect-windows:latest -api -api-port 8080
+docker run --rm -p 8080:8080 3270io/3270connect-windows:latest -api -api-port 8080
+```
 
 ### 3270Connect API Usage
 

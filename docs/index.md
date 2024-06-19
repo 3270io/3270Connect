@@ -48,8 +48,6 @@ Once you've mastered the basics, you can dive into more advanced features:
 
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 
-### UPDATE: Version 1.0.6 now has Windows support
-
 ## Conclusion
 
 The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
