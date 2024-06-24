@@ -11,7 +11,7 @@ set /p DOCKER_USERNAME=Enter Docker username:
 set /p DOCKER_PASSWORD=Enter Docker password: 
 
 REM Login to Docker registry
-docker login --username %DOCKER_USERNAME% --password %DOCKER_PASSWORD% reg.jnnn.gs
+docker login --username %DOCKER_USERNAME% --password %DOCKER_PASSWORD% 
 if errorlevel 1 (
     echo Docker login failed
     exit /b 1
@@ -25,17 +25,17 @@ if errorlevel 1 (
 )
 
 REM Tag the Docker image
-docker tag 3270connect-windows:latest reg.jnnn.gs/3270connect/3270connect-windows:latest
+docker tag 3270connect-windows:latest 3270io/3270connect-windows:latest
 if errorlevel 1 (
     echo Docker image tagging failed
     exit /b 1
 )
 
 REM Push the Docker image
-docker push reg.jnnn.gs/3270connect/3270connect-windows:latest
+docker push 3270io/3270connect-windows:latest
 if errorlevel 1 (
     echo Docker image push failed
     exit /b 1
 )
 
-echo Docker image pushed successfully to reg.jnnn.gs/3270connect/3270connect-windows:latest
+echo Docker image pushed successfully to 3270io/3270connect-windows:latest
