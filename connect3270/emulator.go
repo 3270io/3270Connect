@@ -494,7 +494,7 @@ func (e *Emulator) execCommandOutput(command string) (string, error) {
 	return string(output), nil
 }
 
-// Initialize output file with run details
+// InitializeOutput initializes the output file with run details
 func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 	if Verbose {
 		log.Printf("Initializing Output file at path: %s", filePath)
@@ -510,8 +510,15 @@ func (e *Emulator) InitializeOutput(filePath string, runAPI bool) error {
 		outputContent += fmt.Sprintf("<p>Run Date and Time: %s</p>", currentTime)
 	}
 
-	// Open or create the output file for overwriting
-	file, err := os.Create(filePath)
+	// Open or create the output file for overwriting if in API mode
+	// and for appending if not in API mode
+	var file *os.File
+	var err error
+	if runAPI {
+		file, err = os.Create(filePath) // Clears the file in API mode
+	} else {
+		file, err = os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // Appends in non-API mode
+	}
 	if err != nil {
 		return fmt.Errorf("error opening or creating file: %v", err)
 	}

@@ -129,8 +129,8 @@ Run a test 3270 sample application:
 docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp
 ```
 
-Run a specific test 3270 sample application:
+Run a specific test 3270 sample application and listening port:
 
 ```shell
-docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp [number]
+docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp [number] -runApp-port [portNumber]
 ```

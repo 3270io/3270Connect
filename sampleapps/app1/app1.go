@@ -58,17 +58,23 @@ var screen2 = go3270.Screen{
 	{Row: 22, Col: 0, Content: "PF3 Exit"},
 }
 
-func RunApplication() {
-	ln, err := net.Listen("tcp", ":3270")
+func RunApplication(port int) {
+	address := fmt.Sprintf(":%d", port)
+	ln, err := net.Listen("tcp", address)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error starting server:", err)
+		os.Exit(1)
 	}
-	fmt.Println("LISTENING ON PORT 3270 FOR CONNECTIONS")
+	defer ln.Close()
+
+	fmt.Printf("Listening on port %d for connections\n", port)
 	fmt.Println("Press Ctrl-C to end server.")
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			panic(err)
+			fmt.Println("Error accepting connection:", err)
+			continue
 		}
 		go handle(conn)
 	}

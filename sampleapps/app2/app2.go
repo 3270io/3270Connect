@@ -219,15 +219,16 @@ func handle(conn net.Conn) {
 	}
 }
 
-func RunApplication() {
-	ln, err := net.Listen("tcp", ":3270")
+func RunApplication(port int) {
+	address := fmt.Sprintf(":%d", port)
+	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 		os.Exit(1)
 	}
 	defer ln.Close()
 
-	fmt.Println("Listening on port 3270 for connections")
+	fmt.Printf("Listening on port %d for connections\n", port)
 	fmt.Println("Press Ctrl-C to end server.")
 
 	for {

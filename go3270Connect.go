@@ -21,7 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.6"
+const version = "1.0.4.7"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -64,6 +64,8 @@ const rampUpDelay = time.Second // Delay between starting batches
 var showVersion = flag.Bool("version", false, "Show the application version")
 
 // init initializes the command-line flags with default values.
+var runAppPort int
+
 func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
@@ -73,7 +75,8 @@ func init() {
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
-	flag.StringVar(&runApp, "runApp", "1", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
+	flag.StringVar(&runApp, "runApp", "", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
+	flag.IntVar(&runAppPort, "runApp-port", 3270, "Port for the sample 3270 application (default 3270)")
 }
 
 // loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
@@ -221,14 +224,6 @@ func runAPIWorkflow() {
 	// Set the global Headless mode for all emulator instances
 	connect3270.Headless = true
 
-	// Create a temporary file for this workflow run
-	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
-	if err != nil {
-		log.Printf("Error creating temporary file: %v", err)
-	}
-	defer tmpFile.Close()
-	tmpFileName := tmpFile.Name()
-
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
@@ -240,9 +235,26 @@ func runAPIWorkflow() {
 			return
 		}
 
+		// Create a new temporary file for this request
+		tmpFile, err := ioutil.TempFile("", "workflowOutput_")
+		if err != nil {
+			log.Printf("Error creating temporary file: %v", err)
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to create temporary file", err)
+			return
+		}
+		defer tmpFile.Close()
+		tmpFileName := tmpFile.Name()
+
 		// Create a new Emulator instance for each request
 		scriptPort := getNextAvailablePort()
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
+
+		// Initialize the output file
+		err = e.InitializeOutput(tmpFileName, true)
+		if err != nil {
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
+			return
+		}
 
 		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
@@ -317,22 +329,8 @@ func sendErrorResponse(c *gin.Context, statusCode int, message string, err error
 
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
-
-	// Check if '-runApp' is provided without an argument and if so, set the default to "1".
-	foundRunApp := false
-	for i, arg := range os.Args {
-		if arg == "-runApp" {
-			foundRunApp = true
-			// If '-runApp' is the last argument or the next argument is another flag, set the default to "1".
-			if i+1 == len(os.Args) || strings.HasPrefix(os.Args[i+1], "-") {
-				os.Args[i] = "-runApp=1" // Correctly set the default value for '-runApp'.
-			}
-		}
-	}
-
 	flag.Parse()
 
-	// Now showVersion is accessible here, and you can dereference it to get the value.
 	if *showVersion {
 		printVersionAndExit()
 	}
@@ -343,14 +341,14 @@ func main() {
 
 	setGlobalSettings()
 
-	// If runApp is not empty and not "1" (which is default), then override the default value
-	if foundRunApp {
+	// Check if runApp is specified
+	if runApp != "" && runApp != "1" {
 		switch runApp {
 		case "1":
-			app1.RunApplication()
+			app1.RunApplication(runAppPort) // Pass the port to the application
 			return
 		case "2":
-			app2.RunApplication()
+			app2.RunApplication(runAppPort) // Pass the port to the application
 			return
 		// Add additional cases for other apps
 		default:
@@ -364,10 +362,9 @@ func main() {
 		runAPIWorkflow()
 	} else {
 		if concurrent > 1 {
-			//runWorkflows(concurrent, config)
 			runConcurrentWorkflows(config)
 		} else {
-			runWorkflow(7000, config) // 7000 or a default port for non-concurrent execution
+			runWorkflow(runAppPort, config) // Use runAppPort here
 		}
 	}
 }
