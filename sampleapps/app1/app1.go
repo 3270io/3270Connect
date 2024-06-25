@@ -1,7 +1,3 @@
-// This file is part of https://github.com/racingmars/go3270/
-// Copyright 2020 by Matthew R. Wilson, licensed under the MIT license. See
-// LICENSE in the project root for license information.
-
 package app1
 
 import (
@@ -17,9 +13,6 @@ func init() {
 	// put the go3270 library in debug mode
 	go3270.Debug = os.Stderr
 }
-
-// A Screen is an array of go3270.Field structs. We will build two screens,
-// a query screen and a result screen:
 
 var screen1 = go3270.Screen{
 	{Row: 0, Col: 27, Intense: true, Content: "3270 Example Application"},
