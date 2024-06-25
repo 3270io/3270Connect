@@ -342,7 +342,7 @@ func main() {
 	setGlobalSettings()
 
 	// Check if runApp is specified
-	if runApp != "" && runApp != "1" {
+	if runApp != "" {
 		switch runApp {
 		case "1":
 			app1.RunApplication(runAppPort) // Pass the port to the application
