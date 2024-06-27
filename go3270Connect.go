@@ -158,7 +158,7 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 				log.Println("Retrieved value: " + v)
 			}
 			if v != step.Text {
-				log.Printf("Login failed. Expected: %s, Found: %s", step.Text, v)
+				log.Printf("CheckValue failed. Expected: %s, Found: %s", step.Text, v)
 				workflowFailed = true
 			}
 		case "FillString":
@@ -364,7 +364,7 @@ func main() {
 		if concurrent > 1 {
 			runConcurrentWorkflows(config)
 		} else {
-			runWorkflow(runAppPort, config) // Use runAppPort here
+			runWorkflow(7000, config)
 		}
 	}
 }

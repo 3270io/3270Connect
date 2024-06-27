@@ -1,5 +1,5 @@
 {
-  "Host": "localhost",
+  "Host": "app1.3270.io",
   "Port": 3270,
   "OutputFilePath": "output.html",
   "Steps": [
