@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
@@ -65,6 +65,8 @@ var showVersion = flag.Bool("version", false, "Show the application version")
 
 // init initializes the command-line flags with default values.
 var runAppPort int
+var dashboardPort int
+var scriptPort int
 
 func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
@@ -77,6 +79,8 @@ func init() {
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
 	flag.StringVar(&runApp, "runApp", "", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
 	flag.IntVar(&runAppPort, "runApp-port", 3270, "Port for the sample 3270 application (default 3270)")
+	flag.IntVar(&dashboardPort, "dashboard-port", 0, "Port for the web dashboard (default is 0, which means disabled)")
+	flag.IntVar(&scriptPort, "scriptport", 0, "Port for the script interface (default is 0, which means dynamically assigned)")
 }
 
 // loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
@@ -577,4 +581,37 @@ func validateConfiguration(config *Configuration) error {
 	}
 
 	return nil
+}
+
+func isPortAvailable(port int) bool {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
+}
+
+func getNextFreePort(startPort int) int {
+	port := startPort
+	for {
+		if isPortAvailable(port) {
+			return port
+		}
+		port++
+	}
+}
+
+func startWebDashboard(port int) {
+	if connect3270.Verbose {
+		log.Printf("Starting web dashboard on port %d", port)
+	}
+	// Placeholder for web dashboard implementation
+}
+
+func startScriptInterface(port int) {
+	if connect3270.Verbose {
+		log.Printf("Starting script interface on port %d", port)
+	}
+	// Placeholder for script interface implementation
 }

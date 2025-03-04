@@ -1,4 +1,3 @@
-
 # Basic Usage
 
 ## Introduction
@@ -101,6 +100,22 @@ To enable verbose mode for detailed output, use the `-verbose` flag.
 
 ```bash
 3270Connect -config workflow.json -verbose
+```
+
+### Web Dashboard Port
+
+To specify the port for the web dashboard, use the `-dashboard-port` flag. The web dashboard server will only start if this flag is provided.
+
+```bash
+3270Connect -config workflow.json -dashboard-port 8081
+```
+
+### Script Interface Port
+
+To specify the port for the script interface, use the `-scriptport` flag. The script interface will only start if this flag is provided.
+
+```bash
+3270Connect -config workflow.json -scriptport 5001
 ```
 
 ## Examples

@@ -1,4 +1,3 @@
-
 ## Advanced Features
 
 ### API Mode
@@ -86,6 +85,22 @@ docker run --rm -p 8080:8080 3270io/3270connect-linux:latest -api -api-port 8080
 #### Windows
 ```bash
 docker run --rm -p 8080:8080 3270io/3270connect-windows:latest -api -api-port 8080
+```
+
+### Web Dashboard Port
+
+To specify the port for the web dashboard, use the `-dashboard-port` flag. The web dashboard server will only start if this flag is provided.
+
+```bash
+3270Connect -api -api-port 8080 -dashboard-port 8081
+```
+
+### Script Interface Port
+
+To specify the port for the script interface, use the `-scriptport` flag. The script interface will only start if this flag is provided.
+
+```bash
+3270Connect -api -api-port 8080 -scriptport 5001
 ```
 
 ### 3270Connect API Usage
