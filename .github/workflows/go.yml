@@ -28,7 +28,7 @@ jobs:
         run: go test -v ./...
 
       - name: Upload Linux Binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: 3270Connect-linux
           path: 3270Connect
@@ -54,7 +54,7 @@ jobs:
         run: go test -v ./...
 
       - name: Upload Windows Binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: 3270Connect-windows
           path: 3270Connect.exe
