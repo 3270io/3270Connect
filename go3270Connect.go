@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -21,7 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4.7"
+const version = "1.0.4.8"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -50,8 +51,9 @@ var (
 	runtimeDuration int // Flag to determine if new workflows should be started when others finish
 	done            = make(chan bool)
 	wg              sync.WaitGroup
-	lastUsedPort    int       = 5000 // starting port number
-	closeDoneOnce   sync.Once        // Declare a sync.Once variable
+	lastUsedPort    int       // remove preset initial value; will be set from startPort flag
+	closeDoneOnce   sync.Once // Declare a sync.Once variable
+	startPort       int       // new global flag for starting port
 )
 
 var activeWorkflows int
@@ -77,6 +79,7 @@ func init() {
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds. Only used in concurrent mode.")
 	flag.StringVar(&runApp, "runApp", "", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
 	flag.IntVar(&runAppPort, "runApp-port", 3270, "Port for the sample 3270 application (default 3270)")
+	flag.IntVar(&startPort, "startPort", 5000, "Starting port number for workflow connections") // new flag
 }
 
 // loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
@@ -327,9 +330,29 @@ func sendErrorResponse(c *gin.Context, statusCode int, message string, err error
 	})
 }
 
+// new function to print ASCII banner
+func printBanner() {
+	// Simple ASCII banner with version info
+	fmt.Println(`
+	____ ___ ______ ___   _____                            _
+	|___ \__ \____  / _ \ / ____|                          | |
+	  __) | ) |  / / | | | |     ___  _ __  _ __   ___  ___| |_
+	 |__ < / /  / /| | | | |    / _ \| '_ \| '_ \ / _ \/ __| __|
+	 ___) / /_ / / | |_| | |___| (_) | | | | | | |  __/ (__| |_
+	|____/____/_/   \___/ \_____\___/|_| |_|_| |_|\___|\___|\__|
+
+Version: ` + version)
+}
+
 // main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
 	flag.Parse()
+	printBanner() // Print the ASCII banner at startup
+
+	// Set the initial lastUsedPort from the startPort flag value.
+	mutex.Lock()
+	lastUsedPort = startPort
+	mutex.Unlock()
 
 	if *showVersion {
 		printVersionAndExit()
@@ -530,8 +553,24 @@ func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *syn
 func getNextAvailablePort() int {
 	mutex.Lock()
 	defer mutex.Unlock()
-	lastUsedPort++
-	return lastUsedPort
+	for {
+		lastUsedPort++
+		if isPortAvailable(lastUsedPort) {
+			return lastUsedPort
+		}
+		log.Printf("Port %d is in use, trying next port", lastUsedPort)
+	}
+}
+
+// new helper to check if a port is available
+func isPortAvailable(port int) bool {
+	addr := ":" + strconv.Itoa(port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
 }
 
 // Helper function to find the minimum of two integers

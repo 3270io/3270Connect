@@ -1,9 +1,8 @@
-
 # Basic Usage
 
 ## Introduction
 
-The basic usage of `3270Connect` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens. 
+The basic usage of `3270Connect` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens.
 
 To run a workflow, use the following command:
 
@@ -103,6 +102,16 @@ To enable verbose mode for detailed output, use the `-verbose` flag.
 3270Connect -config workflow.json -verbose
 ```
 
+### startPort Flag
+
+The -startPort flag allows you to specify the starting port for the sample application. This help to prevent port usage conflicts when running 3270Connect multiple times on the same machine.
+
+Use it as follows:
+
+```bash
+3270Connect -config workflow.json -startPort 5000
+```
+
 ## Examples
 
 Let's explore some common use cases with examples:
@@ -139,7 +148,7 @@ Run `3270Connect` in API mode and interact with it using HTTP requests.
 
 ### 5. Running a 3270 sample application to help with testing the workflow features
 
-As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the [github.com/racingmars/go3270](https://github.com/racingmars/go3270) framework. Full credit go to `racingmars` for this great open source repo. 
+As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the [github.com/racingmars/go3270](https://github.com/racingmars/go3270) framework. Full credit go to `racingmars` for this great open source repo.
 
 !!! note
 
