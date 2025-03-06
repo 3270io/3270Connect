@@ -24,7 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.5"
+const version = "1.1"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -57,6 +57,8 @@ var (
 	closeDoneOnce   sync.Once // Declare a sync.Once variable
 	startPort       int       // new global flag for starting port
 )
+
+var dashboardStarted bool
 
 // New global counters for metrics.
 var totalWorkflowsStarted int64
@@ -126,6 +128,7 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		log.Printf("Starting workflow for scriptPort %d", scriptPort)
 	}
 
+	// Increment activeWorkflows
 	mutex.Lock()
 	activeWorkflows++
 	mutex.Unlock()
@@ -206,6 +209,7 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		}
 	}
 
+	// Decrement activeWorkflows when done.
 	mutex.Lock()
 	activeWorkflows--
 	mutex.Unlock()
@@ -419,6 +423,11 @@ func main() {
 		} else {
 			runWorkflow(7000, config)
 		}
+		// If a dashboard is running, leave it up and inform the user.
+		if concurrent > 1 && dashboardStarted {
+			log.Printf("All workflows completed but the dashboard is still running on port %d. Press Ctrl+C to exit.", dashboardPort)
+			select {} // Block forever so the dashboard keeps running
+		}
 	}
 }
 
@@ -439,35 +448,57 @@ func setGlobalSettings() {
 }
 
 func runConcurrentWorkflows(config *Configuration) {
-	activeChan := make(chan struct{}, concurrent)
+	overallStart := time.Now()
+
+	// Start progress logging in a separate goroutine.
+	go logActiveWorkflowsUntilDone()
+
+	// Create a channel to act as a semaphore limiting the number of concurrent workflows.
+	semaphore := make(chan struct{}, concurrent)
 	var wg sync.WaitGroup
-	var closeLogDoneOnce, closeRuntimeDoneOnce sync.Once
-	logDone := make(chan struct{})
-	runtimeDone := make(chan struct{})
 
-	// Always run logActiveWorkflows goroutine for the entire duration of concurrent workflows
-	go logActiveWorkflows(logDone)
+	// Loop until the overall runtime is reached.
+	for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
+		// Start a batch of workflows, up to rampUpBatchSize, or until runtime is reached.
+		for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
+			// Incrementally launch workflows until the concurrent limit is reached.
+			for i := 0; i < rampUpBatchSize; i++ {
+				semaphore <- struct{}{}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					portToUse := getNextAvailablePort()
+					err := runWorkflow(portToUse, config)
+					if err != nil && connect3270.Verbose {
+						log.Printf("Workflow on port %d error: %v", portToUse, err)
+					}
+					// Release the semaphore slot when done.
+					<-semaphore
+				}()
+			}
+			// Log the current number of active workflows.
+			log.Printf("Currently active workflows: %d", len(semaphore))
+			// Wait a short delay before starting the next workflow to gradually reach full concurrency.
+			time.Sleep(rampUpDelay)
+		}
+		// Log the current number of active workflows after each batch.
+		log.Printf("Currently active workflows: %d", len(semaphore))
+		// Wait for a short delay before starting the next batch.
+		time.Sleep(rampUpDelay)
+	}
 
-	// Handle runtime duration, controlling the initiation of new workflows
-	go handleRuntimeDuration(runtimeDone, &closeRuntimeDoneOnce)
-
-	// Start the concurrent workflows
-	startWorkflowsRampUp(activeChan, config, runtimeDone, &wg)
-
-	// Wait for all workflows to complete
+	// Wait for any in-flight workflows to finish.
 	wg.Wait()
+	log.Println("All workflows completed after runtimeDuration ended.")
+}
 
-	// Close the logDone channel to stop logActiveWorkflows
-	closeLogDoneOnce.Do(func() {
-		close(logDone)
-	})
-
-	// Close the runtimeDone channel to stop startWorkflowsRampUp
-	closeRuntimeDoneOnce.Do(func() {
-		close(runtimeDone)
-	})
-
-	log.Println("All workflows completed")
+// Optional logger goroutine:
+func logActiveWorkflowsUntilDone() {
+	for {
+		active := getActiveWorkflows()
+		log.Printf("Currently active workflows: %d", active)
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func logActiveWorkflows(logDone chan struct{}) {
@@ -508,28 +539,24 @@ func getActiveWorkflows() int {
 	return activeWorkflows
 }
 
-func startWorkflowsRampUp(activeChan chan struct{}, config *Configuration, runtimeDone chan struct{}, wg *sync.WaitGroup) {
-	if connect3270.Verbose {
-		log.Println("Starting startWorkflowsRampUp")
-	}
+func startWorkflowsRampUp(overallStart time.Time, activeChan chan struct{}, config *Configuration, wg *sync.WaitGroup) {
 	for {
-		select {
-		case <-runtimeDone:
-			// When runtime is done, stop starting new workflows
+		// Check if we're still within the overall runtimeDuration
+		if time.Since(overallStart) >= time.Duration(runtimeDuration)*time.Second {
 			if connect3270.Verbose {
-				log.Println("Runtime duration reached, stopping new workflow initiation")
+				log.Println("Overall runtimeDuration reached, stopping new workflow initiation")
 			}
 			return
-		default:
-			// Only start a new workflow if we haven't reached the concurrent limit
-			if getActiveWorkflows() < concurrent {
-				if connect3270.Verbose {
-					log.Println("Initiating a new workflow")
-				}
-				startWorkflowBatch(activeChan, config, wg)
-			}
-			time.Sleep(rampUpDelay) // Sleep for a brief period before checking again
 		}
+
+		// Only start a new workflow if we haven't reached the concurrent limit
+		if getActiveWorkflows() < concurrent {
+			if connect3270.Verbose {
+				log.Println("Initiating a new workflow")
+			}
+			startWorkflowBatch(activeChan, config, wg)
+		}
+		time.Sleep(rampUpDelay) // Sleep briefly before checking again
 	}
 }
 
@@ -543,41 +570,40 @@ func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *syn
 	if availableSlots <= 0 {
 		mutex.Unlock()
 		time.Sleep(rampUpDelay) // Throttle batch initiation
+		return
 	}
-
 	workflowsToStart := min(rampUpBatchSize, availableSlots)
-	//activeWorkflows += workflowsToStart
 	mutex.Unlock()
 
 	for j := 0; j < workflowsToStart; j++ {
-		if activeWorkflows >= concurrent {
-			break
-		}
-		activeWorkflows++
-
 		wg.Add(1)
 
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					log.Printf("Recovered from panic in goroutine: %v", r)
-				}
-			}()
-			defer wg.Done()
-			activeWorkflows--
+		// Mark the slot as taken *before* starting the goroutine:
+		mutex.Lock()
+		activeWorkflows++
+		lastUsedPort++
+		portToUse := lastUsedPort
+		mutex.Unlock()
 
+		go func() {
+			defer wg.Done()
+			// optional: use the channel if you like
+			activeChan <- struct{}{}
+
+			// Now run the workflow. Remove the code in runWorkflow that increments/decrements activeWorkflows.
+			err := runWorkflow(portToUse, config)
+			if err != nil {
+				log.Printf("Workflow on port %d returned an error: %v", portToUse, err)
+			}
+
+			// Release the concurrency slot.
 			mutex.Lock()
-			lastUsedPort++
-			portToUse := lastUsedPort
+			activeWorkflows--
 			mutex.Unlock()
 
-			activeChan <- struct{}{}
-			runWorkflow(portToUse, config)
 			<-activeChan
 		}()
-
 	}
-	//time.Sleep(rampUpDelay)
 }
 
 func getNextAvailablePort() int {
@@ -651,7 +677,6 @@ func validateConfiguration(config *Configuration) error {
 // New function to launch the dashboard server.
 func runDashboard() {
 	addr := fmt.Sprintf(":%d", dashboardPort)
-	// Attempt to bind; if already used, assume dashboard is running.
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Printf("Dashboard already running on port %d, skipping local dashboard.", dashboardPort)
@@ -663,6 +688,9 @@ func runDashboard() {
 		}()
 		return
 	}
+
+	dashboardStarted = true
+
 	// Clear old metrics PID files since we are serving the dashboard on this instance.
 	{
 		dashboardDir, err := os.UserConfigDir()
@@ -838,6 +866,7 @@ func runDashboard() {
 	if err := http.Serve(listener, nil); err != nil {
 		log.Printf("Dashboard server error: %v", err)
 	}
+
 }
 
 // Modify Metrics struct to include workflow durations.
