@@ -47,12 +47,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 go-bindata -o binaries/bindata.go -pkg binaries ./binaries/...
 
-$env:GOARCH = "amd64"  
-$env:GOOS = "linux" 
+$env:GOARCH = "amd64"
+$env:GOOS = "linux"
 go build -o 3270Connect go3270Connect.go
 
 $env:GOOS = "windows"
-go build -o 3270Connect go3270Connect.go
+go build -o 3270Connect.exe go3270Connect.go
 
 .\3270Connect -runApp 1
 ./3270Connect -verbose -headless
