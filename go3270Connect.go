@@ -24,7 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.1"
+const version = "1.1.1"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -32,6 +32,7 @@ type Configuration struct {
 	Port           int
 	OutputFilePath string `json:"OutputFilePath"`
 	Steps          []Step
+	InputFilePath  string `json:"InputFilePath"` // New field for the input file path
 }
 
 // Step represents an individual action to be taken on the terminal.
@@ -120,6 +121,73 @@ func loadConfiguration(filePath string) *Configuration {
 	return &config
 }
 
+// loadInputFile reads and parses the new input file format.
+func loadInputFile(filePath string) ([]Step, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading input file: %v", err)
+	}
+
+	// Parse the input file and extract steps
+	var steps []Step
+
+	// Example parsing logic for the new input file format
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "yield ps.sendKeys") {
+			// Extract the key to be sent
+			key := strings.TrimPrefix(line, "yield ps.sendKeys(")
+			key = strings.TrimSuffix(key, ");")
+			key = strings.Trim(key, "'")
+
+			// Determine the step type based on the key
+			stepType := ""
+			switch key {
+			case "ControlKey.TAB":
+				stepType = "PressTab"
+			case "ControlKey.ENTER":
+				stepType = "PressEnter"
+			default:
+				stepType = "FillString"
+			}
+
+			// Create a new step and add it to the steps slice
+			step := Step{
+				Type: stepType,
+				Text: key,
+			}
+			steps = append(steps, step)
+		} else if strings.HasPrefix(line, "yield wait.forText") {
+			// Extract the text and position
+			parts := strings.Split(line, ",")
+			if len(parts) >= 2 {
+				text := strings.TrimPrefix(parts[0], "yield wait.forText('")
+				text = strings.TrimSuffix(text, "'")
+				position := strings.TrimPrefix(parts[1], "new Position(")
+				position = strings.TrimSuffix(position, ");")
+				posParts := strings.Split(position, ",")
+				if len(posParts) == 2 {
+					row, _ := strconv.Atoi(posParts[0])
+					column, _ := strconv.Atoi(posParts[1])
+					step := Step{
+						Type: "CheckValue",
+						Coordinates: connect3270.Coordinates{
+							Row:    row,
+							Column: column,
+							Length: len(text), // Set the length to the length of the text
+						},
+						Text: text,
+					}
+					steps = append(steps, step)
+				}
+			}
+		}
+	}
+
+	return steps, nil
+}
+
 // runWorkflow executes the workflow steps for a single instance and skips the entire workflow if any step fails.
 func runWorkflow(scriptPort int, config *Configuration) error {
 	startTime := time.Now()                    // <-- new timing start
@@ -151,7 +219,19 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 
 	workflowFailed := false
 
-	for _, step := range config.Steps {
+	// Load steps from the input file if specified
+	var steps []Step
+	if config.InputFilePath != "" {
+		steps, err = loadInputFile(config.InputFilePath)
+		if err != nil {
+			log.Printf("Error loading input file: %v", err)
+			return err
+		}
+	} else {
+		steps = config.Steps
+	}
+
+	for _, step := range steps {
 		if workflowFailed {
 			break
 		}
@@ -197,6 +277,131 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		case "PressEnter":
 			if err := e.Press(connect3270.Enter); err != nil {
 				log.Printf("Error pressing Enter: %v", err)
+				workflowFailed = true
+			}
+		case "PressTab":
+			if err := e.Press(connect3270.Tab); err != nil {
+				log.Printf("Error pressing Tab: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF1":
+			if err := e.Press(connect3270.F1); err != nil {
+				log.Printf("Error pressing PF1: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF2":
+			if err := e.Press(connect3270.F2); err != nil {
+				log.Printf("Error pressing PF2: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF3":
+			if err := e.Press(connect3270.F3); err != nil {
+				log.Printf("Error pressing PF3: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF4":
+			if err := e.Press(connect3270.F4); err != nil {
+				log.Printf("Error pressing PF4: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF5":
+			if err := e.Press(connect3270.F5); err != nil {
+				log.Printf("Error pressing PF5: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF6":
+			if err := e.Press(connect3270.F6); err != nil {
+				log.Printf("Error pressing PF6: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF7":
+			if err := e.Press(connect3270.F7); err != nil {
+				log.Printf("Error pressing PF7: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF8":
+			if err := e.Press(connect3270.F8); err != nil {
+				log.Printf("Error pressing PF8: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF9":
+			if err := e.Press(connect3270.F9); err != nil {
+				log.Printf("Error pressing PF9: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF10":
+			if err := e.Press(connect3270.F10); err != nil {
+				log.Printf("Error pressing PF10: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF11":
+			if err := e.Press(connect3270.F11); err != nil {
+				log.Printf("Error pressing PF11: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF12":
+			if err := e.Press(connect3270.F12); err != nil {
+				log.Printf("Error pressing PF12: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF13":
+			if err := e.Press(connect3270.F13); err != nil {
+				log.Printf("Error pressing PF13: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF14":
+			if err := e.Press(connect3270.F14); err != nil {
+				log.Printf("Error pressing PF14: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF15":
+			if err := e.Press(connect3270.F15); err != nil {
+				log.Printf("Error pressing PF15: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF16":
+			if err := e.Press(connect3270.F16); err != nil {
+				log.Printf("Error pressing PF16: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF17":
+			if err := e.Press(connect3270.F17); err != nil {
+				log.Printf("Error pressing PF17: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF18":
+			if err := e.Press(connect3270.F18); err != nil {
+				log.Printf("Error pressing PF18: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF19":
+			if err := e.Press(connect3270.F19); err != nil {
+				log.Printf("Error pressing PF19: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF20":
+			if err := e.Press(connect3270.F20); err != nil {
+				log.Printf("Error pressing PF20: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF21":
+			if err := e.Press(connect3270.F21); err != nil {
+				log.Printf("Error pressing PF21: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF22":
+			if err := e.Press(connect3270.F22); err != nil {
+				log.Printf("Error pressing PF22: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF23":
+			if err := e.Press(connect3270.F23); err != nil {
+				log.Printf("Error pressing PF23: %v", err)
+				workflowFailed = true
+			}
+		case "PressPF24":
+			if err := e.Press(connect3270.F24); err != nil {
+				log.Printf("Error pressing PF24: %v", err)
 				workflowFailed = true
 			}
 		case "Disconnect":
@@ -342,6 +547,54 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string) error {
 		return e.Press(connect3270.Enter)
 	case "Disconnect":
 		return e.Disconnect()
+	case "PressPF1":
+		return e.Press(connect3270.F1)
+	case "PressPF2":
+		return e.Press(connect3270.F2)
+	case "PressPF3":
+		return e.Press(connect3270.F3)
+	case "PressPF4":
+		return e.Press(connect3270.F4)
+	case "PressPF5":
+		return e.Press(connect3270.F5)
+	case "PressPF6":
+		return e.Press(connect3270.F6)
+	case "PressPF7":
+		return e.Press(connect3270.F7)
+	case "PressPF8":
+		return e.Press(connect3270.F8)
+	case "PressPF9":
+		return e.Press(connect3270.F9)
+	case "PressPF10":
+		return e.Press(connect3270.F10)
+	case "PressPF11":
+		return e.Press(connect3270.F11)
+	case "PressPF12":
+		return e.Press(connect3270.F12)
+	case "PressPF13":
+		return e.Press(connect3270.F13)
+	case "PressPF14":
+		return e.Press(connect3270.F14)
+	case "PressPF15":
+		return e.Press(connect3270.F15)
+	case "PressPF16":
+		return e.Press(connect3270.F16)
+	case "PressPF17":
+		return e.Press(connect3270.F17)
+	case "PressPF18":
+		return e.Press(connect3270.F18)
+	case "PressPF19":
+		return e.Press(connect3270.F19)
+	case "PressPF20":
+		return e.Press(connect3270.F20)
+	case "PressPF21":
+		return e.Press(connect3270.F21)
+	case "PressPF22":
+		return e.Press(connect3270.F22)
+	case "PressPF23":
+		return e.Press(connect3270.F23)
+	case "PressPF24":
+		return e.Press(connect3270.F24)
 	default:
 		return fmt.Errorf("unknown step type: %s", step.Type)
 	}

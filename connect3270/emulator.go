@@ -44,6 +44,18 @@ const (
 	F10   = "PF(10)"
 	F11   = "PF(11)"
 	F12   = "PF(12)"
+	F13   = "PF(13)"
+	F14   = "PF(14)"
+	F15   = "PF(15)"
+	F16   = "PF(16)"
+	F17   = "PF(17)"
+	F18   = "PF(18)"
+	F19   = "PF(19)"
+	F20   = "PF(20)"
+	F21   = "PF(21)"
+	F22   = "PF(22)"
+	F23   = "PF(23)"
+	F24   = "PF(24)"
 )
 
 const (
@@ -238,6 +250,8 @@ func (e *Emulator) validateKeyboard(key string) bool {
 	case Tab:
 		return true
 	case Enter:
+		return true
+	case F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24:
 		return true
 	default:
 		return false

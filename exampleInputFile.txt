@@ -1,0 +1,18 @@
+// Example input file for 3270Connect
+
+// Check the value at row 1, column 29
+yield wait.forText('3270 Example Application', new Position(1, 29));
+
+// Fill in the first name at row 5, column 21
+yield ps.sendKeys('user1-firstname');
+yield ps.sendKeys(ControlKey.TAB, true);
+
+// Fill in the last name at row 6, column 21
+yield ps.sendKeys('user1-lastname');
+yield ps.sendKeys(ControlKey.TAB, true);
+
+// Press Enter
+yield ps.sendKeys(ControlKey.ENTER, true);
+
+// Check the value at row 1, column 29 again
+yield wait.forText('3270 Example Application', new Position(1, 29));
