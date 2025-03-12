@@ -5,9 +5,17 @@ go 1.18
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/racingmars/go3270 v0.0.0-20231019170216-d39b10e79d15
+	github.com/shirou/gopsutil v3.21.11+incompatible
 )
 
-require github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
+require (
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/tklauser/go-sysconf v0.3.12 // indirect
+	github.com/tklauser/numcpus v0.6.1 // indirect
+	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+)
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
@@ -20,7 +28,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/google/uuid v1.5.0
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
@@ -35,7 +42,7 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

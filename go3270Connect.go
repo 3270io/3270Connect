@@ -9,22 +9,23 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic" // Added for atomic counters
+	"sync/atomic"
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
 	"github.com/3270io/3270Connect/sampleapps/app1"
 	app2 "github.com/3270io/3270Connect/sampleapps/app2"
 
-	"path/filepath"
-
 	"github.com/gin-gonic/gin"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 )
 
-const version = "1.1.3"
+const version = "1.1.4"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -50,35 +51,39 @@ var (
 	runAPI          bool
 	apiPort         int
 	concurrent      int
-	headless        bool // Flag to run go3270 in headless mode
+	headless        bool // Run go3270 in headless mode
 	verbose         bool
 	runApp          string
-	runtimeDuration int       // Flag to determine if new workflows should be started when others finish
-	lastUsedPort    int       // remove preset initial value; will be set from startPort flag
-	closeDoneOnce   sync.Once // Declare a sync.Once variable
-	startPort       int       // new global flag for starting port
+	runtimeDuration int       // Duration to run workflows (only used in concurrent mode)
+	lastUsedPort    int       // Will be set from startPort flag
+	closeDoneOnce   sync.Once // For one-time closure operations
+	startPort       int       // Starting port for workflow connections
 )
 
 var dashboardStarted bool
 
-// New global counters for metrics.
+// Global counters for metrics.
 var totalWorkflowsStarted int64
 var totalWorkflowsCompleted int64
 var totalWorkflowsFailed int64
 
-// New flag for the dashboard port.
+// Flag for the dashboard port.
 var dashboardPort int
 
 var activeWorkflows int
 var mutex sync.Mutex
 
-// const rampUpBatchSize = 10      // Number of work items to start in each batch
-// const rampUpDelay = time.Second // Delay between starting batches
+// Global variables for workflow durations.
+var timingsMutex sync.Mutex
+var workflowDurations []float64
 
-// Define the showVersion flag at the package level
+// Global variables for host-wide CPU and memory usage history.
+var cpuHistory []float64
+var memHistory []float64
+var processCPUHistory []float64 // Legacy, not used
+
 var showVersion = flag.Bool("version", false, "Show the application version")
 
-// init initializes the command-line flags with default values.
 var runAppPort int
 
 func init() {
@@ -93,14 +98,9 @@ func init() {
 	flag.StringVar(&runApp, "runApp", "", "Select which sample 3270 application to run (e.g., '1' for app1, '2' for app2)")
 	flag.IntVar(&runAppPort, "runApp-port", 3270, "Port for the sample 3270 application (default 3270)")
 	flag.IntVar(&startPort, "startPort", 5000, "Starting port number for workflow connections")
-	flag.IntVar(&dashboardPort, "dashboardPort", 9200, "Port for the dashboard server") // New flag
+	flag.IntVar(&dashboardPort, "dashboardPort", 9200, "Port for the dashboard server")
 }
 
-// New global variables for workflow durations.
-var timingsMutex sync.Mutex
-var workflowDurations []float64
-
-// loadConfiguration reads and decodes a JSON configuration file into a Configuration struct.
 func loadConfiguration(filePath string) *Configuration {
 	if connect3270.Verbose {
 		log.Printf("Loading configuration from %s", filePath)
@@ -110,25 +110,21 @@ func loadConfiguration(filePath string) *Configuration {
 		log.Fatalf("Error opening config file at %s: %v", filePath, err)
 	}
 	defer configFile.Close()
-
 	var config Configuration
 	decoder := json.NewDecoder(configFile)
 	err = decoder.Decode(&config)
 	if err != nil {
 		log.Fatalf("Error decoding config JSON: %v", err)
 	}
-
 	if config.RampUpBatchSize <= 0 {
 		config.RampUpBatchSize = 10
 	}
 	if config.RampUpDelay <= 0 {
 		config.RampUpDelay = 1.0
 	}
-
 	return &config
 }
 
-// loadInputFile reads and parses the new input file format.
 func loadInputFile(filePath string) ([]Step, error) {
 	if connect3270.Verbose {
 		log.Printf("Loading input file: %s", filePath)
@@ -141,18 +137,11 @@ func loadInputFile(filePath string) ([]Step, error) {
 	if connect3270.Verbose {
 		log.Printf("Successfully read input file: %d bytes", len(data))
 	}
-
 	var steps []Step
-
-	// Add a Connect step as the first step.
-	steps = append(steps, Step{
-		Type: "Connect",
-	})
+	steps = append(steps, Step{Type: "Connect"})
 	if connect3270.Verbose {
 		log.Printf("Added initial Connect step")
 	}
-
-	// Parse the input file and extract steps.
 	lines := strings.Split(string(data), "\n")
 	for idx, line := range lines {
 		line = strings.TrimSpace(line)
@@ -163,12 +152,9 @@ func loadInputFile(filePath string) ([]Step, error) {
 			log.Printf("Processing line %d: %s", idx+1, line)
 		}
 		if strings.HasPrefix(line, "yield ps.sendKeys") {
-			// Extract the key to be sent.
 			key := strings.TrimPrefix(line, "yield ps.sendKeys(")
 			key = strings.TrimSuffix(key, ");")
 			key = strings.Trim(key, "'")
-
-			// Determine the step type based on the key.
 			stepType := ""
 			switch key {
 			case "ControlKey.TAB":
@@ -226,18 +212,12 @@ func loadInputFile(filePath string) ([]Step, error) {
 			default:
 				stepType = "FillString"
 			}
-
-			// Create a new step and add it to the steps slice.
-			step := Step{
-				Type: stepType,
-				Text: key,
-			}
+			step := Step{Type: stepType, Text: key}
 			steps = append(steps, step)
 			if connect3270.Verbose {
 				log.Printf("Added step: %s with text: %s", stepType, key)
 			}
 		} else if strings.HasPrefix(line, "yield wait.forText") {
-			// Extract the text and position.
 			parts := strings.Split(line, ",")
 			if len(parts) >= 2 {
 				text := strings.TrimPrefix(parts[0], "yield wait.forText('")
@@ -259,7 +239,7 @@ func loadInputFile(filePath string) ([]Step, error) {
 						Coordinates: connect3270.Coordinates{
 							Row:    row,
 							Column: column,
-							Length: len(text), // Set the length to the length of the text.
+							Length: len(text),
 						},
 						Text: text,
 					}
@@ -270,7 +250,6 @@ func loadInputFile(filePath string) ([]Step, error) {
 				}
 			}
 		} else if strings.HasPrefix(line, "// Fill in the first name at row") || strings.HasPrefix(line, "// Fill in the last name at row") {
-			// Extract the coordinates from the comment line.
 			parts := strings.Split(line, " ")
 			if len(parts) >= 8 {
 				row, errRow := strconv.Atoi(parts[6])
@@ -281,7 +260,6 @@ func loadInputFile(filePath string) ([]Step, error) {
 					}
 					continue
 				}
-				// The next line should be the actual FillString step.
 				if idx+1 < len(lines) {
 					nextLine := strings.TrimSpace(lines[idx+1])
 					if strings.HasPrefix(nextLine, "yield ps.sendKeys") {
@@ -306,10 +284,7 @@ func loadInputFile(filePath string) ([]Step, error) {
 		}
 	}
 
-	// Add a Disconnect step as the last step.
-	steps = append(steps, Step{
-		Type: "Disconnect",
-	})
+	steps = append(steps, Step{Type: "Disconnect"})
 	if connect3270.Verbose {
 		log.Printf("Added final Disconnect step")
 	}
@@ -323,35 +298,25 @@ func loadInputFile(filePath string) ([]Step, error) {
 	return steps, nil
 }
 
-// runWorkflow executes the workflow steps for a single instance and skips the entire workflow if any step fails.
 func runWorkflow(scriptPort int, config *Configuration) error {
-	startTime := time.Now()                    // <-- new timing start
-	atomic.AddInt64(&totalWorkflowsStarted, 1) // Increment workflow start counter
+	startTime := time.Now()
+	atomic.AddInt64(&totalWorkflowsStarted, 1)
 	if connect3270.Verbose {
 		log.Printf("Starting workflow for scriptPort %d", scriptPort)
 	}
-
-	// Increment activeWorkflows
 	mutex.Lock()
 	activeWorkflows++
 	mutex.Unlock()
-
-	// Use NewEmulator constructor function
 	e := connect3270.NewEmulator(config.Host, config.Port, strconv.Itoa(scriptPort))
-
 	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
 	if err != nil {
 		log.Printf("Error creating temporary file: %v", err)
 		return err
 	}
 	tmpFileName := tmpFile.Name()
-	tmpFile.Close() // Ensure the temporary file is closed immediately after creation
-
+	tmpFile.Close()
 	e.InitializeOutput(tmpFileName, runAPI)
-
 	workflowFailed := false
-
-	// Load steps from the input file if specified
 	var steps []Step
 	if config.InputFilePath != "" {
 		steps, err = loadInputFile(config.InputFilePath)
@@ -362,19 +327,16 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	} else {
 		steps = config.Steps
 	}
-
 	for _, step := range steps {
 		if workflowFailed {
 			break
 		}
-
 		switch step.Type {
 		case "InitializeOutput":
 			err := e.InitializeOutput(tmpFileName, runAPI)
 			if err != nil {
 				return fmt.Errorf("error initializing output file: %v", err)
 			}
-
 		case "Connect":
 			if err := e.Connect(); err != nil {
 				log.Printf("Error connecting to terminal: %v", err)
@@ -414,6 +376,11 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		case "PressTab":
 			if err := e.Press(connect3270.Tab); err != nil {
 				log.Printf("Error pressing Tab: %v", err)
+				workflowFailed = true
+			}
+		case "Disconnect":
+			if err := e.Disconnect(); err != nil {
+				log.Printf("Error disconnecting: %v", err)
 				workflowFailed = true
 			}
 		case "PressPF1":
@@ -536,40 +503,27 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 				log.Printf("Error pressing PF24: %v", err)
 				workflowFailed = true
 			}
-		case "Disconnect":
-			if err := e.Disconnect(); err != nil {
-				log.Printf("Error disconnecting: %v", err)
-				workflowFailed = true
-			}
 		default:
 			log.Printf("Unknown step type: %s", step.Type)
 		}
 	}
-
-	// Decrement activeWorkflows when done.
 	mutex.Lock()
 	activeWorkflows--
 	mutex.Unlock()
-
-	// Record the duration and append it.
 	duration := time.Since(startTime).Seconds()
 	timingsMutex.Lock()
 	workflowDurations = append(workflowDurations, duration)
 	timingsMutex.Unlock()
-
 	if workflowFailed {
 		log.Printf("Workflow for scriptPort %d failed", scriptPort)
-		atomic.AddInt64(&totalWorkflowsFailed, 1) // Update failed counter
+		atomic.AddInt64(&totalWorkflowsFailed, 1)
 	} else {
 		if connect3270.Verbose {
 			log.Printf("Workflow for scriptPort %d completed successfully", scriptPort)
 		}
-		// Ensure the file is properly closed before renaming it
-		// Remove existing output file (if any) to prevent "Access is denied" errors.
 		if config.OutputFilePath != "" {
 			_ = os.Remove(config.OutputFilePath)
 			if err := os.Rename(tmpFileName, config.OutputFilePath); err != nil {
-				//log.Printf("Error renaming temporary file to output file: %v", err)
 				pid := os.Getpid()
 				uniqueOutputPath := fmt.Sprintf("%s.%d", config.OutputFilePath, pid)
 				if err2 := os.Rename(tmpFileName, uniqueOutputPath); err2 != nil {
@@ -580,33 +534,25 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 				return err
 			}
 		}
-		atomic.AddInt64(&totalWorkflowsCompleted, 1) // Update completed counter
+		atomic.AddInt64(&totalWorkflowsCompleted, 1)
 	}
-
 	return nil
 }
 
-// runAPIWorkflow runs the program in API mode, accepting and executing workflow configurations via HTTP requests.
 func runAPIWorkflow() {
 	if connect3270.Verbose {
 		log.Println("Starting API server mode")
 	}
-
-	// Set the global Headless mode for all emulator instances
 	connect3270.Headless = true
-
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
-
 	r.POST("/api/execute", func(c *gin.Context) {
 		var workflowConfig Configuration
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload", err)
 			return
 		}
-
-		// Create a new temporary file for this request
 		tmpFile, err := ioutil.TempFile("", "workflowOutput_")
 		if err != nil {
 			log.Printf("Error creating temporary file: %v", err)
@@ -615,46 +561,33 @@ func runAPIWorkflow() {
 		}
 		defer tmpFile.Close()
 		tmpFileName := tmpFile.Name()
-
-		// Create a new Emulator instance for each request
 		scriptPort := getNextAvailablePort()
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
-
-		// Initialize the output file
 		err = e.InitializeOutput(tmpFileName, true)
 		if err != nil {
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output file", err)
 			return
 		}
-
-		// Execute the workflow steps
 		for _, step := range workflowConfig.Steps {
 			if err := executeStep(e, step, tmpFileName); err != nil {
 				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Workflow step '%s' failed", step.Type), err)
-				e.Disconnect() // Ensure disconnection in case of error
+				e.Disconnect()
 				return
 			}
 		}
-
-		// Read the contents of the output file after executing the workflow
 		outputContents, err := e.ReadOutputFile(tmpFileName)
 		if err != nil {
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to read output file", err)
 			return
 		}
-
-		e.Disconnect() // Disconnect after completing the workflow
-
-		// Return the output file contents
+		e.Disconnect()
 		c.JSON(http.StatusOK, gin.H{
 			"returnCode": http.StatusOK,
 			"status":     "okay",
 			"message":    "Workflow executed successfully",
 			"output":     outputContents,
 		})
-
 	})
-
 	apiAddr := fmt.Sprintf(":%d", apiPort)
 	log.Printf("API server is running on %s", apiAddr)
 	if err := r.Run(apiAddr); err != nil {
@@ -662,9 +595,7 @@ func runAPIWorkflow() {
 	}
 }
 
-// executeStep executes a single step in the workflow.
 func executeStep(e *connect3270.Emulator, step Step, tmpFileName string) error {
-	// Implement the logic for each step type
 	switch step.Type {
 	case "InitializeOutput":
 		return e.InitializeOutput(tmpFileName, runAPI)
@@ -751,9 +682,7 @@ func sendErrorResponse(c *gin.Context, statusCode int, message string, err error
 	})
 }
 
-// new function to print ASCII banner
 func printBanner() {
-	// Simple ASCII banner with version info
 	fmt.Println(`
 	 ____ ___ ______ ___   _____                            _
 	|___ \__ \____  / _ \ / ____|                          | |
@@ -765,48 +694,36 @@ func printBanner() {
 Version: ` + version)
 }
 
-// main is the entry point of the program. It parses the command-line flags, sets global settings, and either runs the program in API mode or executes the workflows.
 func main() {
 	flag.Parse()
-	printBanner() // Print the ASCII banner at startup
-
-	// Set the initial lastUsedPort from the startPort flag value.
+	printBanner()
 	mutex.Lock()
 	lastUsedPort = startPort
 	mutex.Unlock()
-
 	if *showVersion {
 		printVersionAndExit()
 	}
-
 	if showHelp {
 		printHelpAndExit()
 	}
-
 	setGlobalSettings()
-
-	// Start the dashboard if running in concurrent or runtime mode.
 	if concurrent > 1 || runtimeDuration > 0 {
-		go runDashboard() // Dashboard runs in its own goroutine.
+		go runDashboard()
 	}
-
-	// Check if runApp is specified
+	go monitorSystemUsage()
 	if runApp != "" {
 		switch runApp {
 		case "1":
-			app1.RunApplication(runAppPort) // Pass the port to the application
+			app1.RunApplication(runAppPort)
 			return
 		case "2":
-			app2.RunApplication(runAppPort) // Pass the port to the application
+			app2.RunApplication(runAppPort)
 			return
-		// Add additional cases for other apps
 		default:
 			log.Fatalf("Invalid runApp value: %s. Please enter a valid app number.", runApp)
 		}
 	}
-
 	config := loadConfiguration(configFile)
-
 	if runAPI {
 		runAPIWorkflow()
 	} else {
@@ -815,10 +732,9 @@ func main() {
 		} else {
 			runWorkflow(7000, config)
 		}
-		// If a dashboard is running, leave it up and inform the user.
 		if concurrent > 1 && dashboardStarted {
 			log.Printf("All workflows completed but the dashboard is still running on port %d. Press Ctrl+C to exit.", dashboardPort)
-			select {} // Block forever so the dashboard keeps running
+			select {}
 		}
 	}
 }
@@ -841,21 +757,19 @@ func setGlobalSettings() {
 
 func runConcurrentWorkflows(config *Configuration) {
 	overallStart := time.Now()
-
-	// Create a channel to act as a semaphore limiting the number of concurrent workflows.
 	semaphore := make(chan struct{}, concurrent)
 	var wg sync.WaitGroup
-
-	// Loop until the overall runtime is reached.
 	for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
-		// Start a batch of workflows, up to rampUpBatchSize, or until runtime is reached.
 		for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
+			freeSlots := concurrent - len(semaphore)
+			if freeSlots <= 0 {
+				time.Sleep(time.Duration(config.RampUpDelay * float64(time.Second)))
+				break
+			}
+			batchSize := min(freeSlots, config.RampUpBatchSize)
 			log.Printf("Increasing batch by %d, current size is %d, new total target is %d",
-				config.RampUpBatchSize,
-				len(semaphore),
-				len(semaphore)+config.RampUpBatchSize)
-
-			for i := 0; i < config.RampUpBatchSize; i++ {
+				batchSize, len(semaphore), len(semaphore)+batchSize)
+			for i := 0; i < batchSize; i++ {
 				semaphore <- struct{}{}
 				wg.Add(1)
 				go func() {
@@ -865,22 +779,21 @@ func runConcurrentWorkflows(config *Configuration) {
 					if err != nil && connect3270.Verbose {
 						log.Printf("Workflow on port %d error: %v", portToUse, err)
 					}
-					// Release the semaphore slot when done.
 					<-semaphore
 				}()
 			}
-			// Log the current number of active workflows.
-			log.Printf("Currently active workflows: %d", len(semaphore))
-			// Wait a short delay before starting the next workflow to gradually reach full concurrency.
+			cpuPercent, _ := cpu.Percent(0, false)
+			memStats, _ := mem.VirtualMemory()
+			log.Printf("Currently active workflows: %d, CPU usage: %.2f%%, memory usage: %.2f%%",
+				len(semaphore), cpuPercent[0], memStats.UsedPercent)
 			time.Sleep(time.Duration(config.RampUpDelay * float64(time.Second)))
 		}
-		// Log the current number of active workflows after each batch.
-		log.Printf("Currently active workflows: %d", len(semaphore))
-		// Wait for a short delay before starting the next batch.
+		cpuPercent, _ := cpu.Percent(0, false)
+		memStats, _ := mem.VirtualMemory()
+		log.Printf("Currently active workflows: %d, CPU usage: %.2f%%, memory usage: %.2f%%",
+			len(semaphore), cpuPercent[0], memStats.UsedPercent)
 		time.Sleep(time.Duration(config.RampUpDelay * float64(time.Second)))
 	}
-
-	// Wait for any in-flight workflows to finish.
 	wg.Wait()
 	log.Println("All workflows completed after runtimeDuration ended.")
 }
@@ -908,7 +821,6 @@ func getNextAvailablePort() int {
 	}
 }
 
-// new helper to check if a port is available
 func isPortAvailable(port int) bool {
 	addr := ":" + strconv.Itoa(port)
 	ln, err := net.Listen("tcp", addr)
@@ -922,7 +834,6 @@ func isPortAvailable(port int) bool {
 	return true
 }
 
-// Helper function to find the minimum of two integers
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -937,22 +848,17 @@ func validateConfiguration(config *Configuration) error {
 	if config.Host == "" {
 		return fmt.Errorf("host is empty")
 	}
-
 	if config.Port <= 0 {
 		return fmt.Errorf("port is invalid")
 	}
-
 	if config.OutputFilePath == "" {
 		return fmt.Errorf("output file path is empty")
 	}
-
 	for _, step := range config.Steps {
 		switch step.Type {
 		case "Connect", "AsciiScreenGrab", "PressEnter", "Disconnect":
-			// These steps don't require additional fields.
 			continue
 		case "CheckValue", "FillString":
-			// These steps require Coordinates and Text.
 			if step.Coordinates.Row == 0 || step.Coordinates.Column == 0 {
 				return fmt.Errorf("coordinates are incomplete in a %s step", step.Type)
 			}
@@ -963,11 +869,14 @@ func validateConfiguration(config *Configuration) error {
 			return fmt.Errorf("unknown step type: %s", step.Type)
 		}
 	}
-
 	return nil
 }
 
-// New function to launch the dashboard server.
+// runDashboard launches the dashboard server. It now serves two charts:
+// 1. A "Per PID Metrics" duration chart.
+// 2. A "cpuMemChart" that uses host-level CPU and Memory usage from the metrics file
+// with the smallest PID.
+// The metadata section uses a Bootstrap jumbotron and flex grid.
 func runDashboard() {
 	addr := fmt.Sprintf(":%d", dashboardPort)
 	listener, err := net.Listen("tcp", addr)
@@ -981,10 +890,7 @@ func runDashboard() {
 		}()
 		return
 	}
-
 	dashboardStarted = true
-
-	// Clear old metrics PID files since we are serving the dashboard on this instance.
 	{
 		dashboardDir, err := os.UserConfigDir()
 		if err != nil {
@@ -1006,9 +912,7 @@ func runDashboard() {
 			}
 		}
 	}
-
 	http.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		// Load each metrics file individually
 		dashboardDir, err := os.UserConfigDir()
 		if err != nil {
 			log.Printf("Error fetching user config directory: %v", err)
@@ -1022,6 +926,7 @@ func runDashboard() {
 			files = []string{}
 		}
 		var metricsList []Metrics
+		var totalStarted, totalCompleted, totalFailed, active int
 		for _, f := range files {
 			data, err := ioutil.ReadFile(f)
 			if err != nil {
@@ -1034,15 +939,26 @@ func runDashboard() {
 				continue
 			}
 			metricsList = append(metricsList, m)
+			totalStarted += int(m.TotalWorkflowsStarted)
+			totalCompleted += int(m.TotalWorkflowsCompleted)
+			totalFailed += int(m.TotalWorkflowsFailed)
+			active += m.ActiveWorkflows
+		}
+		// To display host CPU and Memory, choose the metrics file with the smallest PID.
+		var hostMetrics *Metrics
+		if len(metricsList) > 0 {
+			hostMetrics = &metricsList[0]
+			for i := 1; i < len(metricsList); i++ {
+				if metricsList[i].PID < hostMetrics.PID {
+					hostMetrics = &metricsList[i]
+				}
+			}
 		}
 		metricsJSON, _ := json.Marshal(metricsList)
-
-		// Set up auto-refresh form settings.
-		w.Header().Set("Content-Type", "text/html")
 		autoRefresh := r.URL.Query().Get("autoRefresh")
 		refreshPeriod := r.URL.Query().Get("refreshPeriod")
 		if refreshPeriod == "" {
-			refreshPeriod = "5" // Default refresh period of 5 seconds
+			refreshPeriod = "5"
 		}
 		checked := ""
 		if autoRefresh == "true" {
@@ -1059,97 +975,188 @@ func runDashboard() {
 		case "30":
 			sel30 = "selected"
 		}
-		// Begin HTML output.
-		fmt.Fprintf(w, "<html><head><title>3270Connect Dashboard</title>")
+		metaRefresh := ""
 		if autoRefresh == "true" {
-			fmt.Fprintf(w, `<meta http-equiv="refresh" content="%s">`, refreshPeriod)
+			metaRefresh = fmt.Sprintf(`<meta http-equiv="refresh" content="%s">`, refreshPeriod)
 		}
-		fmt.Fprintf(w, `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<style>
-		  body { font-family: Arial, sans-serif; margin: 20px; }
-		  canvas { border: 1px solid #ccc; }
-		</style>
-		</head>`)
-		fmt.Fprintf(w, "<body>")
-		fmt.Fprintf(w, "<h1>3270Connect Dashboard (Per PID Metrics)</h1>")
-		// Aggregate counts from all metrics files.
-		var totalStarted, totalCompleted, totalFailed, active int
-		for _, m := range metricsList {
-			totalStarted += int(m.TotalWorkflowsStarted)
-			totalCompleted += int(m.TotalWorkflowsCompleted)
-			totalFailed += int(m.TotalWorkflowsFailed)
-			active += m.ActiveWorkflows
-		}
-		fmt.Fprintf(w, "<p>Active Workflows (aggregated): %d</p>", active)
-		fmt.Fprintf(w, "<p>Total Workflows Started (aggregated): %d</p>", totalStarted)
-		fmt.Fprintf(w, "<p>Total Workflows Completed (aggregated): %d</p>", totalCompleted)
-		fmt.Fprintf(w, "<p>Total Workflows Failed (aggregated): %d</p>", totalFailed)
-		// Render auto-refresh form.
-		fmt.Fprintf(w, `<form id="autoRefreshForm" method="get" style="margin-bottom:20px;">
-			<label for="autoRefreshToggle">Auto Refresh: </label>
-			<input type="checkbox" id="autoRefreshToggle" name="autoRefresh" value="true" %s onchange="this.form.submit()">
-			&nbsp;&nbsp;
-			<label for="refreshPeriodSelect">Refresh Period (seconds): </label>
-			<select id="refreshPeriodSelect" name="refreshPeriod" onchange="this.form.submit()">
-				<option value="5" %s>5</option>
-				<option value="10" %s>10</option>
-				<option value="15" %s>15</option>
-				<option value="30" %s>30</option>
-			</select>
-		</form>`, checked, sel5, sel10, sel15, sel30)
-		// Canvas for the graph.
-		fmt.Fprintf(w, `<canvas id="durationChart" width="800" height="400"></canvas>`)
-		// JavaScript to plot a line for each PID's durations.
-		fmt.Fprintf(w, `<script>
-				document.addEventListener('DOMContentLoaded', function() {
-					var metricsData = %s;
-					// Determine the maximum number of workflow durations among all PIDs.
-					var maxCount = 0;
-					metricsData.forEach(function(metric) {
-						if (metric.durations && metric.durations.length > maxCount) {
-							maxCount = metric.durations.length;
-						}
-					});
-					var labels = [];
-					for (var i = 0; i < maxCount; i++) {
-						labels.push("Workflow " + (i + 1));
-					}
-					// Predefined colors for multiple lines.
-					var colors = ['rgba(75, 192, 192, 1)', 'rgba(192, 75, 192, 1)', 'rgba(192, 192, 75, 1)', 'rgba(75, 75, 192, 1)', 'rgba(192, 75, 75, 1)'];
-					var datasets = [];
-					metricsData.forEach(function(metric, index) {
-						datasets.push({
-							label: "PID " + metric.pid,
-							data: metric.durations,
-							borderColor: colors[index %% colors.length],
-							backgroundColor: colors[index %% colors.length].replace("1)", "0.2)"),
-							fill: false,
-							tension: 0.1
-						});
-					});
-					var ctx = document.getElementById("durationChart").getContext("2d");
-					new Chart(ctx, {
-						type: "line",
-						data: {
-							labels: labels,
-							datasets: datasets
-						},
-						options: {
-							animation: { duration: 0 },
-							scales: {
-								y: {
-									beginAtZero: true,
-									title: { display: true, text: "Duration (seconds)" }
-								}
-							}
-						}
-					});
-				});
-				</script>`, metricsJSON)
-		fmt.Fprintf(w, "</body></html>")
+		agg := aggregateMetrics()
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3270Connect Dashboard</title>
+  %s
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+	body { padding-top: 70px; padding-bottom: 70px; }
+	.chart-container { margin: auto; height: 400px; width: 600px; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="container">
+	<a class="navbar-brand" href="#">3270Connect</a>
+	<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+	  <span class="navbar-toggler-icon"></span>
+	</button>
+	<div class="collapse navbar-collapse" id="navbarNav">
+	  <ul class="navbar-nav ms-auto">
+		<li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+	  </ul>
+	</div>
+  </div>
+</nav>
+<div class="container my-4">
+  <div class="p-5 mb-4 bg-light rounded-3">
+	<div class="container-fluid py-3">
+	  <h1 class="display-5 fw-bold">3270Connect Aggregated Metrics</h1>
+	  <p class="col-md-8 fs-4">Per PID Metrics</p>
+	  <div class="d-flex flex-wrap justify-content-around">
+		<div class="p-2 text-center">
+		  <h5>Active Workflows</h5>
+		  <p class="mb-0">%d</p>
+		</div>
+		<div class="p-2 text-center">
+		  <h5>Total Workflows Started</h5>
+		  <p class="mb-0">%d</p>
+		</div>
+		<div class="p-2 text-center">
+		  <h5>Total Workflows Completed</h5>
+		  <p class="mb-0">%d</p>
+		</div>
+		<div class="p-2 text-center">
+		  <h5>Total Workflows Failed</h5>
+		  <p class="mb-0">%d</p>
+		</div>
+	  </div>
+	  <form id="autoRefreshForm" method="get" class="mt-3">
+		<div class="form-check form-switch">
+		  <input class="form-check-input" type="checkbox" id="autoRefreshToggle" name="autoRefresh" value="true" %s onchange="this.form.submit()">
+		  <label class="form-check-label" for="autoRefreshToggle">Auto Refresh</label>
+		</div>
+		<div class="mt-2">
+		  <label for="refreshPeriodSelect" class="form-label">Refresh Period (seconds):</label>
+		  <select class="form-select w-auto" id="refreshPeriodSelect" name="refreshPeriod" onchange="this.form.submit()">
+			<option value="5" %s>5</option>
+			<option value="10" %s>10</option>
+			<option value="15" %s>15</option>
+			<option value="30" %s>30</option>
+		  </select>
+		</div>
+	  </form>
+	</div>
+  </div>
+  <div class="row">
+	<div class="col-md-6">
+	  <div class="chart-container">
+		<canvas id="durationChart"></canvas>
+	  </div>
+	</div>
+	<div class="col-md-6">
+	  <div class="chart-container">
+		<canvas id="cpuMemChart"></canvas>
+	  </div>
+	</div>
+  </div>
+</div>
+<footer class="bg-dark text-white fixed-bottom">
+  <div class="container text-center py-2">
+	&copy; %d 3270Connect. All rights reserved.
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Per-PID Duration Chart.
+  var metricsData = %s;
+  var maxCount = 0;
+  metricsData.forEach(function(metric) {
+	if (metric.durations && metric.durations.length > maxCount) {
+	  maxCount = metric.durations.length;
+	}
+  });
+  var labels = [];
+  for (var i = 0; i < maxCount; i++) {
+	labels.push("Workflow " + (i + 1));
+  }
+  var colors = ['rgba(75, 192, 192, 1)', 'rgba(192, 75, 192, 1)', 'rgba(192, 192, 75, 1)', 'rgba(75, 75, 192, 1)', 'rgba(192, 75, 75, 1)'];
+  var datasets = [];
+  metricsData.forEach(function(metric, index) {
+	  datasets.push({
+		label: "PID " + metric.pid,
+		data: metric.durations,
+		borderColor: colors[index %% colors.length],
+		backgroundColor: colors[index %% colors.length].replace("1)", "0.2)"),
+		fill: false,
+		tension: 0.1
+	  });
+  });
+  var ctx1 = document.getElementById("durationChart").getContext("2d");
+  new Chart(ctx1, {
+	type: "line",
+	data: { labels: labels, datasets: datasets },
+	options: {
+	  animation: { duration: 0 },
+	  scales: { y: { beginAtZero: true, title: { display: true, text: "Duration (seconds)" } } }
+	}
+  });
+
+  // Aggregate only CPU usage from all metricsData.
+  var aggregatedCPU = [];
+  metricsData.forEach(function(metric) {
+	if(metric.cpuUsage) {
+	  metric.cpuUsage.forEach(function(val, i) {
+		aggregatedCPU[i] = (aggregatedCPU[i] || 0) + val;
+	  });
+	}
+  });
+  // For Memory, use host memory from the metric with the smallest PID.
+  var hostMemory = [];
+  if(metricsData.length > 0) {
+	var hostMetric = metricsData[0];
+	metricsData.forEach(function(m) {
+	  if(m.pid < hostMetric.pid) {
+		hostMetric = m;
+	  }
+	});
+	hostMemory = hostMetric.memoryUsage || [];
+  }
+  var maxLen = Math.max(aggregatedCPU.length, hostMemory.length);
+  var labels2 = [];
+  for (var i = 0; i < maxLen; i++) {
+	labels2.push(" " + (i + 1));
+  }
+  var cpuMemDatasets = [{
+	  label: "Total CPU Usage",
+	  data: aggregatedCPU,
+	  borderColor: "rgba(75, 192, 192, 1)",
+	  backgroundColor: "rgba(75, 192, 192, 0.2)",
+	  fill: false
+	},
+	{
+	  label: "Total Memory Usage",
+	  data: hostMemory,
+	  borderColor: "rgba(192, 75, 75, 1)",
+	  backgroundColor: "rgba(192, 75, 75, 0.2)",
+	  fill: false
+	}
+  ];
+  var ctx2 = document.getElementById("cpuMemChart").getContext("2d");
+  new Chart(ctx2, {
+	type: "line",
+	data: { labels: labels2, datasets: cpuMemDatasets },
+	options: { animation: { duration: 0 }, scales: { x: { beginAtZero: true, title: { display: true, text: "Duration (seconds)" } } } }
+  });
+});
+</script>
+</body>
+</html>`, metaRefresh, agg.ActiveWorkflows, agg.TotalWorkflowsStarted, agg.TotalWorkflowsCompleted, agg.TotalWorkflowsFailed, checked, sel5, sel10, sel15, sel30, time.Now().Year(), string(metricsJSON))
 	})
+
 	log.Printf("Dashboard available at http://localhost:%d/dashboard", dashboardPort)
-	// Periodically update our local metrics.
 	go func() {
 		for {
 			updateMetricsFile()
@@ -1159,26 +1166,39 @@ func runDashboard() {
 	if err := http.Serve(listener, nil); err != nil {
 		log.Printf("Dashboard server error: %v", err)
 	}
-
 }
 
-// Modify Metrics struct to include workflow durations.
 type Metrics struct {
 	PID                     int       `json:"pid"`
 	ActiveWorkflows         int       `json:"activeWorkflows"`
 	TotalWorkflowsStarted   int64     `json:"totalWorkflowsStarted"`
 	TotalWorkflowsCompleted int64     `json:"totalWorkflowsCompleted"`
 	TotalWorkflowsFailed    int64     `json:"totalWorkflowsFailed"`
-	Durations               []float64 `json:"durations"` // New field: durations in seconds
+	Durations               []float64 `json:"durations"`
+	CPUUsage                []float64 `json:"cpuUsage"`
+	MemoryUsage             []float64 `json:"memoryUsage"`
 }
 
-// New function to update local metrics file.
 func updateMetricsFile() {
-	pid := os.Getpid()
+	cpuPercents, err := cpu.Percent(0, false)
+	var hostCPU float64 = 0
+	if err == nil && len(cpuPercents) > 0 {
+		hostCPU = cpuPercents[0]
+	}
+	memStats, err := mem.VirtualMemory()
+	var hostMem float64 = 0
+	if err == nil {
+		hostMem = memStats.UsedPercent
+	}
+	mutex.Lock()
+	cpuHistory = append(cpuHistory, hostCPU)
+	memHistory = append(memHistory, hostMem)
+	mutex.Unlock()
 	timingsMutex.Lock()
 	durationsCopy := make([]float64, len(workflowDurations))
 	copy(durationsCopy, workflowDurations)
 	timingsMutex.Unlock()
+	pid := os.Getpid()
 	metrics := Metrics{
 		PID:                     pid,
 		ActiveWorkflows:         getActiveWorkflows(),
@@ -1186,6 +1206,8 @@ func updateMetricsFile() {
 		TotalWorkflowsCompleted: atomic.LoadInt64(&totalWorkflowsCompleted),
 		TotalWorkflowsFailed:    atomic.LoadInt64(&totalWorkflowsFailed),
 		Durations:               durationsCopy,
+		CPUUsage:                cpuHistory,
+		MemoryUsage:             memHistory,
 	}
 	data, err := json.Marshal(metrics)
 	if err != nil {
@@ -1206,7 +1228,6 @@ func updateMetricsFile() {
 	}
 }
 
-// Modify aggregateMetrics to merge durations arrays across files.
 func aggregateMetrics() Metrics {
 	dashboardDir, err := os.UserConfigDir()
 	if err != nil {
@@ -1237,6 +1258,40 @@ func aggregateMetrics() Metrics {
 		agg.TotalWorkflowsFailed += m.TotalWorkflowsFailed
 		agg.ActiveWorkflows += m.ActiveWorkflows
 		agg.Durations = append(agg.Durations, m.Durations...)
+		agg.CPUUsage = append(agg.CPUUsage, m.CPUUsage...)
+		agg.MemoryUsage = append(agg.MemoryUsage, m.MemoryUsage...)
 	}
 	return agg
+}
+
+func monitorSystemUsage() {
+	for {
+		// Measure per-core CPU usage over a 1-second interval.
+		cpuPercents, err := cpu.Percent(1*time.Second, true)
+		if err == nil && len(cpuPercents) > 0 {
+			var sum float64
+			for _, p := range cpuPercents {
+				sum += p
+			}
+			overall := sum / float64(len(cpuPercents))
+			mutex.Lock()
+			cpuHistory = append(cpuHistory, overall)
+			if len(cpuHistory) > 100 {
+				cpuHistory = cpuHistory[1:]
+			}
+			mutex.Unlock()
+		}
+
+		// Get memory usage as before.
+		memStats, err := mem.VirtualMemory()
+		if err == nil {
+			mutex.Lock()
+			memHistory = append(memHistory, memStats.UsedPercent)
+			if len(memHistory) > 100 {
+				memHistory = memHistory[1:]
+			}
+			mutex.Unlock()
+		}
+		// No additional sleep needed here since cpu.Percent already waited for 1 second.
+	}
 }
