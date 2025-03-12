@@ -3,6 +3,8 @@
 // Check the value at row 1, column 29
 yield wait.forText('3270 Example Application', new Position(1, 29));
 
+yield ps.sendKeys(ControlKey.TAB, true);
+
 // Fill in the first name at row 5, column 21
 yield ps.sendKeys('user1-firstname');
 yield ps.sendKeys(ControlKey.TAB, true);

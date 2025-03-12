@@ -212,9 +212,11 @@ func (e *Emulator) FillString(x, y int, value string) error {
 	maxRetries := 3
 	retryDelay := 1 * time.Second
 
-	// Adjust the row and column values to start at 1 internally
-	if err := e.moveCursor(x, y); err != nil {
-		return fmt.Errorf("error moving cursor: %v", err)
+	// If coordinates are provided, move the cursor
+	if x > 0 && y > 0 {
+		if err := e.moveCursor(x, y); err != nil {
+			return fmt.Errorf("error moving cursor: %v", err)
+		}
 	}
 
 	// Retry the SetString operation with a delay in case of failure

@@ -24,15 +24,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.1.1"
+const version = "1.1.2"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
-	Host           string
-	Port           int
-	OutputFilePath string `json:"OutputFilePath"`
-	Steps          []Step
-	InputFilePath  string `json:"InputFilePath"` // New field for the input file path
+	Host            string
+	Port            int
+	OutputFilePath  string `json:"OutputFilePath"`
+	Steps           []Step
+	InputFilePath   string `json:"InputFilePath"` // New field for the input file path
+	RampUpBatchSize int    `json:"RampUpBatchSize"`
+	RampUpDelay     int    `json:"RampUpDelay"`
 }
 
 // Step represents an individual action to be taken on the terminal.
@@ -72,8 +74,8 @@ var dashboardPort int
 var activeWorkflows int
 var mutex sync.Mutex
 
-const rampUpBatchSize = 10      // Number of work items to start in each batch
-const rampUpDelay = time.Second // Delay between starting batches
+// const rampUpBatchSize = 10      // Number of work items to start in each batch
+// const rampUpDelay = time.Second // Delay between starting batches
 
 // Define the showVersion flag at the package level
 var showVersion = flag.Bool("version", false, "Show the application version")
@@ -118,48 +120,126 @@ func loadConfiguration(filePath string) *Configuration {
 		log.Fatalf("Error decoding config JSON: %v", err)
 	}
 
+	if config.RampUpBatchSize <= 0 {
+		config.RampUpBatchSize = 10
+	}
+	if config.RampUpDelay <= 0 {
+		config.RampUpDelay = 1
+	}
+
 	return &config
 }
 
 // loadInputFile reads and parses the new input file format.
 func loadInputFile(filePath string) ([]Step, error) {
+	if connect3270.Verbose {
+		log.Printf("Loading input file: %s", filePath)
+	}
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		log.Printf("Error reading input file %s: %v", filePath, err)
 		return nil, fmt.Errorf("error reading input file: %v", err)
 	}
+	if connect3270.Verbose {
+		log.Printf("Successfully read input file: %d bytes", len(data))
+	}
 
-	// Parse the input file and extract steps
 	var steps []Step
 
-	// Example parsing logic for the new input file format
+	// Add a Connect step as the first step.
+	steps = append(steps, Step{
+		Type: "Connect",
+	})
+	if connect3270.Verbose {
+		log.Printf("Added initial Connect step")
+	}
+
+	// Parse the input file and extract steps.
 	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
+	for idx, line := range lines {
 		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if connect3270.Verbose {
+			log.Printf("Processing line %d: %s", idx+1, line)
+		}
 		if strings.HasPrefix(line, "yield ps.sendKeys") {
-			// Extract the key to be sent
+			// Extract the key to be sent.
 			key := strings.TrimPrefix(line, "yield ps.sendKeys(")
 			key = strings.TrimSuffix(key, ");")
 			key = strings.Trim(key, "'")
 
-			// Determine the step type based on the key
+			// Determine the step type based on the key.
 			stepType := ""
 			switch key {
 			case "ControlKey.TAB":
 				stepType = "PressTab"
 			case "ControlKey.ENTER":
 				stepType = "PressEnter"
+			case "ControlKey.F1":
+				stepType = "PressPF1"
+			case "ControlKey.F2":
+				stepType = "PressPF2"
+			case "ControlKey.F3":
+				stepType = "PressPF3"
+			case "ControlKey.F4":
+				stepType = "PressPF4"
+			case "ControlKey.F5":
+				stepType = "PressPF5"
+			case "ControlKey.F6":
+				stepType = "PressPF6"
+			case "ControlKey.F7":
+				stepType = "PressPF7"
+			case "ControlKey.F8":
+				stepType = "PressPF8"
+			case "ControlKey.F9":
+				stepType = "PressPF9"
+			case "ControlKey.F10":
+				stepType = "PressPF10"
+			case "ControlKey.F11":
+				stepType = "PressPF11"
+			case "ControlKey.F12":
+				stepType = "PressPF12"
+			case "ControlKey.F13":
+				stepType = "PressPF13"
+			case "ControlKey.F14":
+				stepType = "PressPF14"
+			case "ControlKey.F15":
+				stepType = "PressPF15"
+			case "ControlKey.F16":
+				stepType = "PressPF16"
+			case "ControlKey.F17":
+				stepType = "PressPF17"
+			case "ControlKey.F18":
+				stepType = "PressPF18"
+			case "ControlKey.F19":
+				stepType = "PressPF19"
+			case "ControlKey.F20":
+				stepType = "PressPF20"
+			case "ControlKey.F21":
+				stepType = "PressPF21"
+			case "ControlKey.F22":
+				stepType = "PressPF22"
+			case "ControlKey.F23":
+				stepType = "PressPF23"
+			case "ControlKey.F24":
+				stepType = "PressPF24"
 			default:
 				stepType = "FillString"
 			}
 
-			// Create a new step and add it to the steps slice
+			// Create a new step and add it to the steps slice.
 			step := Step{
 				Type: stepType,
 				Text: key,
 			}
 			steps = append(steps, step)
+			if connect3270.Verbose {
+				log.Printf("Added step: %s with text: %s", stepType, key)
+			}
 		} else if strings.HasPrefix(line, "yield wait.forText") {
-			// Extract the text and position
+			// Extract the text and position.
 			parts := strings.Split(line, ",")
 			if len(parts) >= 2 {
 				text := strings.TrimPrefix(parts[0], "yield wait.forText('")
@@ -168,23 +248,80 @@ func loadInputFile(filePath string) ([]Step, error) {
 				position = strings.TrimSuffix(position, ");")
 				posParts := strings.Split(position, ",")
 				if len(posParts) == 2 {
-					row, _ := strconv.Atoi(posParts[0])
-					column, _ := strconv.Atoi(posParts[1])
+					row, errRow := strconv.Atoi(strings.TrimSpace(posParts[0]))
+					column, errCol := strconv.Atoi(strings.TrimSpace(posParts[1]))
+					if errRow != nil || errCol != nil {
+						if connect3270.Verbose {
+							log.Printf("Error parsing position values in line %d: row or column conversion error", idx+1)
+						}
+						continue
+					}
 					step := Step{
 						Type: "CheckValue",
 						Coordinates: connect3270.Coordinates{
 							Row:    row,
 							Column: column,
-							Length: len(text), // Set the length to the length of the text
+							Length: len(text), // Set the length to the length of the text.
 						},
 						Text: text,
 					}
 					steps = append(steps, step)
+					if connect3270.Verbose {
+						log.Printf("Added CheckValue step: text '%s' at position (%d,%d), length %d", text, row, column, len(text))
+					}
+				}
+			}
+		} else if strings.HasPrefix(line, "// Fill in the first name at row") || strings.HasPrefix(line, "// Fill in the last name at row") {
+			// Extract the coordinates from the comment line.
+			parts := strings.Split(line, " ")
+			if len(parts) >= 8 {
+				row, errRow := strconv.Atoi(parts[6])
+				column, errCol := strconv.Atoi(parts[9])
+				if errRow != nil || errCol != nil {
+					if connect3270.Verbose {
+						log.Printf("Error parsing coordinates in line %d: row or column conversion error", idx+1)
+					}
+					continue
+				}
+				// The next line should be the actual FillString step.
+				if idx+1 < len(lines) {
+					nextLine := strings.TrimSpace(lines[idx+1])
+					if strings.HasPrefix(nextLine, "yield ps.sendKeys") {
+						key := strings.TrimPrefix(nextLine, "yield ps.sendKeys(")
+						key = strings.TrimSuffix(key, ");")
+						key = strings.Trim(key, "'")
+						step := Step{
+							Type: "FillString",
+							Coordinates: connect3270.Coordinates{
+								Row:    row,
+								Column: column,
+							},
+							Text: key,
+						}
+						steps = append(steps, step)
+						if connect3270.Verbose {
+							log.Printf("Added FillString step: text '%s' at position (%d,%d)", key, row, column)
+						}
+					}
 				}
 			}
 		}
 	}
 
+	// Add a Disconnect step as the last step.
+	steps = append(steps, Step{
+		Type: "Disconnect",
+	})
+	if connect3270.Verbose {
+		log.Printf("Added final Disconnect step")
+	}
+	if connect3270.Verbose {
+		log.Println("Workflow steps loaded:")
+		for index, step := range steps {
+			log.Printf("Step %d: Type: %s, Text: '%s', Coordinates: {Row: %d, Column: %d, Length: %d}",
+				index, step.Type, step.Text, step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
+		}
+	}
 	return steps, nil
 }
 
@@ -540,11 +677,16 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string) error {
 		_, err := e.GetValue(step.Coordinates.Row, step.Coordinates.Column, step.Coordinates.Length)
 		return err
 	case "FillString":
+		if step.Coordinates.Row == 0 && step.Coordinates.Column == 0 {
+			return e.SetString(step.Text)
+		}
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, step.Text)
 	case "AsciiScreenGrab":
 		return e.AsciiScreenGrab(tmpFileName, runAPI)
 	case "PressEnter":
 		return e.Press(connect3270.Enter)
+	case "PressTab":
+		return e.Press(connect3270.Tab)
 	case "Disconnect":
 		return e.Disconnect()
 	case "PressPF1":
@@ -616,7 +758,7 @@ func sendErrorResponse(c *gin.Context, statusCode int, message string, err error
 func printBanner() {
 	// Simple ASCII banner with version info
 	fmt.Println(`
-	____ ___ ______ ___   _____                            _
+	 ____ ___ ______ ___   _____                            _
 	|___ \__ \____  / _ \ / ____|                          | |
 	  __) | ) |  / / | | | |     ___  _ __  _ __   ___  ___| |_
 	 |__ < / /  / /| | | | |    / _ \| '_ \| '_ \ / _ \/ __| __|
@@ -714,8 +856,12 @@ func runConcurrentWorkflows(config *Configuration) {
 	for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
 		// Start a batch of workflows, up to rampUpBatchSize, or until runtime is reached.
 		for time.Since(overallStart) < time.Duration(runtimeDuration)*time.Second {
-			// Incrementally launch workflows until the concurrent limit is reached.
-			for i := 0; i < rampUpBatchSize; i++ {
+			log.Printf("Increasing batch by %d, current size is %d, new total target is %d",
+				config.RampUpBatchSize,
+				len(semaphore),
+				len(semaphore)+config.RampUpBatchSize)
+
+			for i := 0; i < config.RampUpBatchSize; i++ {
 				semaphore <- struct{}{}
 				wg.Add(1)
 				go func() {
@@ -732,12 +878,12 @@ func runConcurrentWorkflows(config *Configuration) {
 			// Log the current number of active workflows.
 			log.Printf("Currently active workflows: %d", len(semaphore))
 			// Wait a short delay before starting the next workflow to gradually reach full concurrency.
-			time.Sleep(rampUpDelay)
+			time.Sleep(time.Duration(config.RampUpDelay) * time.Second)
 		}
 		// Log the current number of active workflows after each batch.
 		log.Printf("Currently active workflows: %d", len(semaphore))
 		// Wait for a short delay before starting the next batch.
-		time.Sleep(rampUpDelay)
+		time.Sleep(time.Duration(config.RampUpDelay) * time.Second)
 	}
 
 	// Wait for any in-flight workflows to finish.
@@ -809,7 +955,7 @@ func startWorkflowsRampUp(overallStart time.Time, activeChan chan struct{}, conf
 			}
 			startWorkflowBatch(activeChan, config, wg)
 		}
-		time.Sleep(rampUpDelay) // Sleep briefly before checking again
+		time.Sleep(time.Duration(config.RampUpDelay) * time.Second) // Sleep briefly before checking again
 	}
 }
 
@@ -822,10 +968,10 @@ func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *syn
 	availableSlots := concurrent - activeWorkflows
 	if availableSlots <= 0 {
 		mutex.Unlock()
-		time.Sleep(rampUpDelay) // Throttle batch initiation
+		time.Sleep(time.Duration(config.RampUpDelay) * time.Second) // Throttle batch initiation
 		return
 	}
-	workflowsToStart := min(rampUpBatchSize, availableSlots)
+	workflowsToStart := min(config.RampUpBatchSize, availableSlots)
 	mutex.Unlock()
 
 	for j := 0; j < workflowsToStart; j++ {

@@ -2,6 +2,8 @@
   "Host": "app1.3270.io",
   "Port": 3270,
   "OutputFilePath": "output.html",
+  "RampUpBatchSize": 10,
+  "RampUpDelay": 0.5,
   "Steps": [
     {
       "Type": "Connect"
