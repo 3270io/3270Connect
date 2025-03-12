@@ -28,6 +28,7 @@ Here are the key features of 3270Connect:
 - Running workflows defined in a configuration file.
 - Capturing the 3270 screens as the workflow executes.
 - Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
+- Dashboard to visually provide metrics on concurrency usage
 - Headless mode for running workflows without a graphical user interface.
 - Verbose mode for detailed output.
 - API mode for advanced automation.
@@ -36,8 +37,6 @@ Here are the key features of 3270Connect:
 ## Documentation
 
 - [ Documentation](https://3270.io)
-
-### UPDATE: Version 1.0.6 introduces Windows
 
 ## License
 

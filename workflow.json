@@ -3,7 +3,7 @@
   "Port": 3270,
   "OutputFilePath": "output.html",
   "RampUpBatchSize": 10,
-  "RampUpDelay": 0.5,
+  "RampUpDelay": 1,
   "Steps": [
     {
       "Type": "Connect"

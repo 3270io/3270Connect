@@ -23,6 +23,8 @@ To run a single workflow, create a JSON configuration file that describes the wo
   "Host": "10.27.27.62",
   "Port": 3270,
   "HTMLFilePath": "output.html",
+  "RampUpBatchSize": 10, //optional for concurrency runs
+  "RampUpDelay": 1, //optional for concurrency runs
   "Steps": [
     {
       "Type": "InitializeHTMLFile"

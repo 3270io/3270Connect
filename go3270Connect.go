@@ -32,9 +32,9 @@ type Configuration struct {
 	Port            int
 	OutputFilePath  string `json:"OutputFilePath"`
 	Steps           []Step
-	InputFilePath   string `json:"InputFilePath"` // New field for the input file path
-	RampUpBatchSize int    `json:"RampUpBatchSize"`
-	RampUpDelay     int    `json:"RampUpDelay"`
+	InputFilePath   string  `json:"InputFilePath"` // New field for the input file path
+	RampUpBatchSize int     `json:"RampUpBatchSize"`
+	RampUpDelay     float64 `json:"RampUpDelay"`
 }
 
 // Step represents an individual action to be taken on the terminal.
@@ -122,7 +122,7 @@ func loadConfiguration(filePath string) *Configuration {
 		config.RampUpBatchSize = 10
 	}
 	if config.RampUpDelay <= 0 {
-		config.RampUpDelay = 1
+		config.RampUpDelay = 1.0
 	}
 
 	return &config
@@ -872,12 +872,12 @@ func runConcurrentWorkflows(config *Configuration) {
 			// Log the current number of active workflows.
 			log.Printf("Currently active workflows: %d", len(semaphore))
 			// Wait a short delay before starting the next workflow to gradually reach full concurrency.
-			time.Sleep(time.Duration(config.RampUpDelay) * time.Second)
+			time.Sleep(time.Duration(config.RampUpDelay * float64(time.Second)))
 		}
 		// Log the current number of active workflows after each batch.
 		log.Printf("Currently active workflows: %d", len(semaphore))
 		// Wait for a short delay before starting the next batch.
-		time.Sleep(time.Duration(config.RampUpDelay) * time.Second)
+		time.Sleep(time.Duration(config.RampUpDelay * float64(time.Second)))
 	}
 
 	// Wait for any in-flight workflows to finish.
