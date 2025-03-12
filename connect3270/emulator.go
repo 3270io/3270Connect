@@ -59,7 +59,7 @@ const (
 )
 
 const (
-	maxRetries = 3           // Maximum number of retries
+	maxRetries = 10          // Maximum number of retries
 	retryDelay = time.Second // Delay between retries (e.g., 1 second)
 )
 
@@ -316,6 +316,7 @@ func (e *Emulator) Connect() error {
 		}
 
 		if e.ScriptPort == "" {
+			log.Println("ScriptPort not set, using default 5000")
 			e.ScriptPort = "5000"
 		}
 
@@ -323,7 +324,15 @@ func (e *Emulator) Connect() error {
 			log.Println("func Connect: using -scriptport: " + e.ScriptPort)
 		}
 
-		err := e.createApp()
+		var err error
+		for attempt := 0; attempt < maxRetries; attempt++ {
+			err = e.createApp()
+			if err == nil {
+				break
+			}
+			log.Printf("createApp failed (attempt %d/%d): %v", attempt+1, maxRetries, err)
+			time.Sleep(retryDelay)
+		}
 		if err != nil {
 			log.Printf("Failed to create app: %v", err)
 			defer e.Disconnect()

@@ -24,7 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.1.2"
+const version = "1.1.3"
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -53,9 +53,7 @@ var (
 	headless        bool // Flag to run go3270 in headless mode
 	verbose         bool
 	runApp          string
-	runtimeDuration int // Flag to determine if new workflows should be started when others finish
-	done            = make(chan bool)
-	wg              sync.WaitGroup
+	runtimeDuration int       // Flag to determine if new workflows should be started when others finish
 	lastUsedPort    int       // remove preset initial value; will be set from startPort flag
 	closeDoneOnce   sync.Once // Declare a sync.Once variable
 	startPort       int       // new global flag for starting port
@@ -338,11 +336,8 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 	activeWorkflows++
 	mutex.Unlock()
 
-	e := connect3270.Emulator{
-		Host:       config.Host,
-		Port:       config.Port,
-		ScriptPort: strconv.Itoa(scriptPort),
-	}
+	// Use NewEmulator constructor function
+	e := connect3270.NewEmulator(config.Host, config.Port, strconv.Itoa(scriptPort))
 
 	tmpFile, err := ioutil.TempFile("", "workflowOutput_")
 	if err != nil {
@@ -571,17 +566,19 @@ func runWorkflow(scriptPort int, config *Configuration) error {
 		}
 		// Ensure the file is properly closed before renaming it
 		// Remove existing output file (if any) to prevent "Access is denied" errors.
-		_ = os.Remove(config.OutputFilePath)
-		if err := os.Rename(tmpFileName, config.OutputFilePath); err != nil {
-			//log.Printf("Error renaming temporary file to output file: %v", err)
-			pid := os.Getpid()
-			uniqueOutputPath := fmt.Sprintf("%s.%d", config.OutputFilePath, pid)
-			if err2 := os.Rename(tmpFileName, uniqueOutputPath); err2 != nil {
-				log.Printf("Error renaming temporary file to unique output file: %v", err2)
-			} else {
-				log.Printf("Renamed temporary file to unique output file: %s", uniqueOutputPath)
+		if config.OutputFilePath != "" {
+			_ = os.Remove(config.OutputFilePath)
+			if err := os.Rename(tmpFileName, config.OutputFilePath); err != nil {
+				//log.Printf("Error renaming temporary file to output file: %v", err)
+				pid := os.Getpid()
+				uniqueOutputPath := fmt.Sprintf("%s.%d", config.OutputFilePath, pid)
+				if err2 := os.Rename(tmpFileName, uniqueOutputPath); err2 != nil {
+					log.Printf("Error renaming temporary file to unique output file: %v", err2)
+				} else if verbose {
+					log.Printf("Renamed temporary file to unique output file: %s", uniqueOutputPath)
+				}
+				return err
 			}
-			return err
 		}
 		atomic.AddInt64(&totalWorkflowsCompleted, 1) // Update completed counter
 	}
@@ -845,9 +842,6 @@ func setGlobalSettings() {
 func runConcurrentWorkflows(config *Configuration) {
 	overallStart := time.Now()
 
-	// Start progress logging in a separate goroutine.
-	go logActiveWorkflowsUntilDone()
-
 	// Create a channel to act as a semaphore limiting the number of concurrent workflows.
 	semaphore := make(chan struct{}, concurrent)
 	var wg sync.WaitGroup
@@ -891,44 +885,6 @@ func runConcurrentWorkflows(config *Configuration) {
 	log.Println("All workflows completed after runtimeDuration ended.")
 }
 
-// Optional logger goroutine:
-func logActiveWorkflowsUntilDone() {
-	for {
-		active := getActiveWorkflows()
-		log.Printf("Currently active workflows: %d", active)
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func logActiveWorkflows(logDone chan struct{}) {
-	if connect3270.Verbose {
-		log.Println("Starting logActiveWorkflows")
-	}
-	for {
-		select {
-		case <-logDone:
-			if connect3270.Verbose {
-				log.Println("Stopping logActiveWorkflows")
-			}
-			return
-		default:
-			activeCount := getActiveWorkflows()
-			log.Printf("Currently active workflows: %d", activeCount)
-			time.Sleep(1 * time.Second)
-		}
-	}
-}
-
-func handleRuntimeDuration(runtimeDone chan struct{}, closeDoneOnce *sync.Once) {
-	if runtimeDuration > 0 {
-		time.Sleep(time.Duration(runtimeDuration) * time.Second)
-		log.Println("Runtime duration reached. Not starting new workflows...")
-	}
-	closeDoneOnce.Do(func() {
-		close(runtimeDone)
-	})
-}
-
 func getActiveWorkflows() int {
 	if connect3270.Verbose {
 		log.Println("Starting getActiveWorkflows")
@@ -936,73 +892,6 @@ func getActiveWorkflows() int {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return activeWorkflows
-}
-
-func startWorkflowsRampUp(overallStart time.Time, activeChan chan struct{}, config *Configuration, wg *sync.WaitGroup) {
-	for {
-		// Check if we're still within the overall runtimeDuration
-		if time.Since(overallStart) >= time.Duration(runtimeDuration)*time.Second {
-			if connect3270.Verbose {
-				log.Println("Overall runtimeDuration reached, stopping new workflow initiation")
-			}
-			return
-		}
-
-		// Only start a new workflow if we haven't reached the concurrent limit
-		if getActiveWorkflows() < concurrent {
-			if connect3270.Verbose {
-				log.Println("Initiating a new workflow")
-			}
-			startWorkflowBatch(activeChan, config, wg)
-		}
-		time.Sleep(time.Duration(config.RampUpDelay) * time.Second) // Sleep briefly before checking again
-	}
-}
-
-func startWorkflowBatch(activeChan chan struct{}, config *Configuration, wg *sync.WaitGroup) {
-	if connect3270.Verbose {
-		log.Println("Starting startWorkflowBatch")
-	}
-
-	mutex.Lock()
-	availableSlots := concurrent - activeWorkflows
-	if availableSlots <= 0 {
-		mutex.Unlock()
-		time.Sleep(time.Duration(config.RampUpDelay) * time.Second) // Throttle batch initiation
-		return
-	}
-	workflowsToStart := min(config.RampUpBatchSize, availableSlots)
-	mutex.Unlock()
-
-	for j := 0; j < workflowsToStart; j++ {
-		wg.Add(1)
-
-		// Mark the slot as taken *before* starting the goroutine:
-		mutex.Lock()
-		activeWorkflows++
-		lastUsedPort++
-		portToUse := lastUsedPort
-		mutex.Unlock()
-
-		go func() {
-			defer wg.Done()
-			// optional: use the channel if you like
-			activeChan <- struct{}{}
-
-			// Now run the workflow. Remove the code in runWorkflow that increments/decrements activeWorkflows.
-			err := runWorkflow(portToUse, config)
-			if err != nil {
-				log.Printf("Workflow on port %d returned an error: %v", portToUse, err)
-			}
-
-			// Release the concurrency slot.
-			mutex.Lock()
-			activeWorkflows--
-			mutex.Unlock()
-
-			<-activeChan
-		}()
-	}
 }
 
 func getNextAvailablePort() int {
@@ -1013,7 +902,9 @@ func getNextAvailablePort() int {
 		if isPortAvailable(lastUsedPort) {
 			return lastUsedPort
 		}
-		log.Printf("Port %d is in use, trying next port", lastUsedPort)
+		if connect3270.Verbose {
+			log.Printf("Port %d is in use, trying next port", lastUsedPort)
+		}
 	}
 }
 
@@ -1022,6 +913,9 @@ func isPortAvailable(port int) bool {
 	addr := ":" + strconv.Itoa(port)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
+		if connect3270.Verbose {
+			log.Printf("Port %d is in use, trying next port", port)
+		}
 		return false
 	}
 	ln.Close()
