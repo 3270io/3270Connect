@@ -1104,15 +1104,25 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
   });
 
-  // Aggregate only CPU usage from all metricsData.
-  var aggregatedCPU = [];
-  metricsData.forEach(function(metric) {
-	if(metric.cpuUsage) {
-	  metric.cpuUsage.forEach(function(val, i) {
-		aggregatedCPU[i] = (aggregatedCPU[i] || 0) + val;
-	  });
-	}
-  });
+// Average CPU usage across all metricsData.
+var aggregatedCPU = [];
+var cpuCount = [];
+metricsData.forEach(function(metric) {
+    if (metric.cpuUsage) {
+        metric.cpuUsage.forEach(function(val, i) {
+            if (typeof aggregatedCPU[i] === 'undefined') {
+                aggregatedCPU[i] = 0;
+                cpuCount[i] = 0;
+            }
+            aggregatedCPU[i] += val;
+            cpuCount[i] += 1;
+        });
+    }
+});
+// Compute the average for each time slice.
+for (var i = 0; i < aggregatedCPU.length; i++) {
+    aggregatedCPU[i] = aggregatedCPU[i] / cpuCount[i];
+}
   // For Memory, use host memory from the metric with the smallest PID.
   var hostMemory = [];
   if(metricsData.length > 0) {
