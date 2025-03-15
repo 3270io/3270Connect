@@ -1,12 +1,13 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -25,9 +26,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/sirupsen/logrus"
 )
 
-const version = "1.2"
+const version = "1.3"
+
+var log = logrus.New()
+
+func init() {
+	log.SetFormatter(&logrus.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.InfoLevel)
+}
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
@@ -56,10 +66,9 @@ var (
 	headless        bool // Run go3270 in headless mode
 	verbose         bool
 	runApp          string
-	runtimeDuration int       // Duration to run workflows (only used in concurrent mode)
-	lastUsedPort    int       // Will be set from startPort flag
-	closeDoneOnce   sync.Once // For one-time closure operations
-	startPort       int       // Starting port for workflow connections
+	runtimeDuration int // Duration to run workflows (only used in concurrent mode)
+	lastUsedPort    int // Will be set from startPort flag
+	startPort       int // Starting port for workflow connections
 )
 
 var dashboardStarted bool
@@ -82,7 +91,6 @@ var workflowDurations []float64
 // Global variables for host-wide CPU and memory usage history.
 var cpuHistory []float64
 var memHistory []float64
-var processCPUHistory []float64 // Legacy, not used
 
 var showVersion = flag.Bool("version", false, "Show the application version")
 
@@ -131,6 +139,11 @@ func storeLog(message string) {
 	}
 }
 
+//go:embed templates/dashboard.gohtml
+var dashboardTemplateFS embed.FS
+
+var dashboardTemplate *template.Template
+
 func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
@@ -147,8 +160,12 @@ func init() {
 
 	// Create logs directory if it doesn't exist
 	if err := os.MkdirAll("logs", 0755); err != nil {
-		log.Fatalf("Error creating logs directory: %v", err)
+		handleError(err, "Error creating logs directory")
 	}
+
+	var err error
+	dashboardTemplate, err = template.ParseFS(dashboardTemplateFS, "templates/dashboard.gohtml")
+	handleError(err, "Error parsing dashboard template")
 }
 
 func loadConfiguration(filePath string) *Configuration {
@@ -156,23 +173,27 @@ func loadConfiguration(filePath string) *Configuration {
 		log.Printf("Loading configuration from %s", filePath)
 	}
 	configFile, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("Error opening config file at %s: %v", filePath, err)
-	}
+	handleError(err, fmt.Sprintf("Error opening config file at %s", filePath))
 	defer configFile.Close()
 	var config Configuration
 	decoder := json.NewDecoder(configFile)
 	err = decoder.Decode(&config)
-	if err != nil {
-		log.Fatalf("Error decoding config JSON: %v", err)
-	}
+	handleError(err, "Error decoding config JSON")
 	if config.RampUpBatchSize <= 0 {
 		config.RampUpBatchSize = 10
 	}
 	if config.RampUpDelay <= 0 {
 		config.RampUpDelay = 1.0
 	}
+	err = validateConfiguration(&config)
+	handleError(err, "Invalid configuration")
 	return &config
+}
+
+func handleError(err error, message string) {
+	if err != nil {
+		log.Fatalf("%s: %v", message, err)
+	}
 }
 
 func loadInputFile(filePath string) ([]Step, error) {
@@ -987,6 +1008,7 @@ func runDashboard() {
 	}
 
 	setupConsoleHandler()
+	setupTerminalConsoleHandler()
 	http.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 		dashboardDir, err := os.UserConfigDir()
 		if err != nil {
@@ -1054,612 +1076,36 @@ func runDashboard() {
 			sel30 = "selected"
 		}
 		agg := aggregateMetrics()
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>3270Connect Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
-  <style>
-	body { padding-top: 70px; padding-bottom: 70px; color: black; }
-	.chart-container { margin: auto; height: 400px; width: 600px; }
-  </style>
-</head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container">
-	<a class="navbar-brand" href="#">3270Connect</a>
-	<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-	  <span class="navbar-toggler-icon"></span>
-	</button>
-	<div class="collapse navbar-collapse" id="navbarNav">
-	  <ul class="navbar-nav ms-auto">
-		<li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-		<li class="nav-item">
-		  <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#consoleModal">
-			Console Logs
-		  </button>
-		</li>
-	  </ul>
-	</div>
-  </div>
-</nav>
-<div class="container my-4">
-  <div class="p-5 mb-4 bg-light rounded-3">
-	<div class="container-fluid py-3">
-	  <h1 class="display-5 fw-bold">3270Connect Aggregated Metrics</h1>
-	  <p class="col-md-8 fs-4">Per PID Metrics</p>
-	  <div class="d-flex flex-wrap justify-content-around">
-		<div class="p-2 text-center">
-		  <h5>Active Workflows</h5>
-		  <p class="mb-0">%d</p>
-		</div>
-		<div class="p-2 text-center">
-		  <h5>Total Workflows Started</h5>
-		  <p class="mb-0">%d</p>
-		</div>
-		<div class="p-2 text-center">
-		  <h5>Total Workflows Completed</h5>
-		  <p class="mb-0">%d</p>
-		</div>
-		<div class="p-2 text-center">
-		  <h5>Total Workflows Failed</h5>
-		  <p class="mb-0">%d</p>
-		</div>
-	  </div>
-	  <form id="autoRefreshForm" method="get" class="mt-3">
-		<div class="form-check form-switch">
-		  <input class="form-check-input" type="checkbox" id="autoRefreshToggle" name="autoRefresh" value="true" %s onchange="this.form.submit()">
-		  <label class="form-check-label" for="autoRefreshToggle">Auto Refresh</label>
-		</div>
-		<div class="mt-2">
-		  <label for="refreshPeriodSelect" class="form-label">Refresh Period (seconds):</label>
-		  <select class="form-select w-auto" id="refreshPeriodSelect" name="refreshPeriod" onchange="this.form.submit()">
-			<option value="1" %s>1</option>
-			<option value="5" %s>5</option>
-			<option value="10" %s>10</option>
-			<option value="15" %s>15</option>
-			<option value="30" %s>30</option>
-		  </select>
-		</div>
-	  </form>
-	</div>
-  </div>
-  <div class="row">
-	<div class="col-md-6">
-	  <div class="chart-container">
-		<canvas id="durationChart"></canvas>
-	  </div>
-	</div>
-	<div class="col-md-6">
-	  <div class="chart-container">
-		<canvas id="cpuMemChart"></canvas>
-	  </div>
-	</div>
-  </div>
-  <div class="row mt-3">
-	<div class="col-md-12" id="pidParamsContainerOnDashboard">
-	  <!-- Bars for process metrics will be rendered here -->
-	</div>
-  </div>
-</div>
-<!-- Add this inside the <body> tag -->
-<div id="tooltipNotification" class="tooltip bs-tooltip-top" role="tooltip" style="position: fixed; top: 10px; right: 10px; z-index: 9999; display: none;">
-  <div class="tooltip-arrow"></div>
-  <div class="tooltip-inner"></div>
-</div>
-<!-- Modal for Console Logs -->
-<div class="modal fade" id="consoleModal" tabindex="-1" aria-labelledby="consoleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-	<div class="modal-content">
-	  <div class="modal-header">
-		<h5 class="modal-title" id="consoleModalLabel">Console Logs</h5>
-		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-	  </div>
-	  <div class="modal-body">
-		<div id="pidParamsContainer" class="mb-3"></div>
-		<div class="mb-3">
-		  <label for="pidFilter" class="form-label">Filter by PID</label>
-		  <select id="pidFilter" class="form-select">
-			<!-- Options will be auto populated -->
-		  </select>
-		</div>
-		<button id="loadLogs" class="btn btn-primary mb-3">Load Logs</button>
-		<div id="logsContainer" style="max-height:300px; overflow-y:auto;">
-		  <!-- Logs will be loaded here -->
-		</div>
-		<div class="form-check form-switch">
-		  <input class="form-check-input" type="checkbox" id="autoRefreshLogsCheckbox">
-		  <label class="form-check-label" for="autoRefreshLogsCheckbox">Auto Refresh Logs</label>
-		</div>
-		<div class="mt-2">
-		  <label for="logsRefreshInterval" class="form-label">Refresh Interval (seconds):</label>
-		  <select class="form-select w-auto" id="logsRefreshInterval">
-			<option value="1">1</option>
-			<option value="5">5</option>
-			<option value="10">10</option>
-			<option value="15">15</option>
-			<option value="30">30</option>
-		  </select>
-		</div>
-	  </div>
-	</div>
-  </div>
-</div>
-<footer class="bg-dark text-white fixed-bottom">
-  <div class="container text-center py-2">
-	&copy; %d 3270Connect. All rights reserved.
-  </div>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
- // Auto refresh functionality using setInterval instead of meta refresh.
- var autoRefreshEnabled = %t; // true if auto refresh is enabled (e.g., autoRefresh=="true")
- var refreshPeriod = %q; // Refresh period in seconds.
- var refreshIntervalId = null;
-
- function startAutoRefresh() {
-  if (autoRefreshEnabled && !refreshIntervalId) {
-	refreshIntervalId = setInterval(function() {
-	  window.location.reload();
-	}, parseInt(refreshPeriod) * 1000);
-	console.log("Auto refresh started");
-  }
- }
-
- function stopAutoRefresh() {
-  if (refreshIntervalId) {
-	clearInterval(refreshIntervalId);
-	refreshIntervalId = null;
-	console.log("Auto refresh paused");
-  }
- }
-
- // Start auto refresh on page load.
- startAutoRefresh();
-
- // Pause auto refresh when modal is opened; resume when modal is closed.
- document.addEventListener('DOMContentLoaded', function() {
-  // Per-PID Duration Chart.
-  var metricsData = %s;
-  var maxCount = 0;
-  metricsData.forEach(function(metric) {
-	if (metric.durations && metric.durations.length > maxCount) {
-	  maxCount = metric.durations.length;
-	}
-  });
-  var labels = [];
-  for (var i = 0; i < maxCount; i++) {
-	labels.push((i + 1));
-  }
-  var colors = ['rgba(75, 192, 192, 1)', 'rgba(192, 75, 192, 1)', 'rgba(192, 192, 75, 1)', 'rgba(75, 75, 192, 1)', 'rgba(192, 75, 75, 1)'];
-  var datasets = [];
-  metricsData.forEach(function(metric, index) {
-	datasets.push({
-	  label: "PID " + metric.pid,
-	  data: metric.durations,
-	  borderColor: colors[index %% colors.length],
-	  backgroundColor: colors[index %% colors.length].replace("1)", "0.2)"),
-	  fill: false,
-	  tension: 0.1
-	});
-  });
-  var ctx1 = document.getElementById("durationChart").getContext("2d");
-  new Chart(ctx1, {
-	type: "line",
-	data: { labels: labels, datasets: datasets },
-	options: {
-	  animation: { duration: 0 },
-	  scales: { y: { beginAtZero: true, title: { display: true, text: "Duration (seconds)" } } },
-			plugins: {
-		zoom: {
-		  pan: {
-			enabled: true,
-			mode: 'x',
-			speed: 10,
-			threshold: 10
-		  },
-		  zoom: {
-			wheel: {
-			  enabled: true,
-			},
-			pinch: {
-			  enabled: true
-			},
-			mode: 'x'
-		  }
+		data := struct {
+			ActiveWorkflows                 int
+			TotalWorkflowsStarted           int64
+			TotalWorkflowsCompleted         int64
+			TotalWorkflowsFailed            int64
+			Checked                         string
+			Sel1, Sel5, Sel10, Sel15, Sel30 string
+			Year                            int
+			AutoRefreshEnabled              bool
+			RefreshPeriod                   string
+			MetricsJSON                     string
+		}{
+			ActiveWorkflows:         agg.ActiveWorkflows,
+			TotalWorkflowsStarted:   agg.TotalWorkflowsStarted,
+			TotalWorkflowsCompleted: agg.TotalWorkflowsCompleted,
+			TotalWorkflowsFailed:    agg.TotalWorkflowsFailed,
+			Checked:                 checked,
+			Sel1:                    sel1,
+			Sel5:                    sel5,
+			Sel10:                   sel10,
+			Sel15:                   sel15,
+			Sel30:                   sel30,
+			Year:                    time.Now().Year(),
+			AutoRefreshEnabled:      autoRefresh == "true",
+			RefreshPeriod:           refreshPeriod,
+			MetricsJSON:             string(metricsJSON),
 		}
-	  }
-	}
-  });
-
-  // Average CPU usage across all metricsData.
-  var aggregatedCPU = [];
-  var cpuCount = [];
-  metricsData.forEach(function(metric) {
-	if (metric.cpuUsage) {
-	  metric.cpuUsage.forEach(function(val, i) {
-		if (typeof aggregatedCPU[i] === 'undefined') {
-		  aggregatedCPU[i] = 0;
-		  cpuCount[i] = 0;
+		if err := dashboardTemplate.Execute(w, data); err != nil {
+			log.Printf("Error executing dashboard template: %v", err)
 		}
-		aggregatedCPU[i] += val;
-		cpuCount[i] += 1;
-	  });
-	}
-  });
-  // Compute the average for each time slice.
-  for (var i = 0; i < aggregatedCPU.length; i++) {
-	aggregatedCPU[i] = aggregatedCPU[i] / cpuCount[i];
-  }
-  // For Memory, use host memory from the metric with the smallest PID.
-  var hostMemory = [];
-  if (metricsData.length > 0) {
-	var hostMetric = metricsData[0];
-	metricsData.forEach(function(m) {
-	  if (m.pid < hostMetric.pid) {
-		hostMetric = m;
-	  }
-	});
-	hostMemory = hostMetric.memoryUsage || [];
-  }
-  var maxLen = Math.max(aggregatedCPU.length, hostMemory.length);
-  var labels2 = [];
-  for (var i = 0; i < maxLen; i++) {
-	labels2.push(" " + (i + 1));
-  }
-  var cpuMemDatasets = [{
-	  label: "Total CPU Usage",
-	  data: aggregatedCPU,
-	  borderColor: "rgba(75, 192, 192, 1)",
-	  backgroundColor: "rgba(75, 192, 192, 0.2)",
-	  fill: false
-	},
-	{
-	  label: "Total Memory Usage",
-	  data: hostMemory,
-	  borderColor: "rgba(192, 75, 75, 1)",
-	  backgroundColor: "rgba(192, 75, 75, 0.2)",
-	  fill: false
-	}
-  ];
-  var ctx2 = document.getElementById("cpuMemChart").getContext("2d");
-  new Chart(ctx2, {
-	type: "line",
-	data: { labels: labels2, datasets: cpuMemDatasets },
-	options: {
-	  animation: { duration: 0 },
-	  scales: {
-		x: { beginAtZero: true, title: { display: true, text: "Duration (seconds)" } },
-		y: { beginAtZero: true, title: { display: true, text: "Percentage" } },
-	  },
-	  plugins: {
-		zoom: {
-		  pan: {
-			enabled: true,
-			mode: 'x',
-			speed: 10,
-			threshold: 10,
-		  },
-		  zoom: {
-			wheel: {
-			  enabled: true,
-			},
-			pinch: {
-			  enabled: true,
-			},
-			mode: 'x',
-		  },
-		},
-	  },
-	}
-  });
-
-  // Auto populate the PID dropdown from metricsData:
-  var pidSelect = document.getElementById("pidFilter");
-  var optionAll = document.createElement("option");
-  optionAll.value = "";
-  optionAll.text = "All PIDs";
-  pidSelect.appendChild(optionAll);
-  var uniquePIDs = [];
-  metricsData.forEach(function(metric) {
-	if (metric.pid != null && uniquePIDs.indexOf(metric.pid) === -1) {
-	  uniquePIDs.push(metric.pid);
-	}
-  });
-  uniquePIDs.sort(function(a, b) { return a - b; });
-  uniquePIDs.forEach(function(pid) {
-	var option = document.createElement("option");
-	option.value = pid;
-	option.text = pid;
-	pidSelect.appendChild(option);
-  });
-
-  // Load Console Logs when button clicked:
-  function loadLogs() {
-	var pid = document.getElementById("pidFilter").value;
-	var url = "/console";
-	if (pid) {
-	  url += "?pid=" + encodeURIComponent(pid);
-	}
-	fetch(url)
-	  .then(response => response.json())
-	  .then(data => {
-		var container = document.getElementById("logsContainer");
-		container.innerHTML = "";
-		if (!data || data.length === 0) {
-		  container.innerHTML = "<p>No logs found.</p>";
-		  return;
-		}
-		// Build a map of PID → set of parameters
-		const pidParamsMap = {};
-		data.forEach(function(entry) {
-		  const pid = entry.pid;
-		  const param = entry.parameters;
-		  if (!pidParamsMap[pid]) {
-			pidParamsMap[pid] = new Set();
-		  }
-		  pidParamsMap[pid].add(param);
-
-		  // Remove parameters from the log line
-		  var entryDiv = document.createElement("div");
-		  entryDiv.classList.add("mb-1", "p-1", "border-bottom");
-		  entryDiv.style.fontSize = "0.8rem";
-		  entryDiv.style.fontFamily = "monospace";
-		  var timestamp = new Date(entry.timestamp).toLocaleString();
-		  entryDiv.innerHTML = "<span style='color: purple;'>"+ timestamp +"</span>"
-			+ " | <span style='color: green;'>PID:</span> " + pid
-			+ " | <span style='color: grey;'>Log:</span> " + entry.log;
-		  container.appendChild(entryDiv);
-		});
-
-		// Display PIDs and their Params in #pidParamsContainer with fixed badge formatting
-		const containerParams = document.getElementById("pidParamsContainer");
-		containerParams.innerHTML = "";
-		let selectedPid = document.getElementById("pidFilter").value;
-		if (!selectedPid) {
-		  // Show all PIDs and their Params
-		  for (const [pid, paramsSet] of Object.entries(pidParamsMap)) {
-			let paramString = Array.from(paramsSet).join(", ");
-			containerParams.innerHTML += '<h5><span class="badge bg-dark">PID: <span class="badge bg-light" style="color: black;">' + pid
-			  + '</span></span> <span class="badge bg-secondary" style="flex:1;">Params: <span class="badge bg-light" style="color: black;">' + paramString + '</span></span></h5>';
-		  }
-		} else {
-		  // Show only the selected PIDs Params
-		  let paramsSet = pidParamsMap[selectedPid];
-		  if (paramsSet) {
-			let paramString = Array.from(paramsSet).join(", ");
-			containerParams.innerHTML += '<h5><span class="badge bg-dark">PID: <span class="badge bg-light" style="color: black;">' + pid
-			  + '</span></span> <span class="badge bg-secondary" style="flex:1;">Params: <span class="badge bg-light" style="color: black;">' + paramString + '</span></span></h5>';
-
-		  } else {
-			containerParams.innerHTML = "<p>No logs found for PID " + selectedPid + ".</p>";
-		  }
-		}
-	  })
-	  .catch(err => {
-		console.error("Error loading logs:", err);
-	  });
-  }
-
-  document.getElementById("loadLogs").addEventListener("click", function() {
-	loadLogs();
-  });
-
-  // Add this function to show the tooltip notification
-  function showTooltip(message) {
-	var tooltip = document.getElementById('tooltipNotification');
-	var tooltipInner = tooltip.querySelector('.tooltip-inner');
-	tooltipInner.textContent = message;
-	tooltip.style.display = 'block';
-	setTimeout(function() {
-	  tooltip.style.display = 'none';
-	}, 2000);
-  }
-
-  // Update the existing event listeners for the modal
-  var consoleModal = document.getElementById('consoleModal');
-  if (consoleModal) {
-	consoleModal.addEventListener('show.bs.modal', function() {
-	  stopAutoRefresh();
-	  showTooltip('Auto-refresh paused');
-	  loadLogs();
-	});
-	consoleModal.addEventListener('hidden.bs.modal', function() {
-	  startAutoRefresh();
-	  showTooltip('Auto-refresh resumed');
-	});
-  }
-
-  var refreshIntervalId2 = null;
-  function startLogsAutoRefresh(interval) {
-	if (!refreshIntervalId2) {
-	  refreshIntervalId2 = setInterval(loadLogs, interval * 1000);
-	}
-  }
-  function stopLogsAutoRefresh() {
-	if (refreshIntervalId2) {
-	  clearInterval(refreshIntervalId2);
-	  refreshIntervalId2 = null;
-	}
-  }
-  var autoRefreshLogsCheckbox = document.getElementById("autoRefreshLogsCheckbox");
-  var refreshIntervalSelect = document.getElementById("logsRefreshInterval");
-  pidSelect.addEventListener("change", function() {
-	loadLogs();
-  });
-  autoRefreshLogsCheckbox.addEventListener("change", function(){
-	if(this.checked) {
-	  startLogsAutoRefresh(parseInt(refreshIntervalSelect.value));
-	} else {
-	  stopLogsAutoRefresh();
-	}
-  });
-  refreshIntervalSelect.addEventListener("change", function(){
-	if(autoRefreshLogsCheckbox.checked) {
-	  stopLogsAutoRefresh();
-	  startLogsAutoRefresh(parseInt(this.value));
-	}
-  });
-
-function renderPidBars(metricsData) {
-  var container = document.getElementById("pidParamsContainerOnDashboard");
-  container.innerHTML = "";
-  metricsData.forEach(function(metric) {
-    // Simple CPU threshold coloring
-    let cpuColor = "green";
-    let avgCpu = 0;
-    if (metric.cpuUsage && metric.cpuUsage.length > 0) {
-      avgCpu = metric.cpuUsage.reduce((a, b) => a + b, 0) / metric.cpuUsage.length;
-      if (avgCpu > 60) { cpuColor = "red"; }
-      else if (avgCpu > 30) { cpuColor = "orange"; }
-    }
-    let failuresColor = (metric.totalWorkflowsFailed > 0) ? "red" : "green";
-container.innerHTML +=
-  '<div class="d-flex align-items-center mb-2">' +
-    '<h5>' +
-      '<span class="badge bg-dark">PID: ' +
-        '<span class="badge bg-light" style="color: black;">' + metric.pid + '</span>' +
-      '</span>' +
-    '</h5>' +
-    '<div style="flex:1; background:' + cpuColor + '; margin:0 10px; height:10px;"></div>' +
-    '<span style="color:' + failuresColor + '; font-weight:bold; margin-right:10px;">Completed: ' + metric.totalWorkflowsCompleted + '</span>' +
-    '<span style="color:' + failuresColor + '; font-weight:bold; margin-right:10px;">Fails: ' + metric.totalWorkflowsFailed + '</span>' +
-    '<span class="badge bg-info" style="font-weight:bold;">CPU: ' + avgCpu.toFixed(2) + '%%</span>' +
-  '</div>';
-
-  });
-}
-
-  renderPidBars(metricsData);
-});
-
-// Function to fetch the latest metrics data and update the charts
-function fetchAndUpdateMetrics() {
-  fetch('/metrics')
-    .then(response => response.json())
-    .then(data => {
-      updateCharts(data);
-    })
-    .catch(err => {
-      console.error("Error fetching metrics:", err);
-    });
-}
-
-// Function to update the charts with the new data
-function updateCharts(metricsData) {
-  var maxCount = 0;
-  metricsData.forEach(function(metric) {
-    if (metric.durations && metric.durations.length > maxCount) {
-      maxCount = metric.durations.length;
-    }
-  });
-
-  var labels = [];
-  for (var i = 0; i < maxCount; i++) {
-    labels.push((i + 1));
-  }
-
-  // Slice the labels array to include only the most recent points
-  if (labels.length > MAX_DATA_POINTS) {
-    labels = labels.slice(labels.length - MAX_DATA_POINTS);
-  }
-
-  var colors = ['rgba(75, 192, 192, 1)', 'rgba(192, 75, 192, 1)', 'rgba(192, 192, 75, 1)', 'rgba(75, 75, 192, 1)', 'rgba(192, 75, 75, 1)'];
-  var datasets = [];
-  metricsData.forEach(function(metric, index) {
-    var data = metric.durations;
-
-    // Slice the data array to include only the most recent points
-    if (data.length > MAX_DATA_POINTS) {
-      data = data.slice(data.length - MAX_DATA_POINTS);
-    }
-
-    datasets.push({
-      label: "PID " + metric.pid,
-      data: data,
-      borderColor: colors[index %% colors.length],
-      backgroundColor: colors[index %% colors.length].replace("1)", "0.2)"),
-      fill: false,
-      tension: 0.1
-    });
-  });
-
-  durationChart.data.labels = labels;
-  durationChart.data.datasets = datasets;
-  durationChart.update();
-
-  // Average CPU usage across all metricsData.
-  var aggregatedCPU = [];
-  var cpuCount = [];
-  metricsData.forEach(function(metric) {
-    if (metric.cpuUsage) {
-      metric.cpuUsage.forEach(function(val, i) {
-        if (typeof aggregatedCPU[i] === 'undefined') {
-          aggregatedCPU[i] = 0;
-          cpuCount[i] = 0;
-        }
-        aggregatedCPU[i] += val;
-        cpuCount[i] += 1;
-      });
-    }
-  });
-
-  // Compute the average for each time slice.
-  for (var i = 0; i < aggregatedCPU.length; i++) {
-    aggregatedCPU[i] = aggregatedCPU[i] / cpuCount[i];
-  }
-
-  // For Memory, use host memory from the metric with the smallest PID.
-  var hostMemory = [];
-  if (metricsData.length > 0) {
-    var hostMetric = metricsData[0];
-    metricsData.forEach(function(m) {
-      if (m.pid < hostMetric.pid) {
-        hostMetric = m;
-      }
-    });
-    hostMemory = hostMetric.memoryUsage || [];
-  }
-
-  var maxLen = Math.max(aggregatedCPU.length, hostMemory.length);
-  var labels2 = [];
-  for (var i = 0; i < maxLen; i++) {
-    labels2.push(" " + (i + 1));
-  }
-
-  // Slice the labels2 array to include only the most recent points
-  if (labels2.length > MAX_DATA_POINTS) {
-    labels2 = labels2.slice(labels2.length - MAX_DATA_POINTS);
-  }
-
-  var cpuMemDatasets = [{
-      label: "Total CPU Usage",
-      data: aggregatedCPU,
-      borderColor: "rgba(75, 192, 192, 1)",
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      fill: false
-    },
-    {
-      label: "Total Memory Usage",
-      data: hostMemory,
-      borderColor: "rgba(192, 75, 75, 1)",
-      backgroundColor: "rgba(192, 75, 75, 0.2)",
-      fill: false
-    }
-  ];
-
-  cpuMemChart.data.labels = labels2;
-  cpuMemChart.data.datasets = cpuMemDatasets;
-  cpuMemChart.update();
-}
-</script>
-</body>
-</html>`, agg.ActiveWorkflows, agg.TotalWorkflowsStarted, agg.TotalWorkflowsCompleted, agg.TotalWorkflowsFailed, checked, sel1, sel5, sel10, sel15, sel30, time.Now().Year(), autoRefresh == "true", refreshPeriod, string(metricsJSON))
 	})
 
 	log.Printf("Dashboard available at http://localhost:%d/dashboard", dashboardPort)
@@ -1683,6 +1129,7 @@ type Metrics struct {
 	Durations               []float64 `json:"durations"`
 	CPUUsage                []float64 `json:"cpuUsage"`
 	MemoryUsage             []float64 `json:"memoryUsage"`
+	Params                  string    `json:"params"`
 }
 
 func updateMetricsFile() {
@@ -1705,6 +1152,9 @@ func updateMetricsFile() {
 	copy(durationsCopy, workflowDurations)
 	timingsMutex.Unlock()
 	pid := os.Getpid()
+	// Get the entire command-line arguments except the program name
+	args := os.Args[1:]
+	parameters := strings.Join(args, " ")
 	metrics := Metrics{
 		PID:                     pid,
 		ActiveWorkflows:         getActiveWorkflows(),
@@ -1714,6 +1164,7 @@ func updateMetricsFile() {
 		Durations:               durationsCopy,
 		CPUUsage:                cpuHistory,
 		MemoryUsage:             memHistory,
+		Params:                  parameters,
 	}
 	data, err := json.Marshal(metrics)
 	if err != nil {
@@ -1864,6 +1315,75 @@ func setupConsoleHandler() {
 		})
 
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(filtered)
+	})
+}
+
+func setupTerminalConsoleHandler() {
+	http.HandleFunc("/terminal-console", func(w http.ResponseWriter, r *http.Request) {
+		pidFilter := r.URL.Query().Get("pid")
+		var filtered []LogEntry
+
+		if pidFilter != "" {
+			// Read logs from disk for the specified PID
+			logFilePath := filepath.Join("logs", fmt.Sprintf("logs_%s.json", pidFilter))
+			file, err := os.Open(logFilePath)
+			if err != nil {
+				log.Printf("Error opening log file: %v", err)
+				http.Error(w, "Error opening log file", http.StatusInternalServerError)
+				return
+			}
+			defer file.Close()
+
+			decoder := json.NewDecoder(file)
+			for {
+				var logEntry LogEntry
+				if err := decoder.Decode(&logEntry); err != nil {
+					if err == io.EOF {
+						break
+					}
+					log.Printf("Error decoding log entry: %v", err)
+					http.Error(w, "Error decoding log entry", http.StatusInternalServerError)
+					return
+				}
+				filtered = append(filtered, logEntry)
+			}
+		} else {
+			logFiles, err := filepath.Glob(filepath.Join("logs", "logs_*.json"))
+			if err == nil {
+				for _, lf := range logFiles {
+					file, err := os.Open(lf)
+					if err != nil {
+						log.Printf("Error opening log file: %v", err)
+						continue
+					}
+					defer file.Close()
+
+					decoder := json.NewDecoder(file)
+					for {
+						var logEntry LogEntry
+						if err := decoder.Decode(&logEntry); err != nil {
+							if err == io.EOF {
+								break
+							}
+							log.Printf("Error decoding log entry: %v", err)
+							continue
+						}
+						filtered = append(filtered, logEntry)
+					}
+				}
+			}
+		}
+
+		sort.Slice(filtered, func(i, j int) bool {
+			return filtered[i].Timestamp.After(filtered[j].Timestamp)
+		})
+
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		for _, entry := range filtered {
+			w.Write([]byte(fmt.Sprintf("%s | PID: %s | Params: %s | Log: %s\n", entry.Timestamp.Format(time.RFC3339), entry.PID, entry.Parameters, entry.Log)))
+		}
 	})
 }

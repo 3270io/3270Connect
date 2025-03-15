@@ -2,9 +2,7 @@
 setlocal
 
 REM Build the 3270Connect binary for Linux
-set GOARCH=amd64
-set GOOS=linux
-go build -o 3270Connect go3270Connect.go
+GOARCH=amd64 GOOS=linux go build -o 3270Connect go3270Connect.go
 
 REM Prompt for Docker registry credentials
 set /p DOCKER_USERNAME=Enter Docker username: 

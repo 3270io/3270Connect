@@ -10,4 +10,7 @@
         "editor.defaultFormatter": "golang.go"
     },
     "cSpell.language": "en-GB",
+    "files.associations": {
+        "*.gohtml": "gohtml"
+      }
 }
