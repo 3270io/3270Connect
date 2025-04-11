@@ -12,13 +12,9 @@
         <meta name="author" content="3270.io">
       
       
-        <link rel="canonical" href="https://3270.io/workflow/">
+        <link rel="canonical" href="https://3270.io/LICENSE/">
       
       
-        <link rel="prev" href="../basic-usage/">
-      
-      
-        <link rel="next" href="../injection-config/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>Workflow Actions - 3270Connect</title>
+        <title>LICENSE - 3270Connect</title>
       
     
     
@@ -75,11 +71,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#workflow-steps-documentation" class="md-skip">
-          Skip to content
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -115,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Workflow Actions
+              LICENSE
             
           </span>
         </div>
@@ -299,32 +290,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Workflow Actions
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
         
   
   
@@ -335,113 +304,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#available-workflow-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      Available Workflow Steps
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Available Workflow Steps">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#initializeoutput" class="md-nav__link">
-    <span class="md-ellipsis">
-      InitializeOutput
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#connect" class="md-nav__link">
-    <span class="md-ellipsis">
-      Connect
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#checkvalue" class="md-nav__link">
-    <span class="md-ellipsis">
-      CheckValue
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fillstring" class="md-nav__link">
-    <span class="md-ellipsis">
-      FillString
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#asciiscreengrab" class="md-nav__link">
-    <span class="md-ellipsis">
-      AsciiScreenGrab
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pressenter" class="md-nav__link">
-    <span class="md-ellipsis">
-      PressEnter
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#disconnect" class="md-nav__link">
-    <span class="md-ellipsis">
-      Disconnect
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example Workflow
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -505,70 +367,26 @@
                   
 
 
-  
-  
 
+  <h1>LICENSE</h1>
 
-<div><h1 id="workflow-steps-documentation">Workflow Steps Documentation<a class="headerlink" href="#workflow-steps-documentation" title="Permanent link">¶</a></h1>
-<p>This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.</p>
-<h2 id="available-workflow-steps">Available Workflow Steps<a class="headerlink" href="#available-workflow-steps" title="Permanent link">¶</a></h2>
-<h3 id="initializeoutput">InitializeOutput<a class="headerlink" href="#initializeoutput" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Initializes the output file with run details.</li>
-<li><strong>Parameters</strong>: <code>outputFilePath</code> (string) - Path to the output file.</li>
-<li><strong>Usage</strong>: This step is used to set up the output file before executing other steps.</li>
-</ul>
-<h3 id="connect">Connect<a class="headerlink" href="#connect" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Establishes a connection to the terminal.</li>
-<li><strong>Usage</strong>: This step is essential to start the interaction with the terminal.</li>
-</ul>
-<h3 id="checkvalue">CheckValue<a class="headerlink" href="#checkvalue" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Checks a value at specified coordinates on the terminal screen.</li>
-<li><strong>Parameters</strong>: </li>
-<li><code>Coordinates</code> (connect3270.Coordinates) - The row and column to check the value.</li>
-<li><code>Text</code> (string) - The expected text value at the coordinates.</li>
-<li><strong>Usage</strong>: Utilized to verify if the terminal displays expected data at specified locations.</li>
-</ul>
-<h3 id="fillstring">FillString<a class="headerlink" href="#fillstring" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Fills a string at specified coordinates on the terminal screen.</li>
-<li><strong>Parameters</strong>: </li>
-<li><code>Coordinates</code> (connect3270.Coordinates) - The row and column to fill the string.</li>
-<li><code>Text</code> (string) - The text to fill at the coordinates.</li>
-<li><strong>Usage</strong>: This step is used to input text at a specific position on the terminal.</li>
-</ul>
-<h3 id="asciiscreengrab">AsciiScreenGrab<a class="headerlink" href="#asciiscreengrab" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Captures and appends the ASCII representation of the current screen to the output file.</li>
-<li><strong>Parameters</strong>: <code>outputFilePath</code> (string) - Path to the output file.</li>
-<li><strong>Usage</strong>: To capture the current state of the terminal screen as ASCII text.</li>
-</ul>
-<h3 id="pressenter">PressEnter<a class="headerlink" href="#pressenter" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Simulates pressing the Enter key.</li>
-<li><strong>Usage</strong>: Commonly used to submit data or commands entered on the terminal.</li>
-</ul>
-<h3 id="disconnect">Disconnect<a class="headerlink" href="#disconnect" title="Permanent link">¶</a></h3>
-<ul>
-<li><strong>Description</strong>: Disconnects from the terminal.</li>
-<li><strong>Usage</strong>: This step is used to end the terminal session cleanly.</li>
-</ul>
-<h2 id="example-workflow">Example Workflow<a class="headerlink" href="#example-workflow" title="Permanent link">¶</a></h2>
-<p>Here is an example of how these steps might be sequenced in a typical workflow:</p>
-<ol>
-<li><strong>InitializeOutput</strong>: Set up the output file.</li>
-<li><strong>Connect</strong>: Connect to the terminal.</li>
-<li><strong>FillString</strong>: Input a username at the specified coordinates.</li>
-<li><strong>PressEnter</strong>: Submit the username.</li>
-<li><strong>FillString</strong>: Input a password at the specified coordinates.</li>
-<li><strong>PressEnter</strong>: Submit the password.</li>
-<li><strong>CheckValue</strong>: Verify successful login by checking for a welcome message.</li>
-<li><strong>AsciiScreenGrab</strong>: Capture the screen after login.</li>
-<li><strong>Disconnect</strong>: Disconnect from the terminal.</li>
-</ol>
-<p>Each step plays a crucial role in the automated interaction with the terminal. By combining these steps, complex workflows can be executed seamlessly.</p></div>
+<div><p>MIT License</p>
+<p>Copyright (c) 2023 Paul Jennings</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p></div>
 
 
 
@@ -599,44 +417,6 @@
       
         <footer class="md-footer">
   
-    
-      
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
-        
-          
-          <a href="../basic-usage/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Basic Usage">
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-            </div>
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              <div class="md-ellipsis">
-                Basic Usage
-              </div>
-            </div>
-          </a>
-        
-        
-          
-          <a href="../injection-config/" class="md-footer__link md-footer__link--next" aria-label="Next: Dynamic Field Injection">
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              <div class="md-ellipsis">
-                Dynamic Field Injection
-              </div>
-            </div>
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
     
   
   <div class="md-footer-meta md-typeset">
