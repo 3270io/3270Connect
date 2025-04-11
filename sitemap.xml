@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://3270io.github.io/3270Connect/</loc>
+         <loc>https://3270io.github.io/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
     <url>
-         <loc>https://3270io.github.io/3270Connect/advanced-features/</loc>
+         <loc>https://3270io.github.io/advanced-features/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
     <url>
-         <loc>https://3270io.github.io/3270Connect/basic-usage/</loc>
+         <loc>https://3270io.github.io/basic-usage/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
     <url>
-         <loc>https://3270io.github.io/3270Connect/injection-config/</loc>
+         <loc>https://3270io.github.io/injection-config/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
     <url>
-         <loc>https://3270io.github.io/3270Connect/installation/</loc>
+         <loc>https://3270io.github.io/installation/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
     <url>
-         <loc>https://3270io.github.io/3270Connect/workflow/</loc>
+         <loc>https://3270io.github.io/workflow/</loc>
          <lastmod>2025-04-11</lastmod>
     </url>
 </urlset>
