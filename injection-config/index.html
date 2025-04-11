@@ -483,7 +483,7 @@
 <span class="w">    </span><span class="p">}</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>The workflow configuration is then define to use the key names of the injection cxonfiguration file. Below is an example structure:</p>
+<p>The workflow configuration is then define to use the key names of the injection configuration file. Below is an example structure:</p>
 <div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
@@ -499,11 +499,11 @@
 </code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">¶</a></h2>
 <p>To use an injection configuration file, pass it as a parameter when running <code>3270Connect</code>:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-inject<span class="w"> </span>injection-config.json
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-injectionConfig<span class="w"> </span>injection.json
 </code></pre></div>
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">¶</a></h2>
 <p>Here is an example of running a workflow with an injection configuration:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-inject<span class="w"> </span>injection-config.json
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-injectionConfig<span class="w"> </span>injection.json
 </code></pre></div>
 <p>This will replace the specified fields in the workflow with the values provided in the injection configuration.</p>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">¶</a></h2>
