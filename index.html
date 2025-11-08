@@ -417,8 +417,8 @@
 ./3270Connect -verbose -headless</p>
 <p>mkdocs build</p>
 <h2 id="refreshing-embedded-binaries">Refreshing embedded binaries<a class="headerlink" href="#refreshing-embedded-binaries" title="Permanent link">¶</a></h2>
-<p>Run <code>scripts/update-binaries.ps1</code> from the repo root to pull the latest Windows bundle that SourceForge publishes. By default it copies the current 64-bit <code>wc3270</code> no-install ZIP into <code>binaries/windows</code>, and you can pass <code>-LinuxArchiveUrl &lt;url&gt;</code> whenever you have a tarball that already holds <code>x3270</code>, <code>s3270</code>, and <code>x3270if</code> to keep <code>binaries/linux</code> in sync.</p>
-<p>Use <code>-RegenerateBindata</code> if you want the script to rerun <code>go-bindata -o binaries/bindata.go -pkg binaries ./binaries/...</code> after the download. Make sure <code>go-bindata</code> and <code>tar</code> are available in your path before rerunning that step.</p></div>
+<p>Run <code>.\update-binaries.ps1</code> from the repo root (or call <code>.\scripts/update-binaries.ps1</code> directly) to download the most recent Windows bundle that SourceForge publishes. By default it copies the 64-bit <code>wc3270</code> no-install ZIP content into <code>binaries/windows</code>; supply <code>-LinuxArchiveUrl &lt;url&gt;</code> when you have a tarball that already contains <code>x3270</code>, <code>s3270</code>, and <code>x3270if</code> so <code>binaries/linux</code> stays in sync.</p>
+<p>Add <code>-RegenerateBindata</code> to rerun <code>go-bindata -o binaries/bindata.go -pkg binaries ./binaries/...</code> after the download. Make sure <code>go-bindata</code> and <code>tar</code> are available in the path before you ask the script to run it.</p></div>
 
 
 
