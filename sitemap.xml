@@ -25,11 +25,7 @@
          <lastmod>2025-11-08</lastmod>
     </url>
     <url>
-         <loc>https://3270.io/BUILD/</loc>
-         <lastmod>2025-11-08</lastmod>
-    </url>
-    <url>
-         <loc>https://3270.io/</loc>
+         <loc>https://3270.io/mainframe-theme/</loc>
          <lastmod>2025-11-08</lastmod>
     </url>
     <url>
@@ -37,7 +33,11 @@
          <lastmod>2025-11-08</lastmod>
     </url>
     <url>
-         <loc>https://3270.io/mainframe-theme/</loc>
+         <loc>https://3270.io/</loc>
+         <lastmod>2025-11-08</lastmod>
+    </url>
+    <url>
+         <loc>https://3270.io/BUILD/</loc>
          <lastmod>2025-11-08</lastmod>
     </url>
 </urlset>
