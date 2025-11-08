@@ -1,0 +1,621 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="User Guide for the 3270Connect Command-Line Utility">
+      
+      
+        <meta name="author" content="3270.io">
+      
+      
+        <link rel="canonical" href="https://3270.io/MAKEFILE_README/">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>X3270 Binary Build System - 3270Connect</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#x3270-binary-build-system" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="3270Connect" class="md-header__button md-logo" aria-label="3270Connect" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            3270Connect
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              X3270 Binary Build System
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/3270io/3270Connect" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="3270Connect" class="md-nav__button md-logo" aria-label="3270Connect" data-md-component="logo">
+      
+  <img src="../logo.png" alt="logo">
+
+    </a>
+    3270Connect
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/3270io/3270Connect" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../basic-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Basic Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Workflow Actions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../injection-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dynamic Field Injection
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Advanced Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<div><h1 id="x3270-binary-build-system">X3270 Binary Build System<a class="headerlink" href="#x3270-binary-build-system" title="Permanent link">¶</a></h1>
+<p>This Makefile automates the process of building x3270 suite binaries (s3270, x3270if, etc.) for Linux and Windows platforms.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">¶</a></h2>
+<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h3>
+<ul>
+<li>GCC and build tools</li>
+<li>Git</li>
+<li>Make</li>
+</ul>
+<h3 id="windows-cross-compilation">Windows Cross-Compilation<a class="headerlink" href="#windows-cross-compilation" title="Permanent link">¶</a></h3>
+<ul>
+<li>MinGW-w64 cross-compiler (automatically installed if missing)</li>
+<li>The Makefile will install MinGW if needed using: <code>sudo apt-get install mingw-w64</code></li>
+</ul>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">¶</a></h2>
+<p>Build all binaries for both platforms:
+</p><div class="highlight"><pre><span></span><code>make
+</code></pre></div>
+<p>This will:
+1. Clone the x3270 repository from https://github.com/pmattes/x3270
+2. Checkout version 4.4ga6 (configurable)
+3. Build Linux binaries (s3270, x3270if, x3270)
+4. Build Windows binaries (s3270.exe, x3270if.exe, ws3270.exe, wc3270.exe)
+5. Strip binaries to reduce size
+6. Test all binaries
+7. Save version info to <code>.x3270_version</code></p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">¶</a></h2>
+<h3 id="build-specific-platforms">Build Specific Platforms<a class="headerlink" href="#build-specific-platforms" title="Permanent link">¶</a></h3>
+<p>Build Linux binaries only:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>linux
+</code></pre></div>
+<p>Build Windows binaries only:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>windows
+</code></pre></div>
+<h3 id="version-management">Version Management<a class="headerlink" href="#version-management" title="Permanent link">¶</a></h3>
+<p>Specify a different x3270 version:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.3ga10<span class="w"> </span>all
+</code></pre></div>
+<p>The Makefile tracks the last built version in <code>.x3270_version</code>. If you try to build the same version again, it will skip the build unless you run <code>make deepclean</code> first.</p>
+<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">¶</a></h3>
+<p>Test that all binaries are present and working:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>test-binaries
+</code></pre></div>
+<h3 id="cleaning">Cleaning<a class="headerlink" href="#cleaning" title="Permanent link">¶</a></h3>
+<p>Safe clean (removes built binaries, keeps source):
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>clean
+</code></pre></div>
+<p>Deep clean (removes everything including cloned source):
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+</code></pre></div>
+<p>Force rebuild of the same version:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+make
+</code></pre></div>
+<h3 id="help">Help<a class="headerlink" href="#help" title="Permanent link">¶</a></h3>
+<p>Show all available targets and current configuration:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
+</code></pre></div>
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>binaries/
+├── linux/          # Linux binaries
+│   ├── s3270       # Scripting version
+│   ├── x3270if     # Interface program
+│   └── x3270       # Full version
+└── windows/        # Windows binaries
+    ├── s3270.exe   # Scripting version
+    ├── x3270if.exe # Interface program
+    ├── ws3270.exe  # Windows scripting version
+    └── wc3270.exe  # Windows console version
+</code></pre></div>
+<h2 id="build-process-details">Build Process Details<a class="headerlink" href="#build-process-details" title="Permanent link">¶</a></h2>
+<h3 id="linux-build">Linux Build<a class="headerlink" href="#linux-build" title="Permanent link">¶</a></h3>
+<ol>
+<li>Clones x3270 repository to <code>/tmp/x3270-build</code></li>
+<li>Runs <code>./configure --prefix=/usr/local --enable-s3270 --enable-x3270if</code></li>
+<li>Builds using <code>make -j$(nproc)</code> for parallel compilation</li>
+<li>Copies binaries to <code>binaries/linux/</code></li>
+<li>Strips binaries to reduce size</li>
+<li>Sets executable permissions</li>
+</ol>
+<h3 id="windows-build">Windows Build<a class="headerlink" href="#windows-build" title="Permanent link">¶</a></h3>
+<ol>
+<li>Checks for MinGW cross-compiler, installs if missing</li>
+<li>Runs <code>./configure --host=x86_64-w64-mingw32 --prefix=/usr/local --enable-s3270 --enable-x3270if</code></li>
+<li>Builds using <code>make -j$(nproc)</code> for parallel compilation</li>
+<li>Copies binaries to <code>binaries/windows/</code></li>
+<li>Strips binaries using MinGW strip tool</li>
+</ol>
+<p><strong>Note:</strong> Windows cross-compilation from Linux may fail due to missing dependencies (libiconv, OpenSSL for MinGW). If the build fails:
+- Use the existing pre-built Windows binaries already in the repository
+- Build natively on Windows using Visual Studio or MinGW
+- Use the VisualStudio project files included in the x3270 repository</p>
+<h2 id="version-tracking">Version Tracking<a class="headerlink" href="#version-tracking" title="Permanent link">¶</a></h2>
+<p>The Makefile maintains a <code>.x3270_version</code> file that records the last successfully built version. This prevents redundant rebuilds when you run <code>make</code> multiple times with the same version.</p>
+<p>To check the current version:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
+</code></pre></div>
+<h2 id="configuration-variables">Configuration Variables<a class="headerlink" href="#configuration-variables" title="Permanent link">¶</a></h2>
+<ul>
+<li><code>X3270_VERSION</code>: x3270 version to build (default: 4.4ga6)</li>
+<li><code>X3270_REPO</code>: Repository URL (default: https://github.com/pmattes/x3270)</li>
+<li><code>X3270_DIR</code>: Build directory (default: /tmp/x3270-build)</li>
+<li><code>BINARIES_LINUX</code>: Linux binaries output directory (default: binaries/linux)</li>
+<li><code>BINARIES_WINDOWS</code>: Windows binaries output directory (default: binaries/windows)</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
+<h3 id="build-failures">Build Failures<a class="headerlink" href="#build-failures" title="Permanent link">¶</a></h3>
+<p>If the build fails, check:
+1. All prerequisites are installed
+2. Internet connection is available for cloning
+3. Disk space is sufficient in <code>/tmp</code></p>
+<p>Clean and retry:
+</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+make
+</code></pre></div>
+<h3 id="windows-cross-compilation-issues">Windows Cross-Compilation Issues<a class="headerlink" href="#windows-cross-compilation-issues" title="Permanent link">¶</a></h3>
+<p>Windows builds may fail on Linux due to missing MinGW dependencies:
+- <code>libiconv</code> for MinGW
+- <code>OpenSSL</code> for MinGW<br>
+- Other Windows-specific libraries</p>
+<p><strong>Solutions:</strong>
+1. Use the pre-built Windows binaries already in the repository
+2. Build on Windows natively (recommended for Windows binaries)
+3. Install additional MinGW libraries (if available for your distribution)</p>
+<p>For native Windows builds, use:
+- Visual Studio project files in the x3270 repository's <code>VisualStudio/</code> directory
+- MinGW-w64 with MSYS2 on Windows
+- Windows Subsystem for Linux (WSL) with native Windows toolchain</p>
+<h3 id="missing-binaries">Missing Binaries<a class="headerlink" href="#missing-binaries" title="Permanent link">¶</a></h3>
+<p>If some binaries are missing after build, the x3270 version might not include all components. Check the x3270 release notes for the version you're building.</p>
+<h3 id="permission-issues">Permission Issues<a class="headerlink" href="#permission-issues" title="Permanent link">¶</a></h3>
+<p>If binaries aren't executable:
+</p><div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>binaries/linux/*
+chmod<span class="w"> </span>+x<span class="w"> </span>binaries/windows/*
+</code></pre></div>
+<h2 id="integration-with-3270connect">Integration with 3270Connect<a class="headerlink" href="#integration-with-3270connect" title="Permanent link">¶</a></h2>
+<p>After building binaries, regenerate the embedded assets:
+</p><div class="highlight"><pre><span></span><code>go<span class="w"> </span>install<span class="w"> </span>github.com/go-bindata/go-bindata/...@latest
+go-bindata<span class="w"> </span>-o<span class="w"> </span>binaries/bindata.go<span class="w"> </span>-pkg<span class="w"> </span>binaries<span class="w"> </span>./binaries/...
+</code></pre></div>
+<p>Or use the PowerShell script:
+</p><div class="highlight"><pre><span></span><code><span class="p">.\</span><span class="nb">update-binaries</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre></div>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
+<h3 id="building-a-specific-version">Building a Specific Version<a class="headerlink" href="#building-a-specific-version" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Build version 4.3ga10</span>
+make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.3ga10<span class="w"> </span>deepclean<span class="w"> </span>all
+
+<span class="c1"># Verify the version</span>
+./binaries/linux/s3270<span class="w"> </span>-v
+</code></pre></div>
+<h3 id="cross-platform-build">Cross-Platform Build<a class="headerlink" href="#cross-platform-build" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># On Linux, build for both platforms</span>
+make<span class="w"> </span>all
+
+<span class="c1"># Verify Linux binaries</span>
+ls<span class="w"> </span>-lh<span class="w"> </span>binaries/linux/
+
+<span class="c1"># Verify Windows binaries</span>
+ls<span class="w"> </span>-lh<span class="w"> </span>binaries/windows/
+</code></pre></div>
+<h3 id="continuous-integration">Continuous Integration<a class="headerlink" href="#continuous-integration" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># In CI pipeline</span>
+make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.4ga6<span class="w"> </span>all
+make<span class="w"> </span>test-binaries
+</code></pre></div>
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">¶</a></h2>
+<ul>
+<li>The build directory (<code>/tmp/x3270-build</code>) is preserved between builds for faster subsequent builds</li>
+<li>Use <code>make clean</code> to remove binaries without removing the source</li>
+<li>Use <code>make deepclean</code> to remove everything and start fresh</li>
+<li>The Makefile uses color output for better visibility of build steps</li>
+<li>Parallel compilation is enabled by default using all available CPU cores</li>
+</ul>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">¶</a></h2>
+<p>This Makefile is part of the 3270Connect project and follows the same license (MIT).</p></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      © 2023-2025 3270.io
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.progress", "toc.integrate", "navigation.expand", "navigation.top", "navigation.footer"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": 1.5}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
