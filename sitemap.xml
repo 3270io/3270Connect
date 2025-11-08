@@ -25,6 +25,10 @@
          <lastmod>2025-11-08</lastmod>
     </url>
     <url>
+         <loc>https://3270.io/LICENSE/</loc>
+         <lastmod>2025-11-08</lastmod>
+    </url>
+    <url>
          <loc>https://3270.io/BUILD/</loc>
          <lastmod>2025-11-08</lastmod>
     </url>
@@ -37,15 +41,11 @@
          <lastmod>2025-11-08</lastmod>
     </url>
     <url>
-         <loc>https://3270.io/mainframe-theme/</loc>
-         <lastmod>2025-11-08</lastmod>
-    </url>
-    <url>
-         <loc>https://3270.io/LICENSE/</loc>
-         <lastmod>2025-11-08</lastmod>
-    </url>
-    <url>
          <loc>https://3270.io/MAKEFILE_README/</loc>
+         <lastmod>2025-11-08</lastmod>
+    </url>
+    <url>
+         <loc>https://3270.io/mainframe-theme/</loc>
          <lastmod>2025-11-08</lastmod>
     </url>
 </urlset>
