@@ -810,6 +810,7 @@
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.27"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"HTMLFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123456"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"InitializeHTMLFile"</span>
@@ -850,6 +851,13 @@
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
+<ul>
+<li><code>Token</code> (optional): provide a one-time RSA token that will be injected wherever the workflow text contains <code>{{token}}</code>.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+</div>
+<p>The Start Process modal on the dashboard now includes a dedicated <strong>RSA Token</strong> field. Values supplied through the modal are forwarded to the API as the <code>Token</code> property, matching the <code>-token</code> flag used on the command line.</p>
 <h3 id="api-mode-with-docker">API Mode with Docker<a class="headerlink" href="#api-mode-with-docker" title="Permanent link">¶</a></h3>
 <p><code>3270Connect</code> can also run as an API server using the <code>-api</code> and <code>-api-port</code> flags:</p>
 <ul>
