@@ -1693,7 +1693,7 @@ func (m Metrics) extend() ExtendedMetrics {
 	}
 	status := "Running" // Default status for missing or incomplete metrics
 	isRunning := isProcessRunning(m.PID)
-	
+
 	if !isRunning {
 		// Process is no longer running
 		if m.RuntimeDuration > 0 && timeElapsed >= int64(m.RuntimeDuration) {
