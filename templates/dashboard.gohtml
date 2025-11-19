@@ -875,6 +875,15 @@
       text-shadow: 0 0 8px rgba(255, 82, 82, 0.5);
     }
 
+    .action-icon.summary {
+      color: #9b59b6;
+    }
+
+    .action-icon.summary:hover {
+      transform: scale(1.2);
+      text-shadow: 0 0 8px rgba(155, 89, 182, 0.6);
+    }
+
     .action-icon.workflow {
       color: #5bc0de;
     }
@@ -1865,6 +1874,23 @@
   </div>
 </div>
 
+<!-- Summary Stats Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-bottom border-secondary">
+        <h5 class="modal-title" id="summaryModalLabel">Process Summary Statistics</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="summaryContent" class="p-3">
+          <p class="text-center">Loading summary...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   var autoRefreshEnabled = {{.AutoRefreshEnabled}};
@@ -2368,6 +2394,7 @@
       var row = document.createElement("tr");
       row.innerHTML = `
         <td style="text-align: center;">
+          <i class="fas fa-chart-bar action-icon summary" onclick="showSummaryModal(${metric.pid})" data-tippy-content="View Summary Stats"></i>
           <i class="fas fa-file-code action-icon workflow" onclick="showWorkflowModal(${metric.pid})" data-tippy-content="View Workflow JSON"></i>
           <i class="fas fa-desktop action-icon output" onclick="showOutputModal(${metric.pid})" data-tippy-content="Preview Output HTML"></i>
           <i class="fas fa-file-alt action-icon logs" onclick="openLogsModal(${metric.pid})" data-tippy-content="View Logs"></i>
@@ -2525,6 +2552,162 @@
       .catch(function(err) {
         if (outputModalStatusElement) {
           outputModalStatusElement.textContent = 'Error loading output: ' + err.message;
+        }
+      });
+  }
+
+  function showSummaryModal(pid) {
+    var summaryModal = document.getElementById('summaryModal');
+    if (!summaryModal) {
+      return;
+    }
+    
+    var summaryContent = document.getElementById('summaryContent');
+    if (summaryContent) {
+      summaryContent.innerHTML = '<p class="text-center">Loading summary...</p>';
+    }
+    
+    var modalInstance = new bootstrap.Modal(summaryModal);
+    modalInstance.show();
+    
+    fetch('/dashboard/summary?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
+      .then(function(response) {
+        if (!response.ok) {
+          return response.text().then(function(body) {
+            throw new Error(body || response.statusText || 'Unable to load summary');
+          });
+        }
+        return response.json();
+      })
+      .then(function(data) {
+        if (summaryContent) {
+          var statusBadgeClass = 'bg-info';
+          if (data.status === 'Completed') {
+            statusBadgeClass = 'bg-success';
+          } else if (data.status === 'Killed') {
+            statusBadgeClass = 'bg-danger';
+          } else if (data.status === 'Running') {
+            statusBadgeClass = 'bg-primary';
+          }
+          
+          var html = `
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Process Information</h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">PID</small>
+                      <strong class="fs-5 text-primary">${data.pid}</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Status</small>
+                      <span class="badge ${statusBadgeClass} fs-6">${data.status}</span>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Parameters</small>
+                      <code class="text-light">${data.params || '-dashboard'}</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Workflow Statistics</h6>
+                <div class="row g-3">
+                  <div class="col-md-3 col-sm-6">
+                    <div class="p-3 bg-black rounded text-center">
+                      <small class="text-muted d-block mb-1">Started</small>
+                      <strong class="fs-4 text-warning">${data.totalWorkflowsStarted}</strong>
+                      <div class="mt-1"><i class="fas fa-rocket text-warning"></i></div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-6">
+                    <div class="p-3 bg-black rounded text-center">
+                      <small class="text-muted d-block mb-1">Completed</small>
+                      <strong class="fs-4 text-success">${data.totalWorkflowsCompleted}</strong>
+                      <div class="mt-1"><i class="fas fa-check-circle text-success"></i></div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-6">
+                    <div class="p-3 bg-black rounded text-center">
+                      <small class="text-muted d-block mb-1">Failed</small>
+                      <strong class="fs-4 text-danger">${data.totalWorkflowsFailed}</strong>
+                      <div class="mt-1"><i class="fas fa-exclamation-circle text-danger"></i></div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-6">
+                    <div class="p-3 bg-black rounded text-center">
+                      <small class="text-muted d-block mb-1">Active</small>
+                      <strong class="fs-4 text-info">${data.activeWorkflows}</strong>
+                      <div class="mt-1"><i class="fas fa-spinner text-info"></i></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Performance Metrics</h6>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Avg Workflow Time</small>
+                      <strong class="fs-5 text-light">${data.avgWorkflowTime > 0 ? data.avgWorkflowTime.toFixed(2) + 's' : '-'}</strong>
+                      <div class="mt-1"><i class="fas fa-clock text-muted"></i></div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Avg CPU Usage</small>
+                      <strong class="fs-5 text-light">${data.avgCPU > 0 ? data.avgCPU.toFixed(1) + '%' : '-'}</strong>
+                      <div class="mt-1"><i class="fas fa-microchip text-muted"></i></div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Avg Memory Usage</small>
+                      <strong class="fs-5 text-light">${data.avgMemory > 0 ? data.avgMemory.toFixed(1) + '%' : '-'}</strong>
+                      <div class="mt-1"><i class="fas fa-memory text-muted"></i></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Runtime Information</h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Run Duration</small>
+                      <strong class="fs-5 text-light">${data.runDuration}s</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="p-3 bg-black rounded">
+                      <small class="text-muted d-block mb-1">Configured Runtime</small>
+                      <strong class="fs-5 text-light">${data.runtimeDuration > 0 ? data.runtimeDuration + 's' : 'Not set'}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          summaryContent.innerHTML = html;
+        }
+      })
+      .catch(function(err) {
+        if (summaryContent) {
+          summaryContent.innerHTML = '<div class="alert alert-danger">Unable to load summary: ' + err.message + '</div>';
         }
       });
   }

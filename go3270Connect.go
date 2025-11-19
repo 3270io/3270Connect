@@ -1321,6 +1321,7 @@ func runDashboard() {
 	setupTerminalConsoleHandler()
 	setupWorkflowPreviewHandler()
 	setupOutputPreviewHandler()
+	setupSummaryHandler()
 	http.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 		// Check if the dashboardTemplate is nil
 		if dashboardTemplate == nil {
@@ -1487,7 +1488,8 @@ func isProcessRunning(pid int) bool {
 }
 
 func shouldCleanupMetric(m ExtendedMetrics) bool {
-	return !m.IsRunning
+	// Keep all metrics, including completed processes, so they remain visible in the dashboard
+	return false
 }
 
 func cleanupProcessArtifacts(pid int, metricsFile string) {
@@ -1691,11 +1693,19 @@ func (m Metrics) extend() ExtendedMetrics {
 	}
 	status := "Running" // Default status for missing or incomplete metrics
 	isRunning := isProcessRunning(m.PID)
-	if m.RuntimeDuration > 0 && timeLeft == 0 && (m.Params != "" && !strings.Contains(m.Params, "-runApp")) {
-		status = "Ended"
-	}
+	
 	if !isRunning {
-		status = "Killed"
+		// Process is no longer running
+		if m.RuntimeDuration > 0 && timeElapsed >= int64(m.RuntimeDuration) {
+			// Process completed its full runtime duration
+			status = "Completed"
+		} else {
+			// Process was killed or terminated early
+			status = "Killed"
+		}
+	} else if m.RuntimeDuration > 0 && timeLeft == 0 && (m.Params != "" && !strings.Contains(m.Params, "-runApp")) {
+		// Process is still running but time is up
+		status = "Ending"
 	}
 
 	return ExtendedMetrics{
@@ -1935,6 +1945,79 @@ func setupOutputPreviewHandler() {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		if _, err := io.Copy(w, file); err != nil {
 			http.Error(w, "Failed to stream output file: "+err.Error(), http.StatusInternalServerError)
+		}
+	})
+}
+
+func setupSummaryHandler() {
+	http.HandleFunc("/dashboard/summary", func(w http.ResponseWriter, r *http.Request) {
+		pid := r.URL.Query().Get("pid")
+		metric, err := loadExtendedMetricByPID(pid)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "No metrics file found for PID "+pid, http.StatusNotFound)
+			} else {
+				http.Error(w, "Unable to load metrics: "+err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		// Calculate summary statistics
+		var avgWorkflowTime float64
+		if len(metric.Durations) > 0 {
+			var sum float64
+			for _, d := range metric.Durations {
+				sum += d
+			}
+			avgWorkflowTime = sum / float64(len(metric.Durations))
+		}
+
+		var avgCPU float64
+		if len(metric.CPUUsage) > 0 {
+			var sum float64
+			for _, c := range metric.CPUUsage {
+				sum += c
+			}
+			avgCPU = sum / float64(len(metric.CPUUsage))
+		}
+
+		var avgMemory float64
+		if len(metric.MemoryUsage) > 0 {
+			var sum float64
+			for _, m := range metric.MemoryUsage {
+				sum += m
+			}
+			avgMemory = sum / float64(len(metric.MemoryUsage))
+		}
+
+		// Calculate elapsed time
+		elapsed := time.Now().Unix() - metric.StartTimestamp
+		if !metric.IsRunning && metric.RuntimeDuration > 0 {
+			// For completed processes, use the runtime duration
+			elapsed = int64(metric.RuntimeDuration)
+		}
+
+		summary := map[string]interface{}{
+			"pid":                     metric.PID,
+			"status":                  metric.Status,
+			"params":                  metric.Params,
+			"totalWorkflowsStarted":   metric.TotalWorkflowsStarted,
+			"totalWorkflowsCompleted": metric.TotalWorkflowsCompleted,
+			"totalWorkflowsFailed":    metric.TotalWorkflowsFailed,
+			"activeWorkflows":         metric.ActiveWorkflows,
+			"avgWorkflowTime":         avgWorkflowTime,
+			"avgCPU":                  avgCPU,
+			"avgMemory":               avgMemory,
+			"runDuration":             elapsed,
+			"runtimeDuration":         metric.RuntimeDuration,
+			"isRunning":               metric.IsRunning,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		if err := json.NewEncoder(w).Encode(summary); err != nil {
+			http.Error(w, "Failed to encode summary: "+err.Error(), http.StatusInternalServerError)
 		}
 	})
 }
