@@ -505,10 +505,10 @@ func (e *Emulator) Connect() error {
 		time.Sleep(retryDelay)
 	}
 
-	if lastErr != nil {
-		return fmt.Errorf("maximum connect retries reached: %v", lastErr)
+	if lastErr == nil {
+		lastErr = fmt.Errorf("unknown connection error")
 	}
-	return fmt.Errorf("maximum connect retries reached")
+	return fmt.Errorf("maximum connect retries reached: %v", lastErr)
 }
 
 // Disconnect closes the connection with x3270.
