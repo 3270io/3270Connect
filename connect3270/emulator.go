@@ -448,6 +448,7 @@ func (e *Emulator) Connect() error {
 		return errors.New("Host needs to be filled")
 	}
 
+	var lastErr error
 	// Retry logic for connecting
 	for retries := 0; retries < maxRetries; retries++ {
 		if ShutdownRequested() {
@@ -488,12 +489,15 @@ func (e *Emulator) Connect() error {
 				msg := fmt.Sprintf("ERROR failed to create app: %v", err)
 				pterm.Error.Println(msg)
 			}
-			defer e.Disconnect()
-			return fmt.Errorf("failed to create client to connect: %v", err) // Return the error immediately
+			_ = e.Disconnect()
+			lastErr = err
+			time.Sleep(retryDelay)
+			continue
 		}
 
 		if !e.IsConnected() {
 			//log.Printf("Failed to connect to %s (Retry %d)...", e.hostname(), retries+1)
+			lastErr = fmt.Errorf("emulator reported not connected after createApp")
 		} else {
 			return nil // Successfully connected, exit the retry loop
 		}
@@ -501,6 +505,9 @@ func (e *Emulator) Connect() error {
 		time.Sleep(retryDelay)
 	}
 
+	if lastErr != nil {
+		return fmt.Errorf("maximum connect retries reached: %v", lastErr)
+	}
 	return fmt.Errorf("maximum connect retries reached")
 }
 
