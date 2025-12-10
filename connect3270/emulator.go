@@ -489,7 +489,9 @@ func (e *Emulator) Connect() error {
 				msg := fmt.Sprintf("ERROR failed to create app: %v", err)
 				pterm.Error.Println(msg)
 			}
-			_ = e.Disconnect()
+			if derr := e.Disconnect(); derr != nil && Verbose {
+				pterm.Warning.Printf("Disconnect after createApp failure: %v\n", derr)
+			}
 			lastErr = err
 			time.Sleep(retryDelay)
 			continue
@@ -506,7 +508,10 @@ func (e *Emulator) Connect() error {
 	}
 
 	if lastErr == nil {
-		lastErr = fmt.Errorf("unknown connection error")
+		lastErr = fmt.Errorf("connection retries exhausted without specific error detail")
+		if Verbose {
+			pterm.Warning.Println("Connect retries exhausted with no captured error detail")
+		}
 	}
 	return fmt.Errorf("maximum connect retries reached: %v", lastErr)
 }
