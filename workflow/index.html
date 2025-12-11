@@ -653,6 +653,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#waitforfield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WaitForField
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#humandelay" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -977,6 +988,12 @@
 <li><strong>Description</strong>: Captures and appends the ASCII representation of the current screen to the output file.</li>
 <li><strong>Parameters</strong>: <code>outputFilePath</code> (string) - Path to the output file.</li>
 <li><strong>Usage</strong>: To capture the current state of the terminal screen as ASCII text.</li>
+</ul>
+<h3 id="waitforfield">WaitForField<a class="headerlink" href="#waitforfield" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Description</strong>: Waits for the terminal to unlock an input field (keyboard ready) before proceeding.</li>
+<li><strong>Parameters</strong>: Optional <code>Delay</code> (float, seconds) to override the default 1 second timeout used per retry.</li>
+<li><strong>Usage</strong>: Insert after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render screens. This is also applied automatically after <code>Connect</code> when the top-level <code>WaitForField</code> setting is <code>true</code> (default).</li>
 </ul>
 <h3 id="humandelay">HumanDelay<a class="headerlink" href="#humandelay" title="Permanent link">¶</a></h3>
 <ul>
