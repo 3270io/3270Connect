@@ -660,6 +660,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#screen-readiness-waitforfield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen readiness (WaitForField)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#startport-flag" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1099,6 +1110,7 @@
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait after Connect</span>
 <span class="w">  </span><span class="nt">"HTMLFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
 <span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
@@ -1151,7 +1163,10 @@
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>In this example, a short global <code>Delay</code> keeps the steps paced, the <code>HumanDelay</code> step adds a longer pause before pressing Enter, and the workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects.</p>
+<p>In this example, a short global <code>Delay</code> keeps the steps paced, the <code>HumanDelay</code> step adds a longer pause before pressing Enter, and the workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, <code>WaitForField</code> will wait after <code>Connect</code> before the next step. If you disable the global setting (<code>"WaitForField": false</code>), you can still add an explicit step where you need it:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WaitForField"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Place it after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render the next screen.</p>
 <h3 id="concurrent-workflows">Concurrent Workflows<a class="headerlink" href="#concurrent-workflows" title="Permanent link">¶</a></h3>
 <p>You can run multiple workflows concurrently by specifying the <code>-concurrent</code> and <code>-runtime</code> flags:</p>
 <ul>
@@ -1174,6 +1189,11 @@
 <p>To log only failing steps (without the volume of full verbose output), use the <code>-verboseFailures</code> flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
 </code></pre></div>
+<h3 id="screen-readiness-waitforfield">Screen readiness (WaitForField)<a class="headerlink" href="#screen-readiness-waitforfield" title="Permanent link">¶</a></h3>
+<ul>
+<li>Global: <code>WaitForField</code> in the top-level config (default <code>true</code>) waits after every <code>Connect</code> until the terminal unlocks an input field. Set it to <code>false</code> to opt out globally.</li>
+<li>Per-step: Add a <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use <code>Delay</code> to override the default 1-second timeout.</li>
+</ul>
 <h3 id="startport-flag">startPort Flag<a class="headerlink" href="#startport-flag" title="Permanent link">¶</a></h3>
 <p>The -startPort flag allows you to specify the starting port for the sample application. This help to prevent port usage conflicts when running 3270Connect multiple times on the same machine.</p>
 <p>Use it as follows:</p>
