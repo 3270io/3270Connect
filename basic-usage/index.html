@@ -649,6 +649,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#failure-only-verbose-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure-only verbose logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#startport-flag" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1073,6 +1084,7 @@
 <li><code>-config</code>: Specifies the path to the configuration file (default is "workflow.json").</li>
 <li><code>-token</code>: Provides a one-time RSA token that replaces any <code>{{token}}</code> placeholder in workflow step text during execution.</li>
 <li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
+<li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode—useful for high-concurrency runs where you only want failure diagnostics.</li>
 </ul>
 <h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">¶</a></h3>
 <p>Workflows can reference a transient RSA token by placing <code>{{token}}</code> in any <code>Text</code> field. Supply the token when launching 3270Connect:</p>
@@ -1156,6 +1168,10 @@
 <h3 id="verbose-mode">Verbose Mode<a class="headerlink" href="#verbose-mode" title="Permanent link">¶</a></h3>
 <p>To enable verbose mode for detailed output, use the <code>-verbose</code> flag.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
+</code></pre></div>
+<h3 id="failure-only-verbose-logging">Failure-only verbose logging<a class="headerlink" href="#failure-only-verbose-logging" title="Permanent link">¶</a></h3>
+<p>To log only failing steps (without the volume of full verbose output), use the <code>-verboseFailures</code> flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
 </code></pre></div>
 <h3 id="startport-flag">startPort Flag<a class="headerlink" href="#startport-flag" title="Permanent link">¶</a></h3>
 <p>The -startPort flag allows you to specify the starting port for the sample application. This help to prevent port usage conflicts when running 3270Connect multiple times on the same machine.</p>
