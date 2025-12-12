@@ -1108,7 +1108,8 @@
 <li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
 <li><code>WaitForField</code> (config, default <code>true</code>): When true, every successful <code>Connect</code> waits for the terminal to unlock an input field (1s timeout, 10 retries) before moving to the next step. Set it to <code>false</code> if you want to control waiting yourself with explicit <code>WaitForField</code> steps.</li>
 <li><code>-workflowTimeout</code>: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.</li>
-<li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode—useful for high-concurrency runs where you only want failure diagnostics.</li>
+<li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.</li>
+<li><code>-bar</code>: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: <code>-enableProgressBar</code>.)</li>
 </ul>
 <h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">¶</a></h3>
 <p>Workflows can reference a transient RSA token by placing <code>{{token}}</code> in any <code>Text</code> field. Supply the token when launching 3270Connect:</p>
