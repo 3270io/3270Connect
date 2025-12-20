@@ -275,7 +275,7 @@ func (e *Emulator) SetString(value string) error {
 	maxRetries := 3
 	retryDelay := 1 * time.Second
 
-	command := fmt.Sprintf("String(%s)", value)
+	command := fmt.Sprintf("String(%s)", escapeString(value))
 
 	// Retry the SetString operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
