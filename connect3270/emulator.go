@@ -289,6 +289,10 @@ func (e *Emulator) SetString(value string) error {
 	return fmt.Errorf("maximum SetString retries reached")
 }
 
+func escapeString(value string) string {
+	return strconv.Quote(value)
+}
+
 // GetRows returns the number of rows in the saved screen image with retry logic.
 func (e *Emulator) GetRows() (int, error) {
 	// Retry logic parameters
