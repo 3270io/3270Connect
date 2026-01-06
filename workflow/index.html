@@ -350,7 +350,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../BUILD.md" class="md-tabs__link">
+        <a href="../BUILD/" class="md-tabs__link">
           
   
   
@@ -686,6 +686,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#presstab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressTab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presspf1-presspf24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressPF1 ... PressPF24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#disconnect" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -835,7 +857,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../BUILD.md" class="md-nav__link">
+      <a href="../BUILD/" class="md-nav__link">
         
   
   
@@ -863,7 +885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../MAKEFILE_QUICKREF.md" class="md-nav__link">
+      <a href="../MAKEFILE_QUICKREF/" class="md-nav__link">
         
   
   
@@ -964,9 +986,9 @@
 <h2 id="available-workflow-steps">Available Workflow Steps<a class="headerlink" href="#available-workflow-steps" title="Permanent link">¶</a></h2>
 <h3 id="initializeoutput">InitializeOutput<a class="headerlink" href="#initializeoutput" title="Permanent link">¶</a></h3>
 <ul>
-<li><strong>Description</strong>: Initializes the output file with run details.</li>
-<li><strong>Parameters</strong>: <code>outputFilePath</code> (string) - Path to the output file.</li>
-<li><strong>Usage</strong>: This step is used to set up the output file before executing other steps.</li>
+<li><strong>Description</strong>: (Optional) Re-initializes the workflow output file.</li>
+<li><strong>Parameters</strong>: None.</li>
+<li><strong>Usage</strong>: In most cases you do not need this step: the output file is initialized automatically at the start of each workflow run. The output destination comes from the top-level <code>OutputFilePath</code> setting (CLI mode) or an internal temporary file (API mode).</li>
 </ul>
 <h3 id="connect">Connect<a class="headerlink" href="#connect" title="Permanent link">¶</a></h3>
 <ul>
@@ -989,10 +1011,11 @@
 <li><code>Text</code> (string) - The text to fill at the coordinates.</li>
 <li><strong>Usage</strong>: This step is used to input text at a specific position on the terminal.</li>
 </ul>
+<p>If <code>Coordinates</code> is omitted (or <code>Row</code>/<code>Column</code> are both <code>0</code>), the text is typed at the current cursor position.</p>
 <h3 id="asciiscreengrab">AsciiScreenGrab<a class="headerlink" href="#asciiscreengrab" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>Description</strong>: Captures and appends the ASCII representation of the current screen to the output file.</li>
-<li><strong>Parameters</strong>: <code>outputFilePath</code> (string) - Path to the output file.</li>
+<li><strong>Parameters</strong>: None.</li>
 <li><strong>Usage</strong>: To capture the current state of the terminal screen as ASCII text.</li>
 </ul>
 <h3 id="waitforfield">WaitForField<a class="headerlink" href="#waitforfield" title="Permanent link">¶</a></h3>
@@ -1012,6 +1035,16 @@
 <li><strong>Description</strong>: Simulates pressing the Enter key.</li>
 <li><strong>Usage</strong>: Commonly used to submit data or commands entered on the terminal.</li>
 </ul>
+<h3 id="presstab">PressTab<a class="headerlink" href="#presstab" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Description</strong>: Simulates pressing the Tab key.</li>
+<li><strong>Usage</strong>: Useful for moving focus/cursor between fields on some host screens.</li>
+</ul>
+<h3 id="presspf1-presspf24">PressPF1 ... PressPF24<a class="headerlink" href="#presspf1-presspf24" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Description</strong>: Simulates pressing a Program Function key (PF1 through PF24).</li>
+<li><strong>Usage</strong>: Use the PF key that matches your host application navigation.</li>
+</ul>
 <h3 id="disconnect">Disconnect<a class="headerlink" href="#disconnect" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>Description</strong>: Disconnects from the terminal.</li>
@@ -1020,14 +1053,12 @@
 <h2 id="example-workflow">Example Workflow<a class="headerlink" href="#example-workflow" title="Permanent link">¶</a></h2>
 <p>Here is an example of how these steps might be sequenced in a typical workflow:</p>
 <ol>
-<li><strong>InitializeOutput</strong>: Set up the output file.</li>
 <li><strong>Connect</strong>: Connect to the terminal.</li>
-<li><strong>FillString</strong>: Input a username at the specified coordinates.</li>
-<li><strong>PressEnter</strong>: Submit the username.</li>
-<li><strong>FillString</strong>: Input a password at the specified coordinates.</li>
-<li><strong>PressEnter</strong>: Submit the password.</li>
-<li><strong>CheckValue</strong>: Verify successful login by checking for a welcome message.</li>
-<li><strong>AsciiScreenGrab</strong>: Capture the screen after login.</li>
+<li><strong>AsciiScreenGrab</strong>: Capture the initial screen.</li>
+<li><strong>FillString</strong>: Populate fields.</li>
+<li><strong>StepDelay</strong>: Add a targeted pause (optional).</li>
+<li><strong>PressEnter</strong>: Submit.</li>
+<li><strong>AsciiScreenGrab</strong>: Capture the post-submit screen.</li>
 <li><strong>Disconnect</strong>: Disconnect from the terminal.</li>
 </ol>
 <p>Each step plays a crucial role in the automated interaction with the terminal. By combining these steps, complex workflows can be executed seamlessly.</p></div>
