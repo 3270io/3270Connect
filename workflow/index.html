@@ -664,10 +664,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#humandelay" class="md-nav__link">
+  <a href="#stepdelay" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HumanDelay
+        StepDelay
       
     </span>
   </a>
@@ -954,7 +954,13 @@
 <div><h1 id="workflow-steps-documentation">Workflow Steps Documentation<a class="headerlink" href="#workflow-steps-documentation" title="Permanent link">¶</a></h1>
 <p>This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.</p>
 <h2 id="delay-behavior">Delay Behavior<a class="headerlink" href="#delay-behavior" title="Permanent link">¶</a></h2>
-<p>You can control pacing with a top-level <code>Delay</code> value (seconds, just like <code>RampUpDelay</code>). When set, 3270Connect pauses for that many seconds between every step in the workflow. Pair this with the new <code>HumanDelay</code> step type when you need targeted pauses between specific actions.</p>
+<p>You can control pacing with flexible delay ranges:</p>
+<ul>
+<li><strong>EveryStepDelay</strong> (workflow-level): Adds a randomized pause between every step using <code>Min</code>/<code>Max</code> values (sub-second friendly) to mimic keystrokes and host reaction time.</li>
+<li><strong>StepDelay</strong> (step-level): Insert this step when you need a targeted hesitation using a <code>StepDelay</code> object with <code>Min</code>/<code>Max</code> values (typically seconds).</li>
+<li><strong>EndOfTaskDelay</strong> (workflow-level): Adds a randomized pause after the final step to model user think-time between repeats (minutes-scale ranges are common).</li>
+</ul>
+<p>Legacy <code>Delay</code> and <code>HumanDelay</code> settings are no longer used.</p>
 <h2 id="available-workflow-steps">Available Workflow Steps<a class="headerlink" href="#available-workflow-steps" title="Permanent link">¶</a></h2>
 <h3 id="initializeoutput">InitializeOutput<a class="headerlink" href="#initializeoutput" title="Permanent link">¶</a></h3>
 <ul>
@@ -995,11 +1001,11 @@
 <li><strong>Parameters</strong>: Optional <code>Delay</code> (float, seconds) to override the default 1 second timeout used per retry.</li>
 <li><strong>Usage</strong>: Insert after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render screens. This is also applied automatically after <code>Connect</code> when the top-level <code>WaitForField</code> setting is <code>true</code> (default).</li>
 </ul>
-<h3 id="humandelay">HumanDelay<a class="headerlink" href="#humandelay" title="Permanent link">¶</a></h3>
+<h3 id="stepdelay">StepDelay<a class="headerlink" href="#stepdelay" title="Permanent link">¶</a></h3>
 <ul>
-<li><strong>Description</strong>: Inserts a custom pause to mimic human timing between automated interactions.</li>
-<li><strong>Parameters</strong>: <code>Delay</code> (float) - Number of seconds to wait before the workflow proceeds.</li>
-<li><strong>Usage</strong>: Use when a step needs extra time to settle (e.g., waiting for a slow screen refresh) without adding keystrokes.</li>
+<li><strong>Description</strong>: Inserts a randomized pause to mimic human timing between automated interactions.</li>
+<li><strong>Parameters</strong>: <code>StepDelay.Min</code> and <code>StepDelay.Max</code> (float, seconds) - Bounds for the pause duration.</li>
+<li><strong>Usage</strong>: Add just before actions that benefit from a brief hesitation (for example, immediately before <code>PressEnter</code>).</li>
 </ul>
 <h3 id="pressenter">PressEnter<a class="headerlink" href="#pressenter" title="Permanent link">¶</a></h3>
 <ul>
