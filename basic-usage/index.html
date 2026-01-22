@@ -1106,7 +1106,11 @@
 <li><code>-config</code>: Specifies the path to the configuration file (default is "workflow.json").</li>
 <li><code>-token</code>: Provides a one-time RSA token that replaces any <code>{{token}}</code> placeholder in workflow step text during execution.</li>
 <li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
-<li><code>WaitForField</code> (config, default <code>true</code>): When true, the workflow waits for the terminal to unlock an input field (1s timeout, 10 retries) before each step after a successful <code>Connect</code>. Set it to <code>false</code> if you want to control waiting yourself with explicit <code>WaitForField</code> steps.</li>
+<li><code>WaitForField</code> (config, default <code>true</code>): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful <code>Connect</code>. Supports both simple boolean and detailed configuration:</li>
+<li>Boolean format: <code>"WaitForField": true</code> or <code>"WaitForField": false</code> (uses defaults: 1s delay, 10 retries)</li>
+<li>Object format: <code>"WaitForField": { "Delay": 2, "Retries": 5 }</code> (custom delay in seconds and retry count)</li>
+<li>Defaults: <code>Delay</code> defaults to 1 second if not specified. <code>Retries</code> defaults to 10 if not specified.</li>
+<li>The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).</li>
 <li><code>-workflowTimeout</code>: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.</li>
 <li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.</li>
 <li><code>-bar</code>: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: <code>-enableProgressBar</code>.)</li>
@@ -1123,7 +1127,7 @@
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before steps after Connect</span>
+<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
 <span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
 <span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
 <span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
@@ -1174,7 +1178,11 @@
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>In this example, an <code>EveryStepDelay</code> range keeps the steps paced, the <code>StepDelay</code> step adds a longer pause before pressing Enter, and an <code>EndOfTaskDelay</code> holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, <code>WaitForField</code> will wait before each step once connected. If you disable the global setting (<code>"WaitForField": false</code>), you can still add an explicit step where you need it:</p>
+<p>In this example, an <code>EveryStepDelay</code> range keeps the steps paced, the <code>StepDelay</code> step adds a longer pause before pressing Enter, and an <code>EndOfTaskDelay</code> holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, <code>WaitForField</code> will wait before all steps once connected. </p>
+<p>You can customize the WaitForField behavior using the object format:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>This example uses a 2-second delay per retry and allows up to 5 retries. If you disable the global setting (<code>"WaitForField": false</code>), you can still add an explicit step where you need it:</p>
 <div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WaitForField"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>Place it after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render the next screen.</p>
@@ -1201,10 +1209,32 @@
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
 </code></pre></div>
 <h3 id="screen-readiness-waitforfield">Screen readiness (WaitForField)<a class="headerlink" href="#screen-readiness-waitforfield" title="Permanent link">¶</a></h3>
+<p>The <code>WaitForField</code> configuration controls whether the workflow waits for the terminal to unlock an input field before each step once connected. It applies to all steps in the workflow (not just after the Connect step).</p>
+<p><strong>Configuration formats:</strong></p>
 <ul>
-<li>Global: <code>WaitForField</code> in the top-level config (default <code>true</code>) waits before each step once connected until the terminal unlocks an input field. Set it to <code>false</code> to opt out globally.</li>
-<li>Per-step: Add a <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use <code>Delay</code> to override the default 1-second timeout.</li>
+<li><strong>Boolean format</strong> (backward compatible):</li>
+<li><code>"WaitForField": true</code> - Enabled with defaults (1s delay, 10 retries)</li>
+<li>
+<p><code>"WaitForField": false</code> - Disabled globally</p>
+</li>
+<li>
+<p><strong>Object format</strong> (customizable):</p>
+</li>
+<li><code>"WaitForField": { "Delay": 2, "Retries": 5 }</code> - Enabled with custom settings</li>
+<li><code>Delay</code>: Timeout in seconds per retry attempt (default: 1)</li>
+<li><code>Retries</code>: Maximum number of retry attempts (default: 10)</li>
 </ul>
+<p><strong>Usage examples:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Use defaults</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="c1">// Custom delay and retries</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Disable automatic waiting</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+</code></pre></div>
+<p><strong>Per-step override:</strong> You can also add an explicit <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use the <code>Delay</code> parameter in the step to override the timeout for that specific wait.</p>
 <h3 id="workflow-timeout">Workflow timeout<a class="headerlink" href="#workflow-timeout" title="Permanent link">¶</a></h3>
 <ul>
 <li><code>-workflowTimeout</code>: Hard timeout (seconds) applied to each workflow run. Default 120; set to <code>0</code> to disable. When the timeout is hit, the workflow stops without counting as a connect failure.</li>
