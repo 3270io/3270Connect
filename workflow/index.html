@@ -1022,7 +1022,7 @@
 <ul>
 <li><strong>Description</strong>: Waits for the terminal to unlock an input field (keyboard ready) before proceeding.</li>
 <li><strong>Parameters</strong>: Optional <code>Delay</code> (float, seconds) to override the default 1 second timeout used per retry.</li>
-<li><strong>Usage</strong>: Insert after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render screens. This is also applied automatically after <code>Connect</code> when the top-level <code>WaitForField</code> setting is <code>true</code> (default).</li>
+<li><strong>Usage</strong>: Insert after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render screens. This is also applied automatically before each step once connected when the top-level <code>WaitForField</code> setting is <code>true</code> (default).</li>
 </ul>
 <h3 id="stepdelay">StepDelay<a class="headerlink" href="#stepdelay" title="Permanent link">¶</a></h3>
 <ul>
