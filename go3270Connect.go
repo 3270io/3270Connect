@@ -60,12 +60,78 @@ type DelayRange struct {
 	Max float64 `json:"Max,omitempty"`
 }
 
+// WaitForFieldConfig holds the configuration for WaitForField behavior.
+// It supports both simple boolean values (for backward compatibility) and
+// detailed configuration with custom delay and retry settings.
+type WaitForFieldConfig struct {
+	Enabled bool    `json:"-"` // Not directly unmarshaled
+	Delay   float64 `json:"Delay,omitempty"`
+	Retries int     `json:"Retries,omitempty"`
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling to support both boolean and object formats.
+// Examples: "WaitForField": true or "WaitForField": { "Delay": 2, "Retries": 10 }
+func (w *WaitForFieldConfig) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal as boolean first
+	var boolVal bool
+	if err := json.Unmarshal(data, &boolVal); err == nil {
+		w.Enabled = boolVal
+		// Set defaults when using boolean format
+		if w.Delay == 0 {
+			w.Delay = 1.0
+		}
+		if w.Retries == 0 {
+			w.Retries = 10
+		}
+		return nil
+	}
+
+	// Try to unmarshal as object
+	type Alias WaitForFieldConfig
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(w),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	w.Enabled = true // If object format is used, assume enabled
+	// Set defaults if not provided
+	if w.Delay == 0 {
+		w.Delay = 1.0
+	}
+	if w.Retries == 0 {
+		w.Retries = 10
+	}
+	return nil
+}
+
+// MarshalJSON implements custom JSON marshaling.
+func (w WaitForFieldConfig) MarshalJSON() ([]byte, error) {
+	// If using default values, just marshal as boolean
+	if w.Delay == 1.0 && w.Retries == 10 {
+		return json.Marshal(w.Enabled)
+	}
+	// Otherwise, marshal as object
+	type Alias WaitForFieldConfig
+	return json.Marshal(&struct {
+		Delay   float64 `json:"Delay,omitempty"`
+		Retries int     `json:"Retries,omitempty"`
+		*Alias
+	}{
+		Delay:   w.Delay,
+		Retries: w.Retries,
+		Alias:   (*Alias)(&w),
+	})
+}
+
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
 	Host            string
 	Port            int
-	OutputFilePath  string `json:"OutputFilePath"`
-	WaitForField    bool   `json:"WaitForField,omitempty"`
+	OutputFilePath  string             `json:"OutputFilePath"`
+	WaitForField    WaitForFieldConfig `json:"WaitForField,omitempty"`
 	Steps           []Step
 	EveryStepDelay  DelayRange `json:"EveryStepDelay,omitempty"`
 	EndOfTaskDelay  DelayRange `json:"EndOfTaskDelay,omitempty"`
@@ -630,7 +696,7 @@ func loadConfiguration(filePath string) *Configuration {
 	}
 	defer configFile.Close()
 	config := Configuration{
-		WaitForField: true, // default to waiting after Connect unless disabled in config
+		WaitForField: WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10}, // default to waiting after Connect unless disabled in config
 	}
 	decoder := json.NewDecoder(configFile)
 	err = decoder.Decode(&config)
@@ -828,7 +894,7 @@ func loadInputFile(filePath string) ([]Step, error) {
 }
 
 func shouldAutoWaitForField(config *Configuration, step Step, connected bool) bool {
-	if config == nil || !config.WaitForField || !connected {
+	if config == nil || !config.WaitForField.Enabled || !connected {
 		return false
 	}
 	switch step.Type {
@@ -938,7 +1004,8 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 			}
 		}
 		if shouldAutoWaitForField(config, step, connected) {
-			if waitErr := e.WaitForField(time.Second); waitErr != nil {
+			timeout := time.Duration(config.WaitForField.Delay * float64(time.Second))
+			if waitErr := e.WaitForField(timeout, config.WaitForField.Retries); waitErr != nil {
 				if waitErr.Error() == "shutdown requested" {
 					break
 				}
@@ -1101,7 +1168,7 @@ func runAPIWorkflow() {
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 	r.POST("/api/execute", func(c *gin.Context) {
-		workflowConfig := Configuration{WaitForField: true}
+		workflowConfig := Configuration{WaitForField: WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10}}
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload - JSON’s drunk", err)
 			return
@@ -1143,7 +1210,8 @@ func runAPIWorkflow() {
 				}
 			}
 			if shouldAutoWaitForField(&workflowConfig, step, connected) {
-				if waitErr := e.WaitForField(time.Second); waitErr != nil {
+				timeout := time.Duration(workflowConfig.WaitForField.Delay * float64(time.Second))
+				if waitErr := e.WaitForField(timeout, workflowConfig.WaitForField.Retries); waitErr != nil {
 					sendErrorResponse(c, http.StatusInternalServerError, "WaitForField failed", waitErr)
 					e.Disconnect()
 					return
@@ -1217,10 +1285,11 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 		return e.Press(connect3270.Tab)
 	case "WaitForField":
 		timeout := time.Second
+		retries := 10
 		if step.Delay > 0 {
 			timeout = time.Duration(step.Delay * float64(time.Second))
 		}
-		return e.WaitForField(timeout)
+		return e.WaitForField(timeout, retries)
 	case "Disconnect":
 		if err := e.Disconnect(); err != nil {
 			// Disconnect failures often mean the emulator is already gone; don't fail the workflow for that.

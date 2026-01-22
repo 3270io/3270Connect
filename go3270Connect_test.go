@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"math/rand"
 	"os"
 	"strings"
@@ -159,7 +160,7 @@ func TestInjectDynamicValuesPartialMatch(t *testing.T) {
 }
 
 func TestShouldAutoWaitForField(t *testing.T) {
-	config := &Configuration{WaitForField: true}
+	config := &Configuration{WaitForField: WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10}}
 	if shouldAutoWaitForField(config, Step{Type: "FillString"}, true) == false {
 		t.Fatalf("expected auto wait for FillString when connected")
 	}
@@ -172,9 +173,65 @@ func TestShouldAutoWaitForField(t *testing.T) {
 	if shouldAutoWaitForField(config, Step{Type: "FillString"}, false) {
 		t.Fatalf("did not expect auto wait before connect")
 	}
-	config.WaitForField = false
+	config.WaitForField.Enabled = false
 	if shouldAutoWaitForField(config, Step{Type: "FillString"}, true) {
 		t.Fatalf("did not expect auto wait when config disabled")
+	}
+}
+
+func TestWaitForFieldConfigJSON(t *testing.T) {
+	// Test unmarshaling boolean value (backward compatibility)
+	jsonTrue := `{"WaitForField": true}`
+	var configTrue Configuration
+	if err := json.Unmarshal([]byte(jsonTrue), &configTrue); err != nil {
+		t.Fatalf("failed to unmarshal boolean true: %v", err)
+	}
+	if !configTrue.WaitForField.Enabled {
+		t.Errorf("expected Enabled to be true")
+	}
+	if configTrue.WaitForField.Delay != 1.0 {
+		t.Errorf("expected default Delay 1.0, got %f", configTrue.WaitForField.Delay)
+	}
+	if configTrue.WaitForField.Retries != 10 {
+		t.Errorf("expected default Retries 10, got %d", configTrue.WaitForField.Retries)
+	}
+
+	jsonFalse := `{"WaitForField": false}`
+	var configFalse Configuration
+	if err := json.Unmarshal([]byte(jsonFalse), &configFalse); err != nil {
+		t.Fatalf("failed to unmarshal boolean false: %v", err)
+	}
+	if configFalse.WaitForField.Enabled {
+		t.Errorf("expected Enabled to be false")
+	}
+
+	// Test unmarshaling object value with custom settings
+	jsonObject := `{"WaitForField": {"Delay": 2, "Retries": 5}}`
+	var configObject Configuration
+	if err := json.Unmarshal([]byte(jsonObject), &configObject); err != nil {
+		t.Fatalf("failed to unmarshal object: %v", err)
+	}
+	if !configObject.WaitForField.Enabled {
+		t.Errorf("expected Enabled to be true for object format")
+	}
+	if configObject.WaitForField.Delay != 2.0 {
+		t.Errorf("expected Delay 2.0, got %f", configObject.WaitForField.Delay)
+	}
+	if configObject.WaitForField.Retries != 5 {
+		t.Errorf("expected Retries 5, got %d", configObject.WaitForField.Retries)
+	}
+
+	// Test unmarshaling object with only Delay specified
+	jsonPartial := `{"WaitForField": {"Delay": 3}}`
+	var configPartial Configuration
+	if err := json.Unmarshal([]byte(jsonPartial), &configPartial); err != nil {
+		t.Fatalf("failed to unmarshal partial object: %v", err)
+	}
+	if configPartial.WaitForField.Delay != 3.0 {
+		t.Errorf("expected Delay 3.0, got %f", configPartial.WaitForField.Delay)
+	}
+	if configPartial.WaitForField.Retries != 10 {
+		t.Errorf("expected default Retries 10, got %d", configPartial.WaitForField.Retries)
 	}
 }
 

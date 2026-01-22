@@ -47,7 +47,10 @@ Legacy `Delay` and `HumanDelay` settings are no longer used.
 ### WaitForField
 - **Description**: Waits for the terminal to unlock an input field (keyboard ready) before proceeding.
 - **Parameters**: Optional `Delay` (float, seconds) to override the default 1 second timeout used per retry.
-- **Usage**: Insert after `Connect` or after navigation steps (e.g., `PressEnter`) when the host is slow to render screens. This is also applied automatically before each step once connected when the top-level `WaitForField` setting is `true` (default).
+- **Usage**: Insert after `Connect` or after navigation steps (e.g., `PressEnter`) when the host is slow to render screens. This is also applied automatically before each step once connected when the top-level `WaitForField` setting is enabled (default). The global `WaitForField` setting now supports both simple boolean and detailed configuration formats:
+  - Simple boolean: `"WaitForField": true` (uses default 1s delay, 10 retries)
+  - Detailed configuration: `"WaitForField": { "Delay": 2, "Retries": 5 }` (custom delay and retry count)
+  - Defaults: If `Delay` is not specified, it defaults to 1 second. If `Retries` is not specified, it defaults to 10.
 
 ### StepDelay
 - **Description**: Inserts a randomized pause to mimic human timing between automated interactions.
