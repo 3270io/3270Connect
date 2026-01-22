@@ -216,7 +216,7 @@ func (e *Emulator) scriptRequest(command string) (string, error) {
 
 // WaitForField waits until the screen is ready, the cursor has been positioned
 // on a modifiable field, and the keyboard is unlocked.
-func (e *Emulator) WaitForField(timeout time.Duration) error {
+func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	// Send the command to wait for a field with the specified timeout
 	command := fmt.Sprintf("Wait(%d, InputField)", int(timeout.Seconds()))
 

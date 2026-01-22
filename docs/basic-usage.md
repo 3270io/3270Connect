@@ -13,7 +13,11 @@ To run a workflow, use the following command:
 - `-config`: Specifies the path to the configuration file (default is "workflow.json").
 - `-token`: Provides a one-time RSA token that replaces any `{{token}}` placeholder in workflow step text during execution.
 - `-showConnectionErrors`: By default, connection failures for the `Connect` step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.
-- `WaitForField` (config, default `true`): When true, the workflow waits for the terminal to unlock an input field (1s timeout, 10 retries) before each step after a successful `Connect`. Set it to `false` if you want to control waiting yourself with explicit `WaitForField` steps.
+- `WaitForField` (config, default `true`): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful `Connect`. Supports both simple boolean and detailed configuration:
+  - Boolean format: `"WaitForField": true` or `"WaitForField": false` (uses defaults: 1s delay, 10 retries)
+  - Object format: `"WaitForField": { "Delay": 2, "Retries": 5 }` (custom delay in seconds and retry count)
+  - Defaults: `Delay` defaults to 1 second if not specified. `Retries` defaults to 10 if not specified.
+  - The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).
 - `-workflowTimeout`: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.
 - `-verboseFailures`: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.
 - `-bar`: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: `-enableProgressBar`.)
@@ -39,7 +43,7 @@ To run a single workflow, create a JSON configuration file that describes the wo
   "Host": "10.27.27.62",
   "Port": 3270,
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
-  "WaitForField": true, // optional (default true) to wait before steps after Connect
+  "WaitForField": true, // optional (default true) to wait before all steps once connected
   "OutputFilePath": "output.html", // optional; if omitted a temp file is used
   "RampUpBatchSize": 10, //optional for concurrency runs
   "RampUpDelay": 1, //optional for concurrency runs
@@ -91,7 +95,15 @@ To run a single workflow, create a JSON configuration file that describes the wo
 }
 ```
 
-In this example, an `EveryStepDelay` range keeps the steps paced, the `StepDelay` step adds a longer pause before pressing Enter, and an `EndOfTaskDelay` holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, `WaitForField` will wait before each step once connected. If you disable the global setting (`"WaitForField": false`), you can still add an explicit step where you need it:
+In this example, an `EveryStepDelay` range keeps the steps paced, the `StepDelay` step adds a longer pause before pressing Enter, and an `EndOfTaskDelay` holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, `WaitForField` will wait before all steps once connected. 
+
+You can customize the WaitForField behavior using the object format:
+
+```json
+  "WaitForField": { "Delay": 2, "Retries": 5 }
+```
+
+This example uses a 2-second delay per retry and allows up to 5 retries. If you disable the global setting (`"WaitForField": false`), you can still add an explicit step where you need it:
 
 ```json
     { "Type": "WaitForField", "Delay": 2 }
@@ -140,8 +152,33 @@ To log only failing steps (without the volume of full verbose output), use the `
 
 ### Screen readiness (WaitForField)
 
-- Global: `WaitForField` in the top-level config (default `true`) waits before each step once connected until the terminal unlocks an input field. Set it to `false` to opt out globally.
-- Per-step: Add a `WaitForField` step wherever you need an extra wait (e.g., after `PressEnter`). Use `Delay` to override the default 1-second timeout.
+The `WaitForField` configuration controls whether the workflow waits for the terminal to unlock an input field before each step once connected. It applies to all steps in the workflow (not just after the Connect step).
+
+**Configuration formats:**
+
+- **Boolean format** (backward compatible):
+  - `"WaitForField": true` - Enabled with defaults (1s delay, 10 retries)
+  - `"WaitForField": false` - Disabled globally
+
+- **Object format** (customizable):
+  - `"WaitForField": { "Delay": 2, "Retries": 5 }` - Enabled with custom settings
+  - `Delay`: Timeout in seconds per retry attempt (default: 1)
+  - `Retries`: Maximum number of retry attempts (default: 10)
+
+**Usage examples:**
+
+```json
+// Use defaults
+"WaitForField": true
+
+// Custom delay and retries
+"WaitForField": { "Delay": 2, "Retries": 15 }
+
+// Disable automatic waiting
+"WaitForField": false
+```
+
+**Per-step override:** You can also add an explicit `WaitForField` step wherever you need an extra wait (e.g., after `PressEnter`). Use the `Delay` parameter in the step to override the timeout for that specific wait.
 
 ### Workflow timeout
 
