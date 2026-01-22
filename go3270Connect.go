@@ -113,16 +113,10 @@ func (w WaitForFieldConfig) MarshalJSON() ([]byte, error) {
 	if w.Delay == 1.0 && w.Retries == 10 {
 		return json.Marshal(w.Enabled)
 	}
-	// Otherwise, marshal as object
-	type Alias WaitForFieldConfig
-	return json.Marshal(&struct {
-		Delay   float64 `json:"Delay,omitempty"`
-		Retries int     `json:"Retries,omitempty"`
-		*Alias
-	}{
-		Delay:   w.Delay,
-		Retries: w.Retries,
-		Alias:   (*Alias)(&w),
+	// Otherwise, marshal as object with just the custom fields
+	return json.Marshal(map[string]interface{}{
+		"Delay":   w.Delay,
+		"Retries": w.Retries,
 	})
 }
 
