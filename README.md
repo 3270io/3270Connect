@@ -41,7 +41,7 @@ Here are the key features of 3270Connect:
   Source: `connect3270/emulator.go`.
 - Establishing a TN3270 session runs through `Emulator.Connect`, which retries up to 10 times with a 1-second delay between attempts (`maxRetries`/`retryDelay`). Starting the emulator process itself is also retried up to 10 times before surfacing an error.  
   Source: `connect3270/emulator.go`.
-- After a successful `Connect`, the workflow waits for the terminal to unlock an input field (`WaitForField`) using a 1-second timeout and up to 10 retries by default. Disable this with top-level `WaitForField: false` in the config and/or add explicit `WaitForField` steps where needed.  
+- After a successful `Connect`, the workflow waits for the terminal to unlock an input field (`WaitForField`) using a 1-second timeout and up to 10 retries before each step. Disable this with top-level `WaitForField: false` in the config and/or add explicit `WaitForField` steps where needed.  
   Source: `go3270Connect.go`.
 - Connection failures for the workflow Connect step are informational by default and do not increment the failed workflow counter; pass `-showConnectionErrors` if you want connection failures to be treated as errors and surfaced in the failure tally.  
   Use `-verboseFailures` to log failing steps without enabling full verbose when you need concise failure diagnostics at scale.  

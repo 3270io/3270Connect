@@ -158,6 +158,26 @@ func TestInjectDynamicValuesPartialMatch(t *testing.T) {
 	}
 }
 
+func TestShouldAutoWaitForField(t *testing.T) {
+	config := &Configuration{WaitForField: true}
+	if shouldAutoWaitForField(config, Step{Type: "FillString"}, true) == false {
+		t.Fatalf("expected auto wait for FillString when connected")
+	}
+	if shouldAutoWaitForField(config, Step{Type: "Connect"}, true) {
+		t.Fatalf("did not expect auto wait for Connect")
+	}
+	if shouldAutoWaitForField(config, Step{Type: "WaitForField"}, true) {
+		t.Fatalf("did not expect auto wait for explicit WaitForField")
+	}
+	if shouldAutoWaitForField(config, Step{Type: "FillString"}, false) {
+		t.Fatalf("did not expect auto wait before connect")
+	}
+	config.WaitForField = false
+	if shouldAutoWaitForField(config, Step{Type: "FillString"}, true) {
+		t.Fatalf("did not expect auto wait when config disabled")
+	}
+}
+
 func TestInjectDynamicValuesWithUTF8Characters(t *testing.T) {
 	config := &Configuration{
 		Host: "localhost",
