@@ -827,6 +827,18 @@ func loadInputFile(filePath string) ([]Step, error) {
 	return steps, nil
 }
 
+func shouldAutoWaitForField(config *Configuration, step Step, connected bool) bool {
+	if config == nil || !config.WaitForField || !connected {
+		return false
+	}
+	switch step.Type {
+	case "Connect", "Disconnect", "InitializeOutput", "WaitForField":
+		return false
+	default:
+		return true
+	}
+}
+
 func runWorkflow(scriptPort int, config *Configuration) error {
 	e := connect3270.NewEmulator(config.Host, config.Port, strconv.Itoa(scriptPort))
 	return runWorkflowWithEmulator(e, config, time.Time{})
@@ -901,6 +913,8 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	registerWorkflowStatus(workflowKey, config, len(steps))
 	defer clearWorkflowStatus(workflowKey)
 
+	connected := false
+
 	for idx, step := range steps {
 		if workflowFailed {
 			break
@@ -923,13 +937,22 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				time.Sleep(delay)
 			}
 		}
-		err := executeStep(e, step, tmpFileName, config.Token)
-		if err == nil && step.Type == "Connect" && config.WaitForField {
-			waitErr := e.WaitForField(time.Second)
-			if waitErr != nil {
-				err = waitErr
+		if shouldAutoWaitForField(config, step, connected) {
+			if waitErr := e.WaitForField(time.Second); waitErr != nil {
+				if waitErr.Error() == "shutdown requested" {
+					break
+				}
+				workflowFailed = true
+				addError(waitErr)
+				if verboseFailures {
+					msg := fmt.Sprintf("Workflow failure on scriptPort %s at step %d (%s): %v", scriptPortLabel, idx+1, step.Type, waitErr)
+					storeLog(msg)
+					pterm.Error.Println(msg)
+				}
+				continue
 			}
 		}
+		err := executeStep(e, step, tmpFileName, config.Token)
 		if err != nil {
 			if err.Error() == "shutdown requested" {
 				break // Graceful stop: do not count as failure
@@ -948,6 +971,14 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 					storeLog(msg)
 					pterm.Error.Println(msg)
 				}
+			}
+		}
+		if err == nil {
+			if step.Type == "Connect" {
+				connected = true
+			}
+			if step.Type == "Disconnect" {
+				connected = false
 			}
 		}
 	}
@@ -1098,6 +1129,7 @@ func runAPIWorkflow() {
 			sendErrorResponse(c, http.StatusInternalServerError, "Output init failed - setup’s cursed", err)
 			return
 		}
+		connected := false
 		for idx, step := range workflowConfig.Steps {
 			if idx > 0 {
 				delay, err := randomDuration(workflowConfig.EveryStepDelay, true)
@@ -1110,10 +1142,23 @@ func runAPIWorkflow() {
 					time.Sleep(delay)
 				}
 			}
+			if shouldAutoWaitForField(&workflowConfig, step, connected) {
+				if waitErr := e.WaitForField(time.Second); waitErr != nil {
+					sendErrorResponse(c, http.StatusInternalServerError, "WaitForField failed", waitErr)
+					e.Disconnect()
+					return
+				}
+			}
 			if err := executeStep(e, step, tmpFileName, workflowConfig.Token); err != nil {
 				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Step '%s' failed - oof", step.Type), err)
 				e.Disconnect()
 				return
+			}
+			if step.Type == "Connect" {
+				connected = true
+			}
+			if step.Type == "Disconnect" {
+				connected = false
 			}
 		}
 		if delay, err := randomDuration(workflowConfig.EndOfTaskDelay, true); err != nil {
