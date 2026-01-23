@@ -660,6 +660,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#screen-capture-on-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen capture on failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#screen-readiness-waitforfield" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1113,6 +1124,7 @@
 <li>The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).</li>
 <li><code>-workflowTimeout</code>: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.</li>
 <li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.</li>
+<li><code>-verboseScreenCaptureFailures</code>: When enabled alongside <code>-verboseFailures</code>, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format <code>failure_[scriptPort]_step[stepIndex]_[timestamp].txt</code> and saved in the current directory. The capture file path is included in the failure log message.</li>
 <li><code>-bar</code>: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: <code>-enableProgressBar</code>.)</li>
 </ul>
 <h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">¶</a></h3>
@@ -1207,6 +1219,18 @@
 <h3 id="failure-only-verbose-logging">Failure-only verbose logging<a class="headerlink" href="#failure-only-verbose-logging" title="Permanent link">¶</a></h3>
 <p>To log only failing steps (without the volume of full verbose output), use the <code>-verboseFailures</code> flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
+</code></pre></div>
+<h3 id="screen-capture-on-failures">Screen capture on failures<a class="headerlink" href="#screen-capture-on-failures" title="Permanent link">¶</a></h3>
+<p>When troubleshooting intermittent automation failures in high-concurrency environments, you can enable automatic screen captures using the <code>-verboseScreenCaptureFailures</code> flag. This flag works in conjunction with <code>-verboseFailures</code> to capture the terminal screen whenever a workflow step fails or a WaitForField timeout occurs.</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures<span class="w"> </span>-verboseScreenCaptureFailures
+</code></pre></div>
+<p>Key features:
+- Captures are saved as plain text files in the current directory
+- Files are named using the format <code>failure_[scriptPort]_step[stepIndex]_[timestamp].txt</code>
+- Limited to 5 total captures across all concurrent workflows to prevent disk exhaustion
+- The capture file path is automatically included in the failure log message</p>
+<p>Example failure log with screen capture:
+</p><div class="highlight"><pre><span></span><code>Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1234567890.txt
 </code></pre></div>
 <h3 id="screen-readiness-waitforfield">Screen readiness (WaitForField)<a class="headerlink" href="#screen-readiness-waitforfield" title="Permanent link">¶</a></h3>
 <p>The <code>WaitForField</code> configuration controls whether the workflow waits for the terminal to unlock an input field before each step once connected. It applies to all steps in the workflow (not just after the Connect step).</p>
