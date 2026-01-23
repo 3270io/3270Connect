@@ -20,6 +20,7 @@ To run a workflow, use the following command:
   - The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).
 - `-workflowTimeout`: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.
 - `-verboseFailures`: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.
+- `-verboseScreenCaptureFailures`: When enabled alongside `-verboseFailures`, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format `failure_[scriptPort]_step[stepIndex]_[timestamp].txt` and saved in the current directory. The capture file path is included in the failure log message.
 - `-bar`: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: `-enableProgressBar`.)
 
 ### Injecting a runtime RSA token
@@ -148,6 +149,25 @@ To log only failing steps (without the volume of full verbose output), use the `
 
 ```bash
 3270Connect -config workflow.json -verboseFailures
+```
+
+### Screen capture on failures
+
+When troubleshooting intermittent automation failures in high-concurrency environments, you can enable automatic screen captures using the `-verboseScreenCaptureFailures` flag. This flag works in conjunction with `-verboseFailures` to capture the terminal screen whenever a workflow step fails or a WaitForField timeout occurs.
+
+```bash
+3270Connect -config workflow.json -verboseFailures -verboseScreenCaptureFailures
+```
+
+Key features:
+- Captures are saved as plain text files in the current directory
+- Files are named using the format `failure_[scriptPort]_step[stepIndex]_[timestamp].txt`
+- Limited to 5 total captures across all concurrent workflows to prevent disk exhaustion
+- The capture file path is automatically included in the failure log message
+
+Example failure log with screen capture:
+```
+Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1234567890.txt
 ```
 
 ### Screen readiness (WaitForField)

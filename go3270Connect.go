@@ -270,21 +270,22 @@ func resolveTokenPlaceholder(original, token string) string {
 }
 
 var (
-	configFile       string
-	injectionConfig  string
-	rsaToken         string
-	showHelp         bool
-	runAPI           bool
-	apiPort          int
-	concurrent       int
-	headless         bool
-	verbose          bool
-	verboseFailures  bool
-	runApp           string
-	runtimeDuration  int
-	lastUsedPort     int
-	startPort        int
-	tokenWarningOnce sync.Once
+	configFile                      string
+	injectionConfig                 string
+	rsaToken                        string
+	showHelp                        bool
+	runAPI                          bool
+	apiPort                         int
+	concurrent                      int
+	headless                        bool
+	verbose                         bool
+	verboseFailures                 bool
+	verboseScreenCaptureFailures    bool
+	runApp                          string
+	runtimeDuration                 int
+	lastUsedPort                    int
+	startPort                       int
+	tokenWarningOnce                sync.Once
 )
 
 var dashboardStarted bool
@@ -293,6 +294,7 @@ var dashboardStarted bool
 var totalWorkflowsStarted int64
 var totalWorkflowsCompleted int64
 var totalWorkflowsFailed int64
+var screenCaptureCount int64 // Atomic counter for screen captures (max 5)
 
 var dashboardPort int
 
@@ -571,6 +573,7 @@ func init() {
 	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 	flag.BoolVar(&verboseFailures, "verboseFailures", false, "Log failures even when verbose is off")
+	flag.BoolVar(&verboseScreenCaptureFailures, "verboseScreenCaptureFailures", false, "Capture screen on failures (max 5)")
 	flag.IntVar(&runtimeDuration, "runtime", 0, "Duration to run workflows in seconds")
 	flag.StringVar(&runApp, "runApp", "", "Select which sample 3270 app to run ('1' or '2')")
 	flag.IntVar(&runAppPort, "runApp-port", 3270, "Port for the sample 3270 app")
@@ -899,6 +902,37 @@ func shouldAutoWaitForField(config *Configuration, step Step, connected bool) bo
 	}
 }
 
+// captureFailureScreen captures the terminal screen to a file when a workflow step fails.
+// It limits the total number of captures to 5 across all concurrent workflows using an atomic counter.
+// Returns the file path if successful, or an empty string if capture was skipped or failed.
+func captureFailureScreen(e *connect3270.Emulator, scriptPort string, stepIndex int) string {
+	if !verboseScreenCaptureFailures {
+		return ""
+	}
+
+	// Atomically increment and check the counter
+	newCount := atomic.AddInt64(&screenCaptureCount, 1)
+	if newCount > 5 {
+		// We exceeded the limit, decrement back
+		atomic.AddInt64(&screenCaptureCount, -1)
+		return ""
+	}
+
+	// Generate filename: failure_[scriptPort]_step[stepIndex]_[timestamp].txt
+	timestamp := time.Now().Unix()
+	filename := fmt.Sprintf("failure_%s_step%d_%d.txt", scriptPort, stepIndex, timestamp)
+
+	// Capture the screen using AsciiScreenGrab with apiMode=true for plain text
+	err := e.AsciiScreenGrab(filename, true)
+	if err != nil {
+		// Failed to capture, decrement the counter
+		atomic.AddInt64(&screenCaptureCount, -1)
+		return ""
+	}
+
+	return filename
+}
+
 func runWorkflow(scriptPort int, config *Configuration) error {
 	e := connect3270.NewEmulator(config.Host, config.Port, strconv.Itoa(scriptPort))
 	return runWorkflowWithEmulator(e, config, time.Time{})
@@ -1005,8 +1039,15 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				}
 				workflowFailed = true
 				addError(waitErr)
+
+				// Capture screen if verboseScreenCaptureFailures is enabled
+				captureFile := captureFailureScreen(e, scriptPortLabel, idx+1)
+
 				if verboseFailures {
 					msg := fmt.Sprintf("Workflow failure on scriptPort %s at step %d (%s): %v", scriptPortLabel, idx+1, step.Type, waitErr)
+					if captureFile != "" {
+						msg += fmt.Sprintf(" | Screen captured to: %s", captureFile)
+					}
 					storeLog(msg)
 					pterm.Error.Println(msg)
 				}
@@ -1027,8 +1068,15 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 			} else {
 				workflowFailed = true
 				addError(err)
+
+				// Capture screen if verboseScreenCaptureFailures is enabled
+				captureFile := captureFailureScreen(e, scriptPortLabel, idx+1)
+
 				if verboseFailures {
 					msg := fmt.Sprintf("Workflow failure on scriptPort %s at step %d (%s): %v", scriptPortLabel, idx+1, step.Type, err)
+					if captureFile != "" {
+						msg += fmt.Sprintf(" | Screen captured to: %s", captureFile)
+					}
 					storeLog(msg)
 					pterm.Error.Println(msg)
 				}
