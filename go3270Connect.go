@@ -910,12 +910,6 @@ func captureFailureScreen(e *connect3270.Emulator, scriptPort string, stepIndex 
 		return ""
 	}
 
-	// Check if we've already captured 5 screens
-	currentCount := atomic.LoadInt64(&screenCaptureCount)
-	if currentCount >= 5 {
-		return ""
-	}
-
 	// Atomically increment and check the counter
 	newCount := atomic.AddInt64(&screenCaptureCount, 1)
 	if newCount > 5 {
@@ -1045,10 +1039,10 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				}
 				workflowFailed = true
 				addError(waitErr)
-				
+
 				// Capture screen if verboseScreenCaptureFailures is enabled
 				captureFile := captureFailureScreen(e, scriptPortLabel, idx+1)
-				
+
 				if verboseFailures {
 					msg := fmt.Sprintf("Workflow failure on scriptPort %s at step %d (%s): %v", scriptPortLabel, idx+1, step.Type, waitErr)
 					if captureFile != "" {
@@ -1074,10 +1068,10 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 			} else {
 				workflowFailed = true
 				addError(err)
-				
+
 				// Capture screen if verboseScreenCaptureFailures is enabled
 				captureFile := captureFailureScreen(e, scriptPortLabel, idx+1)
-				
+
 				if verboseFailures {
 					msg := fmt.Sprintf("Workflow failure on scriptPort %s at step %d (%s): %v", scriptPortLabel, idx+1, step.Type, err)
 					if captureFile != "" {

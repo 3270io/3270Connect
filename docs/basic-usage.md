@@ -167,7 +167,7 @@ Key features:
 
 Example failure log with screen capture:
 ```
-Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1706012345.txt
+Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1234567890.txt
 ```
 
 ### Screen readiness (WaitForField)
