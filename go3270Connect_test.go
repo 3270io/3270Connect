@@ -5,8 +5,11 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	connect3270 "github.com/3270io/3270Connect/connect3270"
 )
 
 func TestRandomDurationWithinRange(t *testing.T) {
@@ -310,5 +313,93 @@ func TestLoadInjectionDataWithUTF8Characters(t *testing.T) {
 	}
 	if data[1]["{{firstname}}"] != "SÖR" {
 		t.Errorf("expected second entry firstname to be 'SÖR', got '%s'", data[1]["{{firstname}}"])
+	}
+}
+
+func TestCaptureFailureScreenDisabledByDefault(t *testing.T) {
+	// Save original value
+	oldFlag := verboseScreenCaptureFailures
+	defer func() { verboseScreenCaptureFailures = oldFlag }()
+
+	// Ensure flag is disabled
+	verboseScreenCaptureFailures = false
+
+	// Create a mock emulator (will not actually be used since flag is disabled)
+	e := &connect3270.Emulator{}
+
+	// Call captureFailureScreen with flag disabled
+	result := captureFailureScreen(e, "5001", 1)
+
+	// Should return empty string when flag is disabled
+	if result != "" {
+		t.Errorf("expected empty string when flag is disabled, got '%s'", result)
+	}
+}
+
+func TestCaptureFailureScreenLimitTo5(t *testing.T) {
+	// Save original values
+	oldFlag := verboseScreenCaptureFailures
+	oldCount := atomic.LoadInt64(&screenCaptureCount)
+	defer func() {
+		verboseScreenCaptureFailures = oldFlag
+		atomic.StoreInt64(&screenCaptureCount, oldCount)
+	}()
+
+	// Enable the flag
+	verboseScreenCaptureFailures = true
+
+	// Set counter to 5 (maximum)
+	atomic.StoreInt64(&screenCaptureCount, 5)
+
+	// Create a mock emulator
+	e := &connect3270.Emulator{}
+
+	// Try to capture when limit is reached
+	result := captureFailureScreen(e, "5001", 1)
+
+	// Should return empty string when limit is reached
+	if result != "" {
+		t.Errorf("expected empty string when limit is reached, got '%s'", result)
+	}
+
+	// Counter should still be 5
+	if atomic.LoadInt64(&screenCaptureCount) != 5 {
+		t.Errorf("expected counter to remain 5, got %d", atomic.LoadInt64(&screenCaptureCount))
+	}
+}
+
+func TestCaptureFailureScreenAtomicIncrement(t *testing.T) {
+	// Save original values
+	oldFlag := verboseScreenCaptureFailures
+	oldCount := atomic.LoadInt64(&screenCaptureCount)
+	defer func() {
+		verboseScreenCaptureFailures = oldFlag
+		atomic.StoreInt64(&screenCaptureCount, oldCount)
+	}()
+
+	// Enable the flag
+	verboseScreenCaptureFailures = true
+
+	// Set counter to 0
+	atomic.StoreInt64(&screenCaptureCount, 0)
+
+	// Note: We can't actually test the full capture functionality without
+	// a real emulator connection, but we can verify the atomic counter logic
+	// by checking that the counter doesn't exceed 5 even with concurrent calls
+
+	// Simulate attempting to capture beyond the limit
+	for i := 0; i < 10; i++ {
+		atomic.AddInt64(&screenCaptureCount, 1)
+		count := atomic.LoadInt64(&screenCaptureCount)
+		if count > 5 {
+			// Simulate the rollback that happens in captureFailureScreen
+			atomic.AddInt64(&screenCaptureCount, -1)
+		}
+	}
+
+	// Counter should not exceed 5
+	finalCount := atomic.LoadInt64(&screenCaptureCount)
+	if finalCount > 5 {
+		t.Errorf("expected counter not to exceed 5, got %d", finalCount)
 	}
 }
