@@ -180,6 +180,17 @@ func TestShouldAutoWaitForField(t *testing.T) {
 	if shouldAutoWaitForField(config, Step{Type: "FillString"}, true) {
 		t.Fatalf("did not expect auto wait when config disabled")
 	}
+	// Test new exclusions for read-only and timing-related steps
+	config.WaitForField.Enabled = true
+	if shouldAutoWaitForField(config, Step{Type: "CheckValue"}, true) {
+		t.Fatalf("did not expect auto wait for CheckValue (read-only step)")
+	}
+	if shouldAutoWaitForField(config, Step{Type: "AsciiScreenGrab"}, true) {
+		t.Fatalf("did not expect auto wait for AsciiScreenGrab (read-only step)")
+	}
+	if shouldAutoWaitForField(config, Step{Type: "StepDelay"}, true) {
+		t.Fatalf("did not expect auto wait for StepDelay (timing-related step)")
+	}
 }
 
 func TestWaitForFieldConfigJSON(t *testing.T) {
