@@ -38,6 +38,7 @@ var (
 const (
 	Enter = "Enter"
 	Tab   = "Tab"
+	Reset = "Reset"
 	F1    = "PF(1)"
 	F2    = "PF(2)"
 	F3    = "PF(3)"
@@ -217,10 +218,34 @@ func (e *Emulator) scriptRequest(command string) (string, error) {
 // WaitForField waits until the screen is ready, the cursor has been positioned
 // on a modifiable field, and the keyboard is unlocked.
 func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
+	// First, try to wait for the screen to unlock
+	unlockCommand := fmt.Sprintf("Wait(%d, Unlock)", int(timeout.Seconds()))
+	unlockOutput, unlockErr := e.execCommand(unlockCommand)
+
+	// Check if unlock failed or status is not "U"
+	needsReset := false
+	if unlockErr != nil {
+		needsReset = true
+	} else if unlockOutput != "" {
+		statusParts := strings.Fields(unlockOutput)
+		if len(statusParts) > 0 && statusParts[0] != "U" {
+			needsReset = true
+		}
+	}
+
+	// If we need to reset, send Reset command and retry unlock
+	if needsReset {
+		if err := e.Press(Reset); err == nil {
+			// Retry unlock after reset
+			time.Sleep(retryDelay)
+			unlockOutput, unlockErr = e.execCommand(unlockCommand)
+		}
+	}
+
 	// Send the command to wait for a field with the specified timeout
 	command := fmt.Sprintf("Wait(%d, InputField)", int(timeout.Seconds()))
 
-	// Retry the MoveCursor operation with a delay in case of failure
+	// Retry the InputField wait operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
 		output, err := e.execCommand(command)
 		if err == nil {
@@ -232,6 +257,13 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 			// Extract the keyboard status from the command output
 			statusParts := strings.Fields(output)
 			if len(statusParts) > 0 && statusParts[0] != "U" {
+				// If InputField wait reports locked state, try sending Reset
+				if retries == 0 {
+					if resetErr := e.Press(Reset); resetErr == nil {
+						time.Sleep(retryDelay)
+						continue // Retry after reset
+					}
+				}
 				return fmt.Errorf("keyboard not unlocked, state was: %s", statusParts[0])
 			}
 			//fmt.Printf("Wait command executed successfully %s", statusParts[0])
@@ -392,6 +424,8 @@ func (e *Emulator) validateKeyboard(key string) bool {
 	case Tab:
 		return true
 	case Enter:
+		return true
+	case Reset:
 		return true
 	case F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12:
 		return true
