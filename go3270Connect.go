@@ -895,7 +895,7 @@ func shouldAutoWaitForField(config *Configuration, step Step, connected bool) bo
 		return false
 	}
 	switch step.Type {
-	case "Connect", "Disconnect", "InitializeOutput", "WaitForField":
+	case "Connect", "Disconnect", "InitializeOutput", "WaitForField", "CheckValue", "AsciiScreenGrab", "StepDelay":
 		return false
 	default:
 		return true
