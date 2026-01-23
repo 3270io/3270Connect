@@ -242,6 +242,19 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 		time.Sleep(retryDelay)
 	}
 
+	// Smart WaitForField: Check if screen has any modifiable fields
+	// If no modifiable fields exist, treat as success (read-only screen)
+	// Note: We intentionally ignore queryErr here. If the query fails, we proceed
+	// with the original "maximum retries reached" error, which is the expected behavior.
+	if fields, queryErr := e.query("Fields"); queryErr == nil {
+		// The x3270 Fields query returns field attributes including "unprotected" for modifiable fields.
+		// A simple case-insensitive search is sufficient as "unprotected" is a standard x3270 field attribute.
+		if !strings.Contains(strings.ToLower(fields), "unprotected") {
+			// No modifiable fields found; treat as success for read-only screens
+			return nil
+		}
+	}
+
 	return fmt.Errorf("maximum WaitForField retries reached")
 }
 
