@@ -6,6 +6,10 @@ logs/
 # Test files
 workflow_test_injection.json
 injection_test.json
+test_failure_workflow.json
+
+# Screen capture files from -verboseScreenCaptureFailures
+failure_*.txt
 
 # x3270 build artifacts
 .x3270_version
