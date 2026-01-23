@@ -242,6 +242,15 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 		time.Sleep(retryDelay)
 	}
 
+	// Smart WaitForField: Check if screen has any modifiable fields
+	// If no modifiable fields exist, treat as success (read-only screen)
+	if fields, queryErr := e.query("Fields"); queryErr == nil {
+		if !strings.Contains(strings.ToLower(fields), "unprotected") {
+			// No modifiable fields found; treat as success for read-only screens
+			return nil
+		}
+	}
+
 	return fmt.Errorf("maximum WaitForField retries reached")
 }
 
