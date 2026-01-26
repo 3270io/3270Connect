@@ -12,6 +12,12 @@ import (
 	figure "github.com/common-nighthawk/go-figure"
 )
 
+const (
+	// TimestampFormat defines the HH:MM:SS format used in log timestamps
+	// Matches the format used in update-binaries.ps1: [INFO] HH:mm:ss
+	TimestampFormat = "15:04:05"
+)
+
 // Color and style helpers
 type Color struct {
 	value      string
@@ -88,7 +94,7 @@ func (m MessagePrinter) print(msg string) {
 	var line string
 	timestamp := ""
 	if m.IncludeTimestamp {
-		timestamp = time.Now().Format("15:04:05") + " "
+		timestamp = time.Now().Format(TimestampFormat) + " "
 	}
 	if m.Prefix.Text != "" {
 		// Add a small pad around the prefix for readability.
