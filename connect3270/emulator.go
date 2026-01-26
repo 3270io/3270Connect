@@ -222,6 +222,11 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	unlockCommand := fmt.Sprintf("Wait(%d, Unlock)", int(timeout.Seconds()))
 	unlockOutput, unlockErr := e.execCommand(unlockCommand)
 
+	// Query keyboard lock state after Wait(timeout, Unlock)
+	if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil && Verbose {
+		log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
+	}
+
 	// Check if unlock failed or status is not "U"
 	needsReset := false
 	if unlockErr != nil {
@@ -239,6 +244,11 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 			// Retry unlock after reset
 			time.Sleep(retryDelay)
 			unlockOutput, unlockErr = e.execCommand(unlockCommand)
+			
+			// Query keyboard lock state again after reset
+			if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil && Verbose {
+				log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
+			}
 		}
 	}
 
@@ -287,7 +297,15 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 		}
 	}
 
-	return fmt.Errorf("maximum WaitForField retries reached")
+	// On failure, query KeyboardLockDetail for diagnostic information
+	var kbLockDetail string
+	if detail, detailErr := e.query("KeyboardLockDetail"); detailErr == nil {
+		kbLockDetail = detail
+	} else {
+		kbLockDetail = fmt.Sprintf("(unable to query: %v)", detailErr)
+	}
+
+	return fmt.Errorf("maximum WaitForField retries reached | KeyboardLockDetail: %s", kbLockDetail)
 }
 
 // moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.

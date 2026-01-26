@@ -12,6 +12,12 @@ import (
 	figure "github.com/common-nighthawk/go-figure"
 )
 
+const (
+	// TimestampFormat defines the HH:MM:SS format used in log timestamps
+	// Matches the format used in update-binaries.ps1: [INFO] HH:mm:ss
+	TimestampFormat = "15:04:05"
+)
+
 // Color and style helpers
 type Color struct {
 	value      string
@@ -71,8 +77,9 @@ type Prefix struct {
 
 // Message printer with a styled prefix.
 type MessagePrinter struct {
-	Prefix Prefix
-	style  lipgloss.Style
+	Prefix        Prefix
+	style         lipgloss.Style
+	IncludeTimestamp bool // When true, adds HH:MM:SS timestamp before the prefix
 }
 
 func (m MessagePrinter) Println(args ...interface{}) {
@@ -85,12 +92,16 @@ func (m MessagePrinter) Printf(format string, args ...interface{}) {
 
 func (m MessagePrinter) print(msg string) {
 	var line string
+	timestamp := ""
+	if m.IncludeTimestamp {
+		timestamp = time.Now().Format(TimestampFormat) + " "
+	}
 	if m.Prefix.Text != "" {
 		// Add a small pad around the prefix for readability.
 		prefix := m.Prefix.Style.Render(" " + m.Prefix.Text + " ")
-		line = fmt.Sprintf("%s %s", prefix, msg)
+		line = fmt.Sprintf("%s%s %s", timestamp, prefix, msg)
 	} else {
-		line = msg
+		line = timestamp + msg
 	}
 	fmt.Println(m.style.Render(line))
 }
@@ -535,8 +546,9 @@ func newCharmPterm() *charmPterm {
 		style:  lipgloss.NewStyle(),
 	}
 	ui.Error = &MessagePrinter{
-		Prefix: Prefix{Text: "ERROR", Style: ui.NewStyle(ui.BgRed, ui.FgWhite)},
-		style:  lipgloss.NewStyle(),
+		Prefix:           Prefix{Text: "ERROR", Style: ui.NewStyle(ui.BgRed, ui.FgWhite)},
+		style:            lipgloss.NewStyle(),
+		IncludeTimestamp: true, // Add timestamp to ERROR logs
 	}
 	ui.Success = &MessagePrinter{
 		Prefix: Prefix{Text: "SUCCESS", Style: ui.NewStyle(ui.BgGreen, ui.FgBlack)},
