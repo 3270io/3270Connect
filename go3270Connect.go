@@ -189,6 +189,21 @@ func formatDelayRange(r DelayRange) string {
 	return fmt.Sprintf("%s - %s", formatSeconds(min), formatSeconds(max))
 }
 
+func formatWaitForField(cfg WaitForFieldConfig) string {
+	if !cfg.Enabled {
+		return "disabled"
+	}
+	delay := cfg.Delay
+	retries := cfg.Retries
+	if delay == 0 {
+		delay = 1.0
+	}
+	if retries == 0 {
+		retries = 10
+	}
+	return fmt.Sprintf("enabled (delay %s, retries %d)", formatSeconds(delay), retries)
+}
+
 func workflowMetadataText(configPath string, config *Configuration) string {
 	label := strings.TrimSpace(configPath)
 	if label == "" {
@@ -206,6 +221,7 @@ func workflowMetadataText(configPath string, config *Configuration) string {
 		fmt.Sprintf("Host: %s", config.Host),
 		fmt.Sprintf("Port: %d", config.Port),
 		fmt.Sprintf("EveryStepDelay: %s", formatDelayRange(config.EveryStepDelay)),
+		fmt.Sprintf("WaitForField: %s", formatWaitForField(config.WaitForField)),
 		fmt.Sprintf("OutputFilePath: %s", outputPath),
 		fmt.Sprintf("RampUpBatchSize: %d", config.RampUpBatchSize),
 		fmt.Sprintf("RampUpDelay: %s", formatSeconds(config.RampUpDelay)),
@@ -247,6 +263,7 @@ func printWorkflowMetadata(configPath string, config *Configuration) {
 	configPrinter.Printf("Host: %s", pterm.LightGreen(config.Host))
 	configPrinter.Printf("Port: %s", pterm.LightGreen(fmt.Sprintf("%d", config.Port)))
 	configPrinter.Printf("EveryStepDelay: %s", pterm.LightGreen(formatDelayRange(config.EveryStepDelay)))
+	configPrinter.Printf("WaitForField: %s", pterm.LightGreen(formatWaitForField(config.WaitForField)))
 	configPrinter.Printf("OutputFilePath: %s", pterm.LightGreen(outputPath))
 	configPrinter.Printf("RampUpBatchSize: %s", pterm.LightGreen(fmt.Sprintf("%d", config.RampUpBatchSize)))
 	configPrinter.Printf("RampUpDelay: %s", pterm.LightGreen(formatSeconds(config.RampUpDelay)))
@@ -270,22 +287,22 @@ func resolveTokenPlaceholder(original, token string) string {
 }
 
 var (
-	configFile                      string
-	injectionConfig                 string
-	rsaToken                        string
-	showHelp                        bool
-	runAPI                          bool
-	apiPort                         int
-	concurrent                      int
-	headless                        bool
-	verbose                         bool
-	verboseFailures                 bool
-	verboseScreenCaptureFailures    bool
-	runApp                          string
-	runtimeDuration                 int
-	lastUsedPort                    int
-	startPort                       int
-	tokenWarningOnce                sync.Once
+	configFile                   string
+	injectionConfig              string
+	rsaToken                     string
+	showHelp                     bool
+	runAPI                       bool
+	apiPort                      int
+	concurrent                   int
+	headless                     bool
+	verbose                      bool
+	verboseFailures              bool
+	verboseScreenCaptureFailures bool
+	runApp                       string
+	runtimeDuration              int
+	lastUsedPort                 int
+	startPort                    int
+	tokenWarningOnce             sync.Once
 )
 
 var dashboardStarted bool
