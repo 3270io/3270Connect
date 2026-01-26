@@ -94,12 +94,12 @@ func (m MessagePrinter) print(msg string) {
 	var line string
 	timestamp := ""
 	if m.IncludeTimestamp {
-		timestamp = time.Now().Format(TimestampFormat) + " "
+		timestamp = " " + time.Now().Format(TimestampFormat)
 	}
 	if m.Prefix.Text != "" {
 		// Add a small pad around the prefix for readability.
 		prefix := m.Prefix.Style.Render(" " + m.Prefix.Text + " ")
-		line = fmt.Sprintf("%s%s %s", timestamp, prefix, msg)
+		line = fmt.Sprintf("%s%s %s", prefix, timestamp, msg)
 	} else {
 		line = timestamp + msg
 	}
@@ -538,8 +538,9 @@ func newCharmPterm() *charmPterm {
 	}
 
 	ui.Info = &MessagePrinter{
-		Prefix: Prefix{Text: "INFO", Style: ui.NewStyle(ui.BgBlue, ui.FgWhite)},
-		style:  lipgloss.NewStyle(),
+		Prefix:           Prefix{Text: "INFO", Style: ui.NewStyle(ui.BgBlue, ui.FgWhite)},
+		style:            lipgloss.NewStyle(),
+		IncludeTimestamp: true, // Add timestamp to INFO logs
 	}
 	ui.Warning = &MessagePrinter{
 		Prefix: Prefix{Text: "WARN", Style: ui.NewStyle(ui.BgYellow, ui.FgBlack)},
