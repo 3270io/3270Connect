@@ -20,6 +20,11 @@ With 3270Connect, users can:
 
 Through these features, 3270Connect empowers organizations to integrate their legacy systems into modern automated processes, reducing errors, and increasing efficiency.
 
+> **Windows SmartScreen notice**  
+> This app is digitally signed.  
+> If Windows shows **“protected your PC”**, click **More info → Run anyway**.  
+> The warning disappears automatically as usage grows.
+
 ## Features
 
 Here are the key features of 3270Connect:

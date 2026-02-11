@@ -7,6 +7,11 @@ on:
     branches: ["main"]
   workflow_dispatch:  # Allows manual execution
 
+# Cancel duplicate and superseded workflow runs to reduce CI cost
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: windows-latest
