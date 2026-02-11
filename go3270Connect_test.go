@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -412,5 +413,115 @@ func TestCaptureFailureScreenAtomicIncrement(t *testing.T) {
 	finalCount := atomic.LoadInt64(&screenCaptureCount)
 	if finalCount > 5 {
 		t.Errorf("expected counter not to exceed 5, got %d", finalCount)
+	}
+}
+
+func TestInjectionLockPoolAcquireRelease(t *testing.T) {
+	pool := newInjectionLockPool(2)
+	if pool == nil {
+		t.Fatalf("expected pool to be created")
+	}
+
+	first, ok := pool.acquireNext()
+	if !ok {
+		t.Fatalf("expected first acquire to succeed")
+	}
+	second, ok := pool.acquireNext()
+	if !ok {
+		t.Fatalf("expected second acquire to succeed")
+	}
+	if first == second {
+		t.Fatalf("expected unique injection indexes, got %d and %d", first, second)
+	}
+
+	if _, ok := pool.acquireNext(); ok {
+		t.Fatalf("expected acquire to fail when all entries are locked")
+	}
+
+	pool.release(first)
+	third, ok := pool.acquireNext()
+	if !ok {
+		t.Fatalf("expected acquire to succeed after release")
+	}
+	if third != first {
+		t.Fatalf("expected released index %d to be reused, got %d", first, third)
+	}
+}
+
+func TestInjectionLockPoolConcurrentAcquireUnique(t *testing.T) {
+	pool := newInjectionLockPool(3)
+	if pool == nil {
+		t.Fatalf("expected pool to be created")
+	}
+
+	results := make(chan int, 3)
+	var wg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			idx, ok := pool.acquireNext()
+			if !ok {
+				t.Errorf("expected acquire to succeed")
+				return
+			}
+			results <- idx
+		}()
+	}
+	wg.Wait()
+	close(results)
+
+	seen := map[int]bool{}
+	for idx := range results {
+		if seen[idx] {
+			t.Fatalf("duplicate index acquired concurrently: %d", idx)
+		}
+		seen[idx] = true
+	}
+	if len(seen) != 3 {
+		t.Fatalf("expected 3 unique indexes, got %d", len(seen))
+	}
+}
+
+func TestShouldWarnInjectionConcurrency(t *testing.T) {
+	tests := []struct {
+		name                 string
+		injectionEntries     int
+		requestedConcurrency int
+		want                 bool
+	}{
+		{
+			name:                 "warn when entries lower than concurrency",
+			injectionEntries:     2,
+			requestedConcurrency: 5,
+			want:                 true,
+		},
+		{
+			name:                 "no warn when entries equal concurrency",
+			injectionEntries:     4,
+			requestedConcurrency: 4,
+			want:                 false,
+		},
+		{
+			name:                 "no warn when entries greater than concurrency",
+			injectionEntries:     6,
+			requestedConcurrency: 3,
+			want:                 false,
+		},
+		{
+			name:                 "no warn for invalid entries",
+			injectionEntries:     0,
+			requestedConcurrency: 3,
+			want:                 false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldWarnInjectionConcurrency(tt.injectionEntries, tt.requestedConcurrency)
+			if got != tt.want {
+				t.Fatalf("expected %v, got %v", tt.want, got)
+			}
+		})
 	}
 }

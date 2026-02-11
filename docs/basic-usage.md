@@ -125,6 +125,10 @@ For example, to run two workflows concurrently for 60 seconds, use:
 3270Connect -config workflow.json -concurrent 2 -runtime 60
 ```
 
+When `-injectionConfig` is also used, injection entries are locked per active workflow so the same entry is not reused by another active workflow at the same time. If all entries are in use, that workflow start attempt is skipped for the current scheduling cycle and processing continues. A `WARNING` terminal message is emitted for this condition.
+
+`3270Connect` also emits a startup `WARNING` when the number of loaded injection entries is lower than requested concurrency, indicating potential scheduling contention.
+
 ## Configuration
 
 ### Headless Mode

@@ -1575,28 +1575,100 @@ func setGlobalSettings() {
 
 var stopTicker chan struct{}
 
-type workflowWorker struct {
-	id       int
-	jobs     <-chan *Configuration
-	wg       *sync.WaitGroup
-	emulator *connect3270.Emulator
-	deadline time.Time
+type workflowJob struct {
+	config         *Configuration
+	injectionIndex int
 }
 
-func newWorkflowWorker(id int, jobs <-chan *Configuration, wg *sync.WaitGroup, deadline time.Time) *workflowWorker {
+type injectionLockPool struct {
+	mu     sync.Mutex
+	inUse  []bool
+	cursor int
+}
+
+func newInjectionLockPool(size int) *injectionLockPool {
+	if size <= 0 {
+		return nil
+	}
+	return &injectionLockPool{
+		inUse: make([]bool, size),
+	}
+}
+
+func (p *injectionLockPool) acquireNext() (int, bool) {
+	if p == nil || len(p.inUse) == 0 {
+		return -1, false
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	size := len(p.inUse)
+	for i := 0; i < size; i++ {
+		idx := (p.cursor + i) % size
+		if !p.inUse[idx] {
+			p.inUse[idx] = true
+			p.cursor = (idx + 1) % size
+			return idx, true
+		}
+	}
+	return -1, false
+}
+
+func (p *injectionLockPool) release(index int) {
+	if p == nil {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if index < 0 || index >= len(p.inUse) {
+		return
+	}
+	p.inUse[index] = false
+}
+
+func shouldWarnInjectionConcurrency(injectionEntries, requestedConcurrency int) bool {
+	return injectionEntries > 0 && requestedConcurrency > 0 && injectionEntries < requestedConcurrency
+}
+
+func logWarningMessage(message string) {
+	pterm.Warning.Println(message)
+	storeLog(message)
+}
+
+type workflowWorker struct {
+	id            int
+	jobs          <-chan *workflowJob
+	wg            *sync.WaitGroup
+	emulator      *connect3270.Emulator
+	deadline      time.Time
+	injectionPool *injectionLockPool
+}
+
+func newWorkflowWorker(id int, jobs <-chan *workflowJob, wg *sync.WaitGroup, deadline time.Time, injectionPool *injectionLockPool) *workflowWorker {
 	return &workflowWorker{
-		id:       id,
-		jobs:     jobs,
-		wg:       wg,
-		emulator: connect3270.NewEmulator("", 0, ""),
-		deadline: deadline,
+		id:            id,
+		jobs:          jobs,
+		wg:            wg,
+		emulator:      connect3270.NewEmulator("", 0, ""),
+		deadline:      deadline,
+		injectionPool: injectionPool,
+	}
+}
+
+func (w *workflowWorker) releaseInjectionLock(index int) {
+	if w.injectionPool != nil && index >= 0 {
+		w.injectionPool.release(index)
 	}
 }
 
 func (w *workflowWorker) start() {
 	defer w.wg.Done()
-	for cfg := range w.jobs {
+	for job := range w.jobs {
+		if job == nil {
+			continue
+		}
+		cfg := job.config
 		if cfg == nil {
+			w.releaseInjectionLock(job.injectionIndex)
 			continue
 		}
 		// Check if shutdown was requested before starting new workflow
@@ -1604,6 +1676,7 @@ func (w *workflowWorker) start() {
 			if connect3270.Verbose {
 				storeLog(fmt.Sprintf("Worker %d skipping workflow due to shutdown request", w.id))
 			}
+			w.releaseInjectionLock(job.injectionIndex)
 			continue
 		}
 		scriptPort := getNextAvailablePort()
@@ -1619,6 +1692,7 @@ func (w *workflowWorker) start() {
 				pterm.Error.Printf("Worker %d workflow error: %v\n", w.id, err)
 			}
 		}
+		w.releaseInjectionLock(job.injectionIndex)
 	}
 	_ = w.emulator.Disconnect()
 }
@@ -1635,15 +1709,11 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 		workerCount = 1
 	}
 	deadline := overallStart.Add(time.Duration(runtimeDuration) * time.Second)
-	jobs := make(chan *Configuration, workerCount)
+	jobs := make(chan *workflowJob, workerCount)
 	var workerWG sync.WaitGroup
-	for i := 0; i < workerCount; i++ {
-		workerWG.Add(1)
-		worker := newWorkflowWorker(i, jobs, &workerWG, deadline)
-		go worker.start()
-	}
 
 	var injectData []map[string]string
+	var injectionPool *injectionLockPool
 	if injectionConfig != "" {
 		if _, err := os.Stat(injectionConfig); err == nil {
 			var loadErr error
@@ -1655,12 +1725,21 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 				return
 			}
 			pterm.Info.Printf("Loaded %d injection entries from %s\n", len(injectData), injectionConfig)
+			injectionPool = newInjectionLockPool(len(injectData))
+			if shouldWarnInjectionConcurrency(len(injectData), workerCount) {
+				logWarningMessage(fmt.Sprintf("Injection entries (%d) are fewer than requested concurrency (%d); starts may be skipped while entries are locked.", len(injectData), workerCount))
+			}
 		} else {
 			pterm.Warning.Printf("Injection file %s not found. Proceeding without injection.\n", injectionConfig)
 		}
 	}
 	if len(injectData) == 0 {
 		injectData = []map[string]string{{}}
+	}
+	for i := 0; i < workerCount; i++ {
+		workerWG.Add(1)
+		worker := newWorkflowWorker(i, jobs, &workerWG, deadline, injectionPool)
+		go worker.start()
 	}
 
 	var (
@@ -1817,12 +1896,29 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 		workflowsToStart := min(config.RampUpBatchSize, availableSlots)
 		startedThisBatch := 0
 		for startedThisBatch < workflowsToStart && time.Now().Before(deadline) {
-			cfg := injectDynamicValues(config, injectData[injectionCursor])
-			injectionCursor = (injectionCursor + 1) % len(injectData)
+			injectionIndex := -1
+			var cfg *Configuration
+			if injectionPool != nil {
+				lockedIndex, ok := injectionPool.acquireNext()
+				if !ok {
+					skippedStarts := workflowsToStart - startedThisBatch
+					logWarningMessage(fmt.Sprintf("All %d injection entries are currently in use and locked; skipping %d workflow start(s) this cycle.", len(injectData), skippedStarts))
+					break
+				}
+				injectionIndex = lockedIndex
+				cfg = injectDynamicValues(config, injectData[injectionIndex])
+			} else {
+				cfg = injectDynamicValues(config, injectData[injectionCursor])
+				injectionCursor = (injectionCursor + 1) % len(injectData)
+			}
+			job := &workflowJob{config: cfg, injectionIndex: injectionIndex}
 			select {
-			case jobs <- cfg:
+			case jobs <- job:
 				startedThisBatch++
 			default:
+				if injectionPool != nil && injectionIndex >= 0 {
+					injectionPool.release(injectionIndex)
+				}
 				// Avoid blocking so we can honor the runtime deadline.
 				startedThisBatch = workflowsToStart
 			}

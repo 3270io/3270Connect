@@ -56,6 +56,23 @@ Here is an example of running a workflow with an injection configuration:
 
 This will replace the specified fields in the workflow with the values provided in the injection configuration.
 
+## Concurrent Workflow Locking
+
+When running with `-concurrent` and `-runtime` while using `-injectionConfig`, each injection entry is locked while a workflow is actively using it. This prevents a second active workflow from reusing the same injection values at the same time.
+
+Behavior details:
+
+- An injection entry is locked at workflow scheduling/start time and released when that workflow completes (or is skipped before execution).
+- If all injection entries are currently locked and in use, the workflow start for that slot is skipped for the current scheduling cycle.
+- Processing continues normally on the next cycle.
+
+## Warning Messages
+
+`3270Connect` emits `WARNING` terminal messages (same terminal log style and layout as existing warnings) in two cases:
+
+- Startup mapping warning: if loaded injection entries are fewer than requested concurrency, for example `2` entries with `-concurrent 5`.
+- Runtime lock warning: when all injection entries are locked/in use at a scheduling moment, so one or more workflow starts are skipped for that cycle.
+
 ## Conclusion
 
 The injection configuration feature enhances the flexibility of `3270Connect` by allowing workflows to be dynamically customized. This is especially useful for testing and automation scenarios where inputs vary across runs.
