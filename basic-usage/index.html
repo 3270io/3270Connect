@@ -1207,6 +1207,8 @@
 <p>For example, to run two workflows concurrently for 60 seconds, use:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
+<p>When <code>-injectionConfig</code> is also used, injection entries are locked per active workflow so the same entry is not reused by another active workflow at the same time. If all entries are in use, that workflow start attempt is skipped for the current scheduling cycle and processing continues. A <code>WARNING</code> terminal message is emitted for this condition.</p>
+<p><code>3270Connect</code> also emits a startup <code>WARNING</code> when the number of loaded injection entries is lower than requested concurrency, indicating potential scheduling contention.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h2>
 <h3 id="headless-mode">Headless Mode<a class="headerlink" href="#headless-mode" title="Permanent link">¶</a></h3>
 <p>You can run <code>3270Connect</code> in headless mode using the <code>-headless</code> flag. Headless mode is useful for running workflows without a graphical user interface.</p>

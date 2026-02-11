@@ -646,6 +646,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#concurrent-workflow-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concurrent Workflow Locking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warning-messages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning Messages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#conclusion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -907,6 +929,20 @@
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-injectionConfig<span class="w"> </span>injection.json
 </code></pre></div>
 <p>This will replace the specified fields in the workflow with the values provided in the injection configuration.</p>
+<h2 id="concurrent-workflow-locking">Concurrent Workflow Locking<a class="headerlink" href="#concurrent-workflow-locking" title="Permanent link">¶</a></h2>
+<p>When running with <code>-concurrent</code> and <code>-runtime</code> while using <code>-injectionConfig</code>, each injection entry is locked while a workflow is actively using it. This prevents a second active workflow from reusing the same injection values at the same time.</p>
+<p>Behavior details:</p>
+<ul>
+<li>An injection entry is locked at workflow scheduling/start time and released when that workflow completes (or is skipped before execution).</li>
+<li>If all injection entries are currently locked and in use, the workflow start for that slot is skipped for the current scheduling cycle.</li>
+<li>Processing continues normally on the next cycle.</li>
+</ul>
+<h2 id="warning-messages">Warning Messages<a class="headerlink" href="#warning-messages" title="Permanent link">¶</a></h2>
+<p><code>3270Connect</code> emits <code>WARNING</code> terminal messages (same terminal log style and layout as existing warnings) in two cases:</p>
+<ul>
+<li>Startup mapping warning: if loaded injection entries are fewer than requested concurrency, for example <code>2</code> entries with <code>-concurrent 5</code>.</li>
+<li>Runtime lock warning: when all injection entries are locked/in use at a scheduling moment, so one or more workflow starts are skipped for that cycle.</li>
+</ul>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">¶</a></h2>
 <p>The injection configuration feature enhances the flexibility of <code>3270Connect</code> by allowing workflows to be dynamically customized. This is especially useful for testing and automation scenarios where inputs vary across runs.</p></div>
 
