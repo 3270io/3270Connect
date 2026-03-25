@@ -37,7 +37,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-const version = "1.8.5.3"
+const version = "1.8.6"
 
 const (
 	cpuHistoryLimit              = 120
@@ -47,6 +47,7 @@ const (
 	dashboardCleanupInterval     = time.Minute
 	liveStatsHistoryLimit        = 12
 	defaultGracePeriod           = 30 * time.Second
+	promptTimeout                = 10 * time.Second
 )
 
 var errorList []error
@@ -2300,25 +2301,75 @@ func logGracePeriodSuccess(gracePeriod time.Duration) {
 	pterm.Success.Printf("All workflows finished within the %s grace period.\n", formatSeconds(gracePeriod.Seconds()))
 }
 
+type stdinResult struct {
+       input string
+       err   error
+}
+
 func promptToContinueWaiting(reader *bufio.Reader, gracePeriod time.Duration) bool {
-	for {
-		pterm.Warning.Printf("Grace period of %s elapsed. Continue waiting? (y/N): ", formatSeconds(gracePeriod.Seconds()))
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			pterm.Warning.Printf("Failed to read grace period response: %v\n", err)
-			storeLog(fmt.Sprintf("Failed to read grace period response: %v", err))
-			return false
-		}
-		input = strings.TrimSpace(strings.ToLower(input))
-		switch input {
-		case "y", "yes":
-			return true
-		case "", "n", "no":
-			return false
-		default:
-			pterm.Info.Println("Please enter y or n.")
-		}
-	}
+       for {
+	       remaining := int(promptTimeout.Seconds())
+
+	       pterm.Warning.Printf("Grace period of %s elapsed. Continue waiting? (y/N) [auto-shutdown in %ds]: ",
+		       formatSeconds(gracePeriod.Seconds()), remaining)
+
+	       inputCh := make(chan stdinResult, 1)
+	       go func() {
+		       line, err := reader.ReadString('\n')
+		       inputCh <- stdinResult{input: line, err: err}
+	       }()
+
+	       ticker := time.NewTicker(1 * time.Second)
+	       deadline := time.Now().Add(promptTimeout)
+
+	       timedOut := false
+	       var result stdinResult
+	       gotInput := false
+
+	       countdownLoop:
+	       for {
+		       select {
+		       case result = <-inputCh:
+			       gotInput = true
+			       break countdownLoop
+		       case <-ticker.C:
+			       remaining = int(time.Until(deadline).Seconds())
+			       if remaining <= 0 {
+				       timedOut = true
+				       break countdownLoop
+			       }
+			       fmt.Printf("\033[2K\r")
+			       pterm.Warning.Printf("Grace period of %s elapsed. Continue waiting? (y/N) [auto-shutdown in %ds]: ",
+				       formatSeconds(gracePeriod.Seconds()), remaining)
+		       }
+	       }
+	       ticker.Stop()
+
+	       if timedOut {
+		       fmt.Println()
+		       pterm.Warning.Println("No response received. Auto-selecting shutdown (N).")
+		       storeLog("Grace period prompt timed out; auto-selecting shutdown.")
+		       return false
+	       }
+
+	       if gotInput {
+		       if result.err != nil {
+			       pterm.Warning.Printf("Failed to read grace period response: %v\n", result.err)
+			       storeLog(fmt.Sprintf("Failed to read grace period response: %v", result.err))
+			       return false
+		       }
+		       input := strings.TrimSpace(strings.ToLower(result.input))
+		       switch input {
+		       case "y", "yes":
+			       return true
+		       case "", "n", "no":
+			       return false
+		       default:
+			       pterm.Info.Println("Please enter y or n.")
+			       continue
+		       }
+	       }
+       }
 }
 
 func printSingleWorkflowSummary(configPath string, config *Configuration) {

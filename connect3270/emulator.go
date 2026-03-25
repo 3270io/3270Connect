@@ -223,9 +223,11 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	unlockOutput, unlockErr := e.execCommand(unlockCommand)
 
 	// Query keyboard lock state after Wait(timeout, Unlock)
-	if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-		log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
-	}
+	       if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
+		       if Verbose {
+			       log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
+		       }
+	       }
 
 	// Check if unlock failed or status is not "U"
 	needsReset := false
@@ -246,9 +248,11 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 			unlockOutput, unlockErr = e.execCommand(unlockCommand)
 			
 			// Query keyboard lock state again after reset
-			if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-				log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
-			}
+			       if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
+				       if Verbose {
+					       log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
+				       }
+			       }
 		}
 	}
 
@@ -259,10 +263,12 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	for retries := 0; retries < maxRetries; retries++ {
 		output, err := e.execCommand(command)
 		if err == nil {
-			if output == "" {
-				fmt.Printf("Wait command executed successfully (no output)\n")
-				return nil
-			}
+			       if output == "" {
+				       if Verbose {
+					       log.Println("Wait command executed successfully (no output)")
+				       }
+				       return nil
+			       }
 
 			// Extract the keyboard status from the command output
 			statusParts := strings.Fields(output)
