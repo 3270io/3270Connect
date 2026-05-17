@@ -540,20 +540,22 @@ func newCharmPterm() *charmPterm {
 	ui.Info = &MessagePrinter{
 		Prefix:           Prefix{Text: "INFO", Style: ui.NewStyle(ui.BgBlue, ui.FgWhite)},
 		style:            lipgloss.NewStyle(),
-		IncludeTimestamp: true, // Add timestamp to INFO logs
+		IncludeTimestamp: true,
 	}
 	ui.Warning = &MessagePrinter{
-		Prefix: Prefix{Text: "WARN", Style: ui.NewStyle(ui.BgYellow, ui.FgBlack)},
-		style:  lipgloss.NewStyle(),
+		Prefix:           Prefix{Text: "WARN", Style: ui.NewStyle(ui.BgYellow, ui.FgBlack)},
+		style:            lipgloss.NewStyle(),
+		IncludeTimestamp: true,
 	}
 	ui.Error = &MessagePrinter{
 		Prefix:           Prefix{Text: "ERROR", Style: ui.NewStyle(ui.BgRed, ui.FgWhite)},
 		style:            lipgloss.NewStyle(),
-		IncludeTimestamp: true, // Add timestamp to ERROR logs
+		IncludeTimestamp: true,
 	}
 	ui.Success = &MessagePrinter{
-		Prefix: Prefix{Text: "SUCCESS", Style: ui.NewStyle(ui.BgGreen, ui.FgBlack)},
-		style:  lipgloss.NewStyle(),
+		Prefix:           Prefix{Text: "SUCCESS", Style: ui.NewStyle(ui.BgGreen, ui.FgBlack)},
+		style:            lipgloss.NewStyle(),
+		IncludeTimestamp: true,
 	}
 
 	ui.DefaultSection = SectionPrinter{Style: ui.NewStyle(ui.FgCyan, ui.Bold)}
