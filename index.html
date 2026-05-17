@@ -289,6 +289,63 @@
   
   
     <li class="md-tabs__item">
+      <a href="ai-chat-mode/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Chat Mode
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="chaos-mode/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Chaos Mode
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="keyboard-and-controls/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Keyboard and Controls
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="workflow/" class="md-tabs__link">
         
   
@@ -654,6 +711,87 @@
   
   
     <li class="md-nav__item">
+      <a href="ai-chat-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Chat Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="chaos-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="keyboard-and-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keyboard and Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="workflow/" class="md-nav__link">
         
   
@@ -750,10 +888,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
             
   
   
@@ -771,8 +909,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -908,7 +1046,7 @@
 <div><h1 id="3270connect">3270Connect<a class="headerlink" href="#3270connect" title="Permanent link">¶</a></h1>
 <p><img alt="3270Connect logo" src="logo.png" style="max-width: 200px; height: auto;"></p>
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">¶</a></h2>
-<p>3270Connect is a robust automation toolkit that pairs a powerful command-line utility with a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.</p>
+<p>3270Connect is a robust automation toolkit that pairs a powerful command-line utility with 3270Web, a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.</p>
 <p><img alt="3270Connect dashboard" src="dashboard.png" style="max-width: 100%; height: auto;"></p>
 <p>The utility is used by system administrators, developers, and testers who frequently interact with mainframe systems, which are still pivotal in various industries such as banking, insurance, and government services. With 3270Connect, users can script complex sequences of tasks, automate data entry, perform complex online operations, and capture terminal screens for logging or debugging purposes.</p>
 <p>One of the main reasons for using 3270Connect is its ability to save time on repetitive tasks by automating them. This can be especially beneficial in testing scenarios where the same set of operations needs to be performed repeatedly. Moreover, the utility provides a way to integrate mainframe operations with modern CI/CD pipelines, thereby modernizing the development and deployment workflows that involve mainframe systems.</p>
@@ -921,6 +1059,7 @@
 <li>Utilize a verbose output mode for an in-depth understanding of workflow execution, which assists in monitoring and debugging.</li>
 <li>Surface failure-only logging with <code>-verboseFailures</code> to capture concise diagnostics during high-volume runs without enabling full verbose output.</li>
 <li>Run 3270Connect as an API server, enabling advanced automation scenarios and facilitating load and performance testing of mainframe applications.</li>
+<li>Drive a live 3270 session from 3270Web with AI Chat mode, which reads the screen, proposes actions, and can orchestrate chaos exploration with explicit approval.</li>
 </ul>
 <p>Through these features, 3270Connect empowers organizations to integrate their legacy systems into modern automated processes, reducing errors, and increasing efficiency.</p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">¶</a></h2>
@@ -930,10 +1069,11 @@
 <li>Command-line interface for scripting and running automation from the terminal.</li>
 <li>Capturing the 3270 screens as the workflow executes.</li>
 <li>Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.</li>
-<li>Dashboard and web console to visually provide metrics on concurrency usage and manage runs.</li>
+<li>Dashboard and 3270Web to visually provide metrics on concurrency usage, manage runs, and open AI Chat mode for conversational session control.</li>
 <li>Headless mode for running workflows without a graphical user interface.</li>
 <li>Verbose mode for detailed output, plus failure-only logging with <code>-verboseFailures</code> for high-concurrency test runs.</li>
 <li>API mode for advanced automation.</li>
+<li>AI Chat mode in 3270Web for screen reading, field entry, key presses, and chaos exploration with per-action approval or Auto Mode.</li>
 <li>Running a 3270 sample application to assist with testing workflow features.</li>
 </ul>
 <h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">¶</a></h2>
@@ -947,6 +1087,8 @@
 <p>Once you've mastered the basics, you can dive into more advanced features:</p>
 <ul>
 <li><a href="advanced-features/">API Mode</a>: Discover how to run 3270Connect as an API server for advanced automation and load performance testing.</li>
+<li><a href="ai-chat-mode/">AI Chat Mode</a>: Use 3270Web to drive a live 3270 session through conversation, approve tool calls, and run chaos exploration.</li>
+<li><a href="chaos-mode/">Chaos Mode</a>: Learn how toolbar controls and AI Chat share the same exploration state and export workflows.</li>
 </ul>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">¶</a></h2>
 <p>The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the <a href="https://github.com/3270io/3270Connect">GitHub repository</a> for more details.</p>
