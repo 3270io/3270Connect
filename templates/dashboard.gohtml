@@ -512,6 +512,15 @@
       transition: transform 0.2s ease, color 0.2s ease;
     }
 
+    button.action-icon {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      line-height: 1;
+    }
+
     .action-icon:hover {
       transform: scale(1.1);
       color: var(--primary);
@@ -1677,11 +1686,11 @@
         <div class="modal-header">
           <h5 class="modal-title" id="consoleModalLabel">Console Logs</h5>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-light" id="maximizeConsoleBtn" onclick="maximizeConsoleModal()" data-tippy-content="Maximize">
-              <i class="fas fa-expand"></i>
+            <button type="button" class="btn btn-sm btn-light" id="maximizeConsoleBtn" aria-label="Maximize console" onclick="maximizeConsoleModal()" data-tippy-content="Maximize">
+              <i class="fas fa-expand" aria-hidden="true"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-light" id="restoreConsoleBtn" onclick="restoreConsoleModal()" style="display: none;" data-tippy-content="Restore">
-              <i class="fas fa-compress"></i>
+            <button type="button" class="btn btn-sm btn-light" id="restoreConsoleBtn" aria-label="Restore console size" onclick="restoreConsoleModal()" style="display: none;" data-tippy-content="Restore">
+              <i class="fas fa-compress" aria-hidden="true"></i>
             </button>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -2455,16 +2464,16 @@
       // Build action icons conditionally
       var actionIcons = '';
       if (showWorkflowButton) {
-        actionIcons += '<i class="fas fa-file-code action-icon workflow" onclick="showWorkflowModal(' + metric.pid + ')" data-tippy-content="View Workflow JSON"></i>';
+        actionIcons += '<button type="button" class="action-icon workflow" aria-label="View workflow JSON" onclick="showWorkflowModal(' + metric.pid + ')" data-tippy-content="View Workflow JSON"><i class="fas fa-file-code" aria-hidden="true"></i></button>';
       }
       if (hasOutputPath) {
-        actionIcons += '<i class="fas fa-desktop action-icon output" onclick="showOutputModal(' + metric.pid + ')" data-tippy-content="Preview Output HTML"></i>';
+        actionIcons += '<button type="button" class="action-icon output" aria-label="Preview output HTML" onclick="showOutputModal(' + metric.pid + ')" data-tippy-content="Preview Output HTML"><i class="fas fa-desktop" aria-hidden="true"></i></button>';
       }
       if (hasConfigPath && metric.status === "Ended") {
-        actionIcons += '<i class="fas fa-file-text action-icon summary" onclick="showSummaryModal(' + metric.pid + ')" data-tippy-content="View Performance Summary"></i>';
+        actionIcons += '<button type="button" class="action-icon summary" aria-label="View performance summary" onclick="showSummaryModal(' + metric.pid + ')" data-tippy-content="View Performance Summary"><i class="fas fa-file-text" aria-hidden="true"></i></button>';
       }
-      actionIcons += '<i class="fas fa-file-alt action-icon logs" onclick="openLogsModal(' + metric.pid + ')" data-tippy-content="View Logs"></i>';
-      actionIcons += '<i class="fas fa-skull-crossbones action-icon kill" onclick="confirmKill(' + metric.pid + ', \'' + (metric.params || '-dashboard') + '\')" data-tippy-content="Terminate Process"></i>';
+      actionIcons += '<button type="button" class="action-icon logs" aria-label="View logs" onclick="openLogsModal(' + metric.pid + ')" data-tippy-content="View Logs"><i class="fas fa-file-alt" aria-hidden="true"></i></button>';
+      actionIcons += '<button type="button" class="action-icon kill" aria-label="Terminate process" onclick="confirmKill(' + metric.pid + ', \'' + (metric.params || '-dashboard') + '\')" data-tippy-content="Terminate Process"><i class="fas fa-skull-crossbones" aria-hidden="true"></i></button>';
       
       var row = document.createElement("tr");
       row.innerHTML = `
