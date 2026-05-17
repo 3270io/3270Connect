@@ -57,6 +57,9 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Basic Usage: basic-usage.md
+  - AI Chat Mode: ai-chat-mode.md
+  - Chaos Mode: chaos-mode.md
+  - Keyboard and Controls: keyboard-and-controls.md
   - Workflow Actions: workflow.md
   - Dynamic Field Injection: injection-config.md
   - Advanced Features: advanced-features.md

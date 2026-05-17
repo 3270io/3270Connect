@@ -1,6 +1,12 @@
 
 ## Advanced Features
 
+### 3270Web AI Chat Mode
+
+3270Web now includes an **AI Chat** side panel for conversational control of a live 3270 session. The assistant reads the current screen, proposes one action at a time, and waits for approval before it writes fields, presses keys, or starts chaos exploration unless **Auto Mode** is enabled.
+
+See [AI Chat Mode](ai-chat-mode.md) for sign-in, approvals, model selection, and chaos integration details.
+
 ### API Mode
 
 `3270Connect` can also run as an API server using the `-api` and `-api-port` flags:
