@@ -856,27 +856,34 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 				content += "</body></html>"
 			}
 
-			// Open or create the file for appending or overwriting
-			file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				log.Printf("Error opening or creating file: %v", err)
+			if err := writeScreenGrab(filePath, content); err != nil {
 				return err
 			}
-
-			// Write the content to the file
-			if _, err := file.WriteString(content); err != nil {
-				log.Printf("Error writing to file: %v", err)
-				file.Close() // Ensure the file is closed in case of an error
-				return err
-			}
-
-			file.Close() // Ensure the file is properly closed
 			return nil
 		}
 		time.Sleep(retryDelay)
 	}
 
 	return fmt.Errorf("maximum capture retries reached")
+}
+
+func writeScreenGrab(filePath, content string) (err error) {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Printf("Error opening or creating file: %v", err)
+		return err
+	}
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			log.Printf("Error closing file: %v", closeErr)
+			err = closeErr
+		}
+	}()
+	if _, err = file.WriteString(content); err != nil {
+		log.Printf("Error writing to file: %v", err)
+		return err
+	}
+	return nil
 }
 
 // ReadOutputFile reads the contents of the specified HTML file and returns it as a string.
