@@ -28,6 +28,7 @@ import (
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
+	metricsPkg "github.com/3270io/3270Connect/internal/metrics"
 	"github.com/3270io/3270Connect/sampleapps/app1"
 	app2 "github.com/3270io/3270Connect/sampleapps/app2"
 	"github.com/charmbracelet/lipgloss"
@@ -304,6 +305,13 @@ var (
 	lastUsedPort                 int
 	startPort                    int
 	tokenWarningOnce             sync.Once
+	promListen                   string
+	profileMode                  bool
+	profileOut                   string
+	profileHost                  string
+	profilePort                  int
+	profileTLS                   bool
+	profileCollectRaw            bool
 )
 
 var dashboardStarted bool
@@ -599,6 +607,13 @@ func init() {
 	flag.IntVar(&workflowTimeout, "workflowTimeout", 0, "Hard timeout per workflow in seconds (0 to disable)")
 	flag.BoolVar(&showConnectionErrors, "showConnectionErrors", false, "Treat connection failures as errors and report them")
 	flag.IntVar(&dashboardPort, "dashboardPort", 9200, "Port for the dashboard server")
+	flag.StringVar(&promListen, "promListen", "", "Address to expose Prometheus metrics on /metrics (e.g. \":9091\"). Disabled when empty.")
+	flag.BoolVar(&profileMode, "profile", false, "Run as a one-shot host compatibility profiler: connect, probe, write the CompatibilityProfile JSON, and exit.")
+	flag.StringVar(&profileOut, "profileOut", "", "When -profile is set, write the JSON to this path instead of stdout.")
+	flag.StringVar(&profileHost, "profileHost", "", "Host to profile (overrides workflow config Host when -profile is set).")
+	flag.IntVar(&profilePort, "profilePort", 0, "Port to profile (overrides workflow config Port when -profile is set).")
+	flag.BoolVar(&profileTLS, "profileTLS", false, "Mark the profiled host as TLS-protected.")
+	flag.BoolVar(&profileCollectRaw, "profileCollectRaw", false, "Include raw s3270 Query responses in the profile output.")
 
 	// Set up pterm with a funky theme
 	pterm.DefaultSection.Style = pterm.NewStyle(pterm.FgCyan, pterm.Bold)
@@ -979,10 +994,12 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	mutex.Lock()
 	activeWorkflows++
 	mutex.Unlock()
+	metricsPkg.WorkerStarted()
 	defer func() {
 		mutex.Lock()
 		activeWorkflows--
 		mutex.Unlock()
+		metricsPkg.WorkerStopped()
 	}()
 	e.Host = config.Host
 	e.Port = config.Port
@@ -1072,7 +1089,9 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				continue
 			}
 		}
+		stepStart := time.Now()
 		err := executeStep(e, step, tmpFileName, config.Token)
+		metricsPkg.ObserveStep(step.Type, time.Since(stepStart))
 		if err != nil {
 			if err.Error() == "shutdown requested" {
 				break // Graceful stop: do not count as failure
@@ -1131,6 +1150,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 
 	if workflowFailed {
 		atomic.AddInt64(&totalWorkflowsFailed, 1)
+		metricsPkg.IncWorkflow("failure")
 	} else if connectFailed {
 		if showConnectionErrors {
 			msg := fmt.Sprintf("Workflow for scriptPort %s failed to connect; not counted as workflow failure", scriptPortLabel)
@@ -1139,11 +1159,13 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				pterm.Warning.Println(msg)
 			}
 		}
+		metricsPkg.IncWorkflow("connect_failed")
 	} else {
 		if connect3270.Verbose {
 			storeLog(fmt.Sprintf("Workflow for scriptPort %s completed successfully", scriptPortLabel))
 		}
 		atomic.AddInt64(&totalWorkflowsCompleted, 1)
+		metricsPkg.IncWorkflow("success")
 	}
 	return nil
 }
@@ -1475,6 +1497,21 @@ func LaunchEmbeddedIfDoubleClicked() {
 func main() {
 	flag.Parse()
 	metricsConfigFilePath = configFile
+
+	// Wire Prometheus metrics into the emulator. Cheap when -promListen is
+	// unset because the collectors are no-ops without a listener.
+	connect3270.SetMetricsObserver(connect3270.MetricsObserver{
+		ConnectDuration: metricsPkg.ObserveConnectDuration,
+	})
+	if strings.TrimSpace(promListen) != "" {
+		startPrometheusListener(promListen)
+	}
+
+	if profileMode {
+		runProfileMode()
+		return
+	}
+
 	printBanner()
 	// If no command-line parameters are provided, force dashboard mode.
 	if len(os.Args) == 1 {

@@ -85,6 +85,9 @@ type Emulator struct {
 	scriptConn   net.Conn
 	scriptReader *bufio.Reader
 	scriptMu     sync.Mutex
+
+	connectMu       sync.RWMutex
+	connectDuration time.Duration
 }
 
 // Coordinates represents the screen coordinates (row and column)
@@ -521,6 +524,8 @@ func (e *Emulator) Connect() error {
 		return errors.New("Host needs to be filled")
 	}
 
+	start := time.Now()
+
 	// Retry logic for connecting
 	for retries := 0; retries < maxRetries; retries++ {
 		if ShutdownRequested() {
@@ -553,6 +558,11 @@ func (e *Emulator) Connect() error {
 		}
 
 		if e.IsConnected() {
+			d := time.Since(start)
+			e.connectMu.Lock()
+			e.connectDuration = d
+			e.connectMu.Unlock()
+			observeConnectDuration(d)
 			return nil // Successfully connected, exit the retry loop
 		}
 
@@ -563,6 +573,26 @@ func (e *Emulator) Connect() error {
 	}
 
 	return fmt.Errorf("maximum connect retries reached")
+}
+
+// LastConnectDuration returns the elapsed time of the most recent successful
+// Connect call. Zero if no connect has completed.
+func (e *Emulator) LastConnectDuration() time.Duration {
+	e.connectMu.RLock()
+	defer e.connectMu.RUnlock()
+	return e.connectDuration
+}
+
+// Query exposes the x3270/s3270 Query(arg) action publicly. Returns the raw
+// response with each line's "data: " prefix preserved or stripped as the
+// caller expects; an empty arg returns the catch-all Query() response.
+// Empty response and a nil error means the host does not answer the query.
+func (e *Emulator) Query(arg string) (string, error) {
+	arg = strings.TrimSpace(arg)
+	if arg == "" {
+		return e.execCommandOutput("query")
+	}
+	return e.query(arg)
 }
 
 // Disconnect closes the connection with x3270.
@@ -797,6 +827,12 @@ pre {
 	}
 
 	return nil
+}
+
+// AsciiScreen returns the current screen as plain ASCII text without
+// touching the filesystem. Used by the profiler for banner fingerprinting.
+func (e *Emulator) AsciiScreen() (string, error) {
+	return e.execCommandOutput("Ascii()")
 }
 
 // AsciiScreenGrab captures an ASCII screen and saves it to a file.
