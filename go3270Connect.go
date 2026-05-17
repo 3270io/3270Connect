@@ -3508,7 +3508,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		config.Port = portValue
 	}
 	if override := strings.TrimSpace(r.FormValue("overrideOutputFilePath")); override != "" {
-		config.OutputFilePath = override
+		cleaned := filepath.Clean(override)
+		if filepath.IsAbs(cleaned) || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) || cleaned == ".." {
+			http.Error(w, "overrideOutputFilePath must be a relative path within the working directory", http.StatusBadRequest)
+			return
+		}
+		config.OutputFilePath = cleaned
 	}
 	if override := strings.TrimSpace(r.FormValue("overrideRampUpBatchSize")); override != "" {
 		batchValue, convErr := strconv.Atoi(override)
