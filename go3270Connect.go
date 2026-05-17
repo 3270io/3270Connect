@@ -3413,22 +3413,26 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for sample app parameters
-	runApp := r.FormValue("runApp")
+	runApp := strings.TrimSpace(r.FormValue("runApp"))
 	if runApp != "" {
 		storeLog("Sample app mode detected")
-		runAppPort := r.FormValue("runAppPort")
-		// Construct command for sample app mode
+		runAppPort := strings.TrimSpace(r.FormValue("runAppPort"))
+		if _, err := strconv.Atoi(runApp); err != nil {
+			http.Error(w, "Invalid runApp value", http.StatusBadRequest)
+			return
+		}
+		if port, err := strconv.Atoi(runAppPort); err != nil || port < 1 || port > 65535 {
+			http.Error(w, "Invalid runAppPort value", http.StatusBadRequest)
+			return
+		}
 		executablePath := getExecutablePath()
-		command := fmt.Sprintf("%s -runApp %s -runApp-port %s", executablePath, runApp, runAppPort)
+		args := []string{"-runApp", runApp, "-runApp-port", runAppPort}
 		go func() {
-			pterm.Info.Printf("Executing sample app command: %s\n", command)
-			storeLog("Executing sample app command: " + command)
-			// Adjust for OS differences if needed
-			commandParts := strings.Fields(command)
-			executable := commandParts[0]
-			args := commandParts[1:]
+			logLine := fmt.Sprintf("%s %s", executablePath, strings.Join(args, " "))
+			pterm.Info.Printf("Executing sample app command: %s\n", logLine)
+			storeLog("Executing sample app command: " + logLine)
 
-			cmd := exec.Command(executable, args...)
+			cmd := exec.Command(executablePath, args...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
