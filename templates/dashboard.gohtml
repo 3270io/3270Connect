@@ -521,9 +521,16 @@
       line-height: 1;
     }
 
-    .action-icon:hover {
+    .action-icon:hover,
+    .action-icon:focus-visible {
       transform: scale(1.1);
       color: var(--primary);
+    }
+
+    .action-icon:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
+      border-radius: 2px;
     }
 
     .mainframe-footer {
@@ -872,15 +879,23 @@
       transition: all 0.2s ease;
     }
 
-    .action-icon:hover {
+    .action-icon:hover,
+    .action-icon:focus-visible {
       transform: scale(1.2);
+    }
+
+    .action-icon:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 3px;
+      border-radius: 2px;
     }
 
     .action-icon.logs {
       color: var(--primary);
     }
 
-    .action-icon.logs:hover {
+    .action-icon.logs:hover,
+    .action-icon.logs:focus-visible {
       text-shadow: 0 0 8px rgba(0, 255, 128, 0.5);
     }
 
@@ -888,7 +903,8 @@
       color: var(--destructive);
     }
 
-    .action-icon.kill:hover {
+    .action-icon.kill:hover,
+    .action-icon.kill:focus-visible {
       text-shadow: 0 0 8px rgba(255, 82, 82, 0.5);
     }
 
@@ -896,7 +912,8 @@
       color: #5bc0de;
     }
 
-    .action-icon.workflow:hover {
+    .action-icon.workflow:hover,
+    .action-icon.workflow:focus-visible {
       transform: scale(1.2);
       text-shadow: 0 0 8px rgba(91, 192, 222, 0.6);
     }
@@ -905,7 +922,8 @@
       color: #f0ad4e;
     }
 
-    .action-icon.output:hover {
+    .action-icon.output:hover,
+    .action-icon.output:focus-visible {
       transform: scale(1.2);
       text-shadow: 0 0 8px rgba(240, 173, 78, 0.6);
     }
@@ -914,7 +932,8 @@
       color: #17a2b8;
     }
 
-    .action-icon.summary:hover {
+    .action-icon.summary:hover,
+    .action-icon.summary:focus-visible {
       transform: scale(1.2);
       text-shadow: 0 0 8px rgba(23, 162, 184, 0.6);
     }
