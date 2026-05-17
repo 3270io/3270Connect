@@ -3514,7 +3514,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tempFilePath := filepath.Join(os.TempDir(), handler.Filename)
+	safeConfigName := filepath.Base(handler.Filename)
+	if safeConfigName == "" || safeConfigName == "." || safeConfigName == string(filepath.Separator) {
+		http.Error(w, "Invalid configuration filename", http.StatusBadRequest)
+		return
+	}
+	tempFilePath := filepath.Join(os.TempDir(), safeConfigName)
 	if err := os.WriteFile(tempFilePath, updatedJSON, 0644); err != nil {
 		http.Error(w, "Failed to save file", http.StatusInternalServerError)
 		return
@@ -3525,7 +3530,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	injectionFile, injectionHandler, err := r.FormFile("injectionConfig")
 	if err == nil {
 		defer injectionFile.Close()
-		injectionConfigPath = filepath.Join(os.TempDir(), injectionHandler.Filename)
+		safeInjectionName := filepath.Base(injectionHandler.Filename)
+		if safeInjectionName == "" || safeInjectionName == "." || safeInjectionName == string(filepath.Separator) {
+			http.Error(w, "Invalid injection configuration filename", http.StatusBadRequest)
+			return
+		}
+		injectionConfigPath = filepath.Join(os.TempDir(), safeInjectionName)
 		injectionTempFile, err := os.Create(injectionConfigPath)
 		if err != nil {
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
