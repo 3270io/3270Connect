@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -1271,7 +1272,11 @@ func runAPIWorkflow() {
 		defer tmpFile.Close()
 		tmpFileName := tmpFile.Name()
 		defer os.Remove(tmpFileName)
-		scriptPort := getNextAvailablePort()
+		scriptPort, err := getNextAvailablePort()
+		if err != nil {
+			sendErrorResponse(c, http.StatusServiceUnavailable, "No script port available", err)
+			return
+		}
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
 		err = e.InitializeOutput(tmpFileName, true)
 		if err != nil {
@@ -1717,7 +1722,16 @@ func (w *workflowWorker) start() {
 			w.releaseInjectionLock(job.injectionIndex)
 			continue
 		}
-		scriptPort := getNextAvailablePort()
+		scriptPort, err := getNextAvailablePort()
+		if err != nil {
+			storeLog(fmt.Sprintf("Worker %d skipping workflow: %v", w.id, err))
+			if connect3270.Verbose {
+				pterm.Error.Printf("Worker %d skipping workflow: %v\n", w.id, err)
+			}
+			addError(fmt.Errorf("worker %d: %w", w.id, err))
+			w.releaseInjectionLock(job.injectionIndex)
+			continue
+		}
 		w.emulator.ScriptPort = strconv.Itoa(scriptPort)
 		if connect3270.Verbose {
 			storeLog(fmt.Sprintf("Worker %d using script port %d", w.id, scriptPort))
@@ -2460,29 +2474,39 @@ func clear() {
 	print("\033[H\033[2J")
 }
 
-func getNextAvailablePort() int {
-	mutex.Lock()
-	defer mutex.Unlock()
-	const maxPort = 65000
-	checked := 0
+var errPortRangeExhausted = errors.New("no available script port in configured range")
+
+func getNextAvailablePort() (int, error) {
+	const (
+		maxPort      = 65000
+		waitInterval = 100 * time.Millisecond
+		maxWait      = 30 * time.Second
+	)
+	deadline := time.Now().Add(maxWait)
 	for {
-		lastUsedPort++
-		if lastUsedPort > maxPort {
-			lastUsedPort = startPort
+		mutex.Lock()
+		checked := 0
+		rangeSize := maxPort - startPort + 1
+		for checked < rangeSize {
+			lastUsedPort++
+			if lastUsedPort > maxPort {
+				lastUsedPort = startPort
+			}
+			if isPortAvailable(lastUsedPort) {
+				port := lastUsedPort
+				mutex.Unlock()
+				return port, nil
+			}
+			checked++
+			if connect3270.Verbose {
+				pterm.Warning.Printf("Port %d in use, trying next\n", lastUsedPort)
+			}
 		}
-		if isPortAvailable(lastUsedPort) {
-			return lastUsedPort
+		mutex.Unlock()
+		if time.Now().After(deadline) {
+			return 0, errPortRangeExhausted
 		}
-		checked++
-		if connect3270.Verbose {
-			pterm.Warning.Printf("Port %d is taken - port party’s full!\n", lastUsedPort)
-		}
-		if checked >= (maxPort - startPort + 1) {
-			mutex.Unlock()
-			time.Sleep(100 * time.Millisecond)
-			mutex.Lock()
-			checked = 0
-		}
+		time.Sleep(waitInterval)
 	}
 }
 
