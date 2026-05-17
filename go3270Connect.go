@@ -629,13 +629,13 @@ func init() {
 	}
 
 	if err := os.MkdirAll("logs", 0755); err != nil {
-		pterm.Error.Println("Failed to create logs dir - universe says no:", err)
+		pterm.Error.Println("Failed to create logs directory:", err)
 	}
 
 	var err error
 	dashboardTemplate, err = template.ParseFS(dashboardTemplateFS, "templates/dashboard.gohtml")
 	if err != nil {
-		pterm.Error.Println("Dashboard template parsing went kaput:", err)
+		pterm.Error.Println("Failed to parse dashboard template:", err)
 	} else {
 		//pterm.Success.Println("Dashboard template loaded - ready to rock!")
 	}
@@ -666,7 +666,7 @@ func storeLog(message string) {
 
 	encoder := json.NewEncoder(file)
 	if err := encoder.Encode(logEntry); err != nil {
-		pterm.Error.Println("Log encoding broke - computers hate me:", err)
+		pterm.Error.Println("Failed to encode logs:", err)
 	}
 }
 
@@ -1025,7 +1025,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 		}
 	}()
 	if err := e.InitializeOutput(tmpFileName, runAPI); err != nil {
-		return handleError(err, fmt.Sprintf("Output init failed - setup's cursed: %v", err))
+		return handleError(err, fmt.Sprintf("Failed to initialize output: %v", err))
 	}
 	workflowFailed := false
 	connectFailed := false
@@ -1034,7 +1034,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	if config.InputFilePath != "" {
 		steps, err = loadInputFile(config.InputFilePath)
 		if err != nil {
-			return handleError(err, fmt.Sprintf("Input file load crashed - file has gone rogue: %v\n", err))
+			return handleError(err, fmt.Sprintf("Failed to load input file: %v\n", err))
 		}
 	} else {
 		steps = config.Steps
@@ -1265,7 +1265,7 @@ func runAPIWorkflow() {
 		}
 		tmpFile, err := os.CreateTemp("", "workflowOutput_")
 		if err != nil {
-			pterm.Error.Println("Temp file creation failed - disk’s napping:", err)
+			pterm.Error.Println("Failed to create temporary file:", err)
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to create temp file", err)
 			return
 		}
@@ -1280,7 +1280,7 @@ func runAPIWorkflow() {
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
 		err = e.InitializeOutput(tmpFileName, true)
 		if err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Output init failed - setup’s cursed", err)
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output", err)
 			return
 		}
 		connected := false
@@ -2515,7 +2515,7 @@ func isPortAvailable(port int) bool {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		if connect3270.Verbose {
-			pterm.Info.Printf("Port %d in use - next contestant please!\n", port)
+			pterm.Info.Printf("Port %d in use\n", port)
 		}
 		return false
 	}
