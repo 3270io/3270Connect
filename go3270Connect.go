@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -628,13 +629,13 @@ func init() {
 	}
 
 	if err := os.MkdirAll("logs", 0755); err != nil {
-		pterm.Error.Println("Failed to create logs dir - universe says no:", err)
+		pterm.Error.Println("Failed to create logs directory:", err)
 	}
 
 	var err error
 	dashboardTemplate, err = template.ParseFS(dashboardTemplateFS, "templates/dashboard.gohtml")
 	if err != nil {
-		pterm.Error.Println("Dashboard template parsing went kaput:", err)
+		pterm.Error.Println("Failed to parse dashboard template:", err)
 	} else {
 		//pterm.Success.Println("Dashboard template loaded - ready to rock!")
 	}
@@ -665,7 +666,7 @@ func storeLog(message string) {
 
 	encoder := json.NewEncoder(file)
 	if err := encoder.Encode(logEntry); err != nil {
-		pterm.Error.Println("Log encoding broke - computers hate me:", err)
+		pterm.Error.Println("Failed to encode logs:", err)
 	}
 }
 
@@ -1024,7 +1025,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 		}
 	}()
 	if err := e.InitializeOutput(tmpFileName, runAPI); err != nil {
-		return handleError(err, fmt.Sprintf("Output init failed - setup's cursed: %v", err))
+		return handleError(err, fmt.Sprintf("Failed to initialize output: %v", err))
 	}
 	workflowFailed := false
 	connectFailed := false
@@ -1033,7 +1034,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	if config.InputFilePath != "" {
 		steps, err = loadInputFile(config.InputFilePath)
 		if err != nil {
-			return handleError(err, fmt.Sprintf("Input file load crashed - file has gone rogue: %v\n", err))
+			return handleError(err, fmt.Sprintf("Failed to load input file: %v\n", err))
 		}
 	} else {
 		steps = config.Steps
@@ -1264,18 +1265,22 @@ func runAPIWorkflow() {
 		}
 		tmpFile, err := os.CreateTemp("", "workflowOutput_")
 		if err != nil {
-			pterm.Error.Println("Temp file creation failed - disk’s napping:", err)
+			pterm.Error.Println("Failed to create temporary file:", err)
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to create temp file", err)
 			return
 		}
 		defer tmpFile.Close()
 		tmpFileName := tmpFile.Name()
 		defer os.Remove(tmpFileName)
-		scriptPort := getNextAvailablePort()
+		scriptPort, err := getNextAvailablePort()
+		if err != nil {
+			sendErrorResponse(c, http.StatusServiceUnavailable, "No script port available", err)
+			return
+		}
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
 		err = e.InitializeOutput(tmpFileName, true)
 		if err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Output init failed - setup’s cursed", err)
+			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output", err)
 			return
 		}
 		connected := false
@@ -1717,7 +1722,16 @@ func (w *workflowWorker) start() {
 			w.releaseInjectionLock(job.injectionIndex)
 			continue
 		}
-		scriptPort := getNextAvailablePort()
+		scriptPort, err := getNextAvailablePort()
+		if err != nil {
+			storeLog(fmt.Sprintf("Worker %d skipping workflow: %v", w.id, err))
+			if connect3270.Verbose {
+				pterm.Error.Printf("Worker %d skipping workflow: %v\n", w.id, err)
+			}
+			addError(fmt.Errorf("worker %d: %w", w.id, err))
+			w.releaseInjectionLock(job.injectionIndex)
+			continue
+		}
 		w.emulator.ScriptPort = strconv.Itoa(scriptPort)
 		if connect3270.Verbose {
 			storeLog(fmt.Sprintf("Worker %d using script port %d", w.id, scriptPort))
@@ -2460,29 +2474,39 @@ func clear() {
 	print("\033[H\033[2J")
 }
 
-func getNextAvailablePort() int {
-	mutex.Lock()
-	defer mutex.Unlock()
-	const maxPort = 65000
-	checked := 0
+var errPortRangeExhausted = errors.New("no available script port in configured range")
+
+func getNextAvailablePort() (int, error) {
+	const (
+		maxPort      = 65000
+		waitInterval = 100 * time.Millisecond
+		maxWait      = 30 * time.Second
+	)
+	deadline := time.Now().Add(maxWait)
 	for {
-		lastUsedPort++
-		if lastUsedPort > maxPort {
-			lastUsedPort = startPort
+		mutex.Lock()
+		checked := 0
+		rangeSize := maxPort - startPort + 1
+		for checked < rangeSize {
+			lastUsedPort++
+			if lastUsedPort > maxPort {
+				lastUsedPort = startPort
+			}
+			if isPortAvailable(lastUsedPort) {
+				port := lastUsedPort
+				mutex.Unlock()
+				return port, nil
+			}
+			checked++
+			if connect3270.Verbose {
+				pterm.Warning.Printf("Port %d in use, trying next\n", lastUsedPort)
+			}
 		}
-		if isPortAvailable(lastUsedPort) {
-			return lastUsedPort
+		mutex.Unlock()
+		if time.Now().After(deadline) {
+			return 0, errPortRangeExhausted
 		}
-		checked++
-		if connect3270.Verbose {
-			pterm.Warning.Printf("Port %d is taken - port party’s full!\n", lastUsedPort)
-		}
-		if checked >= (maxPort - startPort + 1) {
-			mutex.Unlock()
-			time.Sleep(100 * time.Millisecond)
-			mutex.Lock()
-			checked = 0
-		}
+		time.Sleep(waitInterval)
 	}
 }
 
@@ -2491,7 +2515,7 @@ func isPortAvailable(port int) bool {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		if connect3270.Verbose {
-			pterm.Info.Printf("Port %d in use - next contestant please!\n", port)
+			pterm.Info.Printf("Port %d in use\n", port)
 		}
 		return false
 	}
@@ -3413,22 +3437,26 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for sample app parameters
-	runApp := r.FormValue("runApp")
+	runApp := strings.TrimSpace(r.FormValue("runApp"))
 	if runApp != "" {
 		storeLog("Sample app mode detected")
-		runAppPort := r.FormValue("runAppPort")
-		// Construct command for sample app mode
+		runAppPort := strings.TrimSpace(r.FormValue("runAppPort"))
+		if _, err := strconv.Atoi(runApp); err != nil {
+			http.Error(w, "Invalid runApp value", http.StatusBadRequest)
+			return
+		}
+		if port, err := strconv.Atoi(runAppPort); err != nil || port < 1 || port > 65535 {
+			http.Error(w, "Invalid runAppPort value", http.StatusBadRequest)
+			return
+		}
 		executablePath := getExecutablePath()
-		command := fmt.Sprintf("%s -runApp %s -runApp-port %s", executablePath, runApp, runAppPort)
+		args := []string{"-runApp", runApp, "-runApp-port", runAppPort}
 		go func() {
-			pterm.Info.Printf("Executing sample app command: %s\n", command)
-			storeLog("Executing sample app command: " + command)
-			// Adjust for OS differences if needed
-			commandParts := strings.Fields(command)
-			executable := commandParts[0]
-			args := commandParts[1:]
+			logLine := fmt.Sprintf("%s %s", executablePath, strings.Join(args, " "))
+			pterm.Info.Printf("Executing sample app command: %s\n", logLine)
+			storeLog("Executing sample app command: " + logLine)
 
-			cmd := exec.Command(executable, args...)
+			cmd := exec.Command(executablePath, args...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
@@ -3480,7 +3508,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		config.Port = portValue
 	}
 	if override := strings.TrimSpace(r.FormValue("overrideOutputFilePath")); override != "" {
-		config.OutputFilePath = override
+		cleaned := filepath.Clean(override)
+		if filepath.IsAbs(cleaned) || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) || cleaned == ".." {
+			http.Error(w, "overrideOutputFilePath must be a relative path within the working directory", http.StatusBadRequest)
+			return
+		}
+		config.OutputFilePath = cleaned
 	}
 	if override := strings.TrimSpace(r.FormValue("overrideRampUpBatchSize")); override != "" {
 		batchValue, convErr := strconv.Atoi(override)
@@ -3510,7 +3543,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tempFilePath := filepath.Join(os.TempDir(), handler.Filename)
+	safeConfigName := filepath.Base(handler.Filename)
+	if safeConfigName == "" || safeConfigName == "." || safeConfigName == string(filepath.Separator) {
+		http.Error(w, "Invalid configuration filename", http.StatusBadRequest)
+		return
+	}
+	tempFilePath := filepath.Join(os.TempDir(), safeConfigName)
 	if err := os.WriteFile(tempFilePath, updatedJSON, 0644); err != nil {
 		http.Error(w, "Failed to save file", http.StatusInternalServerError)
 		return
@@ -3521,7 +3559,12 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	injectionFile, injectionHandler, err := r.FormFile("injectionConfig")
 	if err == nil {
 		defer injectionFile.Close()
-		injectionConfigPath = filepath.Join(os.TempDir(), injectionHandler.Filename)
+		safeInjectionName := filepath.Base(injectionHandler.Filename)
+		if safeInjectionName == "" || safeInjectionName == "." || safeInjectionName == string(filepath.Separator) {
+			http.Error(w, "Invalid injection configuration filename", http.StatusBadRequest)
+			return
+		}
+		injectionConfigPath = filepath.Join(os.TempDir(), safeInjectionName)
 		injectionTempFile, err := os.Create(injectionConfigPath)
 		if err != nil {
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
