@@ -22,6 +22,12 @@ To run a workflow, use the following command:
 - `-verboseFailures`: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.
 - `-verboseScreenCaptureFailures`: When enabled alongside `-verboseFailures`, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format `failure_[scriptPort]_step[stepIndex]_[timestamp].txt` and saved in the current directory. The capture file path is included in the failure log message.
 - `-bar`: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: `-enableProgressBar`.)
+- `-promListen <addr>`: Expose Prometheus metrics on `/metrics` at the given address (e.g. `:9091`). Disabled when empty. See [Metrics & Monitoring](metrics.md) for the collector list and example queries.
+- `-profile`: Run as a one-shot host compatibility profiler instead of executing the workflow. Connects, probes the host, writes a `CompatibilityProfile` JSON document, and exits. See [Host Compatibility Profiler](host-profiler.md).
+- `-profileHost <host>` / `-profilePort <port>`: Override the profile target. If omitted, the profiler reads `Host`/`Port` from `-config`.
+- `-profileTLS`: Mark the profiled host as TLS-protected in the output.
+- `-profileOut <path>`: Write the profile JSON to this path instead of stdout.
+- `-profileCollectRaw`: Include raw s3270 `Query` responses in the profile output.
 
 ### Injecting a runtime RSA token
 

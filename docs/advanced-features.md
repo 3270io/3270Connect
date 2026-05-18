@@ -108,3 +108,20 @@ docker run --rm -p 8080:8080 3270io/3270connect-windows:latest -api -api-port 80
 ### 3270Connect API Usage
 
 ![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
+
+### Metrics & Monitoring
+
+3270Connect can expose a Prometheus `/metrics` endpoint with histograms
+for connect and step timing, a counter partitioned by workflow outcome,
+and a live gauge of active workers. Enable it with `-promListen :9091`
+and scrape with the sample config in
+[Metrics & Monitoring](metrics.md).
+
+### Host Compatibility Profiler
+
+Run `3270Connect -profile -profileHost <host> -profilePort <port>` for a
+one-shot probe that writes a `CompatibilityProfile` JSON document. The
+document shares its schema with 3270Web's `POST /profile` endpoint, so
+the same JSON drops into 3270Web's chaos mind-map compare workflow for
+cross-environment diffing. See [Host Compatibility Profiler](host-profiler.md)
+and [Compatibility Profile Schema](compatibility-profile-schema.md).

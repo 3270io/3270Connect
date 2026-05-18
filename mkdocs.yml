@@ -63,6 +63,9 @@ nav:
   - Workflow Actions: workflow.md
   - Dynamic Field Injection: injection-config.md
   - Advanced Features: advanced-features.md
+  - Metrics & Monitoring: metrics.md
+  - Host Compatibility Profiler: host-profiler.md
+  - Compatibility Profile Schema: compatibility-profile-schema.md
   - Reference:
       - Build Guide: BUILD.md
       - Makefile Quick Reference: MAKEFILE_QUICKREF.md
@@ -106,7 +109,7 @@ extra_css:
   - stylesheets/extra.css
 
 extra:
-  version: 1.6
+  version: 1.8.6
   CNAME: 3270.io
   generator: false
   social:
