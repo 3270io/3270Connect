@@ -40,6 +40,8 @@ Here are the key features of 3270Connect:
 - API mode for advanced automation.
 - AI Chat mode for screen reading, field entry, key presses, and chaos exploration with explicit approval or Auto Mode.
 - Runtime RSA token injection using the `-token` flag or API `Token` property, keeping one-time passwords out of workflow files.
+- Prometheus `/metrics` endpoint (`-promListen`) exposing connect/step timing histograms, workflow outcomes, and live worker count for fleet-scale monitoring.
+- One-shot host compatibility profiler (`-profile`) that writes a `CompatibilityProfile` JSON document — same schema as 3270Web — for cross-environment comparison and chaos mind-map diffs.
 - Running a 3270 sample application to assist with testing workflow features.
 
 ## Connection timeout and retries
@@ -56,10 +58,49 @@ Here are the key features of 3270Connect:
 - The `/testConnection` API endpoint that probes host reachability uses a 5-second TCP dial timeout when opening the socket to the TN3270 host.  
   Source: `go3270Connect.go`.
 
+## Metrics
+
+Enable the Prometheus listener with `-promListen <addr>`:
+
+```bash
+3270Connect -config workflow.json -concurrent 10 -runtime 300 -promListen :9091
+```
+
+Collectors:
+
+- `tn3270_connect_seconds` — histogram of TN3270 session establishment time.
+- `tn3270_step_seconds{action}` — histogram of per-step wall time.
+- `tn3270_workflow_total{result}` — `success` / `failure` / `connect_failed` counter.
+- `tn3270_concurrent_workers` — live worker gauge.
+
+See the [Metrics & Monitoring guide](https://3270.io/metrics/) for example queries and a Prometheus scrape config.
+
+## Host Compatibility Profiler
+
+Run a one-shot probe against a host and capture its negotiated terminal model, protocol options, capabilities, and timing:
+
+```bash
+3270Connect -profile -profileHost mvs01.example.com -profilePort 992 -profileTLS \
+            -profileOut mvs01.profile.json
+```
+
+The resulting `CompatibilityProfile` JSON document uses the same schema as 3270Web's `POST /profile` endpoint, so profiles produced by either tool can be diffed against each other (e.g. IBM z/OS vs Rocket Enterprise Server). See the [profiler guide](https://3270.io/host-profiler/) and the [schema reference](https://3270.io/compatibility-profile-schema/).
+
+## Security hardening
+
+Recent releases tightened input handling across the dashboard and API surfaces. User-facing guarantees:
+
+- Sample-app launch arguments are validated against an allow-list — no shell or argument injection via crafted process names.
+- Uploaded workflow filenames in the dashboard's `start-process` handler are sanitised; path separators and traversal sequences are rejected.
+- The dashboard rejects absolute or parent-escaping values for `overrideOutputFilePath`; outputs always land under the configured working directory.
+- `getNextAvailablePort` is bounded and propagates exhaustion errors instead of looping indefinitely under heavy concurrency.
+
 ## Documentation
 
 - [Documentation](https://3270.io)
 - [AI Chat Mode](https://3270.io/ai-chat-mode/)
+- [Metrics & Monitoring](https://3270.io/metrics/)
+- [Host Compatibility Profiler](https://3270.io/host-profiler/)
 
 ## License
 

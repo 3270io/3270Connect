@@ -38,6 +38,8 @@ Here are the key features of 3270Connect:
 - Verbose mode for detailed output, plus failure-only logging with `-verboseFailures` for high-concurrency test runs.
 - API mode for advanced automation.
 - AI Chat mode in 3270Web for screen reading, field entry, key presses, and chaos exploration with per-action approval or Auto Mode.
+- Prometheus metrics endpoint (`-promListen`) exposing connect/step timing, workflow outcomes, and live concurrency for fleet-scale monitoring.
+- One-shot host compatibility profiler (`-profile`) that produces a `CompatibilityProfile` JSON document shareable with 3270Web for cross-environment comparison.
 - Running a 3270 sample application to assist with testing workflow features.
 
 ## Getting Started
@@ -55,6 +57,9 @@ Once you've mastered the basics, you can dive into more advanced features:
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
 - [AI Chat Mode](ai-chat-mode.md): Use 3270Web to drive a live 3270 session through conversation, approve tool calls, and run chaos exploration.
 - [Chaos Mode](chaos-mode.md): Learn how toolbar controls and AI Chat share the same exploration state and export workflows.
+- [Metrics & Monitoring](metrics.md): Scrape `tn3270_connect_seconds`, `tn3270_step_seconds`, workflow outcomes, and live worker counts from `-promListen`.
+- [Host Compatibility Profiler](host-profiler.md): Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that compares cleanly against 3270Web output.
+- [Compatibility Profile Schema](compatibility-profile-schema.md): Field-by-field reference for the shared `CompatibilityProfile` document (v1.0.0).
 
 ## Conclusion
 
