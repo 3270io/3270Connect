@@ -12,13 +12,13 @@
         <meta name="author" content="3270.io">
       
       
-        <link rel="canonical" href="https://3270.io/installation/">
+        <link rel="canonical" href="https://3270.io/metrics/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../advanced-features/">
       
       
-        <link rel="next" href="../basic-usage/">
+        <link rel="next" href="../host-profiler/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Installation - 3270Connect</title>
+        <title>Metrics & Monitoring - 3270Connect</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation" class="md-skip">
+        <a href="#metrics-monitoring" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Installation
+              Metrics & Monitoring
             
           </span>
         </div>
@@ -249,11 +249,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
         
   
   
@@ -403,9 +401,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../metrics/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -572,37 +572,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Installation
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
         
   
   
@@ -618,104 +591,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#linux" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linux
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Linux">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#direct-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Direct Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Windows
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Windows">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#direct-installation_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Direct Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-installation_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -913,10 +788,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../metrics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics & Monitoring
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -932,6 +834,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-the-metrics-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enabling the /metrics endpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#collectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collectors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-scrape-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample scrape config
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#useful-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Useful queries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pairing-with-the-host-compatibility-profiler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pairing with the host compatibility profiler
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1151,7 +1128,7 @@
 
 
   
-    <a href="https://github.com/3270io/3270Connect/edit/main/docs/installation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/3270io/3270Connect/edit/main/docs/metrics.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1160,101 +1137,94 @@
     
       
     
-    <a href="https://github.com/3270io/3270Connect/raw/main/docs/installation.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/3270io/3270Connect/raw/main/docs/metrics.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<div><h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">¶</a></h1>
-<p>To use the 3270Connect command-line utility, you need to install it on your system. Follow the steps below based on your platform:</p>
-<h2 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h2>
-<h3 id="direct-installation">Direct Installation<a class="headerlink" href="#direct-installation" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
-<span class="nv">LATEST_URL</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.assets[] | select(.name == "3270Connect") | .browser_download_url'</span><span class="k">)</span>
+<div><h1 id="metrics-monitoring">Metrics &amp; Monitoring<a class="headerlink" href="#metrics-monitoring" title="Permanent link">¶</a></h1>
+<p>3270Connect exposes Prometheus metrics for fleet-scale monitoring of
+workflow performance, concurrency, and outcome distribution. The metrics
+endpoint is opt-in and runs on a dedicated HTTP listener so it does not
+collide with the dashboard or API ports.</p>
+<h2 id="enabling-the-metrics-endpoint">Enabling the <code>/metrics</code> endpoint<a class="headerlink" href="#enabling-the-metrics-endpoint" title="Permanent link">¶</a></h2>
+<p>Use the <code>-promListen</code> flag with any <code>host:port</code> address. Disabled when
+empty (the default).</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">10</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">300</span><span class="w"> </span>-promListen<span class="w"> </span>:9091
+</code></pre></div>
+<p>Once running, the metrics endpoint is available at:</p>
+<div class="highlight"><pre><span></span><code>http://localhost:9091/metrics
+</code></pre></div>
+<p>The listener uses a 5-second read-header timeout and runs in its own
+goroutine — failures are logged but never abort the workflow runner.</p>
+<h2 id="collectors">Collectors<a class="headerlink" href="#collectors" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Type</th>
+<th>Labels</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tn3270_connect_seconds</code></td>
+<td>Histogram</td>
+<td>—</td>
+<td>Wall-clock time to establish a TN3270 session (exponential buckets starting at 50 ms).</td>
+</tr>
+<tr>
+<td><code>tn3270_step_seconds</code></td>
+<td>Histogram</td>
+<td><code>action</code></td>
+<td>Wall-clock time per workflow step, partitioned by step action (<code>Connect</code>, <code>FillString</code>, <code>CheckValue</code>, <code>PressEnter</code>, etc.).</td>
+</tr>
+<tr>
+<td><code>tn3270_workflow_total</code></td>
+<td>Counter</td>
+<td><code>result</code></td>
+<td>Workflows that have terminated, partitioned by outcome: <code>success</code>, <code>failure</code>, <code>connect_failed</code>.</td>
+</tr>
+<tr>
+<td><code>tn3270_concurrent_workers</code></td>
+<td>Gauge</td>
+<td>—</td>
+<td>Active workflow worker count. Useful for confirming that <code>-concurrent</code> ramps cleanly and never overshoots.</td>
+</tr>
+</tbody>
+</table>
+<p>Source: <a href="https://github.com/3270io/3270Connect/blob/main/internal/metrics/metrics.go"><code>internal/metrics/metrics.go</code></a>.</p>
+<h2 id="sample-scrape-config">Sample scrape config<a class="headerlink" href="#sample-scrape-config" title="Permanent link">¶</a></h2>
+<p>Add a scrape job to <code>prometheus.yml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">'3270connect'</span>
+<span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15s</span>
+<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">'runner-01:9091'</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">'runner-02:9091'</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<h2 id="useful-queries">Useful queries<a class="headerlink" href="#useful-queries" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># p95 connect time over the last 5 minutes</span>
+<span class="kr">histogram_quantile</span><span class="o">(</span><span class="mf">0.95</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">tn3270_connect_seconds_bucket</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">le</span><span class="o">))</span>
 
-<span class="c1"># Download the latest release</span>
-curl<span class="w"> </span>-LO<span class="w"> </span><span class="nv">$LATEST_URL</span>
+<span class="c1"># Failure rate by outcome</span>
+<span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">tn3270_workflow_total</span><span class="p">[</span><span class="s">1m</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">result</span><span class="o">)</span>
 
-<span class="c1"># Make it executable</span>
-chmod<span class="w"> </span>+x<span class="w"> </span>3270Connect
+<span class="c1"># Slowest step actions (p95)</span>
+<span class="kr">histogram_quantile</span><span class="o">(</span><span class="mf">0.95</span><span class="p">,</span>
+<span class="w">  </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">tn3270_step_seconds_bucket</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">le</span><span class="p">,</span><span class="w"> </span><span class="nv">action</span><span class="o">)</span>
+<span class="o">)</span>
 
-<span class="c1"># Move to a directory in PATH</span>
-sudo<span class="w"> </span>mv<span class="w"> </span>3270Connect<span class="w"> </span>/usr/local/bin/3270Connect
+<span class="c1"># Live worker count vs. configured concurrency</span>
+<span class="nv">tn3270_concurrent_workers</span>
 </code></pre></div>
-<h3 id="docker-installation">Docker Installation<a class="headerlink" href="#docker-installation" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Pull the Docker image</span>
-docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-linux:latest
-
-<span class="c1"># Run the Docker container</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-linux:latest
-</code></pre></div>
-<h4 id="additional-docker-run-examples-linux">Additional Docker Run Examples (Linux)<a class="headerlink" href="#additional-docker-run-examples-linux" title="Permanent link">¶</a></h4>
-<p>Run the container with a configuration file and expose the port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
-</code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
-</code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
-</code></pre></div>
-<p>Log only failing steps (concise failure diagnostics without full verbose noise):</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verboseFailures
-</code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
-</code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp
-</code></pre></div>
-<p>Run a specific test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
-</code></pre></div>
-<h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">¶</a></h2>
-<h3 id="direct-installation_1">Direct Installation<a class="headerlink" href="#direct-installation_1" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
-<span class="nv">$latest_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Invoke-RestMethod<span class="w"> </span>-Uri<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>assets<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Where-Object<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">$_</span>.name<span class="w"> </span>-eq<span class="w"> </span><span class="s2">"3270Connect.exe"</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>browser_download_url
-
-<span class="c1"># Download the latest release</span>
-Invoke-WebRequest<span class="w"> </span>-Uri<span class="w"> </span><span class="nv">$latest_url</span><span class="w"> </span>-OutFile<span class="w"> </span>3270Connect.exe
-
-<span class="c1"># Optionally, move to a directory in PATH (requires admin privileges)</span>
-<span class="c1"># Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"</span>
-</code></pre></div>
-<h3 id="docker-installation_1">Docker Installation<a class="headerlink" href="#docker-installation_1" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Pull the Docker image</span>
-docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-windows:latest
-
-<span class="c1"># Run the Docker container</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-windows:latest
-</code></pre></div>
-<h4 id="additional-docker-run-examples-windows">Additional Docker Run Examples (Windows)<a class="headerlink" href="#additional-docker-run-examples-windows" title="Permanent link">¶</a></h4>
-<p>Run the container with a configuration file and expose the port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
-</code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
-</code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
-</code></pre></div>
-<p>Log only failing steps (concise failure diagnostics without full verbose noise):</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verboseFailures
-</code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
-</code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp
-</code></pre></div>
-<p>Run a specific test 3270 sample application and listening port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="o">[</span>portNumber<span class="o">]</span>
-</code></pre></div></div>
+<h2 id="pairing-with-the-host-compatibility-profiler">Pairing with the host compatibility profiler<a class="headerlink" href="#pairing-with-the-host-compatibility-profiler" title="Permanent link">¶</a></h2>
+<p>For one-shot host fingerprinting (rather than continuous timing), use
+the <a href="../host-profiler/">Host Compatibility Profiler</a> — the resulting
+<code>CompatibilityProfile</code> JSON is comparable to the one produced by
+3270Web and can be diffed across environments.</p></div>
 
 
 
@@ -1292,7 +1262,7 @@ docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+          <a href="../advanced-features/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Advanced Features">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1302,20 +1272,20 @@ docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </
                 Previous
               </span>
               <div class="md-ellipsis">
-                Home
+                Advanced Features
               </div>
             </div>
           </a>
         
         
           
-          <a href="../basic-usage/" class="md-footer__link md-footer__link--next" aria-label="Next: Basic Usage">
+          <a href="../host-profiler/" class="md-footer__link md-footer__link--next" aria-label="Next: Host Compatibility Profiler">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Basic Usage
+                Host Compatibility Profiler
               </div>
             </div>
             <div class="md-footer__button md-icon">

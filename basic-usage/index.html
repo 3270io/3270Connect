@@ -404,6 +404,63 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../metrics/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Metrics & Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../host-profiler/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Host Compatibility Profiler
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../compatibility-profile-schema/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Compatibility Profile Schema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -1074,6 +1131,87 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics & Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../host-profiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Host Compatibility Profiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility-profile-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility Profile Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -1090,10 +1228,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
         
           
-          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
             
   
   
@@ -1111,8 +1249,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_10">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1264,6 +1402,12 @@
 <li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.</li>
 <li><code>-verboseScreenCaptureFailures</code>: When enabled alongside <code>-verboseFailures</code>, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format <code>failure_[scriptPort]_step[stepIndex]_[timestamp].txt</code> and saved in the current directory. The capture file path is included in the failure log message.</li>
 <li><code>-bar</code>: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: <code>-enableProgressBar</code>.)</li>
+<li><code>-promListen &lt;addr&gt;</code>: Expose Prometheus metrics on <code>/metrics</code> at the given address (e.g. <code>:9091</code>). Disabled when empty. See <a href="../metrics/">Metrics &amp; Monitoring</a> for the collector list and example queries.</li>
+<li><code>-profile</code>: Run as a one-shot host compatibility profiler instead of executing the workflow. Connects, probes the host, writes a <code>CompatibilityProfile</code> JSON document, and exits. See <a href="../host-profiler/">Host Compatibility Profiler</a>.</li>
+<li><code>-profileHost &lt;host&gt;</code> / <code>-profilePort &lt;port&gt;</code>: Override the profile target. If omitted, the profiler reads <code>Host</code>/<code>Port</code> from <code>-config</code>.</li>
+<li><code>-profileTLS</code>: Mark the profiled host as TLS-protected in the output.</li>
+<li><code>-profileOut &lt;path&gt;</code>: Write the profile JSON to this path instead of stdout.</li>
+<li><code>-profileCollectRaw</code>: Include raw s3270 <code>Query</code> responses in the profile output.</li>
 </ul>
 <h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">¶</a></h3>
 <p>Workflows can reference a transient RSA token by placing <code>{{token}}</code> in any <code>Text</code> field. Supply the token when launching 3270Connect:</p>
@@ -1637,7 +1781,7 @@ or
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "header.autohide", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": 1.6}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "header.autohide", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.8.6"}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
