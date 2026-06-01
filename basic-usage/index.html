@@ -817,6 +817,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#host-code-page-and-character-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host Code Page and Character Set
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1392,6 +1403,7 @@
 <ul>
 <li><code>-config</code>: Specifies the path to the configuration file (default is "workflow.json").</li>
 <li><code>-token</code>: Provides a one-time RSA token that replaces any <code>{{token}}</code> placeholder in workflow step text during execution.</li>
+<li><code>-codePage</code>: Sets the host EBCDIC code page / character set for the 3270 session (for example <code>cp037</code>, <code>cp285</code>, or <code>cp278</code>/<code>finnish</code>). Overrides the workflow's <code>CodePage</code> value when supplied and is passed straight through to the embedded x3270/s3270 emulator's <code>-codepage</code> option. See <a href="#host-code-page-and-character-set">Host Code Page and Character Set</a>.</li>
 <li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
 <li><code>WaitForField</code> (config, default <code>true</code>): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful <code>Connect</code>. Supports both simple boolean and detailed configuration:</li>
 <li>Boolean format: <code>"WaitForField": true</code> or <code>"WaitForField": false</code> (uses defaults: 1s delay, 10 retries)</li>
@@ -1420,6 +1432,7 @@
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
 <span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
 <span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
@@ -1552,6 +1565,88 @@
 <p>Use it as follows:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-startPort<span class="w"> </span><span class="m">5000</span>
 </code></pre></div>
+<h3 id="host-code-page-and-character-set">Host Code Page and Character Set<a class="headerlink" href="#host-code-page-and-character-set" title="Permanent link">¶</a></h3>
+<p>Mainframe sessions exchange data in EBCDIC, and the correct national code page (also called the host character set) must be selected so that accented and language-specific characters render correctly. For example, Finnish/Swedish hosts commonly use code page <strong>cp278</strong>.</p>
+<p>You can set the code page in two ways:</p>
+<ul>
+<li><strong>In the workflow JSON</strong> with the top-level <code>CodePage</code> property:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp278"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong>On the command line</strong> with the <code>-codePage</code> flag, which overrides the value in the workflow JSON:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-codePage<span class="w"> </span>cp278
+</code></pre></div>
+<p>The value is passed directly to the embedded x3270/s3270 emulator's <code>-codepage</code> option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave <code>CodePage</code> unset (and omit <code>-codePage</code>) to use the emulator's built-in default code page.</p>
+<p>Common SBCS code pages (with aliases) supported by the bundled emulator:</p>
+<table>
+<thead>
+<tr>
+<th>Code page</th>
+<th>Aliases</th>
+<th>Region / language</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cp037</code></td>
+<td><code>us</code>, <code>us-intl</code></td>
+<td>US / Canada (English)</td>
+</tr>
+<tr>
+<td><code>cp273</code></td>
+<td><code>german</code></td>
+<td>Germany / Austria</td>
+</tr>
+<tr>
+<td><code>cp277</code></td>
+<td><code>norwegian</code></td>
+<td>Denmark / Norway</td>
+</tr>
+<tr>
+<td><code>cp278</code></td>
+<td><code>finnish</code>, <code>swedish</code></td>
+<td>Finland / Sweden</td>
+</tr>
+<tr>
+<td><code>cp280</code></td>
+<td><code>italian</code></td>
+<td>Italy</td>
+</tr>
+<tr>
+<td><code>cp284</code></td>
+<td><code>spanish</code></td>
+<td>Spain / Latin America</td>
+</tr>
+<tr>
+<td><code>cp285</code></td>
+<td><code>uk</code></td>
+<td>United Kingdom</td>
+</tr>
+<tr>
+<td><code>cp297</code></td>
+<td><code>french</code></td>
+<td>France</td>
+</tr>
+<tr>
+<td><code>cp500</code></td>
+<td><code>belgian</code></td>
+<td>International / Belgium</td>
+</tr>
+<tr>
+<td><code>cp1140</code>–<code>cp1149</code></td>
+<td><code>*-euro</code></td>
+<td>Euro-symbol variants of the above</td>
+</tr>
+</tbody>
+</table>
+<p>You can supply the canonical name (<code>cp278</code>), an alias (<code>finnish</code>), or the bare number (<code>278</code>). Run <code>s3270 -v</code> to print the full list of code pages compiled into the emulator. If an unrecognized code page is supplied, the emulator logs a warning and falls back to its default, so connectivity is not interrupted.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
 <p>Let's explore some common use cases with examples:</p>
 <h3 id="1-running-a-basic-workflow">1. Running a Basic Workflow<a class="headerlink" href="#1-running-a-basic-workflow" title="Permanent link">¶</a></h3>

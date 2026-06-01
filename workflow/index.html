@@ -770,6 +770,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#connection-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connection Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#delay-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1251,6 +1262,20 @@
 
 <div><h1 id="workflow-steps-documentation">Workflow Steps Documentation<a class="headerlink" href="#workflow-steps-documentation" title="Permanent link">¶</a></h1>
 <p>This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.</p>
+<h2 id="connection-settings">Connection Settings<a class="headerlink" href="#connection-settings" title="Permanent link">¶</a></h2>
+<p>These top-level properties configure the terminal connection for the whole workflow:</p>
+<ul>
+<li><strong>Host</strong> (string): Hostname or IP address of the TN3270 host.</li>
+<li><strong>Port</strong> (int): TCP port of the TN3270 host.</li>
+<li><strong>CodePage</strong> (string, optional): Host EBCDIC code page / character set for the session, for example <code>cp037</code>, <code>cp285</code>, or <code>cp278</code>/<code>finnish</code>. When set, it is passed to the embedded x3270/s3270 emulator via its <code>-codepage</code> option so that national and language-specific characters render correctly. The <code>-codePage</code> CLI flag overrides this value. Leave it unset to use the emulator default. See <a href="../basic-usage/#host-code-page-and-character-set">Host Code Page and Character Set</a> for the list of supported code pages.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp278"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="delay-behavior">Delay Behavior<a class="headerlink" href="#delay-behavior" title="Permanent link">¶</a></h2>
 <p>You can control pacing with flexible delay ranges:</p>
 <ul>
