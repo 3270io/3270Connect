@@ -81,6 +81,11 @@ type Emulator struct {
 	Host       string
 	Port       int
 	ScriptPort string
+	// CodePage selects the host EBCDIC code page / character set for the
+	// session. When non-empty it is passed to the underlying x3270/s3270
+	// process via its -codepage option (e.g. "cp037", "cp285", "cp278" or
+	// the alias "finnish"). Empty leaves the emulator default in place.
+	CodePage string
 
 	scriptConn   net.Conn
 	scriptReader *bufio.Reader
@@ -618,6 +623,39 @@ func (e *Emulator) query(keyword string) (string, error) {
 	return e.execCommandOutput(command)
 }
 
+// buildEmulatorArgs assembles the command-line arguments for launching the
+// embedded x3270/s3270/wc3270 process. The argument order mirrors the
+// historical invocation so existing behavior is unchanged; the host EBCDIC
+// code page (-codepage) is inserted only when Emulator.CodePage is set, and
+// the host:port target is always the final positional argument.
+func (e *Emulator) buildEmulatorArgs(modelType string) []string {
+	resourceString := "x3270.unlockDelay: False"
+	if Headless {
+		resourceString = "s3270.unlockDelay: False"
+	} else if runtime.GOOS == "windows" {
+		resourceString = "wc3270.unlockDelay: False"
+	}
+
+	var args []string
+	if Headless {
+		args = []string{"-utf8", "-scriptport", e.ScriptPort, "-xrm", resourceString, "-model", modelType}
+	} else {
+		args = []string{"-utf8", "-xrm", resourceString, "-scriptport", e.ScriptPort, "-model", modelType}
+	}
+
+	// Host EBCDIC code page / character set (e.g. cp037, cp285, cp278). When
+	// unset, the emulator uses its built-in default code page.
+	if codePage := strings.TrimSpace(e.CodePage); codePage != "" {
+		args = append(args, "-codepage", codePage)
+		if Verbose {
+			log.Printf("Using host code page (-codepage %s) for %s", codePage, e.hostname())
+		}
+	}
+
+	args = append(args, e.hostname())
+	return args
+}
+
 // createApp creates a connection to the host using embedded x3270 or s3270
 func (e *Emulator) createApp() error {
 	if Verbose {
@@ -637,19 +675,7 @@ func (e *Emulator) createApp() error {
 	// Choose the correct model type
 	modelType := "3279-2" // Adjust this based on your application's requirements
 
-	var cmd *exec.Cmd
-	resourceString := "x3270.unlockDelay: False"
-	if Headless {
-		resourceString = "s3270.unlockDelay: False"
-	} else if runtime.GOOS == "windows" {
-		resourceString = "wc3270.unlockDelay: False"
-	}
-
-	if Headless {
-		cmd = exec.Command(binaryFilePath, "-utf8", "-scriptport", e.ScriptPort, "-xrm", resourceString, "-model", modelType, e.hostname())
-	} else {
-		cmd = exec.Command(binaryFilePath, "-utf8", "-xrm", resourceString, "-scriptport", e.ScriptPort, "-model", modelType, e.hostname())
-	}
+	cmd := exec.Command(binaryFilePath, e.buildEmulatorArgs(modelType)...)
 
 	if Verbose {
 		log.Printf("Executing command: %s %v", cmd.Path, cmd.Args)

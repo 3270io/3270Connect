@@ -33,6 +33,7 @@ Body:
 {
   "Host": "10.27.27.27",
   "Port": 3270,
+  "CodePage": "cp037",
   "Token": "123456",
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
   "EndOfTaskDelay": { "Min": 30, "Max": 90 },
@@ -81,6 +82,7 @@ Body:
 The API responds with the rendered output in the JSON response body (it does not require an `OutputFilePath`).
 
 - `Token` (optional): provide a one-time RSA token that will be injected wherever the workflow text contains `{{token}}`.
+- `CodePage` (optional): host EBCDIC code page / character set for the session (for example `cp037`, `cp285`, or `cp278`/`finnish`). When omitted, the server falls back to the `-codePage` flag the API process was started with, and otherwise uses the emulator default. See [Host Code Page and Character Set](basic-usage.md#host-code-page-and-character-set).
 
 !!! note
 
