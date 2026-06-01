@@ -21,7 +21,7 @@ jobs:
 
       - name: Build for Linux
         run: |
-          GOARCH=amd64 GOOS=linux go build -o 3270Connect go3270Connect.go
+          GOARCH=amd64 GOOS=linux go build -o 3270Connect .
 
       - name: Test Go Project
         run: go test -v ./...
@@ -54,7 +54,7 @@ jobs:
         run: |
           $env:GOARCH="amd64"
           $env:GOOS="windows"
-          go build -o 3270Connect.exe go3270Connect.go
+          go build -o 3270Connect.exe .
 
       - name: Test Go Project
         run: go test -v ./...

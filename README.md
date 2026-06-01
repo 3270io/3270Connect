@@ -126,9 +126,9 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 
 go-bindata -o binaries/bindata.go -pkg binaries ./binaries/...
 
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o 3270Connect go3270Connect.go
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o 3270Connect .
 
-CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o 3270Connect.exe go3270Connect.go
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o 3270Connect.exe .
 
 .\3270Connect -runApp 1
 ./3270Connect -verbose -headless

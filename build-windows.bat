@@ -2,7 +2,7 @@
 setlocal
 
 REM Build the 3270Connect.exe binary for Windows
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o 3270Connect.exe go3270Connect.go
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o 3270Connect.exe .
 
 REM Prompt for Docker registry credentials
 set /p DOCKER_USERNAME=Enter Docker username: 
