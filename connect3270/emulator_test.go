@@ -52,6 +52,97 @@ func TestPressResetKey(t *testing.T) {
 	}
 }
 
+// argIndex returns the index of target in args, or -1 if not present.
+func argIndex(args []string, target string) int {
+	for i, a := range args {
+		if a == target {
+			return i
+		}
+	}
+	return -1
+}
+
+// TestBuildEmulatorArgsOmitsCodePageWhenUnset verifies no -codepage option is
+// added when CodePage is empty, preserving the historical default behavior.
+func TestBuildEmulatorArgsOmitsCodePageWhenUnset(t *testing.T) {
+	prevHeadless := Headless
+	Headless = false
+	defer func() { Headless = prevHeadless }()
+
+	e := &Emulator{Host: "mvs.example.com", Port: 992, ScriptPort: "5000"}
+	args := e.buildEmulatorArgs("3279-2")
+
+	if argIndex(args, "-codepage") != -1 {
+		t.Fatalf("expected no -codepage when CodePage is empty, got args: %v", args)
+	}
+	if got := args[len(args)-1]; got != "mvs.example.com:992" {
+		t.Fatalf("expected hostname as last arg, got %q (args: %v)", got, args)
+	}
+}
+
+// TestBuildEmulatorArgsIncludesCodePage verifies -codepage <value> is inserted
+// immediately before the host:port positional argument when CodePage is set.
+func TestBuildEmulatorArgsIncludesCodePage(t *testing.T) {
+	prevHeadless := Headless
+	Headless = false
+	defer func() { Headless = prevHeadless }()
+
+	e := &Emulator{Host: "mvs.example.com", Port: 992, ScriptPort: "5000", CodePage: "cp278"}
+	args := e.buildEmulatorArgs("3279-2")
+
+	idx := argIndex(args, "-codepage")
+	if idx == -1 {
+		t.Fatalf("expected -codepage in args, got: %v", args)
+	}
+	if idx+1 >= len(args) || args[idx+1] != "cp278" {
+		t.Fatalf("expected -codepage followed by cp278, got: %v", args)
+	}
+	if got := args[len(args)-1]; got != "mvs.example.com:992" {
+		t.Fatalf("expected hostname as last arg, got %q (args: %v)", got, args)
+	}
+	// The code page value must sit immediately before the host:port argument.
+	if idx+1 != len(args)-2 {
+		t.Fatalf("expected -codepage value immediately before hostname, got: %v", args)
+	}
+}
+
+// TestBuildEmulatorArgsTrimsCodePage verifies surrounding whitespace is trimmed
+// from the configured code page before it is passed to the emulator.
+func TestBuildEmulatorArgsTrimsCodePage(t *testing.T) {
+	prevHeadless := Headless
+	Headless = false
+	defer func() { Headless = prevHeadless }()
+
+	e := &Emulator{Host: "h", Port: 23, ScriptPort: "5000", CodePage: "  finnish  "}
+	args := e.buildEmulatorArgs("3279-2")
+
+	idx := argIndex(args, "-codepage")
+	if idx == -1 || args[idx+1] != "finnish" {
+		t.Fatalf("expected trimmed -codepage finnish, got: %v", args)
+	}
+}
+
+// TestBuildEmulatorArgsHeadlessIncludesCodePage verifies the code page is also
+// honored in headless (s3270) mode while keeping the host as the final arg.
+func TestBuildEmulatorArgsHeadlessIncludesCodePage(t *testing.T) {
+	prevHeadless := Headless
+	Headless = true
+	defer func() { Headless = prevHeadless }()
+
+	e := &Emulator{Host: "h", Port: 23, ScriptPort: "5050", CodePage: "cp037"}
+	args := e.buildEmulatorArgs("3279-2")
+
+	if idx := argIndex(args, "-codepage"); idx == -1 || args[idx+1] != "cp037" {
+		t.Fatalf("expected -codepage cp037 in headless args, got: %v", args)
+	}
+	if argIndex(args, "-scriptport") == -1 {
+		t.Fatalf("expected -scriptport in headless args, got: %v", args)
+	}
+	if got := args[len(args)-1]; got != "h:23" {
+		t.Fatalf("expected hostname as last arg in headless mode, got %q (args: %v)", got, args)
+	}
+}
+
 // TestWaitForFieldErrorIncludesKeyboardLockDetail tests that WaitForField error
 // messages include KeyboardLockDetail information when retries are exhausted
 func TestWaitForFieldErrorIncludesKeyboardLockDetail(t *testing.T) {

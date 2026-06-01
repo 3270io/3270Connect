@@ -12,6 +12,7 @@ To run a workflow, use the following command:
 
 - `-config`: Specifies the path to the configuration file (default is "workflow.json").
 - `-token`: Provides a one-time RSA token that replaces any `{{token}}` placeholder in workflow step text during execution.
+- `-codePage`: Sets the host EBCDIC code page / character set for the 3270 session (for example `cp037`, `cp285`, or `cp278`/`finnish`). Overrides the workflow's `CodePage` value when supplied and is passed straight through to the embedded x3270/s3270 emulator's `-codepage` option. See [Host Code Page and Character Set](#host-code-page-and-character-set).
 - `-showConnectionErrors`: By default, connection failures for the `Connect` step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.
 - `WaitForField` (config, default `true`): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful `Connect`. Supports both simple boolean and detailed configuration:
   - Boolean format: `"WaitForField": true` or `"WaitForField": false` (uses defaults: 1s delay, 10 retries)
@@ -49,6 +50,7 @@ To run a single workflow, create a JSON configuration file that describes the wo
 {
   "Host": "10.27.27.62",
   "Port": 3270,
+  "CodePage": "cp037", // optional host code page / charset; omit to use the emulator default
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
   "WaitForField": true, // optional (default true) to wait before all steps once connected
   "OutputFilePath": "output.html", // optional; if omitted a temp file is used
@@ -223,6 +225,48 @@ Use it as follows:
 ```bash
 3270Connect -config workflow.json -startPort 5000
 ```
+
+### Host Code Page and Character Set
+
+Mainframe sessions exchange data in EBCDIC, and the correct national code page (also called the host character set) must be selected so that accented and language-specific characters render correctly. For example, Finnish/Swedish hosts commonly use code page **cp278**.
+
+You can set the code page in two ways:
+
+- **In the workflow JSON** with the top-level `CodePage` property:
+
+  ```json
+  {
+    "Host": "mvs.example.com",
+    "Port": 992,
+    "CodePage": "cp278",
+    "Steps": [ { "Type": "Connect" }, { "Type": "Disconnect" } ]
+  }
+  ```
+
+- **On the command line** with the `-codePage` flag, which overrides the value in the workflow JSON:
+
+  ```bash
+  3270Connect -config workflow.json -codePage cp278
+  ```
+
+The value is passed directly to the embedded x3270/s3270 emulator's `-codepage` option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave `CodePage` unset (and omit `-codePage`) to use the emulator's built-in default code page.
+
+Common SBCS code pages (with aliases) supported by the bundled emulator:
+
+| Code page | Aliases | Region / language |
+|-----------|---------|-------------------|
+| `cp037` | `us`, `us-intl` | US / Canada (English) |
+| `cp273` | `german` | Germany / Austria |
+| `cp277` | `norwegian` | Denmark / Norway |
+| `cp278` | `finnish`, `swedish` | Finland / Sweden |
+| `cp280` | `italian` | Italy |
+| `cp284` | `spanish` | Spain / Latin America |
+| `cp285` | `uk` | United Kingdom |
+| `cp297` | `french` | France |
+| `cp500` | `belgian` | International / Belgium |
+| `cp1140`–`cp1149` | `*-euro` | Euro-symbol variants of the above |
+
+You can supply the canonical name (`cp278`), an alias (`finnish`), or the bare number (`278`). Run `s3270 -v` to print the full list of code pages compiled into the emulator. If an unrecognized code page is supplied, the emulator logs a warning and falls back to its default, so connectivity is not interrupted.
 
 ## Examples
 

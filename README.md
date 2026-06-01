@@ -40,6 +40,7 @@ Here are the key features of 3270Connect:
 - API mode for advanced automation.
 - AI Chat mode for screen reading, field entry, key presses, and chaos exploration with explicit approval or Auto Mode.
 - Runtime RSA token injection using the `-token` flag or API `Token` property, keeping one-time passwords out of workflow files.
+- Configurable host EBCDIC code page / character set via the workflow `CodePage` property or the `-codePage` flag (for example `cp037`, `cp285`, or `cp278`/`finnish`) so national and language-specific characters render correctly.
 - Prometheus `/metrics` endpoint (`-promListen`) exposing connect/step timing histograms, workflow outcomes, and live worker count for fleet-scale monitoring.
 - One-shot host compatibility profiler (`-profile`) that writes a `CompatibilityProfile` JSON document — same schema as 3270Web — for cross-environment comparison and chaos mind-map diffs.
 - Running a 3270 sample application to assist with testing workflow features.
@@ -57,6 +58,21 @@ Here are the key features of 3270Connect:
   Source: `go3270Connect.go`.
 - The `/testConnection` API endpoint that probes host reachability uses a 5-second TCP dial timeout when opening the socket to the TN3270 host.  
   Source: `go3270Connect.go`.
+
+## Host code page / character set
+
+3270 sessions exchange data in EBCDIC, so the correct national code page (host character set) must be selected for accented and language-specific characters to render correctly. Set it either in the workflow JSON with the `CodePage` property or on the command line with `-codePage` (the flag overrides the JSON value):
+
+```bash
+# Finnish/Swedish host (cp278)
+3270Connect -config workflow.json -codePage cp278
+```
+
+```json
+{ "Host": "mvs.example.com", "Port": 992, "CodePage": "cp278", "Steps": [ ... ] }
+```
+
+The value is passed straight to the embedded x3270/s3270 `-codepage` option, so any code page name (`cp037`), alias (`finnish`), or number (`278`) the emulator recognizes is accepted. When unset, the emulator default is used. In API mode the per-request `CodePage` property wins, falling back to the `-codePage` flag the server was started with. See the [Basic Usage guide](https://3270.io/basic-usage/#host-code-page-and-character-set) for the supported code page list.
 
 ## Metrics
 

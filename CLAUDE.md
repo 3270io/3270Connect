@@ -47,6 +47,7 @@ go test -v ./...
 | `-config` | Workflow JSON file (default: workflow.json) |
 | `-injectionConfig` | Dynamic field injection JSON |
 | `-token` | RSA token substitution |
+| `-codePage` | Host EBCDIC code page / charset (e.g. `cp037`, `cp278`/`finnish`); overrides workflow `CodePage`, passed to s3270 `-codepage` |
 | `-concurrent` | Number of parallel workflows (default: 1) |
 | `-runtime` | Max run duration in seconds |
 | `-api` / `-api-port` | REST API mode |
@@ -61,6 +62,7 @@ go test -v ./...
 {
   "Host": "mainframe.host",
   "Port": 3270,
+  "CodePage": "cp037",
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
   "WaitForField": true,
   "Steps": [

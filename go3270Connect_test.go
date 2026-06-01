@@ -250,6 +250,33 @@ func TestWaitForFieldConfigJSON(t *testing.T) {
 	}
 }
 
+func TestConfigurationCodePageJSON(t *testing.T) {
+	// CodePage is parsed from the workflow JSON.
+	data := `{"Host":"mvs.example.com","Port":992,"CodePage":"cp278","Steps":[]}`
+	var cfg Configuration
+	if err := json.Unmarshal([]byte(data), &cfg); err != nil {
+		t.Fatalf("failed to unmarshal CodePage: %v", err)
+	}
+	if cfg.CodePage != "cp278" {
+		t.Fatalf("expected CodePage cp278, got %q", cfg.CodePage)
+	}
+
+	// CodePage must survive the per-job struct copy used for concurrency/injection.
+	out := injectDynamicValues(&cfg, map[string]string{})
+	if out.CodePage != "cp278" {
+		t.Fatalf("expected CodePage to propagate via injectDynamicValues, got %q", out.CodePage)
+	}
+
+	// omitempty: an unset CodePage must not be emitted when marshaling.
+	b, err := json.Marshal(Configuration{Host: "h", Port: 23})
+	if err != nil {
+		t.Fatalf("failed to marshal configuration: %v", err)
+	}
+	if strings.Contains(string(b), "CodePage") {
+		t.Fatalf("expected empty CodePage to be omitted, got %s", string(b))
+	}
+}
+
 func TestInjectDynamicValuesWithUTF8Characters(t *testing.T) {
 	config := &Configuration{
 		Host: "localhost",

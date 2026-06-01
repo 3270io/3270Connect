@@ -44,8 +44,10 @@ func startPrometheusListener(addr string) {
 func runProfileMode() {
 	host := strings.TrimSpace(profileHost)
 	port := profilePort
+	// The -codePage CLI flag wins; otherwise fall back to the workflow config.
+	codePage := strings.TrimSpace(hostCodePage)
 
-	if host == "" || port == 0 {
+	if host == "" || port == 0 || codePage == "" {
 		// Fall back to the workflow config so callers can reuse their
 		// existing workflow.json instead of duplicating connection info.
 		if cfg, err := loadConfigurationSafe(configFile); err == nil && cfg != nil {
@@ -54,6 +56,9 @@ func runProfileMode() {
 			}
 			if port == 0 {
 				port = cfg.Port
+			}
+			if codePage == "" {
+				codePage = strings.TrimSpace(cfg.CodePage)
 			}
 		}
 	}
@@ -67,6 +72,7 @@ func runProfileMode() {
 	}
 
 	e := connect3270.NewEmulator(host, port, scriptPort)
+	e.CodePage = codePage
 	defer func() { _ = e.Disconnect() }()
 
 	if err := e.Connect(); err != nil {

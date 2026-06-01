@@ -125,8 +125,14 @@ func (w WaitForFieldConfig) MarshalJSON() ([]byte, error) {
 
 // Configuration holds the settings for the terminal connection and the steps to be executed.
 type Configuration struct {
-	Host            string
-	Port            int
+	Host string
+	Port int
+	// CodePage selects the host EBCDIC code page / character set for the 3270
+	// session (e.g. "cp037", "cp285", "cp278" or the alias "finnish"). It is
+	// passed to the underlying x3270/s3270 emulator via its -codepage option.
+	// Leave empty to use the emulator default. The -codePage CLI flag overrides
+	// this value when set.
+	CodePage        string             `json:"CodePage,omitempty"`
 	OutputFilePath  string             `json:"OutputFilePath"`
 	WaitForField    WaitForFieldConfig `json:"WaitForField,omitempty"`
 	Steps           []Step
@@ -293,6 +299,7 @@ var (
 	configFile                   string
 	injectionConfig              string
 	rsaToken                     string
+	hostCodePage                 string
 	showHelp                     bool
 	runAPI                       bool
 	apiPort                      int
@@ -593,6 +600,7 @@ func init() {
 	flag.StringVar(&configFile, "config", "workflow.json", "Path to the configuration file")
 	flag.StringVar(&injectionConfig, "injectionConfig", "", "Path to the injection configuration file")
 	flag.StringVar(&rsaToken, "token", "", "RSA token value to substitute for {{token}} placeholders")
+	flag.StringVar(&hostCodePage, "codePage", "", "Host EBCDIC code page / character set for the 3270 session (e.g. cp037, cp285, cp278 or 'finnish'). Overrides the workflow 'CodePage' value and is passed to the x3270/s3270 -codepage option.")
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
 	flag.BoolVar(&runAPI, "api", false, "Run as API")
 	flag.IntVar(&apiPort, "api-port", 8080, "API port")
@@ -1004,6 +1012,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	}()
 	e.Host = config.Host
 	e.Port = config.Port
+	e.CodePage = config.CodePage
 
 	// Always start from a clean session to avoid reusing stale emulator state between pooled runs.
 	_ = e.Disconnect()
@@ -1259,6 +1268,10 @@ func runAPIWorkflow() {
 		if workflowConfig.Token == "" && rsaToken != "" {
 			workflowConfig.Token = rsaToken
 		}
+		// Per-request CodePage wins; otherwise fall back to the -codePage CLI flag.
+		if strings.TrimSpace(workflowConfig.CodePage) == "" && strings.TrimSpace(hostCodePage) != "" {
+			workflowConfig.CodePage = strings.TrimSpace(hostCodePage)
+		}
 		if err := validateConfiguration(&workflowConfig); err != nil {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid workflow configuration", err)
 			return
@@ -1278,6 +1291,7 @@ func runAPIWorkflow() {
 			return
 		}
 		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
+		e.CodePage = workflowConfig.CodePage
 		err = e.InitializeOutput(tmpFileName, true)
 		if err != nil {
 			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output", err)
@@ -1574,6 +1588,10 @@ func main() {
 	metricsOutputFilePath = config.OutputFilePath
 	if rsaToken != "" {
 		config.Token = rsaToken
+	}
+	// The -codePage CLI flag overrides the workflow's CodePage when provided.
+	if strings.TrimSpace(hostCodePage) != "" {
+		config.CodePage = strings.TrimSpace(hostCodePage)
 	}
 	if !runAPI {
 		printWorkflowMetadata(configFile, config)

@@ -2,6 +2,23 @@
 
 This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.
 
+## Connection Settings
+
+These top-level properties configure the terminal connection for the whole workflow:
+
+- **Host** (string): Hostname or IP address of the TN3270 host.
+- **Port** (int): TCP port of the TN3270 host.
+- **CodePage** (string, optional): Host EBCDIC code page / character set for the session, for example `cp037`, `cp285`, or `cp278`/`finnish`. When set, it is passed to the embedded x3270/s3270 emulator via its `-codepage` option so that national and language-specific characters render correctly. The `-codePage` CLI flag overrides this value. Leave it unset to use the emulator default. See [Host Code Page and Character Set](basic-usage.md#host-code-page-and-character-set) for the list of supported code pages.
+
+```json
+{
+  "Host": "mvs.example.com",
+  "Port": 992,
+  "CodePage": "cp278",
+  "Steps": [ { "Type": "Connect" }, { "Type": "Disconnect" } ]
+}
+```
+
 ## Delay Behavior
 
 You can control pacing with flexible delay ranges:
