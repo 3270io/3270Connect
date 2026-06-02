@@ -2,7 +2,7 @@
 
 Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted workflows via JSON config, concurrent load testing, REST API mode, and a web dashboard.
 
-**Version:** 1.8.6  
+**Version:** 1.9.2  
 **Language:** Go 1.21+ (toolchain 1.23.1)
 
 ## Project Structure
@@ -55,6 +55,8 @@ go test -v ./...
 | `-headless` | No terminal UI (for CI/CD) |
 | `-verbose` | Verbose logging |
 | `-workflowTimeout` | Per-workflow hard timeout (seconds) |
+| `-gracePeriod` | Seconds to wait for in-flight workflows after runtime ends (default: 30; overrides workflow `GracePeriod`) |
+| `-autoShutdown` | Seconds for the auto-shutdown countdown prompt when grace period elapses (default: 10; overrides workflow `AutoShutdownTimeout`) |
 
 ## Workflow Config Format
 

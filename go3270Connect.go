@@ -39,7 +39,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-const version = "1.9.1"
+const version = "1.9.2"
 
 const (
 	cpuHistoryLimit              = 120
@@ -49,7 +49,7 @@ const (
 	dashboardCleanupInterval     = time.Minute
 	liveStatsHistoryLimit        = 12
 	defaultGracePeriod           = 30 * time.Second
-	promptTimeout                = 10 * time.Second
+	defaultPromptTimeout         = 10 * time.Second
 )
 
 var errorList []error
@@ -140,9 +140,11 @@ type Configuration struct {
 	EndOfTaskDelay  DelayRange `json:"EndOfTaskDelay,omitempty"`
 	Token           string     `json:"Token,omitempty"`
 	InputFilePath   string     `json:"InputFilePath"`
-	RampUpBatchSize int        `json:"RampUpBatchSize"`
-	RampUpDelay     float64    `json:"RampUpDelay"`
-	LegacyDelay     float64    `json:"Delay,omitempty"`
+	RampUpBatchSize     int     `json:"RampUpBatchSize"`
+	RampUpDelay         float64 `json:"RampUpDelay"`
+	LegacyDelay         float64 `json:"Delay,omitempty"`
+	GracePeriod         float64 `json:"GracePeriod,omitempty"`
+	AutoShutdownTimeout float64 `json:"AutoShutdownTimeout,omitempty"`
 }
 
 // Step represents an individual action to be taken on the terminal.
@@ -235,6 +237,8 @@ func workflowMetadataText(configPath string, config *Configuration) string {
 		fmt.Sprintf("RampUpBatchSize: %d", config.RampUpBatchSize),
 		fmt.Sprintf("RampUpDelay: %s", formatSeconds(config.RampUpDelay)),
 		fmt.Sprintf("EndOfTaskDelay: %s", formatDelayRange(config.EndOfTaskDelay)),
+		fmt.Sprintf("GracePeriod: %s", formatSeconds(resolveGracePeriod(config).Seconds())),
+		fmt.Sprintf("AutoShutdownTimeout: %s", formatSeconds(resolveAutoShutdownTimeout(config).Seconds())),
 	}, "\n")
 }
 
@@ -277,6 +281,8 @@ func printWorkflowMetadata(configPath string, config *Configuration) {
 	configPrinter.Printf("RampUpBatchSize: %s", pterm.LightGreen(fmt.Sprintf("%d", config.RampUpBatchSize)))
 	configPrinter.Printf("RampUpDelay: %s", pterm.LightGreen(formatSeconds(config.RampUpDelay)))
 	configPrinter.Printf("EndOfTaskDelay: %s", pterm.LightGreen(formatDelayRange(config.EndOfTaskDelay)))
+	configPrinter.Printf("GracePeriod: %s", pterm.LightGreen(formatSeconds(resolveGracePeriod(config).Seconds())))
+	configPrinter.Printf("AutoShutdownTimeout: %s", pterm.LightGreen(formatSeconds(resolveAutoShutdownTimeout(config).Seconds())))
 	pterm.Println()
 }
 
@@ -320,6 +326,8 @@ var (
 	profilePort                  int
 	profileTLS                   bool
 	profileCollectRaw            bool
+	gracePeriodSecs              int
+	autoShutdownTimeoutSecs      int
 )
 
 var dashboardStarted bool
@@ -623,6 +631,8 @@ func init() {
 	flag.IntVar(&profilePort, "profilePort", 0, "Port to profile (overrides workflow config Port when -profile is set).")
 	flag.BoolVar(&profileTLS, "profileTLS", false, "Mark the profiled host as TLS-protected.")
 	flag.BoolVar(&profileCollectRaw, "profileCollectRaw", false, "Include raw s3270 Query responses in the profile output.")
+	flag.IntVar(&gracePeriodSecs, "gracePeriod", 0, "Grace period in seconds to wait for in-flight workflows to finish after the runtime deadline (0 = use workflow GracePeriod or default of 30s)")
+	flag.IntVar(&autoShutdownTimeoutSecs, "autoShutdown", 0, "Auto-shutdown prompt countdown in seconds when the grace period elapses (0 = use workflow AutoShutdownTimeout or default of 10s)")
 
 	// Set up pterm with a funky theme
 	pterm.DefaultSection.Style = pterm.NewStyle(pterm.FgCyan, pterm.Bold)
@@ -2049,7 +2059,8 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 		workerWG.Wait()
 		close(graceDone)
 	}()
-	gracePeriod := defaultGracePeriod
+	gracePeriod := resolveGracePeriod(config)
+	autoShutdownTimeout := resolveAutoShutdownTimeout(config)
 	connectOnlyEndedAtRunEnd := 0
 	connectOnlyMarked := false
 	graceSucceeded := false
@@ -2078,7 +2089,7 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 				for len(nonConnect) > 0 {
 					pterm.Warning.Printf("Grace period of %s elapsed; %d workflow(s) still running.", formatSeconds(gracePeriod.Seconds()), len(nonConnect))
 					logWorkflowStatuses(nonConnect)
-					if !promptToContinueWaiting(graceReader, gracePeriod) {
+					if !promptToContinueWaiting(graceReader, gracePeriod, autoShutdownTimeout) {
 						connect3270.RequestShutdown()
 						pterm.Warning.Println("Shutdown requested. Waiting for workflows to stop...")
 						if waitForGraceTimeout(graceDone, gracePeriod) {
@@ -2324,6 +2335,26 @@ func infofIfBarsDisabled(format string, args ...interface{}) {
 	pterm.Info.Printf(format, args...)
 }
 
+func resolveGracePeriod(config *Configuration) time.Duration {
+	if gracePeriodSecs > 0 {
+		return time.Duration(gracePeriodSecs) * time.Second
+	}
+	if config != nil && config.GracePeriod > 0 {
+		return time.Duration(config.GracePeriod * float64(time.Second))
+	}
+	return defaultGracePeriod
+}
+
+func resolveAutoShutdownTimeout(config *Configuration) time.Duration {
+	if autoShutdownTimeoutSecs > 0 {
+		return time.Duration(autoShutdownTimeoutSecs) * time.Second
+	}
+	if config != nil && config.AutoShutdownTimeout > 0 {
+		return time.Duration(config.AutoShutdownTimeout * float64(time.Second))
+	}
+	return defaultPromptTimeout
+}
+
 func waitForGraceTimeout(done <-chan struct{}, gracePeriod time.Duration) bool {
 	if gracePeriod <= 0 {
 		<-done
@@ -2375,9 +2406,9 @@ type stdinResult struct {
 	err   error
 }
 
-func promptToContinueWaiting(reader *bufio.Reader, gracePeriod time.Duration) bool {
+func promptToContinueWaiting(reader *bufio.Reader, gracePeriod, autoShutdownTimeout time.Duration) bool {
 	for {
-		remaining := int(promptTimeout.Seconds())
+		remaining := int(autoShutdownTimeout.Seconds())
 
 		pterm.Warning.Printf("Grace period of %s elapsed. Continue waiting? (y/N) [auto-shutdown in %ds]: ",
 			formatSeconds(gracePeriod.Seconds()), remaining)
@@ -2389,7 +2420,7 @@ func promptToContinueWaiting(reader *bufio.Reader, gracePeriod time.Duration) bo
 		}()
 
 		ticker := time.NewTicker(1 * time.Second)
-		deadline := time.Now().Add(promptTimeout)
+		deadline := time.Now().Add(autoShutdownTimeout)
 
 		timedOut := false
 		var result stdinResult
