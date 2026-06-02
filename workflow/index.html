@@ -781,6 +781,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#grace-period-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grace Period Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#delay-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1276,6 +1287,21 @@
 <span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
+<h2 id="grace-period-settings">Grace Period Settings<a class="headerlink" href="#grace-period-settings" title="Permanent link">¶</a></h2>
+<p>These top-level properties control what happens when a concurrent run reaches its runtime deadline and workflows are still in progress:</p>
+<ul>
+<li><strong>GracePeriod</strong> (number, optional): How long in seconds to wait for in-flight workflows to finish after the <code>-runtime</code> deadline expires. Defaults to <strong>30</strong> when not set. Overridden by the <code>-gracePeriod</code> CLI flag.</li>
+<li><strong>AutoShutdownTimeout</strong> (number, optional): Length in seconds of the auto-shutdown countdown prompt shown when the grace period elapses. If no input is received before the countdown reaches zero, shutdown is selected automatically. Defaults to <strong>10</strong> when not set. Overridden by the <code>-autoShutdown</code> CLI flag.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"GracePeriod"</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"AutoShutdownTimeout"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Priority order: <strong>CLI flag &gt; workflow JSON field &gt; built-in default</strong>.</p>
 <h2 id="delay-behavior">Delay Behavior<a class="headerlink" href="#delay-behavior" title="Permanent link">¶</a></h2>
 <p>You can control pacing with flexible delay ranges:</p>
 <ul>
