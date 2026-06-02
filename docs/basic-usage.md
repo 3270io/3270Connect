@@ -20,6 +20,8 @@ To run a workflow, use the following command:
   - Defaults: `Delay` defaults to 1 second if not specified. `Retries` defaults to 10 if not specified.
   - The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).
 - `-workflowTimeout`: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.
+- `-gracePeriod`: How long (in seconds) to wait for in-flight workflows to finish after the runtime deadline expires (default: 30). Overrides the `GracePeriod` workflow JSON field.
+- `-autoShutdown`: Length of the auto-shutdown countdown prompt in seconds when the grace period elapses (default: 10). If no response is given before the countdown reaches zero, shutdown is selected automatically. Overrides the `AutoShutdownTimeout` workflow JSON field.
 - `-verboseFailures`: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.
 - `-verboseScreenCaptureFailures`: When enabled alongside `-verboseFailures`, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format `failure_[scriptPort]_step[stepIndex]_[timestamp].txt` and saved in the current directory. The capture file path is included in the failure log message.
 - `-bar`: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: `-enableProgressBar`.)
@@ -126,6 +128,8 @@ You can run multiple workflows concurrently by specifying the `-concurrent` and 
 
 - `-concurrent`: Sets the number of concurrent workflows to run (default is 1).
 - `-runtime`: Specifies the duration to run workflows in seconds (only used in concurrent mode).
+- `-gracePeriod`: Seconds to wait for in-flight workflows to finish after the runtime deadline (default: 30).
+- `-autoShutdown`: Seconds for the auto-shutdown countdown prompt when the grace period elapses (default: 10).
 
 For example, to run two workflows concurrently for 60 seconds, use:
 
@@ -215,6 +219,20 @@ The `WaitForField` configuration controls whether the workflow waits for the ter
 ### Workflow timeout
 
 - `-workflowTimeout`: Hard timeout (seconds) applied to each workflow run. Default 120; set to `0` to disable. When the timeout is hit, the workflow stops without counting as a connect failure.
+
+### Grace period and auto-shutdown
+
+When a concurrent run reaches its `-runtime` deadline, any workflows that are still in progress are given additional time to finish cleanly. Two settings control this behaviour:
+
+- `-gracePeriod <seconds>`: How long to wait for in-flight workflows after the runtime deadline. Default is **30 seconds**. Set a higher value if your workflows are long-running and you want to give them more time to complete naturally.
+- `-autoShutdown <seconds>`: If workflows are still running when the grace period expires, 3270Connect prompts with *"Continue waiting? (y/N)"* and begins a countdown. This setting controls the length of that countdown before shutdown is automatically selected. Default is **10 seconds**.
+
+Both values can also be set in the workflow JSON file (see [Workflow Configuration](workflow.md#grace-period-settings)) so they travel with the workflow definition rather than being passed on the command line every time. The CLI flags take precedence over the JSON values.
+
+```bash
+# Wait up to 60s for in-flight workflows, with a 20s prompt countdown
+3270Connect -config workflow.json -concurrent 10 -runtime 120 -gracePeriod 60 -autoShutdown 20
+```
 
 ### startPort Flag
 
