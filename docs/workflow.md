@@ -19,6 +19,25 @@ These top-level properties configure the terminal connection for the whole workf
 }
 ```
 
+## Grace Period Settings
+
+These top-level properties control what happens when a concurrent run reaches its runtime deadline and workflows are still in progress:
+
+- **GracePeriod** (number, optional): How long in seconds to wait for in-flight workflows to finish after the `-runtime` deadline expires. Defaults to **30** when not set. Overridden by the `-gracePeriod` CLI flag.
+- **AutoShutdownTimeout** (number, optional): Length in seconds of the auto-shutdown countdown prompt shown when the grace period elapses. If no input is received before the countdown reaches zero, shutdown is selected automatically. Defaults to **10** when not set. Overridden by the `-autoShutdown` CLI flag.
+
+```json
+{
+  "Host": "mvs.example.com",
+  "Port": 3270,
+  "GracePeriod": 60,
+  "AutoShutdownTimeout": 20,
+  "Steps": [ { "Type": "Connect" }, { "Type": "Disconnect" } ]
+}
+```
+
+Priority order: **CLI flag > workflow JSON field > built-in default**.
+
 ## Delay Behavior
 
 You can control pacing with flexible delay ranges:
