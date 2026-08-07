@@ -289,6 +289,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="dashboard/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Web Dashboard
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="ai-chat-mode/" class="md-tabs__link">
         
   
@@ -768,6 +787,33 @@
   
   
     <li class="md-nav__item">
+      <a href="dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ai-chat-mode/" class="md-nav__link">
         
   
@@ -1026,10 +1072,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
             
   
   
@@ -1047,8 +1093,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1185,7 +1231,12 @@
 <p><img alt="3270Connect logo" src="logo.png" style="max-width: 200px; height: auto;"></p>
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">¶</a></h2>
 <p>3270Connect is a robust automation toolkit that pairs a powerful command-line utility with 3270Web, a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.</p>
-<p><img alt="3270Connect dashboard" src="dashboard.png" style="max-width: 100%; height: auto;"></p>
+<p><img alt="The 3270Connect operations console" class="shot" src="assets/dashboard/console-overview.webp"></p>
+<p style="text-align:center; font-size:0.8rem; opacity:0.75;">
+The <a href="dashboard/">web dashboard</a> — live workflow metrics, latency percentiles,
+per-process controls and log streaming, served straight from the binary.
+</p>
+
 <p>The utility is used by system administrators, developers, and testers who frequently interact with mainframe systems, which are still pivotal in various industries such as banking, insurance, and government services. With 3270Connect, users can script complex sequences of tasks, automate data entry, perform complex online operations, and capture terminal screens for logging or debugging purposes.</p>
 <p>One of the main reasons for using 3270Connect is its ability to save time on repetitive tasks by automating them. This can be especially beneficial in testing scenarios where the same set of operations needs to be performed repeatedly. Moreover, the utility provides a way to integrate mainframe operations with modern CI/CD pipelines, thereby modernizing the development and deployment workflows that involve mainframe systems.</p>
 <p>With 3270Connect, users can:</p>
@@ -1207,7 +1258,8 @@
 <li>Command-line interface for scripting and running automation from the terminal.</li>
 <li>Capturing the 3270 screens as the workflow executes.</li>
 <li>Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.</li>
-<li>Dashboard and 3270Web to visually provide metrics on concurrency usage, manage runs, and open AI Chat mode for conversational session control.</li>
+<li>Web dashboard for live metrics, latency percentiles, log streaming and per-process control — self-contained, with no external dependencies at runtime.</li>
+<li>3270Web to open AI Chat mode for conversational session control.</li>
 <li>Headless mode for running workflows without a graphical user interface.</li>
 <li>Verbose mode for detailed output, plus failure-only logging with <code>-verboseFailures</code> for high-concurrency test runs.</li>
 <li>API mode for advanced automation.</li>
@@ -1221,6 +1273,7 @@
 <ul>
 <li><a href="installation/">Installation</a>: Learn how to install 3270Connect on your system.</li>
 <li><a href="basic-usage/">Basic Usage</a>: Get started with basic usage, running workflows and sample 3270 application(s) to aid testing.</li>
+<li><a href="dashboard/">Web Dashboard</a>: Watch runs live, launch them from the browser, and stream logs from the operations console.</li>
 <li><a href="workflow/">Workflow Steps</a>: Overview of the various workflow steps available in the 3270Connect application</li>
 </ul>
 <h2 id="advanced-features">Advanced Features<a class="headerlink" href="#advanced-features" title="Permanent link">¶</a></h2>
@@ -1361,7 +1414,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "header.autohide", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.8.6"}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "header.autohide", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.9.2"}</script>
     
     
       <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
