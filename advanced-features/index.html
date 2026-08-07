@@ -24,7 +24,7 @@
         
       
       
-      <link rel="icon" href="../logo.ico">
+      <link rel="icon" href="../assets/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
@@ -55,6 +55,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/3270-theme.css">
+    
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
@@ -63,17 +65,33 @@
 
     
     
+  
+  <script>
+    (function () {
+      var THEMES = ['phosphor', 'amber', 'ice', 'daylight'];
+      var theme = 'phosphor';
+      try {
+        // The cookie is shared across *.3270.io, so the palette a reader
+        // picked on the landing page is already the right answer here.
+        var match = document.cookie.match(/(?:^|;\s*)3270io_theme=([^;]+)/);
+        var found = match ? decodeURIComponent(match[1]) : null;
+        if (THEMES.indexOf(found) === -1) found = localStorage.getItem('3270io:theme');
+        if (THEMES.indexOf(found) !== -1) theme = found;
+      } catch (e) { /* cookies or storage blocked — the default is fine */ }
+
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
   </head>
   
   
     
     
-      
     
     
     
-    
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan">
+    <body dir="ltr" data-md-color-scheme="3270" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -101,9 +119,20 @@
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="3270Connect" class="md-header__button md-logo" aria-label="3270Connect" data-md-component="logo">
-      
-  <img src="../logo.png" alt="logo">
-
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <!-- Bezel -->
+  <rect x="1.25" y="3.25" width="29.5" height="25.5" rx="6" fill="none"
+        stroke="currentColor" stroke-opacity="0.5" stroke-width="1.5"/>
+  <!-- Screen -->
+  <rect x="4.5" y="6.5" width="23" height="19" rx="3.5" fill="var(--accent-soft, rgba(78,255,176,0.14))"/>
+  <!-- » — the same prompt chevron as 3270.io, doubled: replay, at speed -->
+  <path d="M8 12.5 11.5 16 8 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.5 12.5 17 16 13.5 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6"/>
+  <!-- Prompt underscore -->
+  <path d="M19.5 19.5h4.5" stroke="var(--accent, #4effb3)" stroke-width="2" stroke-linecap="round"/>
+</svg>
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
@@ -127,33 +156,7 @@
     </div>
     
       
-        <form class="md-header__option" data-md-component="palette">
-  
     
-    
-    
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
-    
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
-      </label>
-    
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
-    
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
-      </label>
-    
-  
-</form>
-      
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -539,9 +542,20 @@
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="3270Connect" class="md-nav__button md-logo" aria-label="3270Connect" data-md-component="logo">
-      
-  <img src="../logo.png" alt="logo">
-
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <!-- Bezel -->
+  <rect x="1.25" y="3.25" width="29.5" height="25.5" rx="6" fill="none"
+        stroke="currentColor" stroke-opacity="0.5" stroke-width="1.5"/>
+  <!-- Screen -->
+  <rect x="4.5" y="6.5" width="23" height="19" rx="3.5" fill="var(--accent-soft, rgba(78,255,176,0.14))"/>
+  <!-- » — the same prompt chevron as 3270.io, doubled: replay, at speed -->
+  <path d="M8 12.5 11.5 16 8 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.5 12.5 17 16 13.5 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6"/>
+  <!-- Prompt underscore -->
+  <path d="M19.5 19.5h4.5" stroke="var(--accent, #4effb3)" stroke-width="2" stroke-linecap="round"/>
+</svg>
     </a>
     3270Connect
   </label>
@@ -1409,6 +1423,22 @@ and <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a>.
     
     
     
+    <a href="https://3270.io" target="_blank" rel="noopener" title="3270.io" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 3 8 6v12h-5v-7H9v7H4V9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://3270web.3270.io" target="_blank" rel="noopener" title="3270Web documentation" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 16V4H3v12zm0-14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v2h2v2H8v-2h2v-2H3a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2zM5 6h9v5H5zm10 0h4v2h-4zm4 3v5h-4V9zM5 12h4v2H5zm5 0h4v2h-4z"/></svg>
+    </a>
+  
+    
+    
+    
+    
       
       
     
@@ -1455,10 +1485,12 @@ and <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a>.
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "header.autohide", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.9.2"}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.expand", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "content.action.view", "toc.integrate", "content.tabs.link", "content.footnotes"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "1.9.2"}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/3270-theme.js"></script>
       
     
   </body>
