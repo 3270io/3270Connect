@@ -57,6 +57,7 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Basic Usage: basic-usage.md
+  - Web Dashboard: dashboard.md
   - AI Chat Mode: ai-chat-mode.md
   - Chaos Mode: chaos-mode.md
   - Keyboard and Controls: keyboard-and-controls.md
@@ -81,6 +82,7 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - md_in_html
   - toc:
       permalink: true
       toc_depth: 3
@@ -109,7 +111,7 @@ extra_css:
   - stylesheets/extra.css
 
 extra:
-  version: 1.8.6
+  version: 1.9.2
   CNAME: 3270.io
   generator: false
   social:

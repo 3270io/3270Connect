@@ -1,0 +1,67 @@
+/* ==========================================================================
+   3270Connect documentation — supplementary styles
+
+   Referenced from mkdocs.yml (extra_css). Everything here layers on top of
+   Material for MkDocs; no theme internals are overridden.
+   ========================================================================== */
+
+/* --- Screenshots -----------------------------------------------------------
+   The console screenshots are dark UI captures. A hairline border and a soft
+   shadow stop them from bleeding into the page in dark mode, and give them a
+   deliberate edge in light mode. */
+
+.md-typeset img.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1.2em auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.55);
+  background: var(--md-default-bg-color);
+}
+
+[data-md-color-scheme='slate'] .md-typeset img.shot {
+  box-shadow: 0 12px 34px -16px rgba(0, 0, 0, 0.85);
+}
+
+/* Two-up gallery for theme and responsive comparisons. Two columns keeps each
+   capture large enough to read; a single column below the tablet breakpoint. */
+.md-typeset .shot-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem 1.2rem;
+  align-items: start;
+  margin: 1.2em 0;
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .shot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.md-typeset .shot-grid img.shot { margin: 0.4em 0 0.2em; }
+
+.md-typeset .shot-grid p { margin: 0 0 0.8em; font-size: 0.78rem; }
+
+/* Responsive captures are tall and narrow; cap them so they do not dominate. */
+.md-typeset .shot-grid img.shot[src*='responsive'] {
+  max-height: 620px;
+  width: auto;
+  max-width: 100%;
+}
+
+/* --- Tables ----------------------------------------------------------------
+   Reference tables on these pages are wide; keep them readable rather than
+   letting long cells wrap into narrow ribbons. */
+
+.md-typeset table:not([class]) th {
+  white-space: nowrap;
+}
+
+/* --- Inline keys -----------------------------------------------------------
+   pymdownx.keys output, nudged to sit better on a text baseline. */
+
+.md-typeset kbd,
+.md-typeset .keys kbd {
+  vertical-align: baseline;
+}

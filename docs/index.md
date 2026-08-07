@@ -6,7 +6,12 @@
 
 3270Connect is a robust automation toolkit that pairs a powerful command-line utility with 3270Web, a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.
 
-![3270Connect dashboard](dashboard.png){: style="max-width: 100%; height: auto;"}
+![The 3270Connect operations console](assets/dashboard/console-overview.webp){: .shot }
+
+<p style="text-align:center; font-size:0.8rem; opacity:0.75;">
+The <a href="dashboard/">web dashboard</a> — live workflow metrics, latency percentiles,
+per-process controls and log streaming, served straight from the binary.
+</p>
 
 The utility is used by system administrators, developers, and testers who frequently interact with mainframe systems, which are still pivotal in various industries such as banking, insurance, and government services. With 3270Connect, users can script complex sequences of tasks, automate data entry, perform complex online operations, and capture terminal screens for logging or debugging purposes.
 
@@ -33,7 +38,8 @@ Here are the key features of 3270Connect:
 - Command-line interface for scripting and running automation from the terminal.
 - Capturing the 3270 screens as the workflow executes.
 - Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
-- Dashboard and 3270Web to visually provide metrics on concurrency usage, manage runs, and open AI Chat mode for conversational session control.
+- Web dashboard for live metrics, latency percentiles, log streaming and per-process control — self-contained, with no external dependencies at runtime.
+- 3270Web to open AI Chat mode for conversational session control.
 - Headless mode for running workflows without a graphical user interface.
 - Verbose mode for detailed output, plus failure-only logging with `-verboseFailures` for high-concurrency test runs.
 - API mode for advanced automation.
@@ -48,6 +54,7 @@ If you're new to 3270Connect, you can start by exploring the following sections:
 
 - [Installation](installation.md): Learn how to install 3270Connect on your system.
 - [Basic Usage](basic-usage.md): Get started with basic usage, running workflows and sample 3270 application(s) to aid testing.
+- [Web Dashboard](dashboard.md): Watch runs live, launch them from the browser, and stream logs from the operations console.
 - [Workflow Steps](workflow.md): Overview of the various workflow steps available in the 3270Connect application
 
 ## Advanced Features
