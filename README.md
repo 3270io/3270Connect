@@ -1,6 +1,6 @@
 # 3270Connect
 
-![3270Connect dashboard](https://raw.githubusercontent.com/3270io/3270Connect/main/docs/dashboard.png)
+![3270Connect operations console](https://raw.githubusercontent.com/3270io/3270Connect/main/docs/assets/dashboard/console-overview.webp)
 
 3270Connect is a robust automation toolkit that provides both a command-line utility and 3270Web, a browser-based web console for enhancing productivity and efficiency when managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.
 
@@ -34,7 +34,8 @@ Here are the key features of 3270Connect:
 - Command-line interface for scripting and running automation from the terminal.
 - Capturing the 3270 screens as the workflow executes.
 - Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
-- Dashboard and 3270Web to visually provide metrics on concurrency usage, manage runs, and open AI Chat mode for conversational session control.
+- [Web dashboard](https://3270.io/dashboard/) for live workflow metrics, latency percentiles, log streaming and per-process control — served entirely from the binary, with no external dependencies at runtime.
+- 3270Web to open AI Chat mode for conversational session control.
 - Headless mode for running workflows without a graphical user interface.
 - Verbose mode for detailed output, plus failure-only logging with `-verboseFailures` for noisy test loads.
 - API mode for advanced automation.
