@@ -1,17 +1,130 @@
-# 3270Connect
+---
+hide:
+  - toc
+---
 
-![3270Connect logo](logo.png){: style="max-width: 200px; height: auto;"}
+<div class="hero" markdown>
+<div class="split" markdown>
+<div markdown>
+
+<span class="chip accent"><span class="dot live"></span> Open source · v1.9.2</span>
+
+# Replay the mainframe <span class="grad">at any scale</span>
+
+<p class="lede" markdown>
+3270Connect turns a recorded 3270 session into a repeatable workflow: one JSON file, run
+headless in CI, fanned out across hundreds of concurrent workers, with every step landing
+on a live operations console and a Prometheus endpoint.
+</p>
+
+<div class="hero-actions" markdown>
+[Install it](installation.md){ .md-button .md-button--primary }
+[Basic usage](basic-usage.md){ .md-button }
+[Workflow reference](workflow.md){ .md-button }
+</div>
+
+</div>
+<div markdown>
+
+<div class="term">
+  <div class="term-head">
+    <span class="dot live"></span>
+    <span>session · load run</span>
+    <span class="right">25 workers</span>
+  </div>
+  <pre class="term-body"><span class="sig">$</span> 3270Connect -config workflow.json \
+    <span class="cmt">-concurrent 25 -runtime 60 -headless</span>
+<span class="sig">›</span> connect  mvs.example.com:992    <span class="tag">[ok]</span>
+<span class="sig">›</span> workers  25 spawned               <span class="tag info">[live]</span>
+<span class="sig">›</span> steps    FillString · PressEnter  <span class="tag">[ok]</span>
+<span class="sig">›</span> metrics  :9090/metrics scraped    <span class="tag info">[up]</span>
+<span class="sig">›</span> <span class="caret"></span></pre>
+</div>
+
+</div>
+</div>
+
+<div class="kpi-strip" markdown>
+<div class="kpi"><span class="k">Success rate</span><span class="v">97.1%</span><span class="n">2,381 finished workflows</span></div>
+<div class="kpi"><span class="k">p95 step</span><span class="v">0.34s</span><span class="n">measured host-side</span></div>
+<div class="kpi"><span class="k">Completed</span><span class="v">2,313</span><span class="n">this session</span></div>
+<div class="kpi"><span class="k">Dependencies</span><span class="v">0</span><span class="n">single static binary</span></div>
+</div>
+
+</div>
+
+## What it does
+
+<div class="grid cards" markdown>
+
+-   :material-file-code: **Workflows as JSON**
+
+    ---
+
+    Describe a session once — connect, fill, press, assert, grab the screen, disconnect —
+    and run it anywhere. No scripting language to learn, no emulator to install.
+
+    [:octicons-arrow-right-24: Workflow actions](workflow.md)
+
+-   :material-speedometer: **Concurrency & load testing**
+
+    ---
+
+    Run the same workflow across hundreds of parallel workers for a fixed duration, with
+    per-workflow timeouts, grace periods and a controlled shutdown.
+
+    [:octicons-arrow-right-24: Basic usage](basic-usage.md)
+
+-   :material-view-dashboard: **Live operations console**
+
+    ---
+
+    Watch runs as they happen: latency percentiles, outcomes, per-process controls and
+    streaming logs — served straight from the binary, no external services.
+
+    [:octicons-arrow-right-24: Web dashboard](dashboard.md)
+
+-   :material-chart-line: **Prometheus metrics**
+
+    ---
+
+    Scrape `tn3270_connect_seconds`, `tn3270_step_seconds`, workflow outcomes and live
+    worker counts from `-promListen` and put mainframe runs on the same board as everything else.
+
+    [:octicons-arrow-right-24: Metrics & monitoring](metrics.md)
+
+-   :material-robot-excited: **AI Chat mode**
+
+    ---
+
+    Drive a live session from 3270Web by typing plain English. The model reads the screen,
+    proposes field fills and key presses, and waits for your approval before acting.
+
+    [:octicons-arrow-right-24: AI Chat mode](ai-chat-mode.md)
+
+-   :material-fingerprint: **Host compatibility profiler**
+
+    ---
+
+    Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that
+    diffs cleanly against 3270Web output across environments.
+
+    [:octicons-arrow-right-24: Host profiler](host-profiler.md)
+
+</div>
+
+## The operations console
+
+![The 3270Connect operations console](assets/dashboard/console-overview.webp){: .shot }
+
+<p style="text-align:center; font-size:0.72rem; opacity:0.75;">
+The <a href="dashboard/">web dashboard</a> — live workflow metrics, latency percentiles,
+per-process controls and log streaming, served straight from the binary.
+</p>
 
 ## Introduction
 
 3270Connect is a robust automation toolkit that pairs a powerful command-line utility with 3270Web, a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.
-
-![The 3270Connect operations console](assets/dashboard/console-overview.webp){: .shot }
-
-<p style="text-align:center; font-size:0.8rem; opacity:0.75;">
-The <a href="dashboard/">web dashboard</a> — live workflow metrics, latency percentiles,
-per-process controls and log streaming, served straight from the binary.
-</p>
 
 The utility is used by system administrators, developers, and testers who frequently interact with mainframe systems, which are still pivotal in various industries such as banking, insurance, and government services. With 3270Connect, users can script complex sequences of tasks, automate data entry, perform complex online operations, and capture terminal screens for logging or debugging purposes.
 
@@ -68,12 +181,6 @@ Once you've mastered the basics, you can dive into more advanced features:
 - [Host Compatibility Profiler](host-profiler.md): Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that compares cleanly against 3270Web output.
 - [Compatibility Profile Schema](compatibility-profile-schema.md): Field-by-field reference for the shared `CompatibilityProfile` document (v1.0.0).
 
-## Conclusion
-
-The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
-
-Let's get started with 3270Connect!
-
 ## Video example
 
 ### 3270Connect Basic Usage
@@ -83,3 +190,9 @@ Let's get started with 3270Connect!
 ### 3270Connect API Usage
 
 ![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
+
+## Conclusion
+
+The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
+
+Let's get started with 3270Connect!

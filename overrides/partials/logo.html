@@ -1,0 +1,29 @@
+{#-
+  3270Connect mark.
+
+  One family, three glyphs. The bezel and screen geometry is shared verbatim
+  with the 3270.io mark and with 3270Web's, so the three sites read as one
+  suite; only the glyph inside the screen changes:
+
+    3270.io        ›   prompt          — the platform
+    3270Connect    »   fast-forward    — replay, headless and at scale
+    3270Web        ▣   browser chrome  — the terminal in a browser tab
+
+  Inlined rather than referenced through `theme.logo`, which Material renders
+  as <img>: an external SVG is its own document, so currentColor and the
+  --accent token would not reach it and the mark would not follow the palette.
+-#}
+<svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <!-- Bezel -->
+  <rect x="1.25" y="3.25" width="29.5" height="25.5" rx="6" fill="none"
+        stroke="currentColor" stroke-opacity="0.5" stroke-width="1.5"/>
+  <!-- Screen -->
+  <rect x="4.5" y="6.5" width="23" height="19" rx="3.5" fill="var(--accent-soft, rgba(78,255,176,0.14))"/>
+  <!-- » — the same prompt chevron as 3270.io, doubled: replay, at speed -->
+  <path d="M8 12.5 11.5 16 8 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.5 12.5 17 16 13.5 19.5" stroke="var(--accent, #4effb3)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.6"/>
+  <!-- Prompt underscore -->
+  <path d="M19.5 19.5h4.5" stroke="var(--accent, #4effb3)" stroke-width="2" stroke-linecap="round"/>
+</svg>
