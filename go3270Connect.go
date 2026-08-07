@@ -2736,6 +2736,7 @@ func runDashboard() {
 		}
 
 		metricsList, extendedList := readDashboardMetrics(dashboardDir)
+		extendedList = preferRunningMetrics(extendedList)
 		metricsJSON, _ := json.Marshal(metricsList)
 		autoRefresh := r.URL.Query().Get("autoRefresh")
 		refreshPeriod := r.URL.Query().Get("refreshPeriod")
@@ -2822,15 +2823,7 @@ func runDashboard() {
 		_, extendedList := readDashboardMetrics(dashboardDir)
 
 		// Prefer live processes for UI stats; fall back to latest snapshot if nothing running.
-		filtered := make([]ExtendedMetrics, 0, len(extendedList))
-		for _, m := range extendedList {
-			if m.IsRunning {
-				filtered = append(filtered, m)
-			}
-		}
-		if len(filtered) == 0 {
-			filtered = extendedList
-		}
+		filtered := preferRunningMetrics(extendedList)
 
 		payload := struct {
 			AggregatedMetrics Metrics           `json:"aggregated"`
@@ -2977,6 +2970,22 @@ func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
 		extendedList = append(extendedList, extendedMetric)
 	}
 	return metricsList, extendedList
+}
+
+// preferRunningMetrics narrows a snapshot to live processes, falling back to the
+// full list when nothing is running. Both the dashboard page and its polling
+// endpoint use it so the first render and the first refresh agree.
+func preferRunningMetrics(metrics []ExtendedMetrics) []ExtendedMetrics {
+	running := make([]ExtendedMetrics, 0, len(metrics))
+	for _, m := range metrics {
+		if m.IsRunning {
+			running = append(running, m)
+		}
+	}
+	if len(running) == 0 {
+		return metrics
+	}
+	return running
 }
 
 func aggregateExtendedMetrics(metrics []ExtendedMetrics) Metrics {
