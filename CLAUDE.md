@@ -15,7 +15,7 @@ templates/dashboard.gohtml # Web dashboard markup (+ inline icon sprite)
 templates/static/          # Embedded dashboard assets (css/, js/, vendor/, images/)
 sampleapps/               # Embedded sample 3270 apps for testing
 binaries/                 # Pre-compiled x3270 binaries (linux/ and windows/)
-docs/                     # MkDocs source (published to 3270.io)
+docs/                     # MkDocs source (published to 3270connect.3270.io)
 dist/                     # Build output — committed to repo by CI
 ```
 
