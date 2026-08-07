@@ -11,7 +11,8 @@ Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted wor
 go3270Connect.go          # Main entry point (~3,800 lines) — CLI, API, dashboard, workflow runner
 connect3270/emulator.go   # Core TN3270 protocol implementation (x3270/s3270 wrapper)
 charmui.go                # Terminal UI rendering (lipgloss/pterm)
-templates/dashboard.gohtml # Web dashboard UI
+templates/dashboard.gohtml # Web dashboard markup (+ inline icon sprite)
+templates/static/          # Embedded dashboard assets (css/, js/, vendor/, images/)
 sampleapps/               # Embedded sample 3270 apps for testing
 binaries/                 # Pre-compiled x3270 binaries (linux/ and windows/)
 docs/                     # MkDocs source (published to 3270.io)

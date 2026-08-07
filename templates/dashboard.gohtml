@@ -1,3467 +1,868 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="phosphor" data-density="comfortable" data-fx="on" data-view="table" data-wrap="on">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>3270Connect Dashboard</title>
+  <meta name="color-scheme" content="dark light">
+  <title>3270Connect — Operations Console</title>
   <link rel="shortcut icon" href="/static/images/logo.png" type="image/png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- added jQuery dependency -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
-  <script src="https://unpkg.com/@popperjs/core@2"></script>
-  <script src="https://unpkg.com/tippy.js@6"></script>
-  <!-- Yorkshire Mainframe Theme Fonts -->
+
+  <link rel="stylesheet" href="/static/css/dashboard.css?v={{.Version}}">
+
+  <!-- Web fonts are a progressive enhancement: the console falls back to the
+       local monospace/system stacks when the network is unavailable. Every
+       other asset is served from this binary, so the dashboard works offline. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      /* Yorkshire Mainframe System palette */
-      --background: #031611;
-      --background-accent: radial-gradient(135% 135% at 50% -10%, rgba(77, 255, 176, 0.16), transparent 65%);
-      --card: rgba(8, 52, 38, 0.94);
-      --popover: rgba(10, 56, 41, 0.92);
-      --input: rgba(10, 38, 30, 0.9);
-      --muted: rgba(5, 30, 22, 0.65);
-
-      --foreground: #cafee9;
-      --card-foreground: #ecfff7;
-      --popover-foreground: #d4ffee;
-      --muted-foreground: #70e7b6;
-
-      --primary: #4effb3;
-      --primary-foreground: #02130a;
-      --accent: #f7c36b;
-      --accent-foreground: #04130b;
-      --secondary: rgba(84, 160, 126, 0.78);
-      --secondary-foreground: #dcfff3;
-
-      --border: rgba(78, 255, 176, 0.38);
-      --ring: rgba(78, 255, 176, 0.58);
-      --destructive: #ff6f82;
-      --destructive-foreground: #fff5f7;
-
-      --radius: 0.75rem;
-      --shadow-sm: 0 0 16px rgba(78, 255, 176, 0.14);
-      --shadow-md: 0 0 28px rgba(78, 255, 176, 0.18);
-      --shadow-lg: 0 0 40px rgba(78, 255, 176, 0.28);
-    }
-
-    html {
-      height: 100%;
-    }
-
-    .header-subtext {
-      font-size: 1rem;
-      color: var(--muted-foreground);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .header-eyebrow {
-      font-size: 0.85rem;
-      color: var(--muted-foreground);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin: 0 0 8px;
-    }
-
-    .mainframe-header h1 {
-      color: var(--card-foreground);
-      text-shadow: 0 0 16px rgba(78, 255, 176, 0.28);
-      letter-spacing: 0.06em;
-      margin: 0;
-    }
-
-    .header-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-end;
-    }
-
-    .header-actions-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-left: auto;
-      align-items: flex-end;
-    }
-
-    .mainframe-shell {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-      min-height: 100%;
-    }
-
-    .mainframe-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 24px;
-      align-items: stretch;
-    }
-
-    .panel {
-      background: linear-gradient(186deg, rgba(9, 60, 43, 0.95) 0%, rgba(3, 20, 15, 0.97) 100%);
-      border: 1px solid rgba(78, 255, 176, 0.26);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .panel::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius);
-      border: 1px solid rgba(78, 255, 176, 0.14);
-      pointer-events: none;
-    }
-
-    .panel-header {
-      padding: 20px 24px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.95rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-
-    .panel-subtext {
-      font-size: 0.75rem;
-      color: var(--muted-foreground);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-
-    .panel-body {
-      padding: 0 24px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .terminal-panel .panel-header {
-      color: var(--card-foreground);
-    }
-
-    .status-lights {
-      display: flex;
-      gap: 6px;
-    }
-
-    .status-lights .light {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-      background-color: currentColor;
-      box-shadow: 0 0 12px currentColor;
-    }
-
-    .status-lights .light.red { color: #ff6b6b; }
-    .status-lights .light.amber { color: #f8d46a; }
-    .status-lights .light.green { color: #3dff9a; }
-
-    .terminal-body {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--card-foreground);
-    }
-
-    .terminal-line {
-      font-size: 0.95rem;
-      letter-spacing: 0.03em;
-      color: var(--card-foreground);
-    }
-
-    .terminal-line.accent {
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    .terminal-line .success {
-      color: var(--primary);
-    }
-
-    .terminal-line .muted {
-      color: var(--muted-foreground);
-    }
-
-    .terminal-line .numeric {
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .terminal-divider {
-      margin: 12px 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(61, 255, 154, 0.4), transparent);
-    }
-
-    .terminal-prompt {
-      margin: 0;
-      color: var(--primary);
-    }
-
-    .command-panel {
-      gap: 0;
-    }
-
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 18px;
-      padding: 0 24px 24px;
-    }
-
-    .metric-tile {
-      background: rgba(6, 30, 23, 0.9);
-      border: 1px solid rgba(78, 255, 176, 0.22);
-      border-radius: calc(var(--radius) - 0.35rem);
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: inset 0 0 18px rgba(6, 48, 34, 0.4);
-    }
-
-    .metric-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-
-    .metric-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.9rem;
-      font-weight: 700;
-      color: var(--card-foreground);
-    }
-
-    .metric-trend {
-      font-size: 0.75rem;
-      color: var(--muted-foreground);
-      letter-spacing: 0.05em;
-    }
-
-    .command-actions {
-      padding: 0 24px 24px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: flex-start;
-    }
-
-    .interface-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 24px;
-      border-radius: var(--radius);
-      border: 1px solid rgba(78, 255, 176, 0.25);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: rgba(78, 255, 176, 0.14);
-      color: var(--card-foreground);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .interface-button.secondary {
-      background: rgba(78, 255, 176, 0.06);
-    }
-
-    .interface-button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-      background: rgba(78, 255, 176, 0.22);
-    }
-
-    .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-      gap: 18px;
-      padding: 0 24px 24px;
-      width: 100%;
-    }
-
-    .chart-card {
-      background: rgba(7, 36, 27, 0.9);
-      border: 1px solid rgba(78, 255, 176, 0.18);
-      border-radius: calc(var(--radius) - 0.4rem);
-      padding: 18px;
-      box-shadow: inset 0 0 18px rgba(6, 48, 34, 0.55);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      width: 100%;
-    }
-
-    .chart-card-header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      color: var(--card-foreground);
-    }
-
-    .chart-card-header h3 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.1rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin: 0;
-    }
-
-    .chart-slider {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      color: var(--card-foreground);
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .chart-slider input[type="range"] {
-      flex: 1;
-      min-width: 160px;
-    }
-
-    .chart-container {
-      position: relative;
-      width: 100%;
-      height: 260px;
-    }
-
-    .chart-card canvas {
-      width: 100% !important;
-    }
-
-    .status-panel {
-      gap: 0;
-    }
-
-    .status-section {
-      padding: 12px 24px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border-bottom: 1px solid rgba(61, 255, 154, 0.12);
-    }
-
-    .status-section:last-of-type {
-      border-bottom: none;
-    }
-
-    .status-section h4 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      margin: 0;
-    }
-
-    .status-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      color: var(--muted-foreground);
-    }
-
-    .status-item .value {
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .status-meter {
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(61, 255, 154, 0.12);
-      overflow: hidden;
-    }
-
-    .status-meter span {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, rgba(61, 255, 154, 0.6), rgba(61, 255, 154, 1));
-      border-radius: inherit;
-    }
-
-    .automation-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .automation-form .form-check {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .form-check-label {
-      color: var(--muted-foreground);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-    }
-
-    .automation-form label.form-label {
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      color: var(--muted-foreground);
-      text-transform: uppercase;
-    }
-
-    .process-panel .panel-body {
-      padding-top: 16px;
-      overflow-x: auto;
-    }
-
-    #pidParamsContainerOnDashboard {
-      background: linear-gradient(188deg, rgba(3, 24, 18, 0.96) 0%, rgba(2, 14, 10, 0.98) 100%);
-      border: 1px solid rgba(61, 255, 154, 0.18);
-      border-radius: calc(var(--radius) - 0.35rem);
-      padding: 16px;
-      box-shadow: inset 0 0 22px rgba(2, 14, 10, 0.6);
-      overflow-x: auto;
-    }
-
-    #pidParamsContainerOnDashboard table {
-      background: transparent;
-    }
-
-    #pidParamsContainerOnDashboard table.table {
-      --bs-table-color: var(--card-foreground);
-      --bs-table-bg: rgba(3, 24, 18, 0.96);
-      --bs-table-striped-bg: rgba(6, 40, 29, 0.88);
-      --bs-table-striped-color: var(--card-foreground);
-      --bs-table-hover-bg: rgba(6, 40, 29, 0.9);
-      --bs-table-hover-color: var(--card-foreground);
-      --bs-table-border-color: rgba(61, 255, 154, 0.18);
-      background-color: var(--bs-table-bg);
-      color: var(--card-foreground);
-      border: 1px solid rgba(61, 255, 154, 0.18);
-      border-radius: calc(var(--radius) - 0.35rem);
-      overflow: hidden;
-    }
-
-    #pidParamsContainerOnDashboard table.table thead {
-      background-color: rgba(6, 30, 23, 0.95);
-      color: var(--primary);
-    }
-
-    #pidParamsContainerOnDashboard table.table thead th {
-      border: none;
-      border-bottom: 1px solid rgba(61, 255, 154, 0.18);
-    }
-
-    #pidParamsContainerOnDashboard table.table-hover tbody tr:hover {
-      box-shadow: inset 0 0 12px rgba(0, 255, 128, 0.08);
-    }
-
-    #pidParamsContainerOnDashboard table.table tbody tr {
-      background-color: rgba(4, 26, 19, 0.92) !important;
-    }
-
-    #pidParamsContainerOnDashboard table.table tbody td {
-      color: var(--card-foreground);
-    }
-
-    .process-panel table {
-      color: var(--card-foreground);
-      background: transparent;
-    }
-
-    .process-panel thead th {
-      border-bottom: 1px solid rgba(61, 255, 154, 0.2);
-      color: var(--primary);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-    }
-
-    .process-panel tbody tr {
-      border-top: 1px solid rgba(61, 255, 154, 0.08);
-    }
-
-    .action-icon {
-      cursor: pointer;
-      margin: 0 6px;
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
-
-    button.action-icon {
-      background: none;
-      border: 0;
-      padding: 0;
-      color: inherit;
-      font: inherit;
-      line-height: 1;
-    }
-
-    .action-icon:hover,
-    .action-icon:focus-visible {
-      transform: scale(1.1);
-      color: var(--primary);
-    }
-
-    .action-icon:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 3px;
-      border-radius: 2px;
-    }
-
-    .mainframe-footer {
-      text-align: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      padding: 16px 8px 24px;
-      border-top: 1px solid rgba(61, 255, 154, 0.1);
-      margin-top: auto;
-    }
-
-    .mainframe-footer span {
-      display: block;
-    }
-
-    /* CRT Screen Effect */
-    .crt-screen {
-      background:
-        linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75)),
-        radial-gradient(ellipse at center, rgba(0, 255, 128, 0.08) 0%, transparent 65%),
-        linear-gradient(transparent 0%, rgba(0, 255, 128, 0.04) 50%, transparent 100%),
-        var(--card);
-      position: relative;
-    }
-
-    .crt-screen::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 2px,
-          rgba(0, 255, 128, 0.04) 2px,
-          rgba(0, 255, 128, 0.04) 4px
-        );
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Cursor Blink Animation */
-    @keyframes cursor-blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-
-    .cursor {
-      animation: cursor-blink 1s infinite;
-      color: var(--primary);
-    }
-
-    /* System Glow Effect */
-    .system-glow {
-      box-shadow: 
-        0 0 10px rgba(0, 255, 128, 0.3),
-        inset 0 0 10px rgba(0, 255, 128, 0.1);
-    }
-
-    /* Modern Navbar */
-    .navbar {
-      background: var(--card) !important;
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .navbar-brand {
-      font-weight: 700;
-      font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: transform 0.3s ease;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--primary) !important;
-    }
-
-    .navbar-brand:hover {
-      transform: scale(1.05);
-      text-shadow: 0 0 8px rgba(0, 255, 128, 0.4);
-    }
-
-    .navbar-brand img {
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Modern Buttons */
-    .btn {
-      border-radius: var(--radius);
-      padding: 10px 24px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      font-family: 'Inter', sans-serif;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: var(--primary-foreground);
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary);
-      box-shadow: 0 0 15px rgba(0, 255, 128, 0.4);
-    }
-
-    .btn-success {
-      background: var(--accent);
-      color: var(--accent-foreground);
-      border-color: var(--accent);
-    }
-
-    .btn-success:hover {
-      background: var(--accent);
-      box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
-    }
-
-    .btn-secondary {
-      background: var(--secondary);
-      color: var(--secondary-foreground);
-      border-color: var(--secondary);
-    }
-
-    .btn-light {
-      background: var(--card);
-      color: var(--foreground);
-      border-color: var(--border);
-    }
-
-    .btn-danger {
-      background: var(--destructive);
-      color: var(--destructive-foreground);
-      border-color: var(--destructive);
-    }
-
-    .btn-danger:hover {
-      background: var(--destructive);
-      box-shadow: 0 0 15px rgba(255, 82, 82, 0.4);
-    }
-
-    /* Hero Section with Gradient */
-    .hero-section {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      padding: 40px;
-      margin-bottom: 32px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-
-    .hero-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--primary);
-      box-shadow: 0 0 10px rgba(0, 255, 128, 0.5);
-    }
-
-    .hero-section h1 {
-      color: var(--primary);
-      font-weight: 800;
-      margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      text-shadow: 0 0 10px rgba(0, 255, 128, 0.3);
-    }
-
-    .hero-section .subtitle {
-      color: var(--muted-foreground);
-      font-size: 1.1rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* Modern Metric Cards */
-    .metric-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
-      border-left: 4px solid transparent;
-      border: 1px solid var(--border);
-      min-width: 200px;
-      position: relative;
-    }
-
-    .metric-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .metric-card.active {
-      border-left-color: var(--primary);
-      box-shadow: 0 0 10px rgba(0, 255, 128, 0.2);
-    }
-
-    .metric-card.started {
-      border-left-color: var(--accent);
-      box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);
-    }
-
-    .metric-card.completed {
-      border-left-color: var(--primary);
-      box-shadow: 0 0 10px rgba(0, 255, 128, 0.2);
-    }
-
-    .metric-card.failed {
-      border-left-color: var(--destructive);
-      box-shadow: 0 0 10px rgba(255, 82, 82, 0.2);
-    }
-
-    .metric-card h5 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--muted-foreground);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .metric-card .metric-value {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      margin: 0;
-      font-family: 'JetBrains Mono', monospace;
-      text-shadow: 0 0 10px rgba(0, 255, 128, 0.3);
-    }
-
-    .metric-card .metric-icon {
-      font-size: 2rem;
-      opacity: 0.2;
-      position: absolute;
-      right: 24px;
-      top: 24px;
-      color: var(--primary);
-    }
-
-    /* Chart Container */
-    .chart-wrapper {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 24px;
-      transition: all 0.3s ease;
-      border: 1px solid var(--border);
-    }
-
-    .chart-wrapper:hover {
-      box-shadow: var(--shadow-lg);
-    }
-
-    .chart-wrapper h3 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .chart-container { 
-      margin: auto; 
-      height: 400px; 
-      position: relative;
-    }
-
-    /* Modern Table Styling */
-    .table-wrapper {
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-md);
-      margin-top: 24px;
-      border: 1px solid var(--border);
-    }
-
-    .table {
-      margin-bottom: 0;
-      color: var(--foreground);
-    }
-
-    .table thead {
-      background: var(--primary);
-      color: var(--primary-foreground);
-    }
-
-    .table thead th {
-      border: none;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 0.85rem;
-      padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .table tbody tr {
-      transition: all 0.2s ease;
-      background: var(--card);
-    }
-
-    .table tbody tr:hover {
-      background-color: var(--muted);
-      transform: scale(1.01);
-      box-shadow: 0 0 10px rgba(0, 255, 128, 0.1);
-    }
-
-    .table tbody td {
-      padding: 16px;
-      vertical-align: middle;
-      border-bottom: 1px solid var(--border);
-      color: var(--foreground);
-    }
-
-    /* Action Icons */
-    .action-icon {
-      font-size: 1.2rem;
-      cursor: pointer;
-      margin: 0 6px;
-      transition: all 0.2s ease;
-    }
-
-    .action-icon:hover,
-    .action-icon:focus-visible {
-      transform: scale(1.2);
-    }
-
-    .action-icon:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 3px;
-      border-radius: 2px;
-    }
-
-    .action-icon.logs {
-      color: var(--primary);
-    }
-
-    .action-icon.logs:hover,
-    .action-icon.logs:focus-visible {
-      text-shadow: 0 0 8px rgba(0, 255, 128, 0.5);
-    }
-
-    .action-icon.kill {
-      color: var(--destructive);
-    }
-
-    .action-icon.kill:hover,
-    .action-icon.kill:focus-visible {
-      text-shadow: 0 0 8px rgba(255, 82, 82, 0.5);
-    }
-
-    .action-icon.workflow {
-      color: #5bc0de;
-    }
-
-    .action-icon.workflow:hover,
-    .action-icon.workflow:focus-visible {
-      transform: scale(1.2);
-      text-shadow: 0 0 8px rgba(91, 192, 222, 0.6);
-    }
-
-    .action-icon.output {
-      color: #f0ad4e;
-    }
-
-    .action-icon.output:hover,
-    .action-icon.output:focus-visible {
-      transform: scale(1.2);
-      text-shadow: 0 0 8px rgba(240, 173, 78, 0.6);
-    }
-
-    .action-icon.summary {
-      color: #17a2b8;
-    }
-
-    .action-icon.summary:hover,
-    .action-icon.summary:focus-visible {
-      transform: scale(1.2);
-      text-shadow: 0 0 8px rgba(23, 162, 184, 0.6);
-    }
-
-    /* Modern Form Controls */
-    .form-control, .form-select {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 10px 16px;
-      transition: all 0.3s ease;
-      background: var(--input);
-      color: var(--foreground);
-    }
-
-    .form-control:focus, .form-select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(0, 255, 128, 0.1);
-      background: var(--input);
-      color: var(--foreground);
-    }
-
-    .form-check-input:checked {
-      background-color: var(--primary);
-      border-color: var(--primary);
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: var(--foreground);
-      margin-bottom: 8px;
-    }
-
-    .form-range {
-      accent-color: var(--primary);
-    }
-
-    /* Modern Modal */
-    .modal-content {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-lg);
-      background: var(--card);
-    }
-
-    .modal-header {
-      background: linear-gradient(186deg, rgba(8, 52, 38, 0.96) 0%, rgba(3, 20, 15, 0.98) 100%);
-      color: var(--card-foreground);
-      border-radius: var(--radius) var(--radius) 0 0;
-      border-bottom: 1px solid rgba(78, 255, 176, 0.2);
-      padding: 20px 24px;
-      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-    }
-
-    .modal-title {
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .modal-body {
-      padding: 24px;
-      background: var(--card);
-      color: var(--foreground);
-    }
-
-    .modal-footer {
-      border-top: 1px solid var(--border);
-      padding: 20px 24px;
-      background: var(--card);
-    }
-
-    .btn-close {
-      filter: brightness(0) invert(1);
-    }
-
-    #startProcessModal .modal-dialog {
-      --bs-modal-width: min(900px, 95vw);
-    }
-
-    #startProcessModal .modal-body {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .config-preview-accordion .accordion-item {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: calc(var(--radius) - 0.35rem);
-      overflow: hidden;
-    }
-
-    .config-preview-accordion .accordion-button {
-      background: rgba(6, 30, 23, 0.92);
-      color: var(--card-foreground);
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .config-preview-accordion .accordion-button:not(.collapsed) {
-      box-shadow: inset 0 -1px 0 rgba(78, 255, 176, 0.2);
-    }
-
-    .accordion-button::after {
-      content: "";
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      margin-left: auto;
-      background-color: var(--card-foreground);
-      -webkit-mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.5 6.5l6 6 6-6H1.5z'/%3e%3c/svg%3e") no-repeat center;
-      mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.5 6.5l6 6 6-6H1.5z'/%3e%3c/svg%3e") no-repeat center;
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-
-    /* Rotate when expanded */
-    .accordion-button:not(.collapsed)::after {
-      transform: rotate(180deg);
-    }
-
-    /* Optional hover or active effect (slightly brighter) */
-    .accordion-button:hover::after,
-    .accordion-button:not(.collapsed)::after {
-      background-color: color-mix(in srgb, var(--card-foreground) 80%, white);
-    }
-
-
-    .config-preview-accordion .accordion-body {
-      padding: 0;
-      background: rgba(3, 24, 18, 0.96);
-    }
-
-    .config-preview-accordion pre {
-      margin: 0;
-      border: none;
-      border-radius: 0;
-      max-height: 260px;
-      overflow: auto;
-    }
-
-    .override-fieldset {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      background: rgba(6, 30, 23, 0.85);
-      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .override-fieldset legend {
-      padding: 0 12px;
-      font-size: 0.85rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      font-weight: 600;
-    }
-
-    .override-fieldset .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-
-    .override-fieldset .form-grid .full-span {
-      grid-column: 1 / -1;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
-  .form-text {
-      margin-top: .25rem;
-      font-size: .875em;
-      color: var(--muted-foreground);
-  }
-
-    @media (max-width: 768px) {
-      .override-fieldset .form-grid .full-span {
-        justify-content: flex-start;
-      }
-
-      .override-fieldset .form-grid .full-span .btn {
-        width: 100%;
-      }
-    }
-
-    /* Footer */
-    footer {
-      background: var(--card) !important;
-      box-shadow: 0 -4px 16px rgba(0, 255, 128, 0.1);
-      border-top: 1px solid var(--border);
-    }
-
-    footer a {
-      color: var(--primary);
-    }
-
-    footer a:hover {
-      text-shadow: 0 0 8px rgba(0, 255, 128, 0.5);
-    }
-
-    /* Auto Refresh Toggle */
-    .settings-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
-      margin-top: 24px;
-      border: 1px solid var(--border);
-    }
-
-    .form-check-input {
-      cursor: pointer;
-      width: 48px;
-      height: 24px;
-    }
-
-    .auto-refresh-control {
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-      padding: 12px 18px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: rgba(78, 255, 176, 0.12);
-      box-shadow: var(--shadow-sm);
-      width: 340px;
-      align-self: flex-start;
-    }
-
-    .auto-refresh-control .form-check,
-    .auto-refresh-control .form-select {
-      margin: 0;
-    }
-
-    .auto-refresh-control label {
-      margin: 0;
-      color: var(--muted-foreground);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-    }
-
-    .auto-refresh-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      padding-top: 0.5rem;
-      border-top: 1px dashed rgba(255, 255, 255, 0.2);
-      color: var(--muted-foreground);
-    }
-
-    .auto-refresh-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-      font-size: 0.85rem;
-      text-transform: none;
-    }
-
-    .auto-refresh-info small {
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .refresh-indicator {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .refresh-indicator .indicator-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid var(--muted-foreground);
-      position: relative;
-      transition: border-color 0.3s ease;
-    }
-
-    .refresh-indicator .indicator-icon::after {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--muted-foreground);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .refresh-indicator.active .indicator-icon {
-      border-color: var(--primary);
-    }
-
-    .refresh-indicator.active .indicator-icon::after {
-      opacity: 1;
-      border-top-color: var(--primary);
-      animation: spin 0.9s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .logs-modal {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      height: 100%;
-      min-height: 0;
-    }
-
-    .logs-modal .logs-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .logs-modal .settings-card {
-      margin-top: 0;
-      flex-shrink: 0;
-    }
-
-    .logs-modal #logsContainer {
-      flex: 1;
-      min-height: 0;
-      max-height: none;
-      overflow-y: auto;
-    }
-
-    .logs-modal .logs-refresh {
-      margin-bottom: 0;
-    }
-
-    #consoleModal .modal-dialog {
-      width: 100%;
-      max-width: min(960px, 95vw);
-      margin: 16px auto;
-      height: calc(100vh - 32px);
-      display: flex;
-    }
-
-    #consoleModal .modal-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      max-height: 100%;
-    }
-
-    #consoleModal .modal-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      gap: 16px;
-    }
-
-    #pidParamsContainer {
-      max-height: 180px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .pid-param-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .pid-param-row .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: normal;
-    }
-
-    .pid-param-row .pid-badge {
-      flex: 0 0 auto;
-    }
-
-    .pid-param-row .param-badge {
-      flex: 1 1 220px;
-    }
-
-    .pid-param-row .pid-label,
-    .pid-param-row .param-label {
-      font-weight: 600;
-      opacity: 0.75;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-size: 0.65rem;
-    }
-
-    .pid-param-row .pid-value,
-    .pid-param-row .param-text {
-      font-weight: 600;
-      color: inherit;
-    }
-
-    .pid-param-row .param-text {
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      line-height: 1.35;
-    }
-
-    /* Toast Notification */
-    #toast-container.toast-top-right {
-      top: 80px !important;
-      right: 20px;
-    }
-
-    .toast {
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-    }
-
-    /* Logs Container */
-    #logsContainer {
-      background: var(--background) !important;
-      border-radius: var(--radius);
-      font-family: 'JetBrains Mono', monospace;
-      border: 1px solid var(--border);
-    }
-
-    /* Badge Styling */
-    .badge {
-      border-radius: var(--radius);
-      padding: 6px 12px;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .bg-light {
-      background-color: var(--card) !important;
-      color: var(--foreground) !important;
-    }
-
-    .bg-dark {
-      background-color: var(--background) !important;
-      color: var(--foreground) !important;
-    }
-
-    .bg-secondary {
-      background-color: var(--secondary) !important;
-      color: var(--secondary-foreground) !important;
-    }
-
-    .bg-info {
-      background-color: var(--primary) !important;
-      color: var(--primary-foreground) !important;
-    }
-
-    .bg-warning {
-      background-color: var(--accent) !important;
-      color: var(--accent-foreground) !important;
-    }
-
-    .bg-success {
-      background-color: var(--primary) !important;
-      color: var(--primary-foreground) !important;
-    }
-
-    .bg-danger {
-      background-color: var(--destructive) !important;
-      color: var(--destructive-foreground) !important;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 48px 24px 0;
-      background: linear-gradient(188deg, rgba(4, 26, 19, 0.92) 0%, rgba(3, 18, 14, 0.94) 38%, rgba(4, 40, 29, 0.96) 100%);
-      background-image: var(--background-accent), linear-gradient(188deg, rgba(4, 26, 19, 0.92) 0%, rgba(3, 18, 14, 0.94) 38%, rgba(4, 40, 29, 0.96) 100%);
-      border-radius: var(--radius);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .metric-card, .chart-wrapper, .table-wrapper {
-      animation: fadeInUp 0.5s ease-out;
-    }
-
-    /* Loading State */
-    .chart-container.loading::after {
-      content: 'Loading...';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-weight: 600;
-      color: var(--muted-foreground);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Alert Styling */
-    .alert {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      font-family: 'Inter', sans-serif;
-    }
-
-    .alert-danger {
-      background: var(--destructive);
-      color: var(--destructive-foreground);
-      border-color: var(--destructive);
-    }
-
-    .alert-info {
-      background: var(--card);
-      color: var(--foreground);
-      border-color: var(--border);
-    }
-
-    /* Responsive Improvements */
-    @media (max-width: 1200px) {
-      .mainframe-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .header-actions {
-        width: 100%;
-        justify-content: flex-start;
-      }
-
-      .metric-grid {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      }
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 32px 16px 0;
-      }
-
-      .mainframe-shell {
-        gap: 20px;
-      }
-
-      .command-actions {
-        justify-content: flex-start;
-      }
-
-      .metric-grid {
-        grid-template-columns: 1fr;
-        padding: 0 16px 20px;
-      }
-
-      .chart-grid {
-        grid-template-columns: 1fr;
-        padding: 0 16px 20px;
-      }
-
-      .chart-container {
-        height: 220px;
-      }
-
-      .panel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-    }
-
-    /* Maximized modal styles */
-    .modal-maximized {
-      max-width: calc(100vw - 32px) !important;
-      margin: 16px auto !important;
-      height: calc(100vh - 32px);
-    }
-
-    .modal-maximized .modal-content {
-      height: 100%;
-      border-radius: var(--radius);
-    }
-
-    .modal-maximized .modal-body {
-      max-height: calc(100vh - 212px);
-      overflow-y: auto;
-    }
-
-    .modal-maximized #logsContainer {
-      max-height: calc(100vh - 482px) !important;
-    }
-
-    /* Table dark styling for logs */
-    .table-dark {
-      background: var(--background);
-      color: var(--foreground);
-    }
-
-    .table-dark thead {
-      background: var(--card);
-      color: var(--primary);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .table-dark tbody tr {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-      background-color: var(--card);
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
 </head>
-<body class="crt-screen">
-  <div class="mainframe-shell">
-    <header class="mainframe-header">
-      <div class="header-titles">
-        <h1>3270Connect Dashboard<span class="cursor">█</span></h1>
-        <p class="header-subtext">Monitor workflows, resources, and process health at a glance</p>
+<body>
+  <!-- Icon sprite. Generated from Font Awesome Free 6.5.2 solid icons
+       (Icons: CC BY 4.0 — https://fontawesome.com/license/free). Inlined so the
+       console renders identically without any network access. -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true" focusable="false">
+<symbol id="i-magnifying-glass" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></symbol>
+<symbol id="i-rocket" viewBox="0 0 512 512"><path d="M156.6 384.9L125.7 354c-8.5-8.5-11.5-20.8-7.7-32.2c3-8.9 7-20.5 11.8-33.8L24 288c-8.6 0-16.6-4.6-20.9-12.1s-4.2-16.7 .2-24.1l52.5-88.5c13-21.9 36.5-35.3 61.9-35.3l82.3 0c2.4-4 4.8-7.7 7.2-11.3C289.1-4.1 411.1-8.1 483.9 5.3c11.6 2.1 20.6 11.2 22.8 22.8c13.4 72.9 9.3 194.8-111.4 276.7c-3.5 2.4-7.3 4.8-11.3 7.2v82.3c0 25.4-13.4 49-35.3 61.9l-88.5 52.5c-7.4 4.4-16.6 4.5-24.1 .2s-12.1-12.2-12.1-20.9V380.8c-14.1 4.9-26.4 8.9-35.7 11.9c-11.2 3.6-23.4 .5-31.8-7.8zM384 168a40 40 0 1 0 0-80 40 40 0 1 0 0 80z"/></symbol>
+<symbol id="i-server" viewBox="0 0 512 512"><path d="M64 32C28.7 32 0 60.7 0 96v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V352c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/></symbol>
+<symbol id="i-terminal" viewBox="0 0 576 512"><path d="M9.4 86.6C-3.1 74.1-3.1 53.9 9.4 41.4s32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L178.7 256 9.4 86.6zM256 416H544c17.7 0 32 14.3 32 32s-14.3 32-32 32H256c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 512 512"><path d="M142.9 142.9c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5c0 0 0 0 0 0H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5c7.7-21.8 20.2-42.3 37.8-59.8zM16 312v7.6 .7V440c0 9.7 5.8 18.5 14.8 22.2s19.3 1.7 26.2-5.2l41.6-41.6c87.6 86.5 228.7 86.2 315.8-1c24.4-24.4 42.1-53.1 52.9-83.7c5.9-16.7-2.9-34.9-19.5-40.8s-34.9 2.9-40.8 19.5c-7.7 21.8-20.2 42.3-37.8 59.8c-62.2 62.2-162.7 62.5-225.3 1L185 329c6.9-6.9 8.9-17.2 5.2-26.2s-12.5-14.8-22.2-14.8H48.4h-.7H40c-13.3 0-24 10.7-24 24z"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 576 512"><path d="M64 64C28.7 64 0 92.7 0 128V384c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64H64zm16 64h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V144c0-8.8 7.2-16 16-16zM64 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V240zm16 80h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16zm80-176c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V144zm16 80h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V240c0-8.8 7.2-16 16-16zM160 336c0-8.8 7.2-16 16-16H400c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V336zM272 128h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V144c0-8.8 7.2-16 16-16zM256 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272c-8.8 0-16-7.2-16-16V240zM368 128h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H368c-8.8 0-16-7.2-16-16V144c0-8.8 7.2-16 16-16zM352 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H368c-8.8 0-16-7.2-16-16V240zM464 128h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H464c-8.8 0-16-7.2-16-16V144c0-8.8 7.2-16 16-16zM448 240c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H464c-8.8 0-16-7.2-16-16V240zm16 80h32c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H464c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16z"/></symbol>
+<symbol id="i-plug-circle-xmark" viewBox="0 0 576 512"><path d="M96 0C78.3 0 64 14.3 64 32v96h64V32c0-17.7-14.3-32-32-32zM288 0c-17.7 0-32 14.3-32 32v96h64V32c0-17.7-14.3-32-32-32zM32 160c-17.7 0-32 14.3-32 32s14.3 32 32 32v32c0 77.4 55 142 128 156.8V480c0 17.7 14.3 32 32 32s32-14.3 32-32V412.8c12.3-2.5 24.1-6.4 35.1-11.5c-2.1-10.8-3.1-21.9-3.1-33.3c0-80.3 53.8-148 127.3-169.2c.5-2.2 .7-4.5 .7-6.8c0-17.7-14.3-32-32-32H32zM432 512a144 144 0 1 0 0-288 144 144 0 1 0 0 288zm59.3-180.7L454.6 368l36.7 36.7c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0L432 390.6l-36.7 36.7c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6L409.4 368l-36.7-36.7c-6.2-6.2-6.2-16.4 0-22.6s16.4-6.2 22.6 0L432 345.4l36.7-36.7c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"/></symbol>
+<symbol id="i-bolt" viewBox="0 0 448 512"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288H175.5L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7H272.5L349.4 44.6z"/></symbol>
+<symbol id="i-compress" viewBox="0 0 448 512"><path d="M160 64c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V64zM32 320c-17.7 0-32 14.3-32 32s14.3 32 32 32H96v64c0 17.7 14.3 32 32 32s32-14.3 32-32V352c0-17.7-14.3-32-32-32H32zM352 64c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H352V64zM320 320c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32s32-14.3 32-32V384h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H320z"/></symbol>
+<symbol id="i-expand" viewBox="0 0 448 512"><path d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64V352zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32H320zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V352z"/></symbol>
+<symbol id="i-wand-magic-sparkles" viewBox="0 0 576 512"><path d="M234.7 42.7L197 56.8c-3 1.1-5 4-5 7.2s2 6.1 5 7.2l37.7 14.1L248.8 123c1.1 3 4 5 7.2 5s6.1-2 7.2-5l14.1-37.7L315 71.2c3-1.1 5-4 5-7.2s-2-6.1-5-7.2L277.3 42.7 263.2 5c-1.1-3-4-5-7.2-5s-6.1 2-7.2 5L234.7 42.7zM46.1 395.4c-18.7 18.7-18.7 49.1 0 67.9l34.6 34.6c18.7 18.7 49.1 18.7 67.9 0L529.9 116.5c18.7-18.7 18.7-49.1 0-67.9L495.3 14.1c-18.7-18.7-49.1-18.7-67.9 0L46.1 395.4zM484.6 82.6l-105 105-23.3-23.3 105-105 23.3 23.3zM7.5 117.2C3 118.9 0 123.2 0 128s3 9.1 7.5 10.8L64 160l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L128 160l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L128 96 106.8 39.5C105.1 35 100.8 32 96 32s-9.1 3-10.8 7.5L64 96 7.5 117.2zm352 256c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L416 416l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L480 416l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L480 352l-21.2-56.5c-1.7-4.5-6-7.5-10.8-7.5s-9.1 3-10.8 7.5L416 352l-56.5 21.2z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 512 512"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></symbol>
+<symbol id="i-arrows-to-dot" viewBox="0 0 512 512"><path d="M256 0c17.7 0 32 14.3 32 32V64h32c12.9 0 24.6 7.8 29.6 19.8s2.2 25.7-6.9 34.9l-64 64c-12.5 12.5-32.8 12.5-45.3 0l-64-64c-9.2-9.2-11.9-22.9-6.9-34.9s16.6-19.8 29.6-19.8h32V32c0-17.7 14.3-32 32-32zM169.4 393.4l64-64c12.5-12.5 32.8-12.5 45.3 0l64 64c9.2 9.2 11.9 22.9 6.9 34.9s-16.6 19.8-29.6 19.8H288v32c0 17.7-14.3 32-32 32s-32-14.3-32-32V448H192c-12.9 0-24.6-7.8-29.6-19.8s-2.2-25.7 6.9-34.9zM32 224H64V192c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l64 64c12.5 12.5 12.5 32.8 0 45.3l-64 64c-9.2 9.2-22.9 11.9-34.9 6.9s-19.8-16.6-19.8-29.6V288H32c-17.7 0-32-14.3-32-32s14.3-32 32-32zm297.4 54.6c-12.5-12.5-12.5-32.8 0-45.3l64-64c9.2-9.2 22.9-11.9 34.9-6.9s19.8 16.6 19.8 29.6v32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H448v32c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9l-64-64zM256 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></symbol>
+<symbol id="i-image" viewBox="0 0 512 512"><path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></symbol>
+<symbol id="i-file-csv" viewBox="0 0 512 512"><path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM200 352h16c22.1 0 40 17.9 40 40v8c0 8.8-7.2 16-16 16s-16-7.2-16-16v-8c0-4.4-3.6-8-8-8H200c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8h16c4.4 0 8-3.6 8-8v-8c0-8.8 7.2-16 16-16s16 7.2 16 16v8c0 22.1-17.9 40-40 40H200c-22.1 0-40-17.9-40-40V392c0-22.1 17.9-40 40-40zm133.1 0H368c8.8 0 16 7.2 16 16s-7.2 16-16 16H333.1c-7.2 0-13.1 5.9-13.1 13.1c0 5.2 3 9.9 7.8 12l37.4 16.6c16.3 7.2 26.8 23.4 26.8 41.2c0 24.9-20.2 45.1-45.1 45.1H304c-8.8 0-16-7.2-16-16s7.2-16 16-16h42.9c7.2 0 13.1-5.9 13.1-13.1c0-5.2-3-9.9-7.8-12l-37.4-16.6c-16.3-7.2-26.8-23.4-26.8-41.2c0-24.9 20.2-45.1 45.1-45.1zm98.9 0c8.8 0 16 7.2 16 16v31.6c0 23 5.5 45.6 16 66c10.5-20.3 16-42.9 16-66V368c0-8.8 7.2-16 16-16s16 7.2 16 16v31.6c0 34.7-10.3 68.7-29.6 97.6l-5.1 7.7c-3 4.5-8 7.1-13.3 7.1s-10.3-2.7-13.3-7.1l-5.1-7.7c-19.3-28.9-29.6-62.9-29.6-97.6V368c0-8.8 7.2-16 16-16z"/></symbol>
+<symbol id="i-chart-pie" viewBox="0 0 576 512"><path d="M304 240V16.6c0-9 7-16.6 16-16.6C443.7 0 544 100.3 544 224c0 9-7.6 16-16.6 16H304zM32 272C32 150.7 122.1 50.3 239 34.3c9.2-1.3 17 6.1 17 15.4V288L412.5 444.5c6.7 6.7 6.2 17.7-1.5 23.1C371.8 495.6 323.8 512 272 512C139.5 512 32 404.6 32 272zm526.4 16c9.3 0 16.6 7.8 15.4 17c-7.7 55.9-34.6 105.6-73.9 142.3c-6 5.6-15.4 5.2-21.2-.7L320 288H558.4z"/></symbol>
+<symbol id="i-chart-area" viewBox="0 0 512 512"><path d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64V400c0 44.2 35.8 80 80 80H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H80c-8.8 0-16-7.2-16-16V64zm96 288H448c17.7 0 32-14.3 32-32V251.8c0-7.6-2.7-15-7.7-20.8l-65.8-76.8c-12.1-14.2-33.7-15-46.9-1.8l-21 21c-10 10-26.4 9.2-35.4-1.6l-39.2-47c-12.6-15.1-35.7-15.4-48.7-.6L135.9 215c-5.1 5.8-7.9 13.3-7.9 21.1v84c0 17.7 14.3 32 32 32z"/></symbol>
+<symbol id="i-microchip" viewBox="0 0 512 512"><path d="M176 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64c-35.3 0-64 28.7-64 64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v56H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64c0 35.3 28.7 64 64 64v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h56v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448c35.3 0 64-28.7 64-64h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V280h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V176h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448c0-35.3-28.7-64-64-64V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H280V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H176V24zM160 128H352c17.7 0 32 14.3 32 32V352c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32zm192 32H160V352H352V160z"/></symbol>
+<symbol id="i-wave-square" viewBox="0 0 640 512"><path d="M128 64c0-17.7 14.3-32 32-32H320c17.7 0 32 14.3 32 32V416h96V256c0-17.7 14.3-32 32-32H608c17.7 0 32 14.3 32 32s-14.3 32-32 32H512V448c0 17.7-14.3 32-32 32H320c-17.7 0-32-14.3-32-32V96H192V256c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h96V64z"/></symbol>
+<symbol id="i-diagram-project" viewBox="0 0 576 512"><path d="M0 80C0 53.5 21.5 32 48 32h96c26.5 0 48 21.5 48 48V96H384V80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48V160H192v16c0 1.7-.1 3.4-.3 5L272 288h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H272c-26.5 0-48-21.5-48-48V336c0-1.7 .1-3.4 .3-5L144 224H48c-26.5 0-48-21.5-48-48V80z"/></symbol>
+<symbol id="i-table-list" viewBox="0 0 512 512"><path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zm64 0v64h64V96H64zm384 0H192v64H448V96zM64 224v64h64V224H64zm384 0H192v64H448V224zM64 352v64h64V352H64zm384 0H192v64H448V352z"/></symbol>
+<symbol id="i-table-cells-large" viewBox="0 0 512 512"><path d="M448 96V224H288V96H448zm0 192V416H288V288H448zM224 224H64V96H224V224zM64 288H224V416H64V288zM64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64z"/></symbol>
+<symbol id="i-xmark" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></symbol>
+<symbol id="i-satellite-dish" viewBox="0 0 512 512"><path d="M192 32c0-17.7 14.3-32 32-32C383.1 0 512 128.9 512 288c0 17.7-14.3 32-32 32s-32-14.3-32-32C448 164.3 347.7 64 224 64c-17.7 0-32-14.3-32-32zM60.6 220.6L164.7 324.7l28.4-28.4c-.7-2.6-1.1-5.4-1.1-8.3c0-17.7 14.3-32 32-32s32 14.3 32 32s-14.3 32-32 32c-2.9 0-5.6-.4-8.3-1.1l-28.4 28.4L291.4 451.4c14.5 14.5 11.8 38.8-7.3 46.3C260.5 506.9 234.9 512 208 512C93.1 512 0 418.9 0 304c0-26.9 5.1-52.5 14.4-76.1c7.5-19 31.8-21.8 46.3-7.3zM224 96c106 0 192 86 192 192c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-70.7-57.3-128-128-128c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></symbol>
+<symbol id="i-circle-check" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></symbol>
+<symbol id="i-circle-exclamation" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></symbol>
+<symbol id="i-triangle-exclamation" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></symbol>
+<symbol id="i-circle-info" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></symbol>
+<symbol id="i-play" viewBox="0 0 384 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 320 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/></symbol>
+<symbol id="i-bullseye" viewBox="0 0 512 512"><path d="M448 256A192 192 0 1 0 64 256a192 192 0 1 0 384 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm256 80a80 80 0 1 0 0-160 80 80 0 1 0 0 160zm0-224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zM224 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></symbol>
+<symbol id="i-gauge-high" viewBox="0 0 512 512"><path d="M0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM256 416c35.3 0 64-28.7 64-64c0-17.4-6.9-33.1-18.1-44.6L366 161.7c5.3-12.1-.2-26.3-12.3-31.6s-26.3 .2-31.6 12.3L257.9 288c-.6 0-1.3 0-1.9 0c-35.3 0-64 28.7-64 64s28.7 64 64 64zM176 144a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM96 288a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm352-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></symbol>
+<symbol id="i-angles-down" viewBox="0 0 448 512"><path d="M246.6 470.6c-12.5 12.5-32.8 12.5-45.3 0l-160-160c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L224 402.7 361.4 265.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-160 160zm160-352l-160 160c-12.5 12.5-32.8 12.5-45.3 0l-160-160c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L224 210.7 361.4 73.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3z"/></symbol>
+<symbol id="i-align-left" viewBox="0 0 448 512"><path d="M288 64c0 17.7-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32H256c17.7 0 32 14.3 32 32zm0 256c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H256c17.7 0 32 14.3 32 32zM0 192c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 448c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 448 512"><path d="M208 0H332.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V336c0 26.5-21.5 48-48 48H208c-26.5 0-48-21.5-48-48V48c0-26.5 21.5-48 48-48zM48 128h80v64H64V448H256V416h64v48c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V176c0-26.5 21.5-48 48-48z"/></symbol>
+<symbol id="i-download" viewBox="0 0 512 512"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/></symbol>
+<symbol id="i-file-arrow-up" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM216 408c0 13.3-10.7 24-24 24s-24-10.7-24-24V305.9l-31 31c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l72-72c9.4-9.4 24.6-9.4 33.9 0l72 72c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-31-31V408z"/></symbol>
+<symbol id="i-plug" viewBox="0 0 384 512"><path d="M96 0C78.3 0 64 14.3 64 32v96h64V32c0-17.7-14.3-32-32-32zM288 0c-17.7 0-32 14.3-32 32v96h64V32c0-17.7-14.3-32-32-32zM32 160c-17.7 0-32 14.3-32 32s14.3 32 32 32v32c0 77.4 55 142 128 156.8V480c0 17.7 14.3 32 32 32s32-14.3 32-32V412.8C297 398 352 333.4 352 256V224c17.7 0 32-14.3 32-32s-14.3-32-32-32H32z"/></symbol>
+<symbol id="i-skull-crossbones" viewBox="0 0 448 512"><path d="M368 128c0 44.4-25.4 83.5-64 106.4V256c0 17.7-14.3 32-32 32H176c-17.7 0-32-14.3-32-32V234.4c-38.6-23-64-62.1-64-106.4C80 57.3 144.5 0 224 0s144 57.3 144 128zM168 176a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm144-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM3.4 273.7c7.9-15.8 27.1-22.2 42.9-14.3L224 348.2l177.7-88.8c15.8-7.9 35-1.5 42.9 14.3s1.5 35-14.3 42.9L295.6 384l134.8 67.4c15.8 7.9 22.2 27.1 14.3 42.9s-27.1 22.2-42.9 14.3L224 419.8 46.3 508.6c-15.8 7.9-35 1.5-42.9-14.3s-1.5-35 14.3-42.9L152.4 384 17.7 316.6C1.9 308.7-4.5 289.5 3.4 273.7z"/></symbol>
+<symbol id="i-file-code" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM153 289l-31 31 31 31c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L71 337c-9.4-9.4-9.4-24.6 0-33.9l48-48c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9zM265 255l48 48c9.4 9.4 9.4 24.6 0 33.9l-48 48c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z"/></symbol>
+<symbol id="i-folder-open" viewBox="0 0 576 512"><path d="M88.7 223.8L0 375.8V96C0 60.7 28.7 32 64 32H181.5c17 0 33.3 6.7 45.3 18.7l26.5 26.5c12 12 28.3 18.7 45.3 18.7H416c35.3 0 64 28.7 64 64v32H144c-22.8 0-43.8 12.1-55.3 31.8zm27.6 16.1C122.1 230 132.6 224 144 224H544c11.5 0 22 6.1 27.7 16.1s5.7 22.2-.1 32.1l-112 192C453.9 474 443.4 480 432 480H32c-11.5 0-22-6.1-27.7-16.1s-5.7-22.2 .1-32.1l112-192z"/></symbol>
+<symbol id="i-display" viewBox="0 0 576 512"><path d="M64 0C28.7 0 0 28.7 0 64V352c0 35.3 28.7 64 64 64H240l-10.7 32H160c-17.7 0-32 14.3-32 32s14.3 32 32 32H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H346.7L336 416H512c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64zM512 64V352H64V64H512z"/></symbol>
+<symbol id="i-file-lines" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM112 256H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/></symbol>
+<symbol id="i-hashtag" viewBox="0 0 448 512"><path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128h95.1l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H347.1L325.8 320H384c17.7 0 32 14.3 32 32s-14.3 32-32 32H315.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7H155.1l-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l21.3-128H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h68.9l11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320h95.1l21.3-128H187.1z"/></symbol>
+<symbol id="i-right-to-bracket" viewBox="0 0 512 512"><path d="M217.9 105.9L340.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L217.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1L32 320c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM352 416l64 0c17.7 0 32-14.3 32-32l0-256c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0c53 0 96 43 96 96l0 256c0 53-43 96-96 96l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></symbol>
+<symbol id="i-table-columns" viewBox="0 0 512 512"><path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zm64 64V416H224V160H64zm384 0H288V416H448V160z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 512 512"><path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z"/></symbol>
+<symbol id="i-circle-half-stroke" viewBox="0 0 512 512"><path d="M448 256c0-106-86-192-192-192V448c106 0 192-86 192-192zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></symbol>
+<symbol id="i-circle-notch" viewBox="0 0 512 512"><path d="M222.7 32.1c5 16.9-4.6 34.8-21.5 39.8C121.8 95.6 64 169.1 64 256c0 106 86 192 192 192s192-86 192-192c0-86.9-57.8-160.4-137.1-184.1c-16.9-5-26.6-22.9-21.5-39.8s22.9-26.6 39.8-21.5C434.9 42.1 512 140 512 256c0 141.4-114.6 256-256 256S0 397.4 0 256C0 140 77.1 42.1 182.9 10.6c16.9-5 34.8 4.6 39.8 21.5z"/></symbol>
+<symbol id="i-arrow-up-right-from-square" viewBox="0 0 512 512"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></symbol>
+<symbol id="i-filter" viewBox="0 0 512 512"><path d="M3.9 54.9C10.5 40.9 24.5 32 40 32H472c15.5 0 29.5 8.9 36.1 22.9s4.6 30.5-5.2 42.5L320 320.9V448c0 12.1-6.8 23.2-17.7 28.6s-23.8 4.3-33.5-3l-64-48c-8.1-6-12.8-15.5-12.8-25.6V320.9L9 97.3C-.7 85.4-2.8 68.8 3.9 54.9z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 512 512"><path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/></symbol>
+  </svg>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <div class="shell">
+
+    <!-- ================= Topbar ================= -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"><img src="/static/images/logo.png" alt=""></span>
+        <span class="brand-text">
+          <span class="name">3270<b>CONNECT</b></span>
+          <span class="eyebrow">Operations Console · v{{.Version}}</span>
+        </span>
       </div>
-      <div class="header-actions">
-        {{$refreshPeriod := printf "%v" .RefreshPeriod }}
-        <form id="autoRefreshForm" class="auto-refresh-control" onsubmit="event.preventDefault();">
-          <div class="form-check form-switch mb-0">
-            <input class="form-check-input" type="checkbox" id="autoRefreshToggle" {{if .AutoRefreshEnabled}}checked{{end}} data-tippy-content="Toggle automatic dashboard refresh." onchange="handleAutoRefreshToggle()">
-            <label class="form-check-label ms-2" for="autoRefreshToggle">Auto Refresh</label>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <label for="refreshPeriodSelect">Interval</label>
-            <select class="form-select form-select-sm w-auto" id="refreshPeriodSelect" data-tippy-content="Choose how often the dashboard refreshes." onchange="handleRefreshPeriodChange()">
-              <option value="1" {{if eq $refreshPeriod "1"}}selected{{end}}>1s</option>
-              <option value="5" {{if eq $refreshPeriod "5"}}selected{{end}}>5s</option>
-              <option value="10" {{if eq $refreshPeriod "10"}}selected{{end}}>10s</option>
-              <option value="15" {{if eq $refreshPeriod "15"}}selected{{end}}>15s</option>
-              <option value="30" {{if eq $refreshPeriod "30"}}selected{{end}}>30s</option>
-              <option value="60" {{if eq $refreshPeriod "60"}}selected{{end}}>60s</option>
-            </select>
-          </div>
-          <div class="auto-refresh-meta" aria-live="polite" aria-atomic="true">
-            <span class="refresh-indicator" id="refreshIndicator">
-              <span class="indicator-icon" id="refreshIndicatorIcon"></span>
-            </span>
-            <div class="auto-refresh-info">
-              <span id="refreshTimestamp">Last refresh: --</span>
-              <small id="refreshStatus">Waiting for the next update</small>
-            </div>
-          </div>
-        </form>
-        <div class="header-actions-buttons">
-          <button class="interface-button" type="button" data-bs-toggle="modal" data-bs-target="#startProcessModal" data-tippy-content="Start a new 3270Connect process">
-            <i class="fas fa-rocket"></i>
-            Start Process
-          </button>
-          <button class="interface-button" type="button" data-bs-toggle="modal" data-bs-target="#startAppModal" data-tippy-content="Launch a sample 3270 app">
-            <i class="fas fa-server"></i>
-            Start App
-          </button>
-          <button class="interface-button" data-bs-toggle="modal" data-bs-target="#consoleModal" data-tippy-content="Show the console logs">
-            <i class="fas fa-terminal"></i>
-            Console Logs
-          </button>
-          <button class="interface-button" type="button" onclick="refreshDashboardData(true);" data-tippy-content="Force a manual refresh">
-            <i class="fas fa-sync-alt"></i>
-            Refresh
-          </button>
-        </div>
+
+      <div class="topbar-live" role="status" aria-live="polite">
+        <span class="dot" id="liveDot"></span>
+        <span id="liveState">IDLE</span>
+        <span class="sep"></span>
+        <span><span id="liveProcesses">0</span> proc</span>
+        <span class="sep"></span>
+        <span><span id="liveActive">0</span> active</span>
+        <span class="sep"></span>
+        <span id="uptimeClock">0s</span>
+      </div>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="topbar-actions">
+        <button class="palette-trigger" id="paletteTrigger" type="button" aria-label="Open command palette">
+          <svg class="ic" aria-hidden="true"><use href="#i-magnifying-glass"></use></svg>
+          <span class="grow">Search commands…</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+
+        <button class="btn-x primary" id="openStartProcess" type="button" data-tip="Start a 3270Connect run (S)">
+          <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg><span class="txt">Start Process</span>
+        </button>
+        <button class="btn-x accentline" id="openStartApp" type="button" data-tip="Launch a bundled sample 3270 app (A)">
+          <svg class="ic" aria-hidden="true"><use href="#i-server"></use></svg><span class="txt">Start App</span>
+        </button>
+        <button class="btn-x icon" id="openConsole" type="button" data-tip="Console logs (C)" aria-label="Console logs">
+          <svg class="ic" aria-hidden="true"><use href="#i-terminal"></use></svg>
+        </button>
+        <button class="btn-x icon" id="refreshNow" type="button" data-tip="Refresh now (R)" aria-label="Refresh now">
+          <svg class="ic" aria-hidden="true"><use href="#i-rotate"></use></svg>
+        </button>
+        <button class="btn-x icon" id="openShortcuts" type="button" data-tip="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
+          <svg class="ic" aria-hidden="true"><use href="#i-keyboard"></use></svg>
+        </button>
       </div>
     </header>
 
-    <main class="mainframe-grid">
-      <section class="panel command-panel">
-        <div class="panel-header">
-          <span>System Interface</span>
-          <span class="panel-subtext">Live controls &amp; insights</span>
+    <div class="offline-bar" role="alert">
+      <svg class="ic" aria-hidden="true"><use href="#i-plug-circle-xmark"></use></svg>
+      <span>Lost contact with the dashboard server. Showing the last known snapshot and retrying automatically.</span>
+    </div>
+
+    <!-- ================= Status bar ================= -->
+    <div class="statusbar">
+      <div class="group">
+        <div class="refresh-ring" id="refreshRing" aria-hidden="true">
+          <svg viewBox="0 0 30 30">
+            <circle class="track" cx="15" cy="15" r="12" fill="none" stroke-width="2"></circle>
+            <circle class="bar" id="refreshRingBar" cx="15" cy="15" r="12" fill="none" stroke-width="2"
+                    stroke-dasharray="75.4" stroke-dashoffset="75.4"></circle>
+          </svg>
+          <span class="glyph"><svg class="ic" aria-hidden="true"><use href="#i-bolt"></use></svg></span>
         </div>
-        <div class="metric-grid">
-          <div class="metric-tile">
-            <span class="metric-label">Active Workflows</span>
-            <span class="metric-value" data-refresh-key="activeWorkflows">{{.ActiveWorkflows}}</span>
-            <span class="metric-trend">Currently running processes</span>
+        <div class="refresh-meta" aria-live="polite">
+          <span class="primary" id="refreshStamp">Updated --:--:--</span>
+          <span class="secondary" id="refreshStatus">Starting up…</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <label class="switch" data-tip="Pause or resume live polling (P)">
+          <input type="checkbox" id="autoRefreshToggle" {{if .AutoRefreshEnabled}}checked{{end}}>
+          <span class="track"></span>
+          <span class="switch-label">Live</span>
+        </label>
+        <div class="segmented" id="intervalPicker" role="group" aria-label="Refresh interval">
+          <button type="button" data-interval="1" aria-pressed="false">1s</button>
+          <button type="button" data-interval="5" aria-pressed="true">5s</button>
+          <button type="button" data-interval="10" aria-pressed="false">10s</button>
+          <button type="button" data-interval="30" aria-pressed="false">30s</button>
+          <button type="button" data-interval="60" aria-pressed="false">60s</button>
+        </div>
+      </div>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="group">
+        <span class="label">Theme</span>
+        <div class="segmented" id="themePicker" role="group" aria-label="Colour theme">
+          <button type="button" data-theme="phosphor" aria-pressed="true" data-tip="Phosphor green">GRN</button>
+          <button type="button" data-theme="amber" aria-pressed="false" data-tip="Amber CRT">AMB</button>
+          <button type="button" data-theme="ice" aria-pressed="false" data-tip="Ice blue">ICE</button>
+          <button type="button" data-theme="daylight" aria-pressed="false" data-tip="Daylight (light mode)">DAY</button>
+        </div>
+        <button class="btn-x sm icon" id="densityToggle" type="button" aria-pressed="false"
+                data-tip="Toggle compact density (D)" aria-label="Toggle density">
+          <svg class="ic" aria-hidden="true"><use href="#i-compress"></use></svg>
+        </button>
+        <button class="btn-x sm icon" id="fxToggle" type="button" aria-pressed="true"
+                data-tip="Toggle CRT scanlines and grid drift" aria-label="Toggle visual effects">
+          <svg class="ic" aria-hidden="true"><use href="#i-wand-magic-sparkles"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= Main ================= -->
+    <main class="main">
+
+      <!-- KPI strip -->
+      <section class="kpi-strip" aria-label="Key metrics">
+        <article class="kpi" style="--kpi-tint: var(--info)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-bolt"></use></svg></span>
+            <span class="title">Active Workflows</span>
           </div>
-          <div class="metric-tile">
-            <span class="metric-label">Total Started</span>
-            <span class="metric-value" data-refresh-key="totalWorkflowsStarted">{{.TotalWorkflowsStarted}}</span>
-            <span class="metric-trend">Lifetime workflows launched</span>
+          <div class="kpi-body">
+            <span class="kpi-value num" id="kpiActive" data-value="0">{{.ActiveWorkflows}}</span>
+            <svg class="kpi-spark" id="sparkActive" aria-hidden="true"></svg>
           </div>
-          <div class="metric-tile">
-            <span class="metric-label">Completed</span>
-            <span class="metric-value" data-refresh-key="totalWorkflowsCompleted">{{.TotalWorkflowsCompleted}}</span>
-            <span class="metric-trend">Finished without error</span>
+          <div class="kpi-foot">
+            <span class="kpi-delta flat" id="kpiActiveDelta">—</span>
+            <span class="kpi-note">in flight right now</span>
           </div>
-          <div class="metric-tile">
-            <span class="metric-label">Failed</span>
-            <span class="metric-value" data-refresh-key="totalWorkflowsFailed">{{.TotalWorkflowsFailed}}</span>
-            <span class="metric-trend">Attention required</span>
+        </article>
+
+        <article class="kpi" style="--kpi-tint: var(--accent)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-play"></use></svg></span>
+            <span class="title">Total Started</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value num" id="kpiStarted" data-value="0">{{.TotalWorkflowsStarted}}</span>
+            <svg class="kpi-spark" id="sparkStarted" aria-hidden="true"></svg>
+          </div>
+          <div class="kpi-foot">
+            <span class="kpi-delta flat" id="kpiStartedDelta">—</span>
+            <span class="kpi-note">launched this session</span>
+          </div>
+        </article>
+
+        <article class="kpi" style="--kpi-tint: var(--ok)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-circle-check"></use></svg></span>
+            <span class="title">Completed</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value num" id="kpiCompleted" data-value="0">{{.TotalWorkflowsCompleted}}</span>
+            <svg class="kpi-spark" id="sparkCompleted" aria-hidden="true"></svg>
+          </div>
+          <div class="kpi-foot">
+            <span class="kpi-delta flat" id="kpiCompletedDelta">—</span>
+            <span class="kpi-note">finished cleanly</span>
+          </div>
+        </article>
+
+        <article class="kpi" id="kpiFailedTile" style="--kpi-tint: var(--text-3)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-triangle-exclamation"></use></svg></span>
+            <span class="title">Failed</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value num" id="kpiFailed" data-value="0">{{.TotalWorkflowsFailed}}</span>
+            <svg class="kpi-spark" id="sparkFailed" aria-hidden="true"></svg>
+          </div>
+          <div class="kpi-foot">
+            <span class="kpi-delta flat" id="kpiFailedDelta">—</span>
+            <span class="kpi-note">needs attention</span>
+          </div>
+        </article>
+
+        <article class="kpi gauge-tile" id="kpiSuccessTile" style="--kpi-tint: var(--ok)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-bullseye"></use></svg></span>
+            <span class="title">Success Rate</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value num"><span id="kpiSuccessValue">--</span><span class="unit">%</span></span>
+            <svg class="gauge" id="successGauge" aria-hidden="true"></svg>
+          </div>
+          <div class="kpi-foot">
+            <span class="kpi-note" id="kpiSuccessNote">awaiting first result</span>
+          </div>
+        </article>
+
+        <article class="kpi" style="--kpi-tint: var(--violet)">
+          <div class="kpi-head">
+            <span class="icon"><svg class="ic" aria-hidden="true"><use href="#i-gauge-high"></use></svg></span>
+            <span class="title">Throughput</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value num"><span id="kpiThroughput">0.0</span><span class="unit">wf/min</span></span>
+            <svg class="kpi-spark" id="sparkThroughput" aria-hidden="true"></svg>
+          </div>
+          <div class="kpi-foot">
+            <span class="kpi-note" id="kpiThroughputNote">no live processes</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- Charts -->
+      <section class="chart-grid" aria-label="Visual analytics">
+
+        <div class="panel span-8">
+          <div class="panel-head">
+            <h2><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg> Workflow Duration</h2>
+            <span class="sub">per process, newest on the right</span>
+            <div class="tools">
+              <div class="segmented" id="windowPicker" role="group" aria-label="Data window">
+                <button type="button" data-window="30" aria-pressed="true">30</button>
+                <button type="button" data-window="60" aria-pressed="false">60</button>
+                <button type="button" data-window="120" aria-pressed="false">120</button>
+                <button type="button" data-window="all" aria-pressed="false">ALL</button>
+              </div>
+              <button class="btn-x sm icon" id="resetDurationZoom" type="button" data-tip="Reset zoom" aria-label="Reset zoom">
+                <svg class="ic" aria-hidden="true"><use href="#i-arrows-to-dot"></use></svg>
+              </button>
+              <button class="btn-x sm icon" id="exportDurationPNG" type="button" data-tip="Export as PNG" aria-label="Export chart as PNG">
+                <svg class="ic" aria-hidden="true"><use href="#i-image"></use></svg>
+              </button>
+              <button class="btn-x sm icon" id="exportDurationCSV" type="button" data-tip="Export as CSV" aria-label="Export chart data as CSV">
+                <svg class="ic" aria-hidden="true"><use href="#i-file-csv"></use></svg>
+              </button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="chart-frame"><canvas id="durationChart"></canvas></div>
+            <div class="legend" id="durationLegend"></div>
           </div>
         </div>
-        <div class="chart-grid">
-          <div class="chart-card" data-tippy-content="Workflow duration over time.">
-            <div class="chart-card-header">
-              <h3><i class="fas fa-clock me-2"></i> Workflow Duration</h3>
-              <div class="chart-slider">
-                <span>Show last <span id="durationDataPointsValue">30</span> data points</span>
-                <input type="range" class="form-range" id="durationDataPoints" min="10" max="100" value="30" step="5">
+
+        <div class="panel span-4">
+          <div class="panel-head">
+            <h2><svg class="ic" aria-hidden="true"><use href="#i-chart-pie"></use></svg> Outcomes</h2>
+            <span class="sub">completed vs failed</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-frame short donut-wrap">
+              <canvas id="outcomeChart"></canvas>
+              <div class="donut-center">
+                <span class="big num" id="outcomeCenterValue">--</span>
+                <span class="small" id="outcomeCenterLabel">no results yet</span>
               </div>
             </div>
-            <div class="chart-container">
-              <canvas id="durationChart"></canvas>
+            <div class="legend" id="outcomeLegend"></div>
+          </div>
+        </div>
+
+        <div class="panel span-8">
+          <div class="panel-head">
+            <h2><svg class="ic" aria-hidden="true"><use href="#i-microchip"></use></svg> System Resources</h2>
+            <span class="sub">CPU averaged across processes · host memory</span>
+            <div class="tools">
+              <button class="btn-x sm icon" id="resetResourceZoom" type="button" data-tip="Reset zoom" aria-label="Reset zoom">
+                <svg class="ic" aria-hidden="true"><use href="#i-arrows-to-dot"></use></svg>
+              </button>
+              <button class="btn-x sm icon" id="exportResourcePNG" type="button" data-tip="Export as PNG" aria-label="Export chart as PNG">
+                <svg class="ic" aria-hidden="true"><use href="#i-image"></use></svg>
+              </button>
+              <button class="btn-x sm icon" id="exportResourceCSV" type="button" data-tip="Export as CSV" aria-label="Export chart data as CSV">
+                <svg class="ic" aria-hidden="true"><use href="#i-file-csv"></use></svg>
+              </button>
             </div>
           </div>
-          <div class="chart-card" data-tippy-content="CPU and memory utilisation.">
-            <div class="chart-card-header">
-              <h3><i class="fas fa-chart-line me-2"></i> System Resources</h3>
-              <div class="chart-slider">
-                <span>Show last <span id="resourcesDataPointsValue">30</span> data points</span>
-                <input type="range" class="form-range" id="resourcesDataPoints" min="10" max="100" value="30" step="5">
-              </div>
-            </div>
-            <div class="chart-container">
-              <canvas id="cpuMemChart"></canvas>
-            </div>
+          <div class="panel-body">
+            <div class="chart-frame"><canvas id="resourceChart"></canvas></div>
+            <div class="legend" id="resourceLegend"></div>
+          </div>
+        </div>
+
+        <div class="panel span-4">
+          <div class="panel-head">
+            <h2><svg class="ic" aria-hidden="true"><use href="#i-wave-square"></use></svg> Latency Profile</h2>
+            <span class="sub">all recorded runs</span>
+          </div>
+          <div class="panel-body">
+            <div class="pct-list" id="pctList"></div>
+            <hr class="rule" style="margin: 16px 0 12px">
+            <div class="histogram" id="histogram"></div>
+            <div class="histo-axis" id="histogramAxis"></div>
+            <div class="mini-stats" id="latencyStats" style="margin-top: 14px"></div>
           </div>
         </div>
       </section>
 
-    </main>
-
-    <section class="panel process-panel">
-      <div class="panel-header">
-        <span>Process Intelligence</span>
-        <span class="panel-subtext">Live PID overview</span>
-      </div>
-      <div class="panel-body">
-        <div id="pidParamsContainerOnDashboard"></div>
-      </div>
-    </section>
-
-    <footer class="mainframe-footer">
-      <span>3270Connect Control Surface - Authenticated Session - Operator View</span>
-      <span>Session v{{.Version}} - &copy; {{.Year}} 3270Connect</span>
-      <span>"Where there's muck, there's brass." - "Where there's legacy code, there's opportunity."</span>
-    </footer>
-  </div>
-  <!-- Tooltip for notifications -->
-  <div id="tooltipNotification" class="tooltip bs-tooltip-top" role="tooltip" style="position: fixed; top: 10px; right: 10px; z-index: 9999; display: none;">
-    <div class="tooltip-arrow"></div>
-    <div class="tooltip-inner"></div>
-  </div>
-  <!-- Modal for Console Logs -->
-  <div class="modal fade" id="consoleModal" tabindex="-1" aria-labelledby="consoleModalLabel" style="display: none;">
-    <div class="modal-dialog modal-lg" id="consoleModalDialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="consoleModalLabel">Console Logs</h5>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-light" id="maximizeConsoleBtn" aria-label="Maximize console" onclick="maximizeConsoleModal()" data-tippy-content="Maximize">
-              <i class="fas fa-expand" aria-hidden="true"></i>
+      <!-- Process intelligence -->
+      <section class="panel" aria-label="Process intelligence">
+        <div class="panel-head">
+          <h2><svg class="ic" aria-hidden="true"><use href="#i-diagram-project"></use></svg> Process Intelligence</h2>
+          <span class="sub" id="procCount">0 processes</span>
+          <div class="tools">
+            <div class="segmented" id="viewToggle" role="group" aria-label="Layout">
+              <button type="button" data-view="table" aria-pressed="true" data-tip="Table view"><svg class="ic" aria-hidden="true"><use href="#i-table-list"></use></svg></button>
+              <button type="button" data-view="cards" aria-pressed="false" data-tip="Card view"><svg class="ic" aria-hidden="true"><use href="#i-table-cells-large"></use></svg></button>
+            </div>
+            <button class="btn-x sm" id="exportProcesses" type="button" data-tip="Download the current view as CSV">
+              <svg class="ic" aria-hidden="true"><use href="#i-file-csv"></use></svg><span class="txt">Export</span>
             </button>
-            <button type="button" class="btn btn-sm btn-light" id="restoreConsoleBtn" aria-label="Restore console size" onclick="restoreConsoleModal()" style="display: none;" data-tippy-content="Restore">
-              <i class="fas fa-compress" aria-hidden="true"></i>
-            </button>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
         </div>
-        <div class="modal-body logs-modal">
-          <div id="pidParamsContainer" class="settings-card"></div>
-          <div class="settings-card">
-            <label for="pidFilter" class="form-label">Filter by PID</label>
-            <select id="pidFilter" class="form-select">
-              <!-- Options will be auto populated -->
-            </select>
+
+        <div class="table-toolbar">
+          <div class="search-field">
+            <svg class="ic" aria-hidden="true"><use href="#i-magnifying-glass"></use></svg>
+            <label class="visually-hidden" for="procSearch">Search processes</label>
+            <input type="search" id="procSearch" placeholder="Filter by PID, status, params…" autocomplete="off">
+            <button class="clear" id="procSearchClear" type="button" hidden aria-label="Clear search">
+              <svg class="ic" aria-hidden="true"><use href="#i-xmark"></use></svg>
+            </button>
           </div>
-          <div class="logs-wrapper">
-            <div class="p-3 bg-dark text-success" id="logsContainer" style="font-family: 'Courier New', Courier, monospace;">
-              <!-- Logs will be loaded here -->
-            </div>
-            <div class="logs-refresh settings-card">
-              <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="autoRefreshLogsCheckbox">
-                <label class="form-check-label" for="autoRefreshLogsCheckbox">Auto Refresh</label>
-              </div>
-              <div class="d-flex flex-wrap align-items-center gap-3">
-                <label for="logsRefreshInterval" class="form-label mb-0">Refresh Interval (seconds)</label>
-                <select class="form-select form-select-sm w-auto" id="logsRefreshInterval">
-                  <option value="1">1</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="30">30</option>
-                </select>
-              </div>
-            </div>
+          <div class="segmented" id="statusFilter" role="group" aria-label="Status filter">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="running" aria-pressed="false">Running</button>
+            <button type="button" data-filter="ended" aria-pressed="false">Ended</button>
+            <button type="button" data-filter="failing" aria-pressed="false">With failures</button>
           </div>
+          <span class="chip" data-tip="Press / to jump to the filter"><kbd>/</kbd> to search</span>
+        </div>
+
+        <div class="grid-wrap" id="procGridWrap">
+          <table class="grid" id="procTable">
+            <thead>
+              <tr>
+                <th scope="col">Actions</th>
+                <th scope="col" class="sortable" data-key="pid" aria-sort="ascending">PID <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="status">Status <span class="sort-ind">↕</span></th>
+                <th scope="col">Progress</th>
+                <th scope="col" class="sortable" data-key="activeWorkflows">Active <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsStarted">Started <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsCompleted">Completed <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsFailed">Failed <span class="sort-ind">↕</span></th>
+                <th scope="col">Success</th>
+                <th scope="col" class="sortable" data-key="avg">Avg Duration <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="params">Parameters <span class="sort-ind">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="procBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card-view" id="procCards"></div>
+
+        <div class="empty" id="procEmpty" hidden>
+          <div class="glyph"><svg class="ic" aria-hidden="true"><use href="#i-satellite-dish"></use></svg></div>
+          <div class="t" id="procEmptyTitle">No processes yet</div>
+          <div class="d" id="procEmptyBody">Start a 3270Connect run or a sample app to populate the console.</div>
+          <button class="btn-x primary" type="button" onclick="document.getElementById('openStartProcess').click()">
+            <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg> Start a process
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>3270Connect Control Surface · Operator View</span>
+      <span>Session v{{.Version}} · &copy; {{.Year}} 3270Connect</span>
+      <span class="quip">“Where there's legacy code, there's opportunity.”</span>
+    </footer>
+  </div>
+
+  <!-- ================= Toasts ================= -->
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ================= Command palette ================= -->
+  <div class="palette-overlay" id="paletteOverlay" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette">
+      <div class="palette-input-row">
+        <svg class="ic" aria-hidden="true"><use href="#i-terminal"></use></svg>
+        <label class="visually-hidden" for="paletteInput">Search commands</label>
+        <input type="text" id="paletteInput" placeholder="Type a command, theme or PID…" autocomplete="off" spellcheck="false">
+        <kbd>Esc</kbd>
+      </div>
+      <div class="palette-results" id="paletteResults" role="listbox" aria-label="Commands"></div>
+      <div class="palette-foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>⏎</kbd> run</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Console logs modal ================= -->
+  <div class="modal" id="consoleModal" tabindex="-1" aria-labelledby="consoleModalLabel" aria-hidden="true">
+    <div class="modal-card xl tall" id="consoleModalDialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="consoleModalLabel"><svg class="ic" aria-hidden="true"><use href="#i-terminal"></use></svg> Console Stream</h5>
+          <div class="head-tools">
+            <button class="btn-x sm icon" id="consoleMaximize" type="button" aria-pressed="false"
+                    data-tip="Maximise" aria-label="Maximise console"><svg class="ic" aria-hidden="true"><use href="#i-expand"></use></svg></button>
+            <button type="button" class="btn-close" data-close aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="pid-strip" id="logPidStrip"></div>
+
+          <div class="viewer">
+            <div class="viewer-bar">
+              <label class="visually-hidden" for="logPidFilter">Filter by PID</label>
+              <select class="form-select" id="logPidFilter" style="width:auto;min-width:132px" data-tip="Filter by process">
+                <option value="">All PIDs</option>
+              </select>
+
+              <label class="visually-hidden" for="logLevel">Filter by level</label>
+              <select class="form-select" id="logLevel" style="width:auto;min-width:118px" data-tip="Filter by severity">
+                <option value="all">All levels</option>
+                <option value="error">Errors</option>
+                <option value="warn">Warnings</option>
+                <option value="ok">Success</option>
+              </select>
+
+              <div class="search-field" style="min-width:180px">
+                <svg class="ic" aria-hidden="true"><use href="#i-magnifying-glass"></use></svg>
+                <label class="visually-hidden" for="logSearch">Search logs</label>
+                <input type="search" id="logSearch" placeholder="Search log text…" autocomplete="off">
+              </div>
+
+              <span class="spacer"></span>
+              <span class="count" id="logCount">0 lines</span>
+
+              <button class="btn-x sm icon" id="logFollow" type="button" aria-pressed="true"
+                      data-tip="Follow tail" aria-label="Follow tail"><svg class="ic" aria-hidden="true"><use href="#i-angles-down"></use></svg></button>
+              <button class="btn-x sm icon" id="logWrap" type="button" aria-pressed="true"
+                      data-tip="Toggle line wrapping" aria-label="Toggle line wrapping"><svg class="ic" aria-hidden="true"><use href="#i-align-left"></use></svg></button>
+              <button class="btn-x sm icon" id="logRefresh" type="button" data-tip="Reload" aria-label="Reload logs"><svg class="ic" aria-hidden="true"><use href="#i-rotate"></use></svg></button>
+              <button class="btn-x sm icon" id="logCopy" type="button" data-tip="Copy all" aria-label="Copy logs"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
+              <button class="btn-x sm icon" id="logDownload" type="button" data-tip="Download" aria-label="Download logs"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg></button>
+            </div>
+            <div class="viewer-scroll" id="logStream"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <label class="switch" data-tip="Poll the log endpoint automatically">
+            <input type="checkbox" id="logAutoRefresh">
+            <span class="track"></span>
+            <span class="switch-label">Auto refresh</span>
+          </label>
+          <label class="visually-hidden" for="logInterval">Log refresh interval</label>
+          <select class="form-select" id="logInterval" style="width:auto">
+            <option value="1">1s</option>
+            <option value="5" selected>5s</option>
+            <option value="10">10s</option>
+            <option value="15">15s</option>
+            <option value="30">30s</option>
+          </select>
+          <span class="topbar-spacer"></span>
+          <button type="button" class="btn-x" data-close>Close</button>
         </div>
       </div>
     </div>
   </div>
-  <!-- Modal for Starting 3270Connect Process -->
-  <div class="modal fade" id="startProcessModal" tabindex="-1" aria-labelledby="startProcessModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+
+  <!-- ================= Start process modal ================= -->
+  <div class="modal" id="startProcessModal" tabindex="-1" aria-labelledby="startProcessLabel" aria-hidden="true">
+    <div class="modal-card xl">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="startProcessModalLabel">Start 3270Connect Process</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="startProcessForm" enctype="multipart/form-data">
-            <div class="mb-3">
-              <label for="configFileInput" class="form-label">Configuration File</label>
-              <input type="file" class="form-control" id="configFileInput" name="configFile" accept=".json" required>
+          <h5 class="modal-title" id="startProcessLabel"><svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg> Start 3270Connect Process</h5>
+          <div class="head-tools">
+            <div class="steps" id="startSteps">
+              <span class="step"><span class="n">1</span> Config</span>
+              <span class="sep"></span>
+              <span class="step"><span class="n">2</span> Review</span>
+              <span class="sep"></span>
+              <span class="step"><span class="n">3</span> Verify</span>
             </div>
-            <div id="configDetailsWrapper" class="mb-3 d-none">
-              <div class="p-3 mb-3 bg-dark text-success border rounded">
-                <div class="fw-bold text-info text-uppercase small mb-2">Workflow Metadata</div>
-                <dl class="row mb-0" id="configMetadata"></dl>
-              </div>
-              <div class="config-preview-accordion">
-                <div class="accordion" id="configPreviewAccordion">
-                  <div class="accordion-item">
-                    <h2 class="accordion-header" id="configPreviewHeading">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#configPreviewCollapse" aria-expanded="false" aria-controls="configPreviewCollapse">
-                        Configuration Preview
+            <button type="button" class="btn-close" data-close aria-label="Close"></button>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <form id="startProcessForm" enctype="multipart/form-data" novalidate>
+            <div class="modal-cols">
+
+              <!-- Left column: files + parsed config -->
+              <div class="modal-col">
+                <div class="field">
+                  <label for="configFile">Workflow configuration</label>
+                  <div class="dropzone" id="configDrop">
+                    <input type="file" id="configFile" name="configFile" accept=".json" required
+                           aria-label="Workflow configuration JSON file">
+                    <span class="dz-icon"><svg class="ic" aria-hidden="true"><use href="#i-file-arrow-up"></use></svg></span>
+                    <span class="dz-title">Drop a workflow JSON here</span>
+                    <span class="dz-sub">or click to browse — the file is parsed locally before upload</span>
+                  </div>
+                  <span class="file-pill" id="configFileName" hidden></span>
+                </div>
+
+                <div id="configDetails" hidden>
+                  <div class="field">
+                    <span class="form-label">Parsed workflow</span>
+                    <dl class="meta-list" id="configMeta"></dl>
+                  </div>
+                  <details class="disclosure" style="margin-top:12px">
+                    <summary>Raw configuration</summary>
+                    <pre class="code-view" id="configCode" style="max-height:280px"></pre>
+                  </details>
+                </div>
+
+                <fieldset class="group" id="overrideGroup" hidden>
+                  <legend>Overrides</legend>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label for="overrideHost">Host</label>
+                      <input type="text" class="form-control" id="overrideHost" placeholder="mainframe.host">
+                    </div>
+                    <div class="field">
+                      <label for="overridePort">Port</label>
+                      <input type="number" class="form-control" id="overridePort" min="1" placeholder="3270">
+                    </div>
+                    <div class="field full">
+                      <label for="overrideOutputFilePath">Output file path</label>
+                      <input type="text" class="form-control" id="overrideOutputFilePath" placeholder="output.html">
+                    </div>
+                    <div class="field">
+                      <label for="overrideRampUpBatchSize">Ramp-up batch size</label>
+                      <input type="number" class="form-control" id="overrideRampUpBatchSize" min="1" placeholder="Leave blank to keep">
+                    </div>
+                    <div class="field">
+                      <label for="overrideRampUpDelay">Ramp-up delay (s)</label>
+                      <input type="number" class="form-control" id="overrideRampUpDelay" min="0" step="0.1" placeholder="Leave blank to keep">
+                    </div>
+                    <div class="full">
+                      <button type="button" class="btn-x accentline" id="testConnection">
+                        <svg class="ic" aria-hidden="true"><use href="#i-plug"></use></svg><span class="txt">Test connection</span>
                       </button>
-                    </h2>
-                    <div id="configPreviewCollapse" class="accordion-collapse collapse" aria-labelledby="configPreviewHeading" data-bs-parent="#configPreviewAccordion">
-                      <div class="accordion-body">
-                        <pre id="configPreview" class="bg-dark text-success p-3 small"></pre>
+                    </div>
+                    <div class="full">
+                      <div class="banner" id="connectionResult" hidden></div>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+
+              <!-- Right column: run parameters -->
+              <div class="modal-col">
+                <fieldset class="group">
+                  <legend>Load profile</legend>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label for="concurrent">Concurrent workflows</label>
+                      <input type="number" class="form-control" id="concurrent" min="1" value="5" required>
+                    </div>
+                    <div class="field">
+                      <label for="runtime">Runtime (seconds)</label>
+                      <input type="number" class="form-control" id="runtime" min="1" value="180" required>
+                    </div>
+                    <div class="field">
+                      <label for="startPort">Starting port</label>
+                      <input type="number" class="form-control" id="startPort" min="1" value="5000" required>
+                    </div>
+                    <div class="field">
+                      <label for="headlessWrap">Execution mode</label>
+                      <div id="headlessWrap" style="padding-top:6px">
+                        <label class="switch" data-tip="Run without the x3270 GUI — recommended for load tests">
+                          <input type="checkbox" id="headless" checked>
+                          <span class="track"></span>
+                          <span class="switch-label">Headless</span>
+                        </label>
                       </div>
                     </div>
                   </div>
+                </fieldset>
+
+                <fieldset class="group">
+                  <legend>Optional inputs</legend>
+                  <div class="field">
+                    <label for="injectionFile">Injection config (JSON)</label>
+                    <input type="file" class="form-control" id="injectionFile" accept=".json">
+                    <span class="hint">Supplies dynamic field values at runtime.</span>
+                  </div>
+                  <div class="field" style="margin-top:12px">
+                    <label for="token">RSA token</label>
+                    <input type="text" class="form-control" id="token" inputmode="numeric"
+                           autocomplete="one-time-code" placeholder="123456">
+                    <span class="hint">Replaces <code>{{"{{"}}token{{"}}"}}</code> placeholders immediately before execution.</span>
+                  </div>
+                </fieldset>
+
+                <div class="banner">
+                  <svg class="ic" aria-hidden="true"><use href="#i-circle-info"></use></svg>
+                  <span>The console pauses live polling while this dialog is open, and resumes as soon as it closes.</span>
                 </div>
               </div>
-            </div>
-            <fieldset class="override-fieldset mb-3 d-none" id="overridesFieldset">
-              <legend>Overrides (optional)</legend>
-              <div class="form-grid">
-                <div>
-                  <label for="overrideHostInput" class="form-label">Host Override</label>
-                  <input type="text" class="form-control" id="overrideHostInput" name="overrideHost" placeholder="Leave blank to use file value">
-                </div>
-                <div>
-                  <label for="overridePortInput" class="form-label">Port Override</label>
-                  <input type="number" class="form-control" id="overridePortInput" name="overridePort" placeholder="Leave blank to use file value" min="1">
-                </div>
-                <div>
-                  <label for="overrideOutputFilePathInput" class="form-label">Output File Override</label>
-                  <input type="text" class="form-control" id="overrideOutputFilePathInput" name="overrideOutputFilePath" placeholder="Leave blank to use file value">
-                </div>
-                <div>
-                  <label for="overrideRampUpBatchSizeInput" class="form-label">Ramp Up Batch Size Override</label>
-                  <input type="number" class="form-control" id="overrideRampUpBatchSizeInput" name="overrideRampUpBatchSize" placeholder="Leave blank to use file value" min="1">
-                </div>
-                <div>
-                  <label for="overrideRampUpDelayInput" class="form-label">Ramp Up Delay Override (seconds)</label>
-                  <input type="number" class="form-control" id="overrideRampUpDelayInput" name="overrideRampUpDelay" placeholder="Leave blank to use file value" min="0" step="0.1">
-                </div>
-                <div class="full-span">
-                  <button type="button" class="btn btn-success" id="testConnectionButton" onclick="testWorkflowConnection()" data-tippy-content="Verify connectivity to the configured host and port">
-                    <i class="fas fa-plug me-2"></i>Test Connection
-                  </button>
-                </div>
-              </div>
-            </fieldset>
-          <div class="mb-3">
-            <label for="injectionConfigInput" class="form-label">Injection Config File (Optional)</label>
-            <input type="file" class="form-control" id="injectionConfigInput" name="injectionConfig" accept=".json">
-          </div>
-            <div class="mb-3">
-              <label for="tokenInput" class="form-label">RSA Token (Optional)</label>
-              <input type="text" class="form-control" id="tokenInput" name="token" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
-              <div class="form-text">Replaces any <code>{{"{{"}}token{{"}}"}}</code> placeholders right before execution.</div>
-            </div>
-            <div class="mb-3">
-              <label for="concurrentInput" class="form-label">Concurrent Workflows</label>
-              <input type="number" class="form-control" id="concurrentInput" name="concurrent" placeholder="Enter number of concurrent workflows" value="5" required>
-            </div>
-            <div class="mb-3">
-              <label for="runtimeInput" class="form-label">Runtime Duration (seconds)</label>
-              <input type="number" class="form-control" id="runtimeInput" name="runtime" placeholder="Enter runtime duration" value="180" required>
-            </div>
-            <div class="mb-3">
-              <label for="startPortInput" class="form-label">Starting Port</label>
-              <input type="number" class="form-control" id="startPortInput" name="startPort" placeholder="Enter starting port" value="5000" required>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="headlessInput" name="headless" checked>
-              <label class=" ms-2 form-check-label" for="headlessInput">Headless Mode</label>
             </div>
           </form>
-          <!-- New error container -->
-          <div id="processErrors"></div>
         </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" data-tippy-content="Click to start the 3270Connect process" onclick="start3270ConnectProcess()">Start Process</button>
+          <button type="button" class="btn-x" data-close>Cancel</button>
+          <button type="button" class="btn-x primary" id="startProcessSubmit">
+            <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg><span class="txt">Launch run</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
-  <!-- New Modal for Starting 3270 App -->
-  <div class="modal fade" id="startAppModal" tabindex="-1" aria-labelledby="startAppModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+
+  <!-- ================= Start app modal ================= -->
+  <div class="modal" id="startAppModal" tabindex="-1" aria-labelledby="startAppLabel" aria-hidden="true">
+    <div class="modal-card sm">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="startAppModalLabel">Start 3270 App</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="startAppLabel"><svg class="ic" aria-hidden="true"><use href="#i-server"></use></svg> Start Sample 3270 App</h5>
+          <button type="button" class="btn-close" data-close aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="startAppForm" novalidate>
-            <div class="mb-3">
-              <label for="runAppSelect" class="form-label">Select Sample App</label>
-              <select class="form-select" id="runAppSelect" name="runApp" required>
-                <option value="">Choose...</option>
-                <option value="1">Sample App 1</option>
-                <option value="2">Sample App 2</option>
-              </select>
+          <div class="field">
+            <span class="form-label">Choose an application</span>
+            <div class="app-picker" id="appPicker">
+              <button type="button" class="app-option" data-app="1" aria-pressed="false">
+                <svg class="ic" aria-hidden="true"><use href="#i-right-to-bracket"></use></svg>
+                <span class="t">Sample App 1</span>
+                <span class="d">Login screen with menu navigation</span>
+              </button>
+              <button type="button" class="app-option" data-app="2" aria-pressed="false">
+                <svg class="ic" aria-hidden="true"><use href="#i-table-columns"></use></svg>
+                <span class="t">Sample App 2</span>
+                <span class="d">Multi-screen data entry flow</span>
+              </button>
             </div>
-            <div class="mb-3">
-              <label for="runAppPortInput" class="form-label">App Port</label>
-              <input type="number" class="form-control" id="runAppPortInput" name="runAppPort" placeholder="Enter port" value="3270" required>
-            </div>
-          </form>
-          <!-- New error container for start app modal -->
-          <div id="appProcessErrors"></div>
+          </div>
+          <div class="field">
+            <label for="appPort">Listen port</label>
+            <input type="number" class="form-control" id="appPort" min="1" value="3270" required>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-success" data-tippy-content="Click to start the sample 3270 app" onclick="start3270App()">Start App</button>
+          <button type="button" class="btn-x" data-close>Cancel</button>
+          <button type="button" class="btn-x primary" id="startAppSubmit">
+            <svg class="ic" aria-hidden="true"><use href="#i-play"></use></svg><span class="txt">Start app</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-<!-- Modal for Kill Confirmation -->
-<div class="modal fade" id="killModal" tabindex="-1" aria-labelledby="killModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="killModalLabel">Confirm Kill Process</h5>
-        <button type="button" id="closeModal" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p id="killDetails"></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="confirmKillBtn" class="btn btn-danger">Confirm Kill</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Workflow Preview Modal -->
-<div class="modal fade" id="workflowModal" tabindex="-1" aria-labelledby="workflowModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content bg-dark text-light border-secondary">
-      <div class="modal-header border-bottom border-secondary">
-        <h5 class="modal-title text-light" id="workflowModalLabel">Workflow JSON</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-break mb-2" style="color: #cafee9;"><strong>Path:</strong> <span id="workflowModalPath">Unknown</span></p>
-        <pre id="workflowModalContent" class="bg-black rounded p-3" style="height: 60vh; overflow: auto; color: #4effb3;">Preparing workflow...</pre>
+  <!-- ================= Kill modal ================= -->
+  <div class="modal" id="killModal" tabindex="-1" aria-labelledby="killLabel" aria-hidden="true">
+    <div class="modal-card sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="killLabel"><svg class="ic" style="color:var(--danger)" aria-hidden="true"><use href="#i-skull-crossbones"></use></svg> Terminate Process</h5>
+          <button type="button" class="btn-close" data-close aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="banner bad">
+            <svg class="ic" aria-hidden="true"><use href="#i-triangle-exclamation"></use></svg>
+            <span>This sends a kill signal immediately. In-flight workflows on this process will not finish.</span>
+          </div>
+          <dl class="meta-list">
+            <dt>PID</dt><dd id="killPid">—</dd>
+            <dt>Parameters</dt><dd id="killParams">—</dd>
+          </dl>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-x" data-close>Cancel</button>
+          <button type="button" class="btn-x danger" id="confirmKill">
+            <svg class="ic" aria-hidden="true"><use href="#i-skull-crossbones"></use></svg><span class="txt">Terminate</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Output Preview Modal -->
-<div class="modal fade" id="outputModal" tabindex="-1" aria-labelledby="outputModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen-lg-down modal-xl">
-    <div class="modal-content bg-dark text-light border-secondary">
-      <div class="modal-header border-bottom border-secondary">
-        <h5 class="modal-title text-light" id="outputModalLabel">Live Output Preview</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- ================= Workflow JSON modal ================= -->
+  <div class="modal" id="workflowModal" tabindex="-1" aria-labelledby="workflowLabel" aria-hidden="true">
+    <div class="modal-card xl tall">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="workflowLabel"><svg class="ic" aria-hidden="true"><use href="#i-file-code"></use></svg> Workflow Definition</h5>
+          <div class="head-tools">
+            <button class="btn-x sm icon" id="workflowCopy" type="button" data-tip="Copy JSON" aria-label="Copy JSON"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
+            <button class="btn-x sm icon" id="workflowDownload" type="button" data-tip="Download JSON" aria-label="Download JSON"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg></button>
+            <button type="button" class="btn-close" data-close aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <span class="chip" style="align-self:flex-start"><svg class="ic" aria-hidden="true"><use href="#i-folder-open"></use></svg><span id="workflowPath">Unknown</span></span>
+          <div class="viewer">
+            <pre class="code-view" id="workflowCode">Preparing workflow…</pre>
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 mb-2">
-          <small class="text-break" style="color: #cafee9;" id="outputModalPath">Output path unavailable</small>
-          <div class="d-flex align-items-center gap-2">
-            <button id="outputRefreshToggle" class="btn btn-sm btn-outline-success" onclick="toggleOutputAutoRefresh()" title="Toggle auto-refresh">
-              <i class="fas fa-pause" id="outputRefreshIcon"></i>
-            </button>
-            <select id="outputRefreshInterval" class="form-select form-select-sm" style="width: auto; max-width: 120px;" onchange="updateOutputRefreshInterval()">
+    </div>
+  </div>
+
+  <!-- ================= Output preview modal ================= -->
+  <div class="modal" id="outputModal" tabindex="-1" aria-labelledby="outputLabel" aria-hidden="true">
+    <div class="modal-card xl tall">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="outputLabel"><svg class="ic" aria-hidden="true"><use href="#i-display"></use></svg> Live Output Preview</h5>
+          <div class="head-tools">
+            <button class="btn-x sm icon" id="outputToggle" type="button" aria-pressed="true"
+                    data-tip="Pause auto-refresh" aria-label="Toggle auto-refresh"><svg class="ic" aria-hidden="true"><use href="#i-pause"></use></svg></button>
+            <label class="visually-hidden" for="outputIntervalSelect">Preview refresh interval</label>
+            <select class="form-select" id="outputIntervalSelect" style="width:auto">
               <option value="2000">2s</option>
               <option value="4000" selected>4s</option>
               <option value="8000">8s</option>
               <option value="15000">15s</option>
             </select>
-            <span class="small" style="color: #cafee9;" id="outputModalStatus">Auto-refresh every 4 seconds</span>
+            <button class="btn-x sm icon" id="outputReload" type="button" data-tip="Reload now" aria-label="Reload preview"><svg class="ic" aria-hidden="true"><use href="#i-rotate"></use></svg></button>
+            <button type="button" class="btn-close" data-close aria-label="Close"></button>
           </div>
         </div>
-        <div class="ratio ratio-16x9">
-          <iframe id="outputPreviewFrame" class="rounded border border-secondary" sandbox="allow-same-origin" srcdoc="<p class='text-light'>Loading output...</p>"></iframe>
+        <div class="modal-body">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <span class="chip"><svg class="ic" aria-hidden="true"><use href="#i-folder-open"></use></svg><span id="outputPath">Path unavailable</span></span>
+            <span class="chip accent" id="outputInfo">Auto-refreshing every 4s</span>
+            <span class="chip" id="outputStatus">Idle</span>
+          </div>
+          <iframe id="outputFrame" class="preview-frame" title="Workflow output preview"
+                  sandbox="allow-same-origin" srcdoc="<p style='font-family:monospace;padding:16px'>Loading output…</p>"></iframe>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Summary Modal -->
-<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content bg-dark text-light border-secondary">
-      <div class="modal-header border-bottom border-secondary">
-        <h5 class="modal-title text-light" id="summaryModalLabel">Performance Summary</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-break mb-2" style="color: #cafee9;"><strong>PID:</strong> <span id="summaryModalPid">Unknown</span></p>
-        <pre id="summaryModalContent" class="bg-black rounded p-3" style="height: 60vh; overflow: auto; color: #4effb3;">Loading summary...</pre>
+  <!-- ================= Summary modal ================= -->
+  <div class="modal" id="summaryModal" tabindex="-1" aria-labelledby="summaryLabel" aria-hidden="true">
+    <div class="modal-card xl tall">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="summaryLabel"><svg class="ic" aria-hidden="true"><use href="#i-file-lines"></use></svg> Performance Summary</h5>
+          <div class="head-tools">
+            <button class="btn-x sm icon" id="summaryCopy" type="button" data-tip="Copy summary" aria-label="Copy summary"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg></button>
+            <button class="btn-x sm icon" id="summaryDownload" type="button" data-tip="Download summary" aria-label="Download summary"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg></button>
+            <button type="button" class="btn-close" data-close aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <span class="chip" style="align-self:flex-start"><svg class="ic" aria-hidden="true"><use href="#i-hashtag"></use></svg>PID <span id="summaryPid">—</span></span>
+          <div class="viewer">
+            <pre class="code-view" id="summaryCode">Loading summary…</pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  var autoRefreshEnabled = {{.AutoRefreshEnabled}};
-  var refreshPeriod = {{.RefreshPeriod}};
-  var refreshIntervalId = null;
-  var autoRefreshPausedByModal = false;
-  var modalOpenCount = 0;
-  var metricsData = JSON.parse('{{.ExtendedJSON}}');
-  var durationChart = null;
-  var cpuMemChart = null;
-  var durationSlider = null;
-  var resourcesSlider = null;
-  var refreshIndicatorElement = null;
-  var refreshTimestampElement = null;
-  var refreshStatusElement = null;
-  var pidSelectElement = null;
-  var refreshIndicatorTimeout = null;
-  var processIntelligenceTippyInstances = [];
-  var colorPalette = [
-    'rgba(102, 126, 234, 1)',
-    'rgba(75, 192, 192, 1)',
-    'rgba(255, 159, 64, 1)',
-    'rgba(118, 75, 162, 1)',
-    'rgba(255, 99, 132, 1)',
-    'rgba(54, 162, 235, 1)',
-    'rgba(153, 102, 255, 1)',
-    'rgba(255, 206, 86, 1)'
-  ];
-
-  var processMetadataByPid = {};
-  var workflowModalElement = null;
-  var workflowModalContentElement = null;
-  var workflowModalPathElement = null;
-  var outputModalElement = null;
-  var outputPreviewFrame = null;
-  var outputModalStatusElement = null;
-  var outputModalPathElement = null;
-  var outputModalRefreshInterval = null;
-  var outputModalCurrentPid = null;
-  var outputModalAutoRefreshEnabled = true;
-  var outputModalRefreshIntervalMs = 4000;
-
-  var summaryModalElement = null;
-  var summaryModalContentElement = null;
-  var summaryModalPidElement = null;
-
-  function startAutoRefresh() {
-    if (autoRefreshEnabled && !refreshIntervalId && !autoRefreshPausedByModal) {
-      var intervalMs = Math.max(1, parseInt(refreshPeriod) || 5) * 1000;
-      refreshIntervalId = setInterval(function() { refreshDashboardData(true); }, intervalMs);
-      console.log("Auto refresh started");
-    }
-  }
-
-  function stopAutoRefresh() {
-    if (refreshIntervalId) {
-      clearInterval(refreshIntervalId);
-      refreshIntervalId = null;
-      console.log("Auto refresh paused");
-    }
-  }
-
-  function pauseAutoRefreshForModal() {
-    if (!autoRefreshPausedByModal) {
-      autoRefreshPausedByModal = true;
-      stopAutoRefresh();
-    }
-  }
-
-  function resumeAutoRefreshAfterModal() {
-    if (modalOpenCount === 0) {
-      autoRefreshPausedByModal = false;
-      if (autoRefreshEnabled) {
-        startAutoRefresh();
-      }
-    }
-  }
-
-  function handleAutoRefreshToggle() {
-    var checkbox = document.getElementById('autoRefreshToggle');
-    autoRefreshEnabled = checkbox.checked;
-    autoRefreshPausedByModal = modalOpenCount > 0;
-
-    if (!autoRefreshEnabled) {
-      stopAutoRefresh();
-    } else if (!autoRefreshPausedByModal) {
-      restartAutoRefresh();
-      refreshDashboardData(true);
-    }
-    if (refreshStatusElement) {
-      refreshStatusElement.textContent = autoRefreshEnabled ? 'Waiting for the next update' : 'Auto-refresh disabled';
-    }
-  }
-
-  function handleRefreshPeriodChange() {
-    var select = document.getElementById('refreshPeriodSelect');
-    if (!select) { return; }
-    refreshPeriod = select.value || refreshPeriod;
-    restartAutoRefresh();
-  }
-
-  function triggerRefreshIndicator() {
-    if (!refreshIndicatorElement) {
-      return;
-    }
-    refreshIndicatorElement.classList.add('active');
-    if (refreshIndicatorTimeout) {
-      clearTimeout(refreshIndicatorTimeout);
-    }
-    refreshIndicatorTimeout = setTimeout(function() {
-      refreshIndicatorElement.classList.remove('active');
-    }, 1200);
-    if (refreshStatusElement) {
-      refreshStatusElement.textContent = 'Refreshing...';
-    }
-  }
-
-  function updateRefreshTimestamp(timestamp) {
-    if (!refreshTimestampElement) {
-      return;
-    }
-    var timeValue = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date();
-    if (isNaN(timeValue.getTime())) {
-      timeValue = new Date();
-    }
-    refreshTimestampElement.textContent = 'Last refresh: ' + timeValue.toLocaleTimeString();
-    if (refreshStatusElement) {
-      refreshStatusElement.textContent = autoRefreshEnabled ? 'Waiting for the next update' : 'Auto-refresh disabled';
-    }
-  }
-
-  function updateHeaderMetrics(aggregatedMetrics) {
-    if (!aggregatedMetrics) {
-      return;
-    }
-    var mapping = {
-      activeWorkflows: aggregatedMetrics.activeWorkflows,
-      totalWorkflowsStarted: aggregatedMetrics.totalWorkflowsStarted,
-      totalWorkflowsCompleted: aggregatedMetrics.totalWorkflowsCompleted,
-      totalWorkflowsFailed: aggregatedMetrics.totalWorkflowsFailed
-    };
-    Object.keys(mapping).forEach(function(key) {
-      var node = document.querySelector('[data-refresh-key="' + key + '"]');
-      if (node) {
-        var value = mapping[key];
-        node.textContent = typeof value === 'number' ? value : (value || '0');
-      }
-    });
-  }
-
-  function computeAggregatedMetricsFromExtended(metrics) {
-    var agg = {
-      activeWorkflows: 0,
-      totalWorkflowsStarted: 0,
-      totalWorkflowsCompleted: 0,
-      totalWorkflowsFailed: 0
-    };
-    (metrics || []).forEach(function(m) {
-      agg.activeWorkflows += m.activeWorkflows || 0;
-      agg.totalWorkflowsStarted += m.totalWorkflowsStarted || 0;
-      agg.totalWorkflowsCompleted += m.totalWorkflowsCompleted || 0;
-      agg.totalWorkflowsFailed += m.totalWorkflowsFailed || 0;
-    });
-    return agg;
-  }
-
-  function computeAggregatedSeries() {
-    var aggregatedCPU = [];
-    var cpuCount = [];
-    var hostMemory = [];
-    var hostMetric = metricsData.length ? metricsData[0] : null;
-
-    metricsData.forEach(function(metric) {
-      if (!hostMetric || (typeof metric.pid === 'number' && metric.pid < hostMetric.pid)) {
-        hostMetric = metric;
-      }
-      if (metric.cpuUsage) {
-        metric.cpuUsage.forEach(function(val, index) {
-          if (typeof aggregatedCPU[index] === 'undefined') {
-            aggregatedCPU[index] = 0;
-            cpuCount[index] = 0;
-          }
-          aggregatedCPU[index] += val;
-          cpuCount[index] += 1;
-        });
-      }
-    });
-
-    for (var i = 0; i < aggregatedCPU.length; i++) {
-      if (cpuCount[i]) {
-        aggregatedCPU[i] = aggregatedCPU[i] / cpuCount[i];
-      }
-    }
-
-    if (hostMetric && hostMetric.memoryUsage) {
-      hostMemory = hostMetric.memoryUsage.slice();
-    }
-
-    return { aggregatedCPU: aggregatedCPU, hostMemory: hostMemory };
-  }
-
-  function buildDurationData(dataPointLimit) {
-    var maxCount = 0;
-    metricsData.forEach(function(metric) {
-      var durations = metric.durations || [];
-      if (durations.length > maxCount) {
-        maxCount = durations.length;
-      }
-    });
-    var labels = [];
-    for (var i = 0; i < maxCount; i++) { labels.push(i + 1); }
-    var limitedLabels = labels.slice(-dataPointLimit);
-    var datasets = [];
-    var firstDataIndex = limitedLabels.length;
-
-    metricsData.forEach(function(metric, index) {
-      var durations = metric.durations || [];
-      var padding = Math.max(maxCount - durations.length, 0);
-      var fullData = new Array(padding).fill(null).concat(durations);
-      var limitedData = fullData.slice(-dataPointLimit);
-      var color = colorPalette[index % colorPalette.length];
-      var dataset = {
-        label: "PID " + metric.pid,
-        data: limitedData,
-        borderColor: color,
-        backgroundColor: color.replace("1)", "0.1)"),
-        fill: true,
-        tension: 0.4,
-        borderWidth: 3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: color,
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2
-      };
-
-      var firstValueIndex = dataset.data.findIndex(function(value) { return value !== null && value !== undefined; });
-      if (firstValueIndex !== -1 && firstValueIndex < firstDataIndex) {
-        firstDataIndex = firstValueIndex;
-      }
-
-      datasets.push(dataset);
-    });
-
-    if (firstDataIndex > 0 && firstDataIndex < limitedLabels.length) {
-      limitedLabels = limitedLabels.slice(firstDataIndex);
-      datasets = datasets.map(function(dataset) {
-        return Object.assign({}, dataset, {
-          data: dataset.data.slice(firstDataIndex)
-        });
-      });
-    }
-
-    return { labels: limitedLabels, datasets: datasets };
-  }
-
-  function buildResourceData(dataPointLimit, aggregatedCPU, hostMemory) {
-    var maxLen = Math.max(aggregatedCPU.length, hostMemory.length);
-    var labels = [];
-    for (var i = 0; i < maxLen; i++) { labels.push(" " + (i + 1)); }
-    var limitedLabels = labels.slice(-dataPointLimit);
-    var fullCpuData = new Array(Math.max(maxLen - aggregatedCPU.length, 0)).fill(null).concat(aggregatedCPU);
-    var fullMemData = new Array(Math.max(maxLen - hostMemory.length, 0)).fill(null).concat(hostMemory);
-
-    var datasets = [{
-      label: "CPU Usage (%)",
-      data: fullCpuData.slice(-dataPointLimit),
-      borderColor: "rgba(102, 126, 234, 1)",
-      backgroundColor: "rgba(102, 126, 234, 0.1)",
-      fill: true,
-      tension: 0.4,
-      borderWidth: 3,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      pointBackgroundColor: "rgba(102, 126, 234, 1)",
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2
-    }, {
-      label: "Memory Usage (%)",
-      data: fullMemData.slice(-dataPointLimit),
-      borderColor: "rgba(245, 87, 108, 1)",
-      backgroundColor: "rgba(245, 87, 108, 0.1)",
-      fill: true,
-      tension: 0.4,
-      borderWidth: 3,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      pointBackgroundColor: "rgba(245, 87, 108, 1)",
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2
-    }];
-
-    var firstDataIndex = limitedLabels.length;
-    datasets.forEach(function(dataset) {
-      var firstValueIndex = dataset.data.findIndex(function(value) { return value !== null && value !== undefined; });
-      if (firstValueIndex !== -1 && firstValueIndex < firstDataIndex) {
-        firstDataIndex = firstValueIndex;
-      }
-    });
-
-    if (firstDataIndex > 0 && firstDataIndex < limitedLabels.length) {
-      limitedLabels = limitedLabels.slice(firstDataIndex);
-      datasets = datasets.map(function(dataset) {
-        return Object.assign({}, dataset, {
-          data: dataset.data.slice(firstDataIndex)
-        });
-      });
-    }
-
-    return { labels: limitedLabels, datasets: datasets };
-  }
-
-  function updateSystemMonitor(cpuSeries, memorySeries) {
-    var cpuValueNode = document.getElementById("cpuUsageValue");
-    var memoryValueNode = document.getElementById("memoryUsageValue");
-    var cpuBar = document.getElementById("cpuUsageBar");
-    var memoryBar = document.getElementById("memoryUsageBar");
-
-    if (cpuValueNode) {
-      var cpuValue = cpuSeries.length ? cpuSeries[cpuSeries.length - 1] : null;
-      if (cpuValue === null || typeof cpuValue === 'undefined' || isNaN(cpuValue)) {
-        cpuValueNode.textContent = '--';
-        if (cpuBar) { cpuBar.style.width = '0%'; }
-      } else {
-        var clampedCpu = Math.max(0, Math.min(100, cpuValue));
-        cpuValueNode.textContent = clampedCpu.toFixed(2);
-        if (cpuBar) { cpuBar.style.width = clampedCpu.toFixed(2) + '%'; }
-      }
-    }
-
-    if (memoryValueNode) {
-      var memoryValue = memorySeries.length ? memorySeries[memorySeries.length - 1] : null;
-      if (memoryValue === null || typeof memoryValue === 'undefined' || isNaN(memoryValue)) {
-        memoryValueNode.textContent = '--';
-        if (memoryBar) { memoryBar.style.width = '0%'; }
-      } else {
-        var clampedMemory = Math.max(0, Math.min(100, memoryValue));
-        memoryValueNode.textContent = clampedMemory.toFixed(2);
-        if (memoryBar) { memoryBar.style.width = clampedMemory.toFixed(2) + '%'; }
-      }
-    }
-  }
-
-  function initializeCharts() {
-    var ctx1 = document.getElementById("durationChart").getContext("2d");
-    var initialDurationLimit = durationSlider ? parseInt(durationSlider.value) : 30;
-    var durationInitialData = buildDurationData(initialDurationLimit);
-    durationChart = new Chart(ctx1, {
-      type: "line",
-      data: durationInitialData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 750, easing: 'easeInOutQuart' },
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: "Duration (seconds)", font: { size: 14, weight: 'bold' } },
-            grid: { color: 'rgba(0, 0, 0, 0.05)' }
-          },
-          x: {
-            type: 'category',
-            position: 'bottom',
-            offset: false,
-            ticks: { align: 'start' },
-            title: { display: true, text: "Workflow Count", font: { size: 14, weight: 'bold' } },
-            grid: { color: 'rgba(0, 0, 0, 0.05)', offset: false }
-          }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              usePointStyle: true,
-              padding: 15,
-              font: { size: 12, weight: '600' }
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12,
-            titleFont: { size: 14, weight: 'bold' },
-            bodyFont: { size: 13 },
-            cornerRadius: 8
-          },
-          zoom: {
-            pan: { enabled: true, mode: 'x', speed: 10, threshold: 10 },
-            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
-          }
-        }
-      }
-    });
-
-    var ctx2 = document.getElementById("cpuMemChart").getContext("2d");
-    var aggregated = computeAggregatedSeries();
-    var initialResourceLimit = resourcesSlider ? parseInt(resourcesSlider.value) : 30;
-    var resourceInitialData = buildResourceData(initialResourceLimit, aggregated.aggregatedCPU, aggregated.hostMemory);
-    cpuMemChart = new Chart(ctx2, {
-      type: "line",
-      data: resourceInitialData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 750, easing: 'easeInOutQuart' },
-        scales: {
-          x: {
-            type: 'category',
-            position: 'bottom',
-            offset: false,
-            ticks: { align: 'start' },
-            title: { display: true, text: "Time (seconds)", font: { size: 14, weight: 'bold' } },
-            grid: { color: 'rgba(0, 0, 0, 0.05)', offset: false }
-          },
-          y: {
-            beginAtZero: true,
-            max: 100,
-            title: { display: true, text: "Usage (%)", font: { size: 14, weight: 'bold' } },
-            grid: { color: 'rgba(0, 0, 0, 0.05)' }
-          }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              usePointStyle: true,
-              padding: 15,
-              font: { size: 12, weight: '600' }
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12,
-            titleFont: { size: 14, weight: 'bold' },
-            bodyFont: { size: 13 },
-            cornerRadius: 8,
-            callbacks: {
-              label: function(context) {
-                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
-              }
-            }
-          },
-          zoom: {
-            pan: { enabled: true, mode: 'x', speed: 10, threshold: 10 },
-            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
-          }
-        }
-      }
-    });
-
-    updateSystemMonitor(aggregated.aggregatedCPU, aggregated.hostMemory);
-  }
-
-  function updateCharts() {
-    if (!durationChart || !cpuMemChart) {
-      return;
-    }
-    var durationLimit = durationSlider ? parseInt(durationSlider.value) : 30;
-    var durationData = buildDurationData(durationLimit);
-    durationChart.data.labels = durationData.labels;
-    durationChart.data.datasets = durationData.datasets;
-    durationChart.update();
-
-    var aggregated = computeAggregatedSeries();
-    var resourceLimit = resourcesSlider ? parseInt(resourcesSlider.value) : 30;
-    var resourceData = buildResourceData(resourceLimit, aggregated.aggregatedCPU, aggregated.hostMemory);
-    cpuMemChart.data.labels = resourceData.labels;
-    cpuMemChart.data.datasets = resourceData.datasets;
-    cpuMemChart.update();
-    updateSystemMonitor(aggregated.aggregatedCPU, aggregated.hostMemory);
-  }
-
-  function renderProcessIntelligenceTable(metrics) {
-    var pidInfoContainer = document.getElementById("pidParamsContainerOnDashboard");
-    if (!pidInfoContainer) {
-      return;
-    }
-    processMetadataByPid = {};
-    pidInfoContainer.innerHTML = "";
-    var table = document.createElement("table");
-    table.classList.add("table", "table-hover");
-    var thead = document.createElement("thead");
-    thead.innerHTML = `
-      <tr>
-        <th><i class="fas fa-bars"></i> Actions</th>
-        <th><i class="fas fa-hashtag"></i> PID</th>
-        <th><i class="fas fa-info-circle"></i> Status</th>
-        <th><i class="fas fa-hourglass-half"></i> Time Left</th>
-        <th><i class="fas fa-spinner"></i> Active</th>
-        <th><i class="fas fa-play"></i> Started</th>
-        <th><i class="fas fa-check"></i> Completed</th>
-        <th><i class="fas fa-times"></i> Failed</th>
-        <th><i class="fas fa-clock"></i> Avg Time</th>
-        <th><i class="fas fa-cog"></i> Parameters</th>
-      </tr>
-    `;
-    table.appendChild(thead);
-    var tbody = document.createElement("tbody");
-    metrics.forEach(function(metric) {
-      processMetadataByPid[metric.pid] = {
-        configPath: metric.configFilePath || "",
-        outputPath: metric.outputFilePath || ""
-      };
-      var durations = metric.durations || [];
-      var avgCompletionTime = durations.length ? durations.reduce(function(a, b) { return a + b; }, 0) / durations.length : NaN;
-      
-      var paramString = (metric.params || '').trim();
-      var normalizedParam = paramString === '' ? '-dashboard' : paramString;
-      // Determine if this process should have workflow/output buttons
-      var hasConfigPath = metric.configFilePath && metric.configFilePath.trim() !== '';
-      var hasOutputPath = metric.outputFilePath && metric.outputFilePath.trim() !== '';
-      var showWorkflowButton = hasConfigPath && normalizedParam !== '-dashboard';
-      
-      // Build action icons conditionally
-      var actionIcons = '';
-      if (showWorkflowButton) {
-        actionIcons += '<button type="button" class="action-icon workflow" aria-label="View workflow JSON" onclick="showWorkflowModal(' + metric.pid + ')" data-tippy-content="View Workflow JSON"><i class="fas fa-file-code" aria-hidden="true"></i></button>';
-      }
-      if (hasOutputPath) {
-        actionIcons += '<button type="button" class="action-icon output" aria-label="Preview output HTML" onclick="showOutputModal(' + metric.pid + ')" data-tippy-content="Preview Output HTML"><i class="fas fa-desktop" aria-hidden="true"></i></button>';
-      }
-      if (hasConfigPath && metric.status === "Ended") {
-        actionIcons += '<button type="button" class="action-icon summary" aria-label="View performance summary" onclick="showSummaryModal(' + metric.pid + ')" data-tippy-content="View Performance Summary"><i class="fas fa-file-text" aria-hidden="true"></i></button>';
-      }
-      actionIcons += '<button type="button" class="action-icon logs" aria-label="View logs" onclick="openLogsModal(' + metric.pid + ')" data-tippy-content="View Logs"><i class="fas fa-file-alt" aria-hidden="true"></i></button>';
-      actionIcons += '<button type="button" class="action-icon kill" aria-label="Terminate process" onclick="confirmKill(' + metric.pid + ', \'' + (metric.params || '-dashboard') + '\')" data-tippy-content="Terminate Process"><i class="fas fa-skull-crossbones" aria-hidden="true"></i></button>';
-      
-      var row = document.createElement("tr");
-      row.innerHTML = `
-        <td style="text-align: center;">
-          ${actionIcons}
-        </td>
-        <td><strong>${metric.pid}</strong></td>
-        <td><span class="badge bg-info">${metric.status || 'Running'}</span></td>
-        <td>${(typeof metric.timeLeft !== 'undefined' && metric.timeLeft !== null && metric.timeLeft !== 0) ? '<span class="badge bg-warning text-dark">' + metric.timeLeft + 's</span>' : '<span class="badge bg-secondary">-</span>'}</td>
-        <td>${metric.activeWorkflows || '0'}</td>
-        <td>${metric.totalWorkflowsStarted || '0'}</td>
-        <td><span class="badge bg-success">${metric.totalWorkflowsCompleted || '0'}</span></td>
-        <td><span class="badge bg-danger">${metric.totalWorkflowsFailed || '0'}</span></td>
-        <td>${isNaN(avgCompletionTime) ? '-' : '<strong>' + avgCompletionTime.toFixed(2) + 's</strong>'}</td>
-        <td><code>${metric.params || '-dashboard'}</code></td>
-      `;
-      tbody.appendChild(row);
-    });
-    table.appendChild(tbody);
-    pidInfoContainer.appendChild(table);
-    initializeProcessIntelligenceTooltips();
-  }
-
-  function initializeProcessIntelligenceTooltips() {
-    if (typeof tippy === 'undefined') {
-      return;
-    }
-    if (processIntelligenceTippyInstances.length) {
-      processIntelligenceTippyInstances.forEach(function(instance) {
-        if (instance && typeof instance.destroy === 'function') {
-          instance.destroy();
-        }
-      });
-      processIntelligenceTippyInstances = [];
-    }
-    processIntelligenceTippyInstances = tippy('#pidParamsContainerOnDashboard [data-tippy-content]', {
-      placement: 'top',
-      animation: 'fade',
-      theme: 'light',
-      delay: [100, 50],
-      appendTo: document.body
-    }) || [];
-  }
-
-  function updatePidFilterOptions(metrics) {
-    if (!pidSelectElement) {
-      return;
-    }
-    var selected = pidSelectElement.value;
-    pidSelectElement.innerHTML = '';
-    var optionAll = document.createElement("option");
-    optionAll.value = "";
-    optionAll.text = "All PIDs";
-    pidSelectElement.appendChild(optionAll);
-    var uniquePIDs = [];
-    metrics.forEach(function(metric) {
-      if (metric.pid != null && uniquePIDs.indexOf(metric.pid) === -1) {
-        uniquePIDs.push(metric.pid);
-      }
-    });
-    uniquePIDs.sort(function(a, b) { return a - b; });
-    uniquePIDs.forEach(function(pid) {
-      var option = document.createElement("option");
-      option.value = pid;
-      option.text = pid;
-      pidSelectElement.appendChild(option);
-    });
-    if (selected && uniquePIDs.indexOf(parseInt(selected)) !== -1) {
-      pidSelectElement.value = selected;
-    } else {
-      pidSelectElement.value = "";
-    }
-  }
-
-  function showWorkflowModal(pid) {
-    if (!workflowModalElement) {
-      return;
-    }
-    var metadata = processMetadataByPid[pid] || {};
-    if (workflowModalPathElement) {
-      workflowModalPathElement.textContent = metadata.configPath || 'Path unavailable';
-    }
-    if (workflowModalContentElement) {
-      workflowModalContentElement.textContent = 'Loading workflow...';
-    }
-    var modalInstance = new bootstrap.Modal(workflowModalElement);
-    modalInstance.show();
-    if (!metadata.configPath) {
-      if (workflowModalContentElement) {
-        workflowModalContentElement.textContent = 'Configuration path is missing for PID ' + pid + '.';
-      }
-      return;
-    }
-    fetch('/dashboard/workflow?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
-      .then(function(response) {
-        if (!response.ok) {
-          return response.text().then(function(body) {
-            throw new Error(body || response.statusText || 'Unable to load workflow');
-          });
-        }
-        return response.text();
-      })
-      .then(function(text) {
-        var formatted = text;
-        try {
-          var parsed = JSON.parse(text);
-          formatted = JSON.stringify(parsed, null, 2);
-        } catch (error) {
-          // Keep raw text if parsing fails
-        }
-        if (workflowModalContentElement) {
-          workflowModalContentElement.textContent = formatted;
-        }
-      })
-      .catch(function(err) {
-        if (workflowModalContentElement) {
-          workflowModalContentElement.textContent = 'Unable to load workflow: ' + err.message;
-        }
-      });
-  }
-
-  function showOutputModal(pid) {
-    if (!outputModalElement) {
-      return;
-    }
-    outputModalCurrentPid = pid;
-    var metadata = processMetadataByPid[pid] || {};
-    if (outputModalPathElement) {
-      outputModalPathElement.textContent = metadata.outputPath || 'Path unavailable';
-    }
-    if (outputModalStatusElement) {
-      outputModalStatusElement.textContent = 'Loading output...';
-    }
-    if (outputModalRefreshInterval) {
-      clearInterval(outputModalRefreshInterval);
-      outputModalRefreshInterval = null;
-    }
-    // Reset to default auto-refresh state
-    outputModalAutoRefreshEnabled = true;
-    updateOutputRefreshUI();
-    
-    var modalInstance = new bootstrap.Modal(outputModalElement);
-    modalInstance.show();
-    if (!metadata.outputPath) {
-      if (outputModalStatusElement) {
-        outputModalStatusElement.textContent = 'No output file configured for PID ' + pid + '.';
-      }
-      return;
-    }
-    refreshOutputModal(pid);
-    startOutputModalAutoRefresh(pid);
-    outputModalElement.addEventListener('hidden.bs.modal', function cleanup() {
-      if (outputModalRefreshInterval) {
-        clearInterval(outputModalRefreshInterval);
-        outputModalRefreshInterval = null;
-      }
-      outputModalCurrentPid = null;
-    }, { once: true });
-  }
-
-  function startOutputModalAutoRefresh(pid) {
-    if (outputModalRefreshInterval) {
-      clearInterval(outputModalRefreshInterval);
-    }
-    if (outputModalAutoRefreshEnabled) {
-      outputModalRefreshInterval = setInterval(function() {
-        refreshOutputModal(pid);
-      }, outputModalRefreshIntervalMs);
-    }
-  }
-
-  function refreshOutputModal(pid) {
-    if (!outputPreviewFrame) {
-      return;
-    }
-    fetch('/dashboard/output?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
-      .then(function(response) {
-        if (!response.ok) {
-          return response.text().then(function(body) {
-            throw new Error(body || response.statusText || 'Unable to load output preview');
-          });
-        }
-        return response.text();
-      })
-      .then(function(html) {
-        if (outputPreviewFrame) {
-          outputPreviewFrame.srcdoc = html;
-        }
-        if (outputModalStatusElement) {
-          outputModalStatusElement.textContent = 'Updated ' + new Date().toLocaleTimeString();
-        }
-      })
-      .catch(function(err) {
-        if (outputModalStatusElement) {
-          outputModalStatusElement.textContent = 'Error loading output: ' + err.message;
-        }
-      });
-  }
-
-  function showSummaryModal(pid) {
-    if (!summaryModalElement) {
-      return;
-    }
-    if (summaryModalPidElement) {
-      summaryModalPidElement.textContent = pid;
-    }
-    if (summaryModalContentElement) {
-      summaryModalContentElement.textContent = 'Loading summary...';
-    }
-    var modalInstance = new bootstrap.Modal(summaryModalElement);
-    modalInstance.show();
-    fetch('/dashboard/summary?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
-      .then(function(response) {
-        if (!response.ok) {
-          return response.text().then(function(body) {
-            throw new Error(body || response.statusText || 'Unable to load summary');
-          });
-        }
-        return response.text();
-      })
-      .then(function(text) {
-        if (summaryModalContentElement) {
-          summaryModalContentElement.textContent = text;
-        }
-      })
-      .catch(function(err) {
-        if (summaryModalContentElement) {
-          summaryModalContentElement.textContent = 'Unable to load summary: ' + err.message;
-        }
-      });
-  }
-
-  function toggleOutputAutoRefresh() {
-    outputModalAutoRefreshEnabled = !outputModalAutoRefreshEnabled;
-    updateOutputRefreshUI();
-    if (outputModalCurrentPid) {
-      startOutputModalAutoRefresh(outputModalCurrentPid);
-    }
-  }
-
-  function updateOutputRefreshInterval() {
-    var selectElement = document.getElementById('outputRefreshInterval');
-    if (selectElement) {
-      outputModalRefreshIntervalMs = parseInt(selectElement.value);
-      if (outputModalCurrentPid && outputModalAutoRefreshEnabled) {
-        startOutputModalAutoRefresh(outputModalCurrentPid);
-      }
-      updateOutputRefreshUI();
-    }
-  }
-
-  function updateOutputRefreshUI() {
-    var toggleButton = document.getElementById('outputRefreshToggle');
-    var icon = document.getElementById('outputRefreshIcon');
-    var statusElement = document.getElementById('outputModalStatus');
-    var selectElement = document.getElementById('outputRefreshInterval');
-    
-    if (toggleButton && icon) {
-      if (outputModalAutoRefreshEnabled) {
-        toggleButton.classList.remove('btn-outline-success');
-        toggleButton.classList.add('btn-success');
-        icon.classList.remove('fa-play');
-        icon.classList.add('fa-pause');
-        toggleButton.title = 'Pause auto-refresh';
-      } else {
-        toggleButton.classList.remove('btn-success');
-        toggleButton.classList.add('btn-outline-success');
-        icon.classList.remove('fa-pause');
-        icon.classList.add('fa-play');
-        toggleButton.title = 'Resume auto-refresh';
-      }
-    }
-    
-    if (statusElement) {
-      var intervalSeconds = outputModalRefreshIntervalMs / 1000;
-      if (outputModalAutoRefreshEnabled) {
-        statusElement.textContent = 'Auto-refresh every ' + intervalSeconds + ' seconds';
-      } else {
-        statusElement.textContent = 'Auto-refresh paused';
-      }
-    }
-  }
-
-  function refreshDashboardData(showIndicator) {
-    if (showIndicator) {
-      triggerRefreshIndicator();
-    }
-    return fetch('/dashboard/data', { cache: 'no-store' })
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('Failed to refresh dashboard data');
-        }
-        return response.json();
-      })
-      .then(function(payload) {
-        if (!payload) {
-          return;
-        }
-        metricsData = payload.extendedMetrics || [];
-        var aggregated = computeAggregatedMetricsFromExtended(metricsData);
-        updateHeaderMetrics(aggregated);
-        renderProcessIntelligenceTable(metricsData);
-        updatePidFilterOptions(metricsData);
-        updateCharts();
-        updateRefreshTimestamp(payload.timestamp || Date.now() / 1000);
-      })
-      .catch(function(error) {
-        console.error("Dashboard refresh failed:", error);
-      });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    durationSlider = document.getElementById('durationDataPoints');
-    resourcesSlider = document.getElementById('resourcesDataPoints');
-    refreshIndicatorElement = document.getElementById('refreshIndicator');
-    refreshTimestampElement = document.getElementById('refreshTimestamp');
-    refreshStatusElement = document.getElementById('refreshStatus');
-    pidSelectElement = document.getElementById('pidFilter');
-    workflowModalElement = document.getElementById('workflowModal');
-    workflowModalContentElement = document.getElementById('workflowModalContent');
-    workflowModalPathElement = document.getElementById('workflowModalPath');
-    outputModalElement = document.getElementById('outputModal');
-    outputPreviewFrame = document.getElementById('outputPreviewFrame');
-    outputModalStatusElement = document.getElementById('outputModalStatus');
-    outputModalPathElement = document.getElementById('outputModalPath');
-
-    summaryModalElement = document.getElementById('summaryModal');
-    summaryModalContentElement = document.getElementById('summaryModalContent');
-    summaryModalPidElement = document.getElementById('summaryModalPid');
-
-    if (durationSlider) {
-      document.getElementById('durationDataPointsValue').textContent = durationSlider.value;
-      durationSlider.addEventListener('input', function() {
-        document.getElementById('durationDataPointsValue').textContent = durationSlider.value;
-        updateCharts();
-      });
-    }
-    if (resourcesSlider) {
-      document.getElementById('resourcesDataPointsValue').textContent = resourcesSlider.value;
-      resourcesSlider.addEventListener('input', function() {
-        document.getElementById('resourcesDataPointsValue').textContent = resourcesSlider.value;
-        updateCharts();
-      });
-    }
-
-    initializeCharts();
-    renderProcessIntelligenceTable(metricsData);
-    updatePidFilterOptions(metricsData);
-    // Always pull a fresh snapshot once on load so stats update even when auto-refresh is off.
-    refreshDashboardData(false);
-    updateRefreshTimestamp(Date.now() / 1000);
-
-    if (pidSelectElement) {
-      pidSelectElement.addEventListener('change', function() {
-        loadLogs();
-      });
-    }
-
-    var modalElements = document.querySelectorAll('.modal');
-    modalElements.forEach(function(modalEl) {
-      modalEl.addEventListener('show.bs.modal', function() {
-        modalOpenCount++;
-        pauseAutoRefreshForModal();
-      });
-      modalEl.addEventListener('hidden.bs.modal', function() {
-        modalOpenCount = Math.max(0, modalOpenCount - 1);
-        resumeAutoRefreshAfterModal();
-      });
-    });
-
-    var consoleModal = document.getElementById("consoleModal");
-    if (consoleModal) {
-      consoleModal.addEventListener('show.bs.modal', function() {
-        loadLogs();
-      });
-    }
-
-    var loadLogsButton = document.getElementById("loadLogs");
-    if (loadLogsButton) {
-      loadLogsButton.addEventListener("click", function() { loadLogs(); });
-    }
-
-    var autoRefreshLogsCheckbox = document.getElementById("autoRefreshLogsCheckbox");
-    var refreshIntervalSelect = document.getElementById("logsRefreshInterval");
-    var refreshIntervalId2 = null;
-    function startLogsAutoRefresh(interval) {
-      if (!refreshIntervalId2) {
-        refreshIntervalId2 = setInterval(loadLogs, interval * 1000);
-      }
-    }
-    function stopLogsAutoRefresh() {
-      if (refreshIntervalId2) {
-        clearInterval(refreshIntervalId2);
-        refreshIntervalId2 = null;
-      }
-    }
-    if (autoRefreshLogsCheckbox) {
-      autoRefreshLogsCheckbox.addEventListener("change", function() {
-        if (this.checked && refreshIntervalSelect) {
-          startLogsAutoRefresh(parseInt(refreshIntervalSelect.value));
-        } else {
-          stopLogsAutoRefresh();
-        }
-      });
-    }
-    if (refreshIntervalSelect) {
-      refreshIntervalSelect.addEventListener("change", function() {
-        if (autoRefreshLogsCheckbox && autoRefreshLogsCheckbox.checked) {
-          stopLogsAutoRefresh();
-          startLogsAutoRefresh(parseInt(this.value));
-        }
-      });
-    }
-
-    if (autoRefreshEnabled && !autoRefreshPausedByModal) {
-      startAutoRefresh();
-    }
-  });
-
-  function restartAutoRefresh() {
-    stopAutoRefresh();
-    startAutoRefresh();
-  }
-
-  function loadLogs() {
-    var pid = pidSelectElement ? pidSelectElement.value : (document.getElementById("pidFilter") ? document.getElementById("pidFilter").value : "");
-    var url = "/console";
-    if (pid) {
-      url += "?pid=" + encodeURIComponent(pid);
-    }
-
-    fetch(url)
-      .then(function(response) { return response.json(); })
-      .then(function(data) {
-        var container = document.getElementById("logsContainer");
-        if (!container) {
-          return;
-        }
-        container.innerHTML = "";
-
-        if (!data || data.length === 0) {
-          container.innerHTML = "<p>No logs found.</p>";
-          return;
-        }
-
-        const pidParamsMap = {};
-        var table = document.createElement("table");
-        table.classList.add("table", "table-dark", "table-striped", "table-sm");
-        var thead = document.createElement("thead");
-        thead.innerHTML = `
-          <tr>
-            <th style="width: 180px;">Time</th>
-            <th style="width: 60px;">PID</th>
-            <th>Log</th>
-          </tr>
-        `;
-        table.appendChild(thead);
-        var tbody = document.createElement("tbody");
-
-        data.forEach(function(entry) {
-          const entryPid = entry.pid;
-          const param = entry.parameters;
-          if (!pidParamsMap[entryPid]) {
-            pidParamsMap[entryPid] = new Set();
-          }
-          pidParamsMap[entryPid].add(param);
-          var row = document.createElement("tr");
-          var timestamp = new Date(entry.timestamp).toLocaleString();
-          row.innerHTML = `
-            <td style="color: green;">${timestamp}</td>
-            <td style="color: LightGreen;">${entryPid}</td>
-            <td style="color: white;">${entry.log}</td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        table.appendChild(tbody);
-        container.appendChild(table);
-
-        const containerParams = document.getElementById("pidParamsContainer");
-        if (containerParams) {
-          containerParams.innerHTML = "";
-          const renderParamsRow = function(pidValue, paramsSet) {
-            const entries = Array.from(paramsSet || []);
-            const paramString = entries.length ? entries.join(", ") : "-";
-            return `
-              <div class="pid-param-row">
-                <span class="badge bg-dark text-light pid-badge"><span class="pid-label">PID</span><span class="pid-value">${pidValue}</span></span>
-                <span class="badge bg-secondary text-dark param-badge"><span class="param-label">Parameters</span><span class="param-text">${paramString}</span></span>
-              </div>`;
-          };
-          const selectedPid = pidSelectElement ? pidSelectElement.value : "";
-          if (!selectedPid) {
-            Object.entries(pidParamsMap).forEach(function(pair) {
-              containerParams.innerHTML += renderParamsRow(pair[0], pair[1]);
-            });
-          } else {
-            const paramsSet = pidParamsMap[selectedPid];
-            if (paramsSet) {
-              containerParams.innerHTML = renderParamsRow(selectedPid, paramsSet);
-            } else {
-              containerParams.innerHTML = `<p>No logs found for PID ${selectedPid}.</p>`;
-            }
-          }
-        }
-      })
-      .catch(function(err) {
-        console.error("Error loading logs:", err);
-      });
-  }
-
-  function openLogsModal(pid) {
-    var pidFilter = document.getElementById("pidFilter");
-    pidFilter.value = pid;
-    var consoleModal = new bootstrap.Modal(document.getElementById("consoleModal"));
-    consoleModal.show();
-    loadLogs();
-  }
-
-  var loadedConfigData = null;
-  var configFileInputControl = document.getElementById("configFileInput");
-  if (configFileInputControl) {
-    configFileInputControl.addEventListener("change", handleConfigFileSelection);
-  }
-
-  function handleConfigFileSelection(event) {
-    resetConfigDetails();
-    var file = event && event.target && event.target.files ? event.target.files[0] : null;
-    if (!file) {
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(loadEvent) {
-      var text = loadEvent.target ? loadEvent.target.result : "";
-      var preview = document.getElementById("configPreview");
-      if (preview) {
-        preview.textContent = typeof text === "string" ? text : "";
-      }
-      var wrapper = document.getElementById("configDetailsWrapper");
-      if (wrapper) {
-        wrapper.classList.remove("d-none");
-      }
-      try {
-        var parsed = JSON.parse(text);
-        loadedConfigData = parsed;
-        showConfigMetadata(parsed);
-        setOverrideValue("overrideHostInput", parsed && parsed.Host !== undefined ? parsed.Host : "");
-        setOverrideValue("overridePortInput", parsed && parsed.Port !== undefined ? parsed.Port : "");
-        setOverrideValue("overrideOutputFilePathInput", parsed && parsed.OutputFilePath !== undefined ? parsed.OutputFilePath : "");
-        setOverrideValue("overrideRampUpBatchSizeInput", parsed && parsed.RampUpBatchSize !== undefined ? parsed.RampUpBatchSize : "");
-        setOverrideValue("overrideRampUpDelayInput", parsed && parsed.RampUpDelay !== undefined ? parsed.RampUpDelay : "");
-        toggleOverridesFieldset(true);
-      } catch (err) {
-        var metadataList = document.getElementById("configMetadata");
-        if (metadataList) {
-          metadataList.innerHTML = '<dt class="col-12 text-danger">Failed to read configuration: ' + escapeHtml(err && err.message ? err.message : "Unknown error") + "</dt>";
-        }
-        setOverrideValue("overrideHostInput", "");
-        setOverrideValue("overridePortInput", "");
-        setOverrideValue("overrideOutputFilePathInput", "");
-        setOverrideValue("overrideRampUpBatchSizeInput", "");
-        setOverrideValue("overrideRampUpDelayInput", "");
-        toggleOverridesFieldset(false);
-      }
-    };
-    reader.onerror = function() {
-      var wrapper = document.getElementById("configDetailsWrapper");
-      if (wrapper) {
-        wrapper.classList.remove("d-none");
-      }
-      var metadataList = document.getElementById("configMetadata");
-      if (metadataList) {
-        metadataList.innerHTML = '<dt class="col-12 text-danger">Failed to load configuration file.</dt>';
-      }
-      loadedConfigData = null;
-      toggleOverridesFieldset(false);
-    };
-    reader.readAsText(file);
-  }
-
-  function showConfigMetadata(configData) {
-    var metadataList = document.getElementById("configMetadata");
-    if (!metadataList) {
-      return;
-    }
-    var items = "";
-    items += buildMetadataRow("Host", configData ? configData.Host : "");
-    items += buildMetadataRow("Port", configData ? configData.Port : "");
-    items += buildMetadataRow("Output File", configData ? configData.OutputFilePath : "");
-    items += buildMetadataRow("Ramp Up Batch Size", configData ? configData.RampUpBatchSize : "");
-    items += buildMetadataRow("Ramp Up Delay", configData ? configData.RampUpDelay : "");
-    metadataList.innerHTML = items;
-  }
-
-  function buildMetadataRow(label, value) {
-    var safeValue = value === undefined || value === null || value === "" ? "-" : value;
-    return '<dt class="col-sm-5">' + escapeHtml(label) + '</dt><dd class="col-sm-7 text-break">' + escapeHtml(safeValue) + "</dd>";
-  }
-
-  function setOverrideValue(elementId, value) {
-    var input = document.getElementById(elementId);
-    if (!input) {
-      return;
-    }
-    if (value === undefined || value === null) {
-      input.value = "";
-      return;
-    }
-    input.value = value;
-  }
-
-  function toggleOverridesFieldset(show) {
-    var fieldset = document.getElementById("overridesFieldset");
-    if (!fieldset) {
-      return;
-    }
-    if (show) {
-      fieldset.classList.remove("d-none");
-    } else {
-      fieldset.classList.add("d-none");
-    }
-  }
-
-  function resetConfigDetails() {
-    var wrapper = document.getElementById("configDetailsWrapper");
-    if (wrapper) {
-      wrapper.classList.add("d-none");
-    }
-    var metadataList = document.getElementById("configMetadata");
-    if (metadataList) {
-      metadataList.innerHTML = "";
-    }
-    var preview = document.getElementById("configPreview");
-    if (preview) {
-      preview.textContent = "";
-    }
-    loadedConfigData = null;
-    setOverrideValue("overrideHostInput", "");
-    setOverrideValue("overridePortInput", "");
-    setOverrideValue("overrideOutputFilePathInput", "");
-    setOverrideValue("overrideRampUpBatchSizeInput", "");
-    setOverrideValue("overrideRampUpDelayInput", "");
-    toggleOverridesFieldset(false);
-  }
-
-  function escapeHtml(value) {
-    if (value === undefined || value === null) {
-      return "";
-    }
-    return String(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
-  function appendOverrideField(formData, elementId, fieldName) {
-    var input = document.getElementById(elementId);
-    if (!input) {
-      return;
-    }
-    var value = typeof input.value === "string" ? input.value.trim() : "";
-    if (value !== "") {
-      formData.append(fieldName, value);
-    }
-  }
-
-  function testWorkflowConnection() {
-    var hostInput = document.getElementById('overrideHostInput');
-    var portInput = document.getElementById('overridePortInput');
-    var rawHost = hostInput && hostInput.value ? hostInput.value.trim() : "";
-    var rawPort = portInput && portInput.value ? portInput.value.trim() : "";
-
-    var hostToUse = rawHost !== "" ? rawHost : (loadedConfigData && loadedConfigData.Host ? String(loadedConfigData.Host) : "");
-    var portSource = rawPort !== "" ? rawPort : (loadedConfigData && typeof loadedConfigData.Port !== 'undefined' ? String(loadedConfigData.Port) : "");
-
-    if (hostToUse === "") {
-      toastr.error('Host is required to test the connection. Provide an override or load a configuration file.');
-      return;
-    }
-    if (portSource === "") {
-      toastr.error('Port is required to test the connection. Provide an override or load a configuration file.');
-      return;
-    }
-
-    var portNumber = Number(portSource);
-    if (!Number.isInteger(portNumber) || portNumber <= 0) {
-      toastr.error('Port must be a positive integer.');
-      return;
-    }
-
-    var button = document.getElementById('testConnectionButton');
-    if (button) {
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Testing...';
-    }
-
-    fetch('/test-connection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ host: hostToUse, port: portNumber })
-    })
-      .then(function(response) {
-        if (!response.ok) {
-          return response.json().then(function(data) {
-            var message = data && data.message ? data.message : 'Failed to test connection.';
-            throw new Error(message);
-          }).catch(function(err) {
-            throw err instanceof Error ? err : new Error('Failed to test connection.');
-          });
-        }
-        return response.json();
-      })
-      .then(function(data) {
-        toastr.success(data && data.message ? data.message : 'Connection successful.');
-      })
-      .catch(function(error) {
-        toastr.error(error && error.message ? error.message : 'Unable to connect to host.');
-      })
-      .finally(function() {
-        if (button) {
-          button.disabled = false;
-          button.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
-        }
-      });
-  }
-
-  function start3270ConnectProcess() {
-    var errorsDiv = document.getElementById('processErrors');
-    errorsDiv.innerHTML = '';
-    var formElem = document.getElementById('startProcessForm');
-    
-    // Check if form is valid using form.checkValidity()
-    if (!formElem.checkValidity()) {
-      errorsDiv.innerHTML = '<div class="alert alert-danger">Please complete all required fields.</div>';
-      return;
-    }
-    
-    var configFileInput = document.getElementById('configFileInput');
-    // Additionally trap error if configuration file is not supplied
-    if (!configFileInput.files || configFileInput.files.length === 0) {
-      errorsDiv.innerHTML = '<div class="alert alert-danger">Configuration file is required.</div>';
-      return;
-    }
-    
-    // All required fields provided; build FormData manually
-    var formData = new FormData();
-    formData.append("configFile", configFileInput.files[0]);
-
-    var injectionConfigInput = document.getElementById('injectionConfigInput');
-    if (injectionConfigInput.files && injectionConfigInput.files.length > 0) {
-      formData.append("injectionConfig", injectionConfigInput.files[0]);
-    }
-
-    formData.append("concurrent", document.getElementById('concurrentInput').value);
-    formData.append("runtime", document.getElementById('runtimeInput').value);
-    formData.append("startPort", document.getElementById('startPortInput').value);
-    formData.append("headless", document.getElementById('headlessInput').checked ? "on" : "off");
-    var tokenInput = document.getElementById('tokenInput');
-    if (tokenInput && tokenInput.value.trim() !== "") {
-      formData.append("token", tokenInput.value.trim());
-    }
-    appendOverrideField(formData, 'overrideHostInput', 'overrideHost');
-    appendOverrideField(formData, 'overridePortInput', 'overridePort');
-    appendOverrideField(formData, 'overrideOutputFilePathInput', 'overrideOutputFilePath');
-    appendOverrideField(formData, 'overrideRampUpBatchSizeInput', 'overrideRampUpBatchSize');
-    appendOverrideField(formData, 'overrideRampUpDelayInput', 'overrideRampUpDelay');
-  
-    fetch('/start-process', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (response.ok) {
-        toastr.success('Process started successfully!');
-        var modalEl = document.getElementById("startProcessModal");
-        var modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) {
-          modalInstance.hide();
-          setTimeout(function() {
-          window.location.href = window.location.href;
-          }, 5000);
-        }
-      } else {
-        return response.text().then((text) => {
-          toastr.error(`Failed to start process: ${String(text)}`);
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Error starting process:', error);
-      toastr.error(`An error occurred while starting the process: ${String(error.message)}`);
-    });
-  }
-
-  // New function to handle starting the sample 3270 App
-  function start3270App() {
-    var errorsDiv = document.getElementById('appProcessErrors');
-    errorsDiv.innerHTML = '';
-    var formElem = document.getElementById('startAppForm');
-    if (!formElem.checkValidity()) {
-      errorsDiv.innerHTML = '<div class="alert alert-danger">Please complete all required fields.</div>';
-      return;
-    }
-    var runApp = document.getElementById('runAppSelect').value;
-    var runAppPort = document.getElementById('runAppPortInput').value;
-    // Build FormData with runApp params
-    var formData = new FormData();
-    formData.append("runApp", runApp);
-    formData.append("runAppPort", runAppPort);
-  
-    fetch('/start-process', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (response.ok) {
-        toastr.success('Sample app started successfully!');
-      } else {
-        return response.text().then((text) => {
-          toastr.error(`Failed to start sample app: ${String(text)}`);
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Error starting sample app:', error);
-      toastr.error(`An error occurred while starting the sample app: ${String(error.message)}`);
-    });
-    
-    var modalEl = document.getElementById("startAppModal");
-    var modalInstance = bootstrap.Modal.getInstance(modalEl);
-    if (modalInstance) {
-      modalInstance.hide();
-    }
-  }
-
-  // Create a mapping for extended metrics keyed by PID
-  var extendedMetrics = {
-    {{range .ExtendedMetricsList}}
-      "{{.PID}}": {
-        status: "{{.Status}}",
-        timeLeft: "{{.TimeLeft}}"
-      },
-    {{end}}
-  };
-
-  document.addEventListener('DOMContentLoaded', function () {
-    // Initialize default tooltips with an offset
-    tippy('[data-tippy-content]:not(#autoRefreshToggle):not(#refreshPeriodSelect)', {
-      placement: 'top',
-      animation: 'fade',
-      theme: 'light',
-      popperOptions: {
-        modifiers: [ {
-          name: 'offset',
-          options: { offset: [0, 8] }
-        } ]
-      }
-    });
-    // Specific settings for auto refresh toggle tooltip
-    tippy('#autoRefreshToggle', {
-      content: document.querySelector('#autoRefreshToggle').getAttribute('data-tippy-content') || "Enable or disable automatic page refresh.",
-      placement: 'right',
-      animation: 'fade',
-      theme: 'light',
-      popperOptions: {
-        modifiers: [ {
-          name: 'offset',
-          options: { offset: [20, 0] }
-        } ]
-      }
-    });
-    // Specific settings for refresh period select tooltip
-    tippy('#refreshPeriodSelect', {
-      content: document.querySelector('#refreshPeriodSelect').getAttribute('data-tippy-content') || "Set the interval for automatic page refresh in seconds.",
-      placement: 'right',
-      animation: 'fade',
-      theme: 'light',
-      popperOptions: {
-        modifiers: [ {
-          name: 'offset',
-          options: { offset: [20, 0] }
-        } ]
-      }
-    });
-  });
-
-  // Set toastr options
-  toastr.options = {
-    "closeButton": false,
-    "debug": false,
-    "newestOnTop": true,
-    "progressBar": true,
-    "positionClass": "toast-top-right",
-    "preventDuplicates": false,
-    "onclick": null,
-    "showDuration": "300",
-    "hideDuration": "1000",
-    "timeOut": "5000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-  };
-
-  function confirmKill(pid, params) {
-    document.getElementById("killDetails").innerHTML = `
-      <p>Are you sure you want to kill the following process?</p>
-      <div class="alert alert-info">
-      <strong>PID:</strong> ${pid}<br>
-      <strong>Parameters:</strong> ${params}
+  <!-- ================= Shortcut sheet ================= -->
+  <div class="modal" id="shortcutModal" tabindex="-1" aria-labelledby="shortcutLabel" aria-hidden="true">
+    <div class="modal-card lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shortcutLabel"><svg class="ic" aria-hidden="true"><use href="#i-keyboard"></use></svg> Keyboard Shortcuts</h5>
+          <button type="button" class="btn-close" data-close aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="sheet-grid">
+            <div class="sheet-row"><span>Command palette</span><span><kbd>Ctrl</kbd> <kbd>K</kbd></span></div>
+            <div class="sheet-row"><span>Focus process filter</span><span><kbd>/</kbd></span></div>
+            <div class="sheet-row"><span>Refresh now</span><span><kbd>R</kbd></span></div>
+            <div class="sheet-row"><span>Console logs</span><span><kbd>C</kbd></span></div>
+            <div class="sheet-row"><span>Start process</span><span><kbd>S</kbd></span></div>
+            <div class="sheet-row"><span>Start sample app</span><span><kbd>A</kbd></span></div>
+            <div class="sheet-row"><span>Pause / resume polling</span><span><kbd>P</kbd></span></div>
+            <div class="sheet-row"><span>Toggle density</span><span><kbd>D</kbd></span></div>
+            <div class="sheet-row"><span>Cycle theme</span><span><kbd>T</kbd></span></div>
+            <div class="sheet-row"><span>This sheet</span><span><kbd>?</kbd></span></div>
+            <div class="sheet-row"><span>Close dialogs</span><span><kbd>Esc</kbd></span></div>
+          </div>
+          <div class="banner">
+            <svg class="ic" aria-hidden="true"><use href="#i-circle-info"></use></svg>
+            <span>Charts support scroll-wheel zoom and drag-to-pan. Use the reset button in each panel header to return to the full range.</span>
+          </div>
+        </div>
       </div>
-    `;
-    var killModal = new bootstrap.Modal(document.getElementById("killModal"));
-    document.getElementById("confirmKillBtn").onclick = function() {
-      killProcess(pid);
+    </div>
+  </div>
+
+  <!-- ================= Scripts ================= -->
+  <script src="/static/vendor/chart.umd.js?v={{.Version}}"></script>
+  <script src="/static/vendor/chartjs-plugin-zoom.min.js?v={{.Version}}"></script>
+  <script>
+    window.__DASH__ = {
+      autoRefresh: {{.AutoRefreshEnabled}},
+      refreshPeriod: "{{.RefreshPeriod}}",
+      version: "{{.Version}}",
+      metrics: JSON.parse('{{.ExtendedJSON}}')
     };
-    killModal.show();
-  }
-
-  function killProcess(pid) {
-    fetch('/kill?pid=' + encodeURIComponent(pid), { method: 'POST' })
-      .then(response => {
-        return response.text().then(text => {
-          if (response.ok) {
-            toastr.success(text);
-          } else {
-            toastr.error(text);
-          }
-        });
-      });
-    var killModal = document.getElementById("killModal");
-    var modalInstance = document.getElementById("killModal");
-    var modalInstance = bootstrap.Modal.getInstance(killModal);
-    if (modalInstance) {
-        modalInstance.hide();
-    }
-    setTimeout(function() {
-      window.location.href = window.location.href;
-    }, 5000);
-  }
-
-  document.getElementById("closeModal").onclick = function() {
-    var killModal = document.getElementById("killModal");
-    var modalInstance = bootstrap.Modal.getInstance(killModal);
-    if (modalInstance) {
-        modalInstance.hide();
-    }
-    setTimeout(function() {
-      window.location.href = window.location.href;
-    }, 5000);
-  };
-
-  // Functions for maximizing and restoring console modal
-  function maximizeConsoleModal() {
-    var modalDialog = document.getElementById("consoleModalDialog");
-    modalDialog.classList.add("modal-maximized");
-    document.getElementById("maximizeConsoleBtn").style.display = "none";
-    document.getElementById("restoreConsoleBtn").style.display = "inline-block";
-  }
-
-  function restoreConsoleModal() {
-    var modalDialog = document.getElementById("consoleModalDialog");
-    modalDialog.classList.remove("modal-maximized");
-    document.getElementById("maximizeConsoleBtn").style.display = "inline-block";
-    document.getElementById("restoreConsoleBtn").style.display = "none";
-  }
-</script>
+  </script>
+  <script src="/static/js/dashboard.js?v={{.Version}}"></script>
 </body>
 </html>
