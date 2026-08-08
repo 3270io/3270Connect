@@ -76,11 +76,23 @@ The tools are grouped by what they can do, and the tier is set with the
 
 | `MCP_TOOLS` | Adds | For |
 |---|---|---|
-| `readonly` *(default)* | `describe_workflow_schema`, `validate_workflow`, `list_load_tests`, `get_load_test_metrics`, `get_live_workflow_status`, `get_step_latencies`, `get_run_summary`, `get_console_log`, `test_connection`, `list_skills`, `load_skill`, `list_instructions`, `load_instruction`, `list_extensions` | Writing and checking workflows, and reporting on runs someone else started |
-| `smoke` | + `run_workflow_once`, `save_workflow`, `start_sample_app` | Single-session runs against a real host |
+| `readonly` *(default)* | `describe_workflow_schema`, `validate_workflow`, `list_workflows`, `list_load_tests`, `get_load_test_metrics`, `get_live_workflow_status`, `get_step_latencies`, `get_run_summary`, `get_console_log`, `test_connection`, `list_skills`, `load_skill`, `list_instructions`, `load_instruction`, `list_extensions` | Writing and checking workflows, and reporting on runs someone else started |
+| `smoke` | + `run_workflow_once`, `save_workflow`, `start_sample_app`, `profile_host` | Single-session runs against a real host |
 | `load` | + `start_load_test`, `stop_load_test` | Concurrent load generation |
 
 Each tier includes the ones below it.
+
+Two are worth knowing about before you start writing anything:
+`list_workflows` reports the workflow documents already on disk — including
+any an installed extension contributes — with the step count, the host each
+targets and **whether it would pass validation**, so a file that is one field
+short of running is visible rather than something to find out at the start of
+a load test. `profile_host` connects once and reports what the host actually
+supports: screen model, colour, extended attributes and character sets. It
+presses no keys and submits nothing, but it does open a session, which is why
+it sits in `smoke` rather than `readonly`. It answers the question that
+invalidates a workflow silently — whether the screen size the coordinates
+assume is the screen size you will get.
 
 The default is deliberately the most restrictive. A load test is the one thing
 3270Connect does that a host cannot ignore — every other operation asks a

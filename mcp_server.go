@@ -137,7 +137,9 @@ func skillTools() []MCPTool {
 					entry := map[string]any{
 						"name": e.Manifest.Name, "version": e.Manifest.Version,
 						"enabled": !e.Disabled, "loadable": e.Problem == "",
-						"skills": len(e.Manifest.Contributes.Skills),
+						"skills":       len(e.Manifest.Contributes.Skills),
+						"instructions": len(e.Manifest.Contributes.Instructions),
+						"workflows":    len(e.Manifest.Contributes.Workflows),
 					}
 					if e.Problem != "" {
 						entry["problem"] = e.Problem

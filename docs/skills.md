@@ -24,6 +24,7 @@ would cost the same as loading one that was needed.
 | `soak-test` | Holding a steady load for hours to surface leaks and gradual slowdown |
 | `interpret-results` | Turning counters and percentiles into something actionable |
 | `author-workflow` | Writing workflow JSON against the schema rather than from memory |
+| `before-after-comparison` | Measuring whether a change moved throughput or latency, holding everything else still |
 
 | Instruction | Covers |
 |---|---|
@@ -126,7 +127,8 @@ extensions/
   "requires": { "product": "3270Connect", "minVersion": "1.9.0" },
   "contributes": {
     "skills":       [{ "dir": "skills/acme-billing-load", "name": "acme-billing-load" }],
-    "instructions": [{ "file": "instructions/acme-conventions.instructions.md" }]
+    "instructions": [{ "file": "instructions/acme-conventions.instructions.md" }],
+    "workflows":    [{ "file": "workflows/billing.json" }]
   }
 }
 ```
@@ -141,6 +143,11 @@ missing from `list_skills`.
 ## What an extension may contribute
 
 Content only: skills, instructions and workflow documents.
+
+A contributed workflow appears in `list_workflows` alongside the files in the
+working directory, with its source named, and goes through the same
+`validate_workflow` gate as one you wrote yourself — a pack cannot ship a
+workflow that skips the check.
 
 There is deliberately no way for an extension to register a command, a script,
 or an executable tool. 3270Connect generates load against production systems,
