@@ -51,6 +51,7 @@ func TestBuiltinsLoadCleanly(t *testing.T) {
 		"find-concurrency-knee",
 		"interpret-results",
 		"author-workflow",
+		"before-after-comparison",
 	} {
 		if _, ok := c.Skill(want); !ok {
 			t.Errorf("built-in skill %q is missing", want)
@@ -370,5 +371,75 @@ func TestCompareVersions(t *testing.T) {
 		if got := compareVersions(tc.a, tc.b); got != tc.want {
 			t.Errorf("compareVersions(%q, %q) = %d, want %d", tc.a, tc.b, got, tc.want)
 		}
+	}
+}
+
+// TestExtensionContributesWorkflow covers the documents an extension declares
+// for the product to run. The manifest field existed from the start and
+// nothing read it, so a pack could ship a folder of workflows, load cleanly,
+// list itself as active, and contribute none of them.
+func TestExtensionContributesWorkflow(t *testing.T) {
+	dirs := emptyDirs(t)
+
+	m := sampleManifest("acme-billing")
+	m.Contributes.Workflows = append(m.Contributes.Workflows, struct {
+		File string `json:"file"`
+	}{File: "workflows/billing.json"})
+	dir := writeExtension(t, dirs.Extensions, "acme-billing", m)
+
+	wfDir := filepath.Join(dir, "workflows")
+	if err := os.MkdirAll(wfDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const doc = `{"Host":"mvs.example.com","Port":3270,"Steps":[{"Type":"Connect"}]}`
+	if err := os.WriteFile(filepath.Join(wfDir, "billing.json"), []byte(doc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := Load(dirs, "1.9.0")
+
+	docs := c.Workflows()
+	if len(docs) != 1 {
+		t.Fatalf("Workflows() returned %d documents, want 1; problems: %v", len(docs), c.Problems())
+	}
+	if string(docs[0].Data) != doc {
+		t.Errorf("the bytes are handed over unchanged; got %q", docs[0].Data)
+	}
+	if docs[0].Source.Kind != SourceExtension || docs[0].Source.Extension != "acme-billing" {
+		t.Errorf("source = %q, want extension:acme-billing", docs[0].Source)
+	}
+	if !strings.HasSuffix(docs[0].File, "billing.json") {
+		t.Errorf("File = %q, want the path it was read from", docs[0].File)
+	}
+}
+
+// TestExtensionWorkflowCannotEscapeItsDirectory: the same containment rule as
+// skills, checked separately because it is a separate call site and the
+// consequence here is a document from anywhere on disk being run at
+// concurrency against a host.
+func TestExtensionWorkflowCannotEscapeItsDirectory(t *testing.T) {
+	dirs := emptyDirs(t)
+
+	outside := filepath.Join(filepath.Dir(dirs.Extensions), "outside")
+	if err := os.MkdirAll(outside, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outside, "stolen.json"), []byte(`{"Steps":[]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	m := sampleManifest("escaper")
+	m.Contributes.Workflows = append(m.Contributes.Workflows, struct {
+		File string `json:"file"`
+	}{File: "../../outside/stolen.json"})
+	writeExtension(t, dirs.Extensions, "escaper", m)
+
+	c := Load(dirs, "1.9.0")
+
+	if len(c.Workflows()) != 0 {
+		t.Fatal("an extension loaded a workflow from outside its own directory")
+	}
+	if !strings.Contains(strings.Join(c.Problems(), "\n"), "outside the extension directory") {
+		t.Errorf("the traversal should be reported; problems were %v", c.Problems())
 	}
 }

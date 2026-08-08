@@ -27,7 +27,7 @@ const extensionSchemaVersion = 1
 // Manifest is an extension's declaration of what it contributes.
 //
 // Contributions are content only — playbooks, policy fragments and saved
-// tasks. There is deliberately no way for an extension to register a command,
+// workflows. There is deliberately no way for an extension to register a command,
 // a script or an executable tool. 3270Connect holds an authenticated session
 // against someone's mainframe; the blast radius of "drop a folder in and it
 // runs" is not one an operator can reason about, and every capability an
@@ -54,9 +54,9 @@ type Manifest struct {
 			File       string `json:"file"`
 			AlwaysLoad bool   `json:"alwaysLoad,omitempty"`
 		} `json:"instructions,omitempty"`
-		Tasks []struct {
+		Workflows []struct {
 			File string `json:"file"`
-		} `json:"tasks,omitempty"`
+		} `json:"workflows,omitempty"`
 	} `json:"contributes"`
 }
 

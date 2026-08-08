@@ -374,6 +374,7 @@ func allTools() []MCPTool {
 		},
 	}
 
+	tools = append(tools, workflowTools()...)
 	tools = append(tools, skillTools()...)
 
 	sort.Slice(tools, func(i, j int) bool { return tools[i].Name < tools[j].Name })
