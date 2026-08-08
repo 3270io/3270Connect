@@ -1388,12 +1388,12 @@ command and arguments in their own configuration format.</p>
 <tbody>
 <tr>
 <td><code>readonly</code> <em>(default)</em></td>
-<td><code>describe_workflow_schema</code>, <code>validate_workflow</code>, <code>list_load_tests</code>, <code>get_load_test_metrics</code>, <code>get_live_workflow_status</code>, <code>get_step_latencies</code>, <code>get_run_summary</code>, <code>get_console_log</code>, <code>test_connection</code>, <code>list_skills</code>, <code>load_skill</code>, <code>list_instructions</code>, <code>load_instruction</code>, <code>list_extensions</code></td>
+<td><code>describe_workflow_schema</code>, <code>validate_workflow</code>, <code>list_workflows</code>, <code>list_load_tests</code>, <code>get_load_test_metrics</code>, <code>get_live_workflow_status</code>, <code>get_step_latencies</code>, <code>get_run_summary</code>, <code>get_console_log</code>, <code>test_connection</code>, <code>list_skills</code>, <code>load_skill</code>, <code>list_instructions</code>, <code>load_instruction</code>, <code>list_extensions</code></td>
 <td>Writing and checking workflows, and reporting on runs someone else started</td>
 </tr>
 <tr>
 <td><code>smoke</code></td>
-<td>+ <code>run_workflow_once</code>, <code>save_workflow</code>, <code>start_sample_app</code></td>
+<td>+ <code>run_workflow_once</code>, <code>save_workflow</code>, <code>start_sample_app</code>, <code>profile_host</code></td>
 <td>Single-session runs against a real host</td>
 </tr>
 <tr>
@@ -1404,6 +1404,17 @@ command and arguments in their own configuration format.</p>
 </tbody>
 </table>
 <p>Each tier includes the ones below it.</p>
+<p>Two are worth knowing about before you start writing anything:
+<code>list_workflows</code> reports the workflow documents already on disk — including
+any an installed extension contributes — with the step count, the host each
+targets and <strong>whether it would pass validation</strong>, so a file that is one field
+short of running is visible rather than something to find out at the start of
+a load test. <code>profile_host</code> connects once and reports what the host actually
+supports: screen model, colour, extended attributes and character sets. It
+presses no keys and submits nothing, but it does open a session, which is why
+it sits in <code>smoke</code> rather than <code>readonly</code>. It answers the question that
+invalidates a workflow silently — whether the screen size the coordinates
+assume is the screen size you will get.</p>
 <p>The default is deliberately the most restrictive. A load test is the one thing
 3270Connect does that a host cannot ignore — every other operation asks a
 question, this one takes resources from whoever else is using the system. Opt

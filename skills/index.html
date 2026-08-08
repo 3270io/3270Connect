@@ -1333,6 +1333,10 @@ would cost the same as loading one that was needed.</p>
 <td><code>author-workflow</code></td>
 <td>Writing workflow JSON against the schema rather than from memory</td>
 </tr>
+<tr>
+<td><code>before-after-comparison</code></td>
+<td>Measuring whether a change moved throughput or latency, holding everything else still</td>
+</tr>
 </tbody>
 </table>
 <table>
@@ -1433,7 +1437,8 @@ one folder:</p>
 <span class="w">  </span><span class="nt">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"product"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270Connect"</span><span class="p">,</span><span class="w"> </span><span class="nt">"minVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.9.0"</span><span class="w"> </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"contributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"skills"</span><span class="p">:</span><span class="w">       </span><span class="p">[{</span><span class="w"> </span><span class="nt">"dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"skills/acme-billing-load"</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-billing-load"</span><span class="w"> </span><span class="p">}],</span>
-<span class="w">    </span><span class="nt">"instructions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"instructions/acme-conventions.instructions.md"</span><span class="w"> </span><span class="p">}]</span>
+<span class="w">    </span><span class="nt">"instructions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"instructions/acme-conventions.instructions.md"</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="nt">"workflows"</span><span class="p">:</span><span class="w">    </span><span class="p">[{</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"workflows/billing.json"</span><span class="w"> </span><span class="p">}]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -1444,6 +1449,10 @@ one failed to load</strong> — which is the answer when a skill someone expects
 missing from <code>list_skills</code>.</p>
 <h2 id="what-an-extension-may-contribute">What an extension may contribute<a class="headerlink" href="#what-an-extension-may-contribute" title="Permanent link">¶</a></h2>
 <p>Content only: skills, instructions and workflow documents.</p>
+<p>A contributed workflow appears in <code>list_workflows</code> alongside the files in the
+working directory, with its source named, and goes through the same
+<code>validate_workflow</code> gate as one you wrote yourself — a pack cannot ship a
+workflow that skips the check.</p>
 <p>There is deliberately no way for an extension to register a command, a script,
 or an executable tool. 3270Connect generates load against production systems,
 and "drop a folder in and it runs" is not a security model an operator can
