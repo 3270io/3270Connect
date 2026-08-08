@@ -1493,6 +1493,16 @@ func LaunchEmbeddedIfDoubleClicked() {
 }
 
 func main() {
+	// The MCP subcommand owns stdout from its first statement, so it is
+	// dispatched before flag.Parse — which stops at the first non-flag
+	// argument anyway — and before the banner, the no-arguments dashboard
+	// branch and the double-click webview, all of which write to stdout or
+	// open a window.
+	if len(os.Args) > 1 && os.Args[1] == "mcp" {
+		runMCP(os.Args[2:])
+		return
+	}
+
 	flag.Parse()
 	metricsConfigFilePath = configFile
 
