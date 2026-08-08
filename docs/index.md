@@ -7,9 +7,10 @@ hide:
 <div class="split" markdown>
 <div markdown>
 
+<div class="hero-lockup">
 <p class="hero-mark"></p>
-
 <span class="chip accent"><span class="dot live"></span> Open source · v1.9.2</span>
+</div>
 
 # Replay the mainframe <span class="grad">at any scale</span>
 
