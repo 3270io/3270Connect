@@ -30,6 +30,7 @@ import (
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
 	metricsPkg "github.com/3270io/3270Connect/internal/metrics"
+	"github.com/3270io/3270Connect/internal/workflow"
 	"github.com/3270io/3270Connect/sampleapps/app1"
 	app2 "github.com/3270io/3270Connect/sampleapps/app2"
 	"github.com/charmbracelet/lipgloss"
@@ -55,106 +56,15 @@ const (
 var errorList []error
 var errorMutex sync.Mutex
 
-// DelayRange represents a randomized delay window in seconds. When Max is
-// omitted (zero) but Min is set, Max defaults to Min. Set both Min and Max to
-// zero to disable the delay entirely.
-type DelayRange struct {
-	Min float64 `json:"Min,omitempty"`
-	Max float64 `json:"Max,omitempty"`
-}
-
-// WaitForFieldConfig holds the configuration for WaitForField behavior.
-// It supports both simple boolean values (for backward compatibility) and
-// detailed configuration with custom delay and retry settings.
-type WaitForFieldConfig struct {
-	Enabled bool    `json:"-"` // Not directly unmarshaled
-	Delay   float64 `json:"Delay,omitempty"`
-	Retries int     `json:"Retries,omitempty"`
-}
-
-// UnmarshalJSON implements custom JSON unmarshaling to support both boolean and object formats.
-// Examples: "WaitForField": true or "WaitForField": { "Delay": 2, "Retries": 10 }
-func (w *WaitForFieldConfig) UnmarshalJSON(data []byte) error {
-	// Try to unmarshal as boolean first
-	var boolVal bool
-	if err := json.Unmarshal(data, &boolVal); err == nil {
-		w.Enabled = boolVal
-		// Set defaults when using boolean format
-		if w.Delay == 0 {
-			w.Delay = 1.0
-		}
-		if w.Retries == 0 {
-			w.Retries = 10
-		}
-		return nil
-	}
-
-	// Try to unmarshal as object
-	type Alias WaitForFieldConfig
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(w),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	w.Enabled = true // If object format is used, assume enabled
-	// Set defaults if not provided
-	if w.Delay == 0 {
-		w.Delay = 1.0
-	}
-	if w.Retries == 0 {
-		w.Retries = 10
-	}
-	return nil
-}
-
-// MarshalJSON implements custom JSON marshaling.
-func (w WaitForFieldConfig) MarshalJSON() ([]byte, error) {
-	// If using default values, just marshal as boolean
-	if w.Delay == 1.0 && w.Retries == 10 {
-		return json.Marshal(w.Enabled)
-	}
-	// Otherwise, marshal as object with just the custom fields
-	return json.Marshal(map[string]interface{}{
-		"Delay":   w.Delay,
-		"Retries": w.Retries,
-	})
-}
-
-// Configuration holds the settings for the terminal connection and the steps to be executed.
-type Configuration struct {
-	Host string
-	Port int
-	// CodePage selects the host EBCDIC code page / character set for the 3270
-	// session (e.g. "cp037", "cp285", "cp278" or the alias "finnish"). It is
-	// passed to the underlying x3270/s3270 emulator via its -codepage option.
-	// Leave empty to use the emulator default. The -codePage CLI flag overrides
-	// this value when set.
-	CodePage        string             `json:"CodePage,omitempty"`
-	OutputFilePath  string             `json:"OutputFilePath"`
-	WaitForField    WaitForFieldConfig `json:"WaitForField,omitempty"`
-	Steps           []Step
-	EveryStepDelay  DelayRange `json:"EveryStepDelay,omitempty"`
-	EndOfTaskDelay  DelayRange `json:"EndOfTaskDelay,omitempty"`
-	Token           string     `json:"Token,omitempty"`
-	InputFilePath   string     `json:"InputFilePath"`
-	RampUpBatchSize     int     `json:"RampUpBatchSize"`
-	RampUpDelay         float64 `json:"RampUpDelay"`
-	LegacyDelay         float64 `json:"Delay,omitempty"`
-	GracePeriod         float64 `json:"GracePeriod,omitempty"`
-	AutoShutdownTimeout float64 `json:"AutoShutdownTimeout,omitempty"`
-}
-
-// Step represents an individual action to be taken on the terminal.
-type Step struct {
-	Type        string
-	Coordinates connect3270.Coordinates
-	Text        string
-	Delay       float64    `json:"Delay,omitempty"`
-	StepDelay   DelayRange `json:"StepDelay,omitempty"`
-}
+// The workflow document and its validation rules live in internal/workflow,
+// so that validating one does not require running it. These aliases keep
+// every call site in this file unchanged.
+type (
+	DelayRange         = workflow.DelayRange
+	WaitForFieldConfig = workflow.WaitForFieldConfig
+	Configuration      = workflow.Configuration
+	Step               = workflow.Step
+)
 
 var configPrinter *MessagePrinter
 
@@ -2586,85 +2496,14 @@ func max(a, b int) int {
 	return b
 }
 
-func validateDelayRange(name string, dr DelayRange, allowZero bool) error {
-	if dr.Min < 0 || dr.Max < 0 {
-		return fmt.Errorf("%s must be zero or positive", name)
-	}
-	if dr.Max > 0 && dr.Min > dr.Max {
-		return fmt.Errorf("%s Min cannot be greater than Max", name)
-	}
-	if !allowZero && dr.Min == 0 && dr.Max == 0 {
-		return fmt.Errorf("%s requires a positive Min or Max value", name)
-	}
-	return nil
-}
-
+// validateConfiguration reports whether a workflow is well-formed.
+// internal/workflow.Validate is the single gate; this wrapper keeps the
+// verbose-mode narration the CLI has always printed.
 func validateConfiguration(config *Configuration) error {
 	if connect3270.Verbose {
 		pterm.Info.Println("Validating config - let’s see if it’s naughty or nice!")
 	}
-	if config.Host == "" {
-		return fmt.Errorf("host is empty - where’s the party at?")
-	}
-	if config.Port <= 0 {
-		return fmt.Errorf("port is invalid - ports cant be negative silly")
-	}
-	if config.LegacyDelay > 0 {
-		return fmt.Errorf("Delay is no longer supported; use EveryStepDelay.Min/Max instead")
-	}
-	if err := validateDelayRange("EveryStepDelay", config.EveryStepDelay, true); err != nil {
-		return err
-	}
-	if err := validateDelayRange("EndOfTaskDelay", config.EndOfTaskDelay, true); err != nil {
-		return err
-	}
-	if config.OutputFilePath == "" {
-		hasScreenGrab := false
-		for _, step := range config.Steps {
-			if step.Type == "AsciiScreenGrab" {
-				hasScreenGrab = true
-				break
-			}
-		}
-		if hasScreenGrab {
-			return fmt.Errorf("output file path is empty - screen grab needs a home")
-		}
-	}
-
-	for _, step := range config.Steps {
-		if step.Type == "HumanDelay" {
-			return fmt.Errorf("HumanDelay is no longer supported; use StepDelay with Min/Max instead")
-		}
-		// Allow steps that do not require additional configuration.
-		if step.Type == "Connect" ||
-			step.Type == "AsciiScreenGrab" ||
-			step.Type == "PressEnter" ||
-			step.Type == "PressTab" ||
-			step.Type == "WaitForField" ||
-			step.Type == "Disconnect" ||
-			step.Type == "StepDelay" ||
-			(strings.HasPrefix(step.Type, "PressPF")) {
-			if step.Type == "StepDelay" {
-				if err := validateDelayRange("StepDelay", step.StepDelay, false); err != nil {
-					return err
-				}
-			}
-			continue
-		}
-		// Steps that require coordinates and text.
-		if step.Type == "CheckValue" || step.Type == "FillString" {
-			if step.Coordinates.Row == 0 || step.Coordinates.Column == 0 {
-				return fmt.Errorf("coords missing in %s step - lost in space", step.Type)
-			}
-			if step.Text == "" {
-				return fmt.Errorf("text empty in %s step - cat got your tongue?", step.Type)
-			}
-			continue
-		}
-		// Unknown step type.
-		return fmt.Errorf("unknown step type: %s - what’s this nonsense?", step.Type)
-	}
-	return nil
+	return workflow.Validate(config)
 }
 
 func runDashboard() {
