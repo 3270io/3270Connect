@@ -176,3 +176,8 @@ The 3270Connect mark and its lockups live in [`brand/`](brand/) — SVG, PNG and
 `.ico`, in a dark-ground and a light-ground pair. They are generated from the shared kit in the
 [3270io](https://github.com/3270io/3270io) repo (`brand/build.mjs`); regenerate
 there rather than editing these by hand.
+
+The console serves two copies from `templates/static/images/`: `logo.png` is the
+phosphor mark, for the header tile on the dark console, and `favicon.png` is the
+daylight-green icon, for the browser tab — phosphor is tuned for a dark terminal
+and goes milky against white tab chrome.
