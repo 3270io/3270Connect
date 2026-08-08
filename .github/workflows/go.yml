@@ -135,7 +135,11 @@ jobs:
         run: |
           mkdocs build
 
+      # Pull request builds validate that the docs still build, but must never
+      # publish: on a pull_request event the checkout is the PR merge ref, so
+      # deploying here overwrites the live site with an unmerged branch.
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
