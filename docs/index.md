@@ -7,6 +7,8 @@ hide:
 <div class="split" markdown>
 <div markdown>
 
+<p class="hero-mark"><img class="plain" src="assets/logo.svg" alt="3270Connect" width="72" height="72"></p>
+
 <span class="chip accent"><span class="dot live"></span> Open source · v1.9.2</span>
 
 # Replay the mainframe <span class="grad">at any scale</span>
