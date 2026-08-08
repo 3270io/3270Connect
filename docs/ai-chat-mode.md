@@ -2,6 +2,13 @@
 
 AI Chat mode is a side panel in 3270Web, the 3270Connect web console, that lets you drive a 3270 session through conversation. You type instructions in plain language; the AI reads the current screen, fills fields, presses keys, and runs chaos exploration, all with your approval before each action.
 
+!!! note "Driving 3270Connect itself"
+
+    This page is about interactive terminal work in the browser. To have an AI
+    client compose workflows and run load tests through 3270Connect, see the
+    [MCP Server](mcp.md) — it exposes the same capability to Claude Desktop
+    and other MCP clients, with no browser involved.
+
 ## Open the Panel
 
 1. Connect to a host.

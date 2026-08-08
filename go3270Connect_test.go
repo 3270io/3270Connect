@@ -97,14 +97,19 @@ func TestValidateConfigurationRejectsLegacyDelayAndHumanDelay(t *testing.T) {
 		LegacyDelay: 1,
 		Steps:       []Step{{Type: "Connect"}},
 	}
-	if err := validateConfiguration(&cfg); err == nil || !strings.Contains(err.Error(), "Delay is no longer supported") {
-		t.Fatalf("expected legacy Delay validation error, got %v", err)
+	// What matters is that the removed setting is refused and the message
+	// names what to use instead — a rejection that does not say that leaves
+	// the author with a file that used to work and no way forward.
+	err := validateConfiguration(&cfg)
+	if err == nil || !strings.Contains(err.Error(), "EveryStepDelay") {
+		t.Fatalf("expected the legacy Delay to be rejected pointing at EveryStepDelay, got %v", err)
 	}
 
 	cfg.LegacyDelay = 0
 	cfg.Steps = []Step{{Type: "HumanDelay"}}
-	if err := validateConfiguration(&cfg); err == nil || !strings.Contains(err.Error(), "HumanDelay is no longer supported") {
-		t.Fatalf("expected HumanDelay validation error, got %v", err)
+	err = validateConfiguration(&cfg)
+	if err == nil || !strings.Contains(err.Error(), "StepDelay") {
+		t.Fatalf("expected HumanDelay to be rejected pointing at StepDelay, got %v", err)
 	}
 }
 

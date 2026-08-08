@@ -1,7 +1,7 @@
 #############################
 # Builder for Windows
 #############################
-FROM golang:1.23 AS builder-windows
+FROM golang:1.25 AS builder-windows
 
 # Set environment variables for Windows
 ENV GOARCH=amd64
@@ -19,4 +19,4 @@ RUN cmd /C "go mod download"
 COPY . .
 
 # Build the Windows binary using CMD
-RUN cmd /C "go build -o 3270Connect.exe go3270Connect.go"
+RUN cmd /C "go build -o 3270Connect.exe ."

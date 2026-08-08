@@ -126,6 +126,14 @@ p99 several times larger points at a tail problem rather than a general one.
   range.
 - **Export** each chart as a **PNG** image or its underlying series as **CSV**.
 
+## Reading the same data from an AI client
+
+The process table and the KPI tiles read the per-process metrics files every
+running 3270Connect writes. The [MCP Server](mcp.md) reads the same files, so
+an assistant can list runs, report percentiles and stop a run in conversation
+— `list_load_tests`, `get_load_test_metrics`, `stop_load_test`. Starting a run
+that way is the same primitive the **Start process** button uses.
+
 ## Process table
 
 ![The process intelligence table](assets/dashboard/process-table.webp){: .shot }

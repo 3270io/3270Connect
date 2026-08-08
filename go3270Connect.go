@@ -25,11 +25,12 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
 	metricsPkg "github.com/3270io/3270Connect/internal/metrics"
+	"github.com/3270io/3270Connect/internal/runstore"
+	"github.com/3270io/3270Connect/internal/workflow"
 	"github.com/3270io/3270Connect/sampleapps/app1"
 	app2 "github.com/3270io/3270Connect/sampleapps/app2"
 	"github.com/charmbracelet/lipgloss"
@@ -55,106 +56,15 @@ const (
 var errorList []error
 var errorMutex sync.Mutex
 
-// DelayRange represents a randomized delay window in seconds. When Max is
-// omitted (zero) but Min is set, Max defaults to Min. Set both Min and Max to
-// zero to disable the delay entirely.
-type DelayRange struct {
-	Min float64 `json:"Min,omitempty"`
-	Max float64 `json:"Max,omitempty"`
-}
-
-// WaitForFieldConfig holds the configuration for WaitForField behavior.
-// It supports both simple boolean values (for backward compatibility) and
-// detailed configuration with custom delay and retry settings.
-type WaitForFieldConfig struct {
-	Enabled bool    `json:"-"` // Not directly unmarshaled
-	Delay   float64 `json:"Delay,omitempty"`
-	Retries int     `json:"Retries,omitempty"`
-}
-
-// UnmarshalJSON implements custom JSON unmarshaling to support both boolean and object formats.
-// Examples: "WaitForField": true or "WaitForField": { "Delay": 2, "Retries": 10 }
-func (w *WaitForFieldConfig) UnmarshalJSON(data []byte) error {
-	// Try to unmarshal as boolean first
-	var boolVal bool
-	if err := json.Unmarshal(data, &boolVal); err == nil {
-		w.Enabled = boolVal
-		// Set defaults when using boolean format
-		if w.Delay == 0 {
-			w.Delay = 1.0
-		}
-		if w.Retries == 0 {
-			w.Retries = 10
-		}
-		return nil
-	}
-
-	// Try to unmarshal as object
-	type Alias WaitForFieldConfig
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(w),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	w.Enabled = true // If object format is used, assume enabled
-	// Set defaults if not provided
-	if w.Delay == 0 {
-		w.Delay = 1.0
-	}
-	if w.Retries == 0 {
-		w.Retries = 10
-	}
-	return nil
-}
-
-// MarshalJSON implements custom JSON marshaling.
-func (w WaitForFieldConfig) MarshalJSON() ([]byte, error) {
-	// If using default values, just marshal as boolean
-	if w.Delay == 1.0 && w.Retries == 10 {
-		return json.Marshal(w.Enabled)
-	}
-	// Otherwise, marshal as object with just the custom fields
-	return json.Marshal(map[string]interface{}{
-		"Delay":   w.Delay,
-		"Retries": w.Retries,
-	})
-}
-
-// Configuration holds the settings for the terminal connection and the steps to be executed.
-type Configuration struct {
-	Host string
-	Port int
-	// CodePage selects the host EBCDIC code page / character set for the 3270
-	// session (e.g. "cp037", "cp285", "cp278" or the alias "finnish"). It is
-	// passed to the underlying x3270/s3270 emulator via its -codepage option.
-	// Leave empty to use the emulator default. The -codePage CLI flag overrides
-	// this value when set.
-	CodePage        string             `json:"CodePage,omitempty"`
-	OutputFilePath  string             `json:"OutputFilePath"`
-	WaitForField    WaitForFieldConfig `json:"WaitForField,omitempty"`
-	Steps           []Step
-	EveryStepDelay  DelayRange `json:"EveryStepDelay,omitempty"`
-	EndOfTaskDelay  DelayRange `json:"EndOfTaskDelay,omitempty"`
-	Token           string     `json:"Token,omitempty"`
-	InputFilePath   string     `json:"InputFilePath"`
-	RampUpBatchSize     int     `json:"RampUpBatchSize"`
-	RampUpDelay         float64 `json:"RampUpDelay"`
-	LegacyDelay         float64 `json:"Delay,omitempty"`
-	GracePeriod         float64 `json:"GracePeriod,omitempty"`
-	AutoShutdownTimeout float64 `json:"AutoShutdownTimeout,omitempty"`
-}
-
-// Step represents an individual action to be taken on the terminal.
-type Step struct {
-	Type        string
-	Coordinates connect3270.Coordinates
-	Text        string
-	Delay       float64    `json:"Delay,omitempty"`
-	StepDelay   DelayRange `json:"StepDelay,omitempty"`
-}
+// The workflow document and its validation rules live in internal/workflow,
+// so that validating one does not require running it. These aliases keep
+// every call site in this file unchanged.
+type (
+	DelayRange         = workflow.DelayRange
+	WaitForFieldConfig = workflow.WaitForFieldConfig
+	Configuration      = workflow.Configuration
+	Step               = workflow.Step
+)
 
 var configPrinter *MessagePrinter
 
@@ -501,6 +411,29 @@ func snapshotWorkflowStatuses() []workflowStatus {
 		return statuses[i].ScriptPort < statuses[j].ScriptPort
 	})
 	return statuses
+}
+
+// liveStepSnapshot converts the in-memory per-worker positions into the form
+// published in the metrics file.
+func liveStepSnapshot() []runstore.WorkflowStatus {
+	statuses := snapshotWorkflowStatuses()
+	out := make([]runstore.WorkflowStatus, 0, len(statuses))
+	for _, s := range statuses {
+		started := int64(0)
+		if !s.StartedAt.IsZero() {
+			started = s.StartedAt.Unix()
+		}
+		out = append(out, runstore.WorkflowStatus{
+			ScriptPort:  s.ScriptPort,
+			Host:        s.Host,
+			Port:        s.Port,
+			CurrentStep: s.CurrentStep,
+			TotalSteps:  s.TotalSteps,
+			StepType:    s.StepType,
+			StartedAt:   started,
+		})
+	}
+	return out
 }
 
 func splitWorkflowStatuses(statuses []workflowStatus) (connectOnly []workflowStatus, nonConnect []workflowStatus) {
@@ -1275,87 +1208,16 @@ func runAPIWorkflow() {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload - JSON’s drunk", err)
 			return
 		}
-		if workflowConfig.Token == "" && rsaToken != "" {
-			workflowConfig.Token = rsaToken
-		}
-		// Per-request CodePage wins; otherwise fall back to the -codePage CLI flag.
-		if strings.TrimSpace(workflowConfig.CodePage) == "" && strings.TrimSpace(hostCodePage) != "" {
-			workflowConfig.CodePage = strings.TrimSpace(hostCodePage)
-		}
-		if err := validateConfiguration(&workflowConfig); err != nil {
-			sendErrorResponse(c, http.StatusBadRequest, "Invalid workflow configuration", err)
-			return
-		}
-		tmpFile, err := os.CreateTemp("", "workflowOutput_")
+		output, err := executeWorkflowOnce(&workflowConfig)
 		if err != nil {
-			pterm.Error.Println("Failed to create temporary file:", err)
-			sendErrorResponse(c, http.StatusInternalServerError, "Failed to create temp file", err)
+			sendErrorResponse(c, statusForWorkflowError(err), "Workflow execution failed", err)
 			return
 		}
-		defer tmpFile.Close()
-		tmpFileName := tmpFile.Name()
-		defer os.Remove(tmpFileName)
-		scriptPort, err := getNextAvailablePort()
-		if err != nil {
-			sendErrorResponse(c, http.StatusServiceUnavailable, "No script port available", err)
-			return
-		}
-		e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
-		e.CodePage = workflowConfig.CodePage
-		err = e.InitializeOutput(tmpFileName, true)
-		if err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Failed to initialize output", err)
-			return
-		}
-		connected := false
-		for idx, step := range workflowConfig.Steps {
-			if idx > 0 {
-				delay, err := randomDuration(workflowConfig.EveryStepDelay, true)
-				if err != nil {
-					sendErrorResponse(c, http.StatusBadRequest, "Invalid delay configuration", err)
-					e.Disconnect()
-					return
-				}
-				if delay > 0 {
-					time.Sleep(delay)
-				}
-			}
-			if shouldAutoWaitForField(&workflowConfig, step, connected) {
-				timeout := time.Duration(workflowConfig.WaitForField.Delay * float64(time.Second))
-				if waitErr := e.WaitForField(timeout, workflowConfig.WaitForField.Retries); waitErr != nil {
-					sendErrorResponse(c, http.StatusInternalServerError, "WaitForField failed", waitErr)
-					e.Disconnect()
-					return
-				}
-			}
-			if err := executeStep(e, step, tmpFileName, workflowConfig.Token); err != nil {
-				sendErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Step '%s' failed - oof", step.Type), err)
-				e.Disconnect()
-				return
-			}
-			if step.Type == "Connect" {
-				connected = true
-			}
-			if step.Type == "Disconnect" {
-				connected = false
-			}
-		}
-		if delay, err := randomDuration(workflowConfig.EndOfTaskDelay, true); err != nil {
-			sendErrorResponse(c, http.StatusBadRequest, "Invalid end-of-task delay", err)
-		} else if delay > 0 {
-			time.Sleep(delay)
-		}
-		outputContents, err := e.ReadOutputFile(tmpFileName)
-		if err != nil {
-			sendErrorResponse(c, http.StatusInternalServerError, "Output read failed - file’s shy", err)
-			return
-		}
-		e.Disconnect()
 		c.JSON(http.StatusOK, gin.H{
 			"returnCode": http.StatusOK,
 			"status":     "okay",
 			"message":    "Workflow executed successfully - high five!",
-			"output":     outputContents,
+			"output":     output,
 		})
 	})
 	apiAddr := fmt.Sprintf("localhost:%d", apiPort) // Bind to localhost
@@ -1363,6 +1225,113 @@ func runAPIWorkflow() {
 	if err := r.Run(apiAddr); err != nil {
 		pterm.Error.Printf("API server crashed - send coffee: %v\n", err)
 	}
+}
+
+// workflowError carries the HTTP status a failure should map to, so one
+// implementation can serve both the API handler and callers that have no
+// notion of HTTP.
+type workflowError struct {
+	status int
+	err    error
+}
+
+func (w *workflowError) Error() string { return w.err.Error() }
+func (w *workflowError) Unwrap() error { return w.err }
+
+func wfErr(status int, format string, args ...interface{}) error {
+	return &workflowError{status: status, err: fmt.Errorf(format, args...)}
+}
+
+// statusForWorkflowError maps a failure to an HTTP status, defaulting to 500
+// for anything that did not name one.
+func statusForWorkflowError(err error) int {
+	var we *workflowError
+	if errors.As(err, &we) {
+		return we.status
+	}
+	return http.StatusInternalServerError
+}
+
+// executeWorkflowOnce runs a workflow to completion with a single session and
+// returns the captured screen output.
+//
+// This is the smoke-test path: one virtual user, synchronous, no ramp-up and
+// no dashboard. It is deliberately separate from runConcurrentWorkflows,
+// which is a load engine with its own worker pool, progress bars and stdin
+// prompts. Both the REST handler and the MCP tool call this, so "run it once
+// and show me the screens" means the same thing however it is asked for.
+func executeWorkflowOnce(workflowConfig *Configuration) (string, error) {
+	if workflowConfig.Token == "" && rsaToken != "" {
+		workflowConfig.Token = rsaToken
+	}
+	// A per-request CodePage wins; otherwise fall back to the -codePage flag.
+	if strings.TrimSpace(workflowConfig.CodePage) == "" && strings.TrimSpace(hostCodePage) != "" {
+		workflowConfig.CodePage = strings.TrimSpace(hostCodePage)
+	}
+	if err := validateConfiguration(workflowConfig); err != nil {
+		return "", wfErr(http.StatusBadRequest, "invalid workflow configuration: %w", err)
+	}
+
+	tmpFile, err := os.CreateTemp("", "workflowOutput_")
+	if err != nil {
+		return "", wfErr(http.StatusInternalServerError, "could not create a temporary output file: %w", err)
+	}
+	defer tmpFile.Close()
+	tmpFileName := tmpFile.Name()
+	defer os.Remove(tmpFileName)
+
+	scriptPort, err := getNextAvailablePort()
+	if err != nil {
+		return "", wfErr(http.StatusServiceUnavailable, "no script port available: %w", err)
+	}
+
+	e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
+	e.CodePage = workflowConfig.CodePage
+	if err := e.InitializeOutput(tmpFileName, true); err != nil {
+		return "", wfErr(http.StatusInternalServerError, "could not initialise the output file: %w", err)
+	}
+	defer e.Disconnect()
+
+	connected := false
+	for idx, step := range workflowConfig.Steps {
+		if idx > 0 {
+			delay, err := randomDuration(workflowConfig.EveryStepDelay, true)
+			if err != nil {
+				return "", wfErr(http.StatusBadRequest, "invalid EveryStepDelay: %w", err)
+			}
+			if delay > 0 {
+				time.Sleep(delay)
+			}
+		}
+		if shouldAutoWaitForField(workflowConfig, step, connected) {
+			timeout := time.Duration(workflowConfig.WaitForField.Delay * float64(time.Second))
+			if err := e.WaitForField(timeout, workflowConfig.WaitForField.Retries); err != nil {
+				return "", wfErr(http.StatusInternalServerError,
+					"step %d (%s): the host keyboard did not unlock: %w", idx+1, step.Type, err)
+			}
+		}
+		if err := executeStep(e, step, tmpFileName, workflowConfig.Token); err != nil {
+			return "", wfErr(http.StatusInternalServerError, "step %d (%s) failed: %w", idx+1, step.Type, err)
+		}
+		switch step.Type {
+		case "Connect":
+			connected = true
+		case "Disconnect":
+			connected = false
+		}
+	}
+
+	if delay, err := randomDuration(workflowConfig.EndOfTaskDelay, true); err != nil {
+		return "", wfErr(http.StatusBadRequest, "invalid EndOfTaskDelay: %w", err)
+	} else if delay > 0 {
+		time.Sleep(delay)
+	}
+
+	output, err := e.ReadOutputFile(tmpFileName)
+	if err != nil {
+		return "", wfErr(http.StatusInternalServerError, "could not read the captured output: %w", err)
+	}
+	return output, nil
 }
 
 func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token string) error {
@@ -1524,6 +1493,16 @@ func LaunchEmbeddedIfDoubleClicked() {
 }
 
 func main() {
+	// The MCP subcommand owns stdout from its first statement, so it is
+	// dispatched before flag.Parse — which stops at the first non-flag
+	// argument anyway — and before the banner, the no-arguments dashboard
+	// branch and the double-click webview, all of which write to stdout or
+	// open a window.
+	if len(os.Args) > 1 && os.Args[1] == "mcp" {
+		runMCP(os.Args[2:])
+		return
+	}
+
 	flag.Parse()
 	metricsConfigFilePath = configFile
 
@@ -2586,85 +2565,14 @@ func max(a, b int) int {
 	return b
 }
 
-func validateDelayRange(name string, dr DelayRange, allowZero bool) error {
-	if dr.Min < 0 || dr.Max < 0 {
-		return fmt.Errorf("%s must be zero or positive", name)
-	}
-	if dr.Max > 0 && dr.Min > dr.Max {
-		return fmt.Errorf("%s Min cannot be greater than Max", name)
-	}
-	if !allowZero && dr.Min == 0 && dr.Max == 0 {
-		return fmt.Errorf("%s requires a positive Min or Max value", name)
-	}
-	return nil
-}
-
+// validateConfiguration reports whether a workflow is well-formed.
+// internal/workflow.Validate is the single gate; this wrapper keeps the
+// verbose-mode narration the CLI has always printed.
 func validateConfiguration(config *Configuration) error {
 	if connect3270.Verbose {
 		pterm.Info.Println("Validating config - let’s see if it’s naughty or nice!")
 	}
-	if config.Host == "" {
-		return fmt.Errorf("host is empty - where’s the party at?")
-	}
-	if config.Port <= 0 {
-		return fmt.Errorf("port is invalid - ports cant be negative silly")
-	}
-	if config.LegacyDelay > 0 {
-		return fmt.Errorf("Delay is no longer supported; use EveryStepDelay.Min/Max instead")
-	}
-	if err := validateDelayRange("EveryStepDelay", config.EveryStepDelay, true); err != nil {
-		return err
-	}
-	if err := validateDelayRange("EndOfTaskDelay", config.EndOfTaskDelay, true); err != nil {
-		return err
-	}
-	if config.OutputFilePath == "" {
-		hasScreenGrab := false
-		for _, step := range config.Steps {
-			if step.Type == "AsciiScreenGrab" {
-				hasScreenGrab = true
-				break
-			}
-		}
-		if hasScreenGrab {
-			return fmt.Errorf("output file path is empty - screen grab needs a home")
-		}
-	}
-
-	for _, step := range config.Steps {
-		if step.Type == "HumanDelay" {
-			return fmt.Errorf("HumanDelay is no longer supported; use StepDelay with Min/Max instead")
-		}
-		// Allow steps that do not require additional configuration.
-		if step.Type == "Connect" ||
-			step.Type == "AsciiScreenGrab" ||
-			step.Type == "PressEnter" ||
-			step.Type == "PressTab" ||
-			step.Type == "WaitForField" ||
-			step.Type == "Disconnect" ||
-			step.Type == "StepDelay" ||
-			(strings.HasPrefix(step.Type, "PressPF")) {
-			if step.Type == "StepDelay" {
-				if err := validateDelayRange("StepDelay", step.StepDelay, false); err != nil {
-					return err
-				}
-			}
-			continue
-		}
-		// Steps that require coordinates and text.
-		if step.Type == "CheckValue" || step.Type == "FillString" {
-			if step.Coordinates.Row == 0 || step.Coordinates.Column == 0 {
-				return fmt.Errorf("coords missing in %s step - lost in space", step.Type)
-			}
-			if step.Text == "" {
-				return fmt.Errorf("text empty in %s step - cat got your tongue?", step.Type)
-			}
-			continue
-		}
-		// Unknown step type.
-		return fmt.Errorf("unknown step type: %s - what’s this nonsense?", step.Type)
-	}
-	return nil
+	return workflow.Validate(config)
 }
 
 func runDashboard() {
@@ -2852,51 +2760,52 @@ func runDashboard() {
 	}
 }
 
-type Metrics struct {
-	PID                     int       `json:"pid"`
-	ActiveWorkflows         int       `json:"activeWorkflows"`
-	TotalWorkflowsStarted   int64     `json:"totalWorkflowsStarted"`
-	TotalWorkflowsCompleted int64     `json:"totalWorkflowsCompleted"`
-	TotalWorkflowsFailed    int64     `json:"totalWorkflowsFailed"`
-	Durations               []float64 `json:"durations"`
-	CPUUsage                []float64 `json:"cpuUsage"`
-	MemoryUsage             []float64 `json:"memoryUsage"`
-	Params                  string    `json:"params"`
-	RuntimeDuration         int       `json:"runtimeDuration"`
-	StartTimestamp          int64     `json:"startTimestamp"`
-	ConfigFilePath          string    `json:"configFilePath,omitempty"`
-	OutputFilePath          string    `json:"outputFilePath,omitempty"`
-}
+// The metrics a load run publishes, and the readers for them, live in
+// internal/runstore. A load test runs as a detached child process, so its
+// metrics file is the only channel out of it — and the dashboard, the CLI and
+// an AI client all need to read it.
+type (
+	Metrics         = runstore.Metrics
+	ExtendedMetrics = runstore.ExtendedMetrics
+)
 
-type ExtendedMetrics struct {
-	Metrics
-	Status    string `json:"status"`
-	TimeLeft  int64  `json:"timeLeft"`
-	IsRunning bool   `json:"isRunning"`
-}
-
-func isProcessRunning(pid int) bool {
-	if pid <= 0 {
-		return false
-	}
-	if runtime.GOOS == "windows" {
-		cmd := exec.Command("tasklist", "/FI", fmt.Sprintf("PID eq %d", pid))
-		output, err := cmd.Output()
-		if err != nil {
-			pterm.Warning.Printf("Failed to query tasklist for pid %d: %v\n", pid, err)
-			return true
-		}
-		return bytes.Contains(output, []byte(fmt.Sprintf("%d", pid)))
-	}
-	proc, err := os.FindProcess(pid)
+// dashboardMetricsDir is where every 3270Connect process publishes its
+// metrics file. Shared across processes on purpose: one dashboard sees every
+// run on the machine.
+func dashboardMetricsDir() string {
+	dir, err := runstore.Dir()
 	if err != nil {
-		return false
+		pterm.Warning.Printf("%v; defaulting to the local dashboard folder\n", err)
 	}
-	if err := proc.Signal(syscall.Signal(0)); err != nil {
-		return false
-	}
-	return true
+	return dir
 }
+
+// preferRunningMetrics narrows to live processes, unless none are live — in
+// which case the run that just finished is more use than an empty dashboard.
+func preferRunningMetrics(metrics []ExtendedMetrics) []ExtendedMetrics {
+	running := make([]ExtendedMetrics, 0, len(metrics))
+	for _, m := range metrics {
+		if m.IsRunning {
+			running = append(running, m)
+		}
+	}
+	if len(running) == 0 {
+		return metrics
+	}
+	return running
+}
+
+// aggregateExtendedMetrics sums counters and concatenates samples so the
+// dashboard can show one figure for several concurrent processes.
+func aggregateExtendedMetrics(metrics []ExtendedMetrics) Metrics {
+	entries := make([]runstore.Entry, 0, len(metrics))
+	for _, m := range metrics {
+		entries = append(entries, runstore.Entry{Metrics: m})
+	}
+	return runstore.Aggregate(entries)
+}
+
+func isProcessRunning(pid int) bool { return runstore.IsProcessRunning(pid) }
 
 func shouldCleanupMetric(m ExtendedMetrics, modTime time.Time) bool {
 	if m.IsRunning || m.Status != "Killed" {
@@ -2919,15 +2828,6 @@ func cleanupProcessArtifacts(pid int, metricsFile string) {
 	if err := os.Remove(logFilePath); err != nil && !os.IsNotExist(err) {
 		pterm.Warning.Printf("Failed to remove stale log file %s for pid %d: %v\n", logFilePath, pid, err)
 	}
-}
-
-func dashboardMetricsDir() string {
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		pterm.Warning.Printf("User config directory unavailable, defaulting to local dashboard folder: %v\n", err)
-		return filepath.Join(".", "dashboard")
-	}
-	return filepath.Join(configDir, "3270Connect", "dashboard")
 }
 
 func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
@@ -2961,7 +2861,7 @@ func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
 			pterm.Warning.Printf("Error unmarshaling metrics %s: %v\n", f, err)
 			continue
 		}
-		extendedMetric := m.extend()
+		extendedMetric := m.Extend()
 		if shouldCleanupMetric(extendedMetric, fi.ModTime()) {
 			cleanupProcessArtifacts(extendedMetric.PID, f)
 			continue
@@ -2975,32 +2875,6 @@ func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
 // preferRunningMetrics narrows a snapshot to live processes, falling back to the
 // full list when nothing is running. Both the dashboard page and its polling
 // endpoint use it so the first render and the first refresh agree.
-func preferRunningMetrics(metrics []ExtendedMetrics) []ExtendedMetrics {
-	running := make([]ExtendedMetrics, 0, len(metrics))
-	for _, m := range metrics {
-		if m.IsRunning {
-			running = append(running, m)
-		}
-	}
-	if len(running) == 0 {
-		return metrics
-	}
-	return running
-}
-
-func aggregateExtendedMetrics(metrics []ExtendedMetrics) Metrics {
-	var agg Metrics
-	for _, metric := range metrics {
-		agg.ActiveWorkflows += metric.ActiveWorkflows
-		agg.TotalWorkflowsStarted += metric.TotalWorkflowsStarted
-		agg.TotalWorkflowsCompleted += metric.TotalWorkflowsCompleted
-		agg.TotalWorkflowsFailed += metric.TotalWorkflowsFailed
-		agg.Durations = append(agg.Durations, metric.Durations...)
-		agg.CPUUsage = append(agg.CPUUsage, metric.CPUUsage...)
-		agg.MemoryUsage = append(agg.MemoryUsage, metric.MemoryUsage...)
-	}
-	return agg
-}
 
 func updateMetricsFile() {
 	metricsMutex.Lock()
@@ -3064,10 +2938,16 @@ func updateMetricsFile() {
 		}(),
 		ConfigFilePath: configPath,
 		OutputFilePath: outputPath,
+		// Where each worker has got to. This map lives only in this
+		// process, and a load test runs detached, so without writing it here
+		// nothing outside can see it — and "every worker is waiting on a
+		// field at step 6" is the most useful thing to know about a run that
+		// has stopped making progress.
+		LiveSteps: liveStepSnapshot(),
 	}
 
 	// Process extended metrics by using the extend() method on metrics.
-	extendedMetrics := metrics.extend()
+	extendedMetrics := metrics.Extend()
 
 	data, err := json.Marshal(extendedMetrics)
 	if err != nil {
@@ -3122,7 +3002,7 @@ func aggregateMetrics() Metrics {
 			pterm.Warning.Printf("Unmarshaling file %s failed: %v\n", f, err)
 			continue
 		}
-		extendedMetric := m.extend()
+		extendedMetric := m.Extend()
 		if shouldCleanupMetric(extendedMetric, fi.ModTime()) {
 			cleanupProcessArtifacts(extendedMetric.PID, f)
 			continue
@@ -3138,38 +3018,6 @@ func aggregateMetrics() Metrics {
 		agg.StartTimestamp = extendedMetric.StartTimestamp
 	}
 	return agg
-}
-
-func (m Metrics) extend() ExtendedMetrics {
-	timeElapsed := time.Now().Unix() - m.StartTimestamp
-	timeLeft := int64(m.RuntimeDuration) - timeElapsed
-	if timeLeft < 0 {
-		timeLeft = 0
-	}
-	status := "Running" // Default status for missing or incomplete metrics
-	isRunning := isProcessRunning(m.PID)
-	completedOrFailed := m.TotalWorkflowsCompleted + m.TotalWorkflowsFailed
-	allWorkflowsAccounted := m.TotalWorkflowsStarted > 0 &&
-		completedOrFailed >= m.TotalWorkflowsStarted &&
-		m.ActiveWorkflows == 0
-	if m.RuntimeDuration > 0 && timeLeft == 0 && (m.Params != "" && !strings.Contains(m.Params, "-runApp")) {
-		status = "Ended"
-	}
-	if !isRunning {
-		switch {
-		case allWorkflowsAccounted:
-			status = "Ended"
-		case status != "Ended":
-			status = "Killed"
-		}
-	}
-
-	return ExtendedMetrics{
-		Metrics:   m,
-		Status:    status,
-		TimeLeft:  timeLeft,
-		IsRunning: isRunning,
-	}
 }
 
 func monitorSystemUsage() {
@@ -3832,7 +3680,7 @@ func updateKilledStatus(pid int) {
 	// Only clear active workflows - preserve execution statistics for accurate aggregation
 	metrics.ActiveWorkflows = 0
 
-	extendedMetrics := metrics.extend()
+	extendedMetrics := metrics.Extend()
 	extendedMetrics.Status = "Killed"
 
 	updatedData, err := json.Marshal(extendedMetrics)
