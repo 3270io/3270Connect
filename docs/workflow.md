@@ -2,6 +2,11 @@
 
 This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.
 
+This page and the validator are the authority on the format. An AI client can
+read the same thing programmatically through the [MCP Server](mcp.md)'s
+`describe_workflow_schema` tool, and check a document with `validate_workflow`
+before running it.
+
 ## Connection Settings
 
 These top-level properties configure the terminal connection for the whole workflow:

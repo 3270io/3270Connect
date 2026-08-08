@@ -70,3 +70,22 @@ For one-shot host fingerprinting (rather than continuous timing), use
 the [Host Compatibility Profiler](host-profiler.md) — the resulting
 `CompatibilityProfile` JSON is comparable to the one produced by
 3270Web and can be diffed across environments.
+
+## Reading these from an AI client
+
+The [MCP Server](mcp.md) exposes these metrics as tools, so an assistant can
+report on a run in conversation. Two things it adds beyond the raw
+collectors:
+
+- **Percentiles.** `get_load_test_metrics` computes p50, p95 and p99 from the
+  workflow durations, alongside the counters. Those durations are a rolling
+  window of the most recent few hundred completed workflows, so every reply
+  carries the sample count.
+- **Live worker positions.** `get_live_workflow_status` reports which step
+  each virtual user is on right now. When throughput drops, workers clustered
+  on one step mean the host is slow at a single transaction rather than slow
+  in general.
+
+Per-step timings still come only from the histograms above, so a run has to
+be started with `-promListen` for `get_step_latencies` to have anything to
+read.

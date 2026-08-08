@@ -68,6 +68,8 @@ nav:
   - Dynamic Field Injection: injection-config.md
   - Advanced Features: advanced-features.md
   - Metrics & Monitoring: metrics.md
+  - MCP Server: mcp.md
+  - Skills and Extensions: skills.md
   - Host Compatibility Profiler: host-profiler.md
   - Compatibility Profile Schema: compatibility-profile-schema.md
   - Reference:
