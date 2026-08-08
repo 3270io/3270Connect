@@ -3,7 +3,7 @@
 Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted workflows via JSON config, concurrent load testing, REST API mode, and a web dashboard.
 
 **Version:** 1.9.2  
-**Language:** Go 1.21+ (toolchain 1.23.1)
+**Language:** Go 1.25
 
 ## Project Structure
 
@@ -61,23 +61,34 @@ go test -v ./...
 
 ## Workflow Config Format
 
+A step's keys are `Type`, `Coordinates` and `Text`. They are **not** `Action`,
+`Row`/`Column` at the top level, `Value`, or `FilePath` — an earlier version of
+this file documented that shape and no such workflow has ever run. Coordinates
+are **1-based**. `docs/workflow.md` and `Validate` in `internal/workflow` are
+authoritative; regenerate this block from `describe_workflow_schema` rather
+than editing it by hand.
+
 ```json
 {
   "Host": "mainframe.host",
   "Port": 3270,
   "CodePage": "cp037",
+  "OutputFilePath": "output.html",
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
   "WaitForField": true,
   "Steps": [
-    { "Action": "Connect" },
-    { "Action": "FillString", "Column": 20, "Row": 10, "Value": "{{username}}" },
-    { "Action": "PressEnter" },
-    { "Action": "CheckValue", "Column": 1, "Row": 24, "Value": "READY" },
-    { "Action": "AsciiScreenGrab", "FilePath": "screen.txt" },
-    { "Action": "Disconnect" }
+    { "Type": "Connect" },
+    { "Type": "FillString", "Coordinates": { "Row": 10, "Column": 20, "Length": 8 }, "Text": "{{username}}" },
+    { "Type": "PressEnter" },
+    { "Type": "CheckValue", "Coordinates": { "Row": 24, "Column": 1, "Length": 5 }, "Text": "READY" },
+    { "Type": "AsciiScreenGrab" },
+    { "Type": "Disconnect" }
   ]
 }
 ```
+
+`AsciiScreenGrab` writes to the workflow's top-level `OutputFilePath`, which is
+required whenever any step uses it.
 
 ## REST API Endpoints
 
