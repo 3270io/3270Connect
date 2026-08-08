@@ -1,8 +1,6 @@
 module github.com/3270io/3270Connect
 
-go 1.23.0
-
-toolchain go1.24.7
+go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.9.1
