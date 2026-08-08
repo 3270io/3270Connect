@@ -1,4 +1,7 @@
-<img src="brand/3270connect-lockup-600.png" alt="3270Connect" width="300">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/3270connect-lockup-600.png">
+  <img alt="3270Connect" src="brand/3270connect-lockup-light-600.png" width="300">
+</picture>
 
 Scripted 3270 workflows that replay human online integration at unlimited scale —
 a command-line utility, an API server, and a live operations console served
@@ -170,6 +173,6 @@ Run `.\update-binaries.ps1` from the repo root after you update `binaries/linux`
 ## Brand
 
 The 3270Connect mark and its lockups live in [`brand/`](brand/) — SVG, PNG and
-`.ico`. They are generated from the shared kit in the
+`.ico`, in a dark-ground and a light-ground pair. They are generated from the shared kit in the
 [3270io](https://github.com/3270io/3270io) repo (`brand/build.mjs`); regenerate
 there rather than editing these by hand.
