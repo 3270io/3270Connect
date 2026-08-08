@@ -433,6 +433,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="../mcp/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  MCP Server
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../skills/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Skills and Extensions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../host-profiler/" class="md-tabs__link">
         
   
@@ -781,6 +819,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-same-data-from-an-ai-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the same data from an AI client
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1143,6 +1192,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills and Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../host-profiler/" class="md-nav__link">
         
   
@@ -1212,10 +1315,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_16" >
         
           
-          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
             
   
   
@@ -1233,8 +1336,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1513,6 +1616,12 @@ p99 several times larger points at a tail problem rather than a general one.</p>
   range.</li>
 <li><strong>Export</strong> each chart as a <strong>PNG</strong> image or its underlying series as <strong>CSV</strong>.</li>
 </ul>
+<h2 id="reading-the-same-data-from-an-ai-client">Reading the same data from an AI client<a class="headerlink" href="#reading-the-same-data-from-an-ai-client" title="Permanent link">¶</a></h2>
+<p>The process table and the KPI tiles read the per-process metrics files every
+running 3270Connect writes. The <a href="../mcp/">MCP Server</a> reads the same files, so
+an assistant can list runs, report percentiles and stop a run in conversation
+— <code>list_load_tests</code>, <code>get_load_test_metrics</code>, <code>stop_load_test</code>. Starting a run
+that way is the same primitive the <strong>Start process</strong> button uses.</p>
 <h2 id="process-table">Process table<a class="headerlink" href="#process-table" title="Permanent link">¶</a></h2>
 <p><img alt="The process intelligence table" class="shot" src="../assets/dashboard/process-table.webp"></p>
 <p>One row per 3270Connect process, refreshed on every poll.</p>

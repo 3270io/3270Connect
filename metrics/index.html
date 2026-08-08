@@ -18,7 +18,7 @@
         <link rel="prev" href="../advanced-features/">
       
       
-        <link rel="next" href="../host-profiler/">
+        <link rel="next" href="../mcp/">
       
       
         
@@ -421,6 +421,44 @@
     
   
   Metrics & Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../mcp/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  MCP Server
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../skills/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Skills and Extensions
 
       </a>
     </li>
@@ -939,10 +977,75 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#reading-these-from-an-ai-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading these from an AI client
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills and Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1023,10 +1126,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_16" >
         
           
-          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
             
   
   
@@ -1044,8 +1147,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1258,7 +1361,24 @@ goroutine — failures are logged but never abort the workflow runner.</p>
 <p>For one-shot host fingerprinting (rather than continuous timing), use
 the <a href="../host-profiler/">Host Compatibility Profiler</a> — the resulting
 <code>CompatibilityProfile</code> JSON is comparable to the one produced by
-3270Web and can be diffed across environments.</p></div>
+3270Web and can be diffed across environments.</p>
+<h2 id="reading-these-from-an-ai-client">Reading these from an AI client<a class="headerlink" href="#reading-these-from-an-ai-client" title="Permanent link">¶</a></h2>
+<p>The <a href="../mcp/">MCP Server</a> exposes these metrics as tools, so an assistant can
+report on a run in conversation. Two things it adds beyond the raw
+collectors:</p>
+<ul>
+<li><strong>Percentiles.</strong> <code>get_load_test_metrics</code> computes p50, p95 and p99 from the
+  workflow durations, alongside the counters. Those durations are a rolling
+  window of the most recent few hundred completed workflows, so every reply
+  carries the sample count.</li>
+<li><strong>Live worker positions.</strong> <code>get_live_workflow_status</code> reports which step
+  each virtual user is on right now. When throughput drops, workers clustered
+  on one step mean the host is slow at a single transaction rather than slow
+  in general.</li>
+</ul>
+<p>Per-step timings still come only from the histograms above, so a run has to
+be started with <code>-promListen</code> for <code>get_step_latencies</code> to have anything to
+read.</p></div>
 
 
 
@@ -1314,13 +1434,13 @@ the <a href="../host-profiler/">Host Compatibility Profiler</a> — the resultin
         
         
           
-          <a href="../host-profiler/" class="md-footer__link md-footer__link--next" aria-label="Next: Host Compatibility Profiler">
+          <a href="../mcp/" class="md-footer__link md-footer__link--next" aria-label="Next: MCP Server">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Host Compatibility Profiler
+                MCP Server
               </div>
             </div>
             <div class="md-footer__button md-icon">
