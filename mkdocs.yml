@@ -1,5 +1,10 @@
 site_name: 3270Connect
-site_description: User Guide for the 3270Connect Command-Line Utility
+# Doubles as the fallback <meta name="description"> and the og:description on
+# any page without its own `description:` front matter, so it is written as a
+# sentence a search result can show rather than a shelf label.
+site_description: >-
+  Replay recorded IBM 3270 sessions as JSON workflows — headless in CI, fanned
+  out across concurrent workers, with a live console and Prometheus metrics.
 site_author: 3270.io
 copyright: "© Since 2023 3270.io"
 site_url: https://3270connect.3270.io
@@ -125,6 +130,10 @@ extra:
   version: 1.9.2
   CNAME: 3270.io
   generator: false
+  # Short enough to sit next to the product name in a social card title, where
+  # site_description would be cut off. overrides/main.html uses it for the home
+  # page's og:title and for the preview image's alt text.
+  tagline: replay the mainframe at any scale
   social:
     # Sibling sites first, so every page in the suite offers the same way back
     # out to 3270.io and across to the other tool's guide.

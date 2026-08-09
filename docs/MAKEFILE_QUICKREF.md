@@ -1,3 +1,9 @@
+---
+description: >-
+  The Makefile targets that build the x3270 binaries — s3270 and x3270if —
+  for Linux and Windows, in one page.
+---
+
 # X3270 Makefile Quick Reference
 
 ## Quick Start

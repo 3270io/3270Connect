@@ -1,4 +1,8 @@
 ---
+description: >-
+  3270Connect turns a recorded 3270 session into a repeatable JSON workflow:
+  run it headless in CI, fan it out across hundreds of workers, watch every
+  step on a live console.
 hide:
   - toc
 ---

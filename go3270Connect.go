@@ -2575,6 +2575,65 @@ func validateConfiguration(config *Configuration) error {
 	return workflow.Validate(config)
 }
 
+// pageBaseURL returns the absolute origin — scheme and authority, no trailing
+// slash — that this browser reached the console on, or "" when it cannot be
+// determined.
+//
+// It exists for the dashboard's social preview tags. Open Graph requires
+// absolute URLs: a scraper fetches og:image out of band, with no document to
+// resolve a relative path against, so "/static/images/og-image.png" would
+// simply not render and a console link pasted into a team chat would post as a
+// bare grey box. A self-hosted console has no configured public address to
+// build one from, so the request is the only thing that knows.
+//
+// X-Forwarded-Proto and X-Forwarded-Host are read without a trust gate, which
+// would be wrong for a security decision and is fine here: the only thing they
+// can affect is the URL in a preview tag. Nothing on this path mints a cookie,
+// grants access, or is recorded. Behind a TLS-terminating proxy they are also
+// the only evidence of the address the browser actually typed, and without
+// them every card on such a deployment would point at an unreachable http://
+// URL.
+func pageBaseURL(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+
+	host := strings.TrimSpace(r.Host)
+	if forwarded := r.Header.Get("X-Forwarded-Host"); forwarded != "" {
+		// A proxy chain appends, so the first entry is the host the browser
+		// actually asked for.
+		if idx := strings.IndexByte(forwarded, ','); idx >= 0 {
+			forwarded = forwarded[:idx]
+		}
+		if trimmed := strings.TrimSpace(forwarded); trimmed != "" {
+			host = trimmed
+		}
+	}
+	if host == "" {
+		return ""
+	}
+	// The Host header reaches the template as an attribute value. html/template
+	// escapes it, so markup cannot break out either way, but a value carrying a
+	// space or a control character is not an authority at all and would produce
+	// a URL no scraper can fetch — better to emit no card than a broken one.
+	if strings.ContainsAny(host, " \t\r\n/\\\"'<>") {
+		return ""
+	}
+
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	} else if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		if idx := strings.IndexByte(proto, ','); idx >= 0 {
+			proto = proto[:idx]
+		}
+		if strings.EqualFold(strings.TrimSpace(proto), "https") {
+			scheme = "https"
+		}
+	}
+	return scheme + "://" + host
+}
+
 func runDashboard() {
 
 	// Serve embedded static files
@@ -2688,6 +2747,7 @@ func runDashboard() {
 			ExtendedMetricsList             []ExtendedMetrics
 			ExtendedJSON                    string
 			Version                         string
+			BaseURL                         string
 		}{
 			ActiveWorkflows:         agg.ActiveWorkflows,
 			TotalWorkflowsStarted:   agg.TotalWorkflowsStarted,
@@ -2706,6 +2766,7 @@ func runDashboard() {
 			ExtendedMetricsList:     extendedList,
 			ExtendedJSON:            string(extendedJSON),
 			Version:                 version, // Holds the value of the const `version`
+			BaseURL:                 pageBaseURL(r),
 		}
 		// Use a buffer to write the template output first, then write it all at once
 		// This prevents partial responses from being written if the connection closes

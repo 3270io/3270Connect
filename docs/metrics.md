@@ -1,3 +1,9 @@
+---
+description: >-
+  Prometheus metrics for fleet-scale monitoring of workflow performance,
+  concurrency and outcome distribution, on an opt-in dedicated listener.
+---
+
 # Metrics & Monitoring
 
 3270Connect exposes Prometheus metrics for fleet-scale monitoring of

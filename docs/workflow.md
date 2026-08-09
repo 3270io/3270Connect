@@ -1,3 +1,10 @@
+---
+description: >-
+  Every workflow step 3270Connect executes — Connect, FillString,
+  PressEnter, CheckValue, AsciiScreenGrab and the rest — with the schema
+  that validates them.
+---
+
 # Workflow Steps Documentation
 
 This page provides an overview of the various workflow steps available in the 3270Connect application. Each step represents an individual action taken on the terminal during a workflow execution.

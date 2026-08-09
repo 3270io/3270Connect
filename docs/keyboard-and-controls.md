@@ -1,3 +1,9 @@
+---
+description: >-
+  The 3270 keyboard interaction model as 3270Connect preserves it, plus the
+  toolbar and AI Chat panel controls.
+---
+
 # Keyboard and Controls
 
 3270Connect preserves the normal 3270 keyboard interaction model while you work in 3270Web.

@@ -1,3 +1,10 @@
+---
+description: >-
+  Drive a live 3270 session through conversation — the assistant reads the
+  screen, fills fields, presses keys and runs chaos exploration, with
+  approval before each action.
+---
+
 # AI Chat Mode
 
 AI Chat mode is a side panel in 3270Web, the 3270Connect web console, that lets you drive a 3270 session through conversation. You type instructions in plain language; the AI reads the current screen, fills fields, presses keys, and runs chaos exploration, all with your approval before each action.

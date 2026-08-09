@@ -1,3 +1,8 @@
+---
+description: >-
+  3270Connect is released under the MIT License. The full licence text.
+---
+
 MIT License
 
 Copyright (c) 2023 Paul Jennings

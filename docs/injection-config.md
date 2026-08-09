@@ -1,3 +1,9 @@
+---
+description: >-
+  Parameterise a workflow with dynamic field injection: feed external data
+  into steps from a JSON configuration instead of hard-coding values.
+---
+
 # Dynamic Field Injection 
 
 ## Overview

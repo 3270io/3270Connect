@@ -1,3 +1,10 @@
+---
+description: >-
+  The -profile mode connects once to a TN3270 host and writes a
+  CompatibilityProfile: negotiated terminal model, protocol options,
+  capabilities and timing.
+---
+
 # Host Compatibility Profiler
 
 The `-profile` mode connects once to a TN3270 host, probes its

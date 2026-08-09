@@ -5,6 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <title>3270Connect — Operations Console</title>
+  <meta name="description" content="3270Connect's operations console: live workflow counts, durations and latency percentiles, host CPU and memory, log tailing and process control for IBM 3270 workflow runs.">
+  <meta name="theme-color" content="#03110d">
+  <!--
+       Social preview, so a console URL pasted into a team chat renders as a
+       card rather than a bare link.
+
+       Every URL is absolute and built from the request, because a scraper
+       fetches og:image with no document to resolve a relative path against —
+       and a self-hosted console has no configured public address to build one
+       from. When the origin cannot be determined the block is skipped
+       entirely: no card at all beats a card whose image 404s.
+
+       The card itself is static brand artwork, not a rendering of this page,
+       so nothing about the runs on screen leaves the network.
+  -->
+  {{ if .BaseURL }}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="3270Connect">
+  <meta property="og:url" content="{{ .BaseURL }}/dashboard">
+  <meta property="og:title" content="3270Connect — replay the mainframe at any scale">
+  <meta property="og:description" content="Live workflow counts, durations and latency percentiles, host CPU and memory — the operations console for IBM 3270 workflow runs.">
+  <meta property="og:image" content="{{ .BaseURL }}/static/images/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="3270Connect — replay the mainframe at any scale">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="3270Connect — replay the mainframe at any scale">
+  <meta name="twitter:description" content="Live workflow counts, durations and latency percentiles, host CPU and memory — the operations console for IBM 3270 workflow runs.">
+  <meta name="twitter:image" content="{{ .BaseURL }}/static/images/og-image.png">
+  <meta name="twitter:image:alt" content="3270Connect — replay the mainframe at any scale">
+  {{ end }}
   <!-- The tab strip is a surface the console does not own and cannot theme, so
        the favicon is the daylight-green icon from the brand kit rather than the
        phosphor mark the header carries: phosphor washes out on white chrome. -->

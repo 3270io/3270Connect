@@ -1,3 +1,9 @@
+---
+description: >-
+  The build system for the embedded x3270 binaries: prerequisites, targets
+  and what each one produces for Linux and Windows.
+---
+
 # X3270 Binary Build System
 
 This Makefile automates the process of building x3270 suite binaries (s3270, x3270if, etc.) for Linux and Windows platforms.

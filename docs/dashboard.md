@@ -1,3 +1,9 @@
+---
+description: >-
+  The browser-based operations console: live workflow counts, durations,
+  latency percentiles, host CPU and memory, log tailing and process control.
+---
+
 # Web Dashboard
 
 The dashboard is 3270Connect's browser-based operations console. It shows what
