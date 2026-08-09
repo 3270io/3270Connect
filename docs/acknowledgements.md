@@ -1,3 +1,9 @@
+---
+description: >-
+  The projects 3270Connect is built on, starting with s3270 and the x3270
+  family that carries out every workflow step.
+---
+
 # Acknowledgements
 
 ## s3270 and the x3270 family

@@ -1,3 +1,9 @@
+---
+description: >-
+  Run a workflow: the configuration file, the actions it sequences —
+  connect, fill fields, capture screens — and the command that executes it.
+---
+
 # Basic Usage
 
 ## Introduction

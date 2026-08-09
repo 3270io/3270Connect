@@ -1,3 +1,10 @@
+---
+description: >-
+  Chaos Mode explores a live 3270 session automatically, records the screens
+  and transitions it finds, and turns them into repeatable 3270Connect
+  workflows.
+---
+
 # Chaos Mode
 
 Chaos Mode explores a live 3270 session automatically, records discovered screens and transitions, and helps you turn what it learns into repeatable 3270Connect workflows.
