@@ -170,6 +170,20 @@ mkdocs build
 
 Run `.\update-binaries.ps1` from the repo root after you update `binaries/linux` or `binaries/windows`. The script now simply runs `go-bindata -o binaries/bindata.go -pkg binaries ./binaries/...` against the assets that already live in those directories, so make sure the native executables you need are in place beforehand.
 
+## Acknowledgements
+
+3270Connect does not speak TN3270 itself. Every workflow step is carried out by
+**s3270**, the scripting member of the
+[**x3270**](https://x3270.miraheze.org/wiki/Main_Page) family of 3270 terminal
+emulators, whose pre-compiled binaries ship inside every 3270Connect release.
+Three decades of faithful 3270 protocol work by Paul Mattes and the x3270
+contributors, given away for anyone to build on — 3270Connect would not exist
+without it. Our thanks to them.
+
+s3270 is BSD 3-Clause licensed; the full text, and the list of which
+executables are redistributed on which platform, is in
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
 ## Brand
 
 The 3270Connect mark and its lockups live in [`brand/`](brand/) — SVG, PNG and

@@ -75,6 +75,7 @@ nav:
   - Reference:
       - Build Guide: BUILD.md
       - Makefile Quick Reference: MAKEFILE_QUICKREF.md
+  - Acknowledgements: acknowledgements.md
   - License: LICENSE.md
 
 plugins:
