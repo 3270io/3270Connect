@@ -32,10 +32,13 @@ Russell, Dick Altenbern, Jeff Sparkes and the Georgia Tech Research Corporation.
 Because 3270Connect redistributes those executables inside its own releases,
 the full licence text is reproduced — as the licence requires of a binary
 redistribution — in
-[`THIRD-PARTY-NOTICES.md`](https://github.com/3270io/3270Connect/blob/main/THIRD-PARTY-NOTICES.md),
+[`THIRD-PARTY-LICENSES.md`](https://github.com/3270io/3270Connect/blob/main/THIRD-PARTY-LICENSES.md),
 alongside a list of exactly which executables ship on which platform.
 
 !!! note "Not an endorsement"
 
-    The x3270 authors do not endorse 3270Connect. The credit above is
-    attribution, and gratitude, and nothing more.
+    The licence's third clause reserves the authors' names: they may not be
+    used to endorse or promote products derived from the software. The x3270
+    authors have no involvement in 3270Connect and have not reviewed, approved or
+    promoted it. Naming them above states what this software uses, which the
+    licence requires, and thanks them for it.

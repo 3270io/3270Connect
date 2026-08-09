@@ -182,7 +182,7 @@ without it. Our thanks to them.
 
 s3270 is BSD 3-Clause licensed; the full text, and the list of which
 executables are redistributed on which platform, is in
-[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+[`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md).
 
 ## Brand
 
