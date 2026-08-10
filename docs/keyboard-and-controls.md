@@ -1,7 +1,8 @@
 ---
+seo_title: "3270Connect keyboard, toolbar and AI Chat controls"
 description: >-
   The 3270 keyboard interaction model as 3270Connect preserves it, plus the
-  toolbar and AI Chat panel controls.
+  toolbar buttons, the AI Chat panel controls and the session shortcuts.
 ---
 
 # Keyboard and Controls

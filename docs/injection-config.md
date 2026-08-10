@@ -1,7 +1,9 @@
 ---
+seo_title: "Dynamic field injection: parameterise a 3270 workflow"
 description: >-
   Parameterise a workflow with dynamic field injection: feed external data
-  into steps from a JSON configuration instead of hard-coding values.
+  into steps from a JSON file, with locking that holds across concurrent
+  runs.
 ---
 
 # Dynamic Field Injection 

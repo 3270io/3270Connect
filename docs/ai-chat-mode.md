@@ -1,8 +1,9 @@
 ---
+seo_title: "AI Chat Mode: run a 3270 session by conversation"
 description: >-
   Drive a live 3270 session through conversation — the assistant reads the
   screen, fills fields, presses keys and runs chaos exploration, with
-  approval before each action.
+  approval each time.
 ---
 
 # AI Chat Mode

@@ -1,7 +1,9 @@
 ---
+seo_title: "The x3270 binary build system used by 3270Connect"
 description: >-
-  The build system for the embedded x3270 binaries: prerequisites, targets
-  and what each one produces for Linux and Windows.
+  The build system behind the embedded x3270 binaries: prerequisites,
+  targets, output directories and version tracking, for both the Linux and
+  the Windows build.
 ---
 
 # X3270 Binary Build System

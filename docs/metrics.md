@@ -1,7 +1,9 @@
 ---
+seo_title: "Prometheus metrics for 3270Connect workflow runs"
 description: >-
-  Prometheus metrics for fleet-scale monitoring of workflow performance,
-  concurrency and outcome distribution, on an opt-in dedicated listener.
+  Prometheus metrics for fleet-scale monitoring of workflow throughput,
+  concurrency and outcomes, on an opt-in listener — with a scrape config and
+  queries.
 ---
 
 # Metrics & Monitoring

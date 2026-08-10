@@ -1,6 +1,9 @@
 ---
+seo_title: "3270Connect licence — the MIT License in full"
 description: >-
-  3270Connect is released under the MIT License. The full licence text.
+  3270Connect is released under the MIT License: permissive, commercial use
+  permitted, supplied without warranty. The full licence text is on this
+  page.
 ---
 
 MIT License
