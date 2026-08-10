@@ -1,4 +1,5 @@
 ---
+seo_title: "Chaos Mode: discover 3270 screens, then replay them"
 description: >-
   Chaos Mode explores a live 3270 session automatically, records the screens
   and transitions it finds, and turns them into repeatable 3270Connect

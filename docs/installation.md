@@ -1,7 +1,9 @@
 ---
+seo_title: "Install 3270Connect on Linux, Windows or Docker"
 description: >-
   Install the 3270Connect command-line utility on Linux, Windows or Docker —
-  direct download, package install, or building from source.
+  a direct release download, the container image, or a build from source in
+  Go.
 ---
 
 

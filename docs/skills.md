@@ -1,7 +1,9 @@
 ---
+seo_title: "Skills and extensions for the 3270Connect assistant"
 description: >-
-  The procedures the AI assistant follows are files, not prose compiled into
-  the binary — teach it about your own hosts without waiting for a release.
+  The procedures the 3270Connect assistant follows are files on disk, not
+  prose compiled into the binary — teach it about your own hosts, with no
+  release needed.
 ---
 
 # Skills and Extensions

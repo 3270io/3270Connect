@@ -1,7 +1,9 @@
 ---
+seo_title: "Build 3270Connect from source for Linux and Windows"
 description: >-
-  Building 3270Connect from source for Linux and Windows, including the
-  toolchain each platform needs.
+  Build 3270Connect from source for Linux and Windows: the toolchain each
+  platform needs, the build script that drives it, and where the binaries
+  land.
 ---
 
 # Build Instructions

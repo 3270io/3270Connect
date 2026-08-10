@@ -1,7 +1,9 @@
 ---
+seo_title: "3270Connect advanced features: API mode and concurrency"
 description: >-
-  API mode, AI Chat, concurrency, timeouts and the rest of what 3270Connect
-  does beyond running a single workflow once.
+  API mode, AI Chat, concurrency and worker fan-out, timeouts and grace
+  periods — what 3270Connect does beyond running a single workflow a single
+  time.
 ---
 
 

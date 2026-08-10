@@ -2,6 +2,13 @@ site_name: 3270Connect
 # Doubles as the fallback <meta name="description"> and the og:description on
 # any page without its own `description:` front matter, so it is written as a
 # sentence a search result can show rather than a shelf label.
+#
+# It is only ever a fallback: every page carries its own `description:` and its
+# own `seo_title:`, both unique across this site and the 3270Web one. A new
+# page that omits them does not fail the build — it quietly ships a description
+# identical to every other page that omitted them, which is the one thing a
+# search engine penalises outright. Aim for 140-160 characters of description
+# and 45-60 of title; beyond that a result row truncates.
 site_description: >-
   Replay recorded IBM 3270 sessions as JSON workflows — headless in CI, fanned
   out across concurrent workers, with a live console and Prometheus metrics.

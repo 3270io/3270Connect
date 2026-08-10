@@ -1,7 +1,8 @@
 ---
+seo_title: "Acknowledgements: the projects 3270Connect builds on"
 description: >-
-  The projects 3270Connect is built on, starting with s3270 and the x3270
-  family that carries out every workflow step.
+  The open-source projects 3270Connect is built on, starting with s3270 and
+  the x3270 family that carries out every step of every workflow it replays.
 ---
 
 # Acknowledgements

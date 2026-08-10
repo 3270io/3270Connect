@@ -1,7 +1,9 @@
 ---
+seo_title: "Run your first 3270Connect workflow from the CLI"
 description: >-
-  Run a workflow: the configuration file, the actions it sequences —
-  connect, fill fields, capture screens — and the command that executes it.
+  Run a workflow end to end: the JSON configuration file, the steps it
+  sequences — connect, fill fields, check values, grab screens — and the
+  command to run it.
 ---
 
 # Basic Usage

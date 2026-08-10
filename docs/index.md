@@ -1,8 +1,9 @@
 ---
+seo_title: "3270Connect — replay IBM 3270 workflows at any scale"
 description: >-
   3270Connect turns a recorded 3270 session into a repeatable JSON workflow:
-  run it headless in CI, fan it out across hundreds of workers, watch every
-  step on a live console.
+  run it headless in CI, fan it out across hundreds of workers, watch it
+  live.
 hide:
   - toc
 ---

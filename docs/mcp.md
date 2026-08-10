@@ -1,4 +1,5 @@
 ---
+seo_title: "3270Connect MCP server for AI-composed workflows"
 description: >-
   Run 3270Connect as a Model Context Protocol server so an AI client can
   compose a workflow, validate it, run it at concurrency and read back

@@ -1,4 +1,5 @@
 ---
+seo_title: "3270Connect workflow steps and JSON schema reference"
 description: >-
   Every workflow step 3270Connect executes — Connect, FillString,
   PressEnter, CheckValue, AsciiScreenGrab and the rest — with the schema
