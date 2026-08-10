@@ -13,7 +13,7 @@ hide:
 
 <div class="hero-lockup">
 <p class="hero-mark"></p>
-<span class="chip accent"><span class="dot live"></span> Open source · v1.9.2</span>
+<span class="chip accent"><span class="dot live"></span> Open source · v2.0.0</span>
 </div>
 
 # Replay the mainframe <span class="grad">at any scale</span>

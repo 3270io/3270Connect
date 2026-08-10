@@ -2,7 +2,7 @@
 
 Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted workflows via JSON config, concurrent load testing, REST API mode, and a web dashboard.
 
-**Version:** 1.9.2  
+**Version:** 2.0.0  
 **Language:** Go 1.25
 
 ## Project Structure
