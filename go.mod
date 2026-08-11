@@ -14,7 +14,9 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/jchv/go-webview2 v0.0.0-20221223143126-dc24628cff85
 	github.com/modelcontextprotocol/go-sdk v1.7.0
+	github.com/muesli/termenv v0.16.0
 	github.com/prometheus/client_golang v1.23.2
+	golang.org/x/term v0.34.0
 )
 
 require (
@@ -36,7 +38,6 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
-	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
@@ -52,7 +53,6 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 )
 
