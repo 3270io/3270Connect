@@ -1,0 +1,106 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>Accounts</h2>
+  <p>
+    Add accounts, change roles, reset passwords, disable and delete. A few
+    actions are deliberately unavailable — removing your own administrator
+    role, disabling or deleting your own account, and doing any of those to the
+    last enabled administrator — because each would strand you on a page you
+    could no longer use.
+  </p>
+</div>
+
+<div class="filters">
+  <input type="search" id="filter" placeholder="Filter by name or group" aria-label="Filter accounts">
+  <select id="scope" aria-label="Narrow the list">
+    <option value="all">Everyone</option>
+    <option value="admin">Administrators</option>
+    <option value="disabled">Disabled</option>
+    <option value="mustchange">Owes a password change</option>
+    <option value="external">Single sign-on</option>
+  </select>
+  <button class="btn btn-primary btn-sm" id="add">Add account</button>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>Account</th><th>Role</th><th>Groups</th><th>Status</th>
+        <th>Created</th><th class="right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<div class="section-head">
+  <h2>Roles from groups</h2>
+  <p>
+    A role assigned to a group is held by everyone in it, on top of whatever
+    their account holds in its own right — an account's effective role is the
+    stronger of the two. Inheritance is additive only, so adding somebody to a
+    team can never quietly demote them. Membership is edited on the
+    <a href="/admin/groups">Groups</a> page.
+  </p>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead><tr><th>Group</th><th>Grants</th><th class="right">Actions</th></tr></thead>
+    <tbody id="grouproles"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<!-- Add account / reset password. One dialog, because the two differ only in
+     which fields are shown, and two dialogs would be two places to fix a
+     password rule. -->
+<div class="modal-back" id="dialog" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Add account</h2>
+    <p class="sub" id="dialog-sub"></p>
+
+    <div id="field-username">
+      <label for="d-username">Username</label>
+      <input id="d-username" type="text" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <label for="d-password">Password</label>
+    <input id="d-password" type="text" autocomplete="off" spellcheck="false">
+    <div class="generated">
+      <button class="btn btn-sm" id="d-generate" type="button">Generate</button>
+      <button class="btn btn-sm" id="d-copy" type="button">Copy</button>
+    </div>
+    <p class="hint">
+      At least {{ .MinLength }} characters. A password set here is temporary:
+      its owner is asked to choose their own the next time they sign in, and
+      nothing shows it again once the dialog closes.
+    </p>
+
+    <div id="field-role">
+      <label for="d-role">Role</label>
+      <select id="d-role">
+        <option value="user">User — run and watch their own load tests</option>
+        <option value="admin">Administrator — that, plus the whole instance</option>
+      </select>
+    </div>
+
+    <p class="banner banner-error" id="d-error" hidden role="alert"></p>
+
+    <div class="modal-actions">
+      <button class="btn" id="d-cancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="d-save" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}

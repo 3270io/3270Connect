@@ -1,0 +1,514 @@
+/* ==========================================================================
+   3270Connect — sign-in and administration
+
+   A small, self-contained stylesheet for the pages that are not the console:
+   the sign-in form, first-run setup, the password change, and the
+   administration area.
+
+   It repeats the console's design tokens rather than importing
+   dashboard.css. dashboard.css is two thousand lines of live-document layout —
+   KPI strips, charts, log tailing — that none of these pages use, and the
+   sign-in page in particular has to render before anything else on the
+   instance does. The tokens below are the same values; keep them in step with
+   section 1 of dashboard.css if that file's palette changes.
+   ========================================================================== */
+
+:root {
+  --bg: #03110d;
+  --bg-deep: #010806;
+
+  --surface: rgba(9, 40, 30, 0.62);
+  --surface-2: rgba(6, 30, 23, 0.72);
+  --surface-3: rgba(4, 20, 16, 0.86);
+  --surface-solid: #06201a;
+
+  --line: rgba(78, 255, 176, 0.16);
+  --line-strong: rgba(78, 255, 176, 0.34);
+
+  --text: #e6fff5;
+  --text-2: #9fe6c8;
+  --text-3: #5f9e86;
+
+  --accent: #4effb3;
+  --accent-2: #7cf9d0;
+  --accent-ink: #02130a;
+  --accent-soft: rgba(78, 255, 176, 0.14);
+
+  --ok: #4effb3;
+  --info: #5ad2ff;
+  --warn: #f7c36b;
+  --danger: #ff6f82;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  --shadow-2: 0 12px 32px -12px rgba(0, 0, 0, 0.75);
+  --shadow-3: 0 32px 80px -24px rgba(0, 0, 0, 0.85);
+
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 620px at 12% -10%, rgba(78, 255, 176, 0.12), transparent 60%),
+    radial-gradient(900px 520px at 110% 0%, rgba(90, 210, 255, 0.08), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent-2); }
+a:hover { color: var(--accent); }
+
+code, kbd, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+code {
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+/* --------------------------------------------------------------------------
+   Centred single-card pages: sign-in, setup, password change, refusals
+   -------------------------------------------------------------------------- */
+
+body.page-centred { display: flex; flex-direction: column; }
+
+.main-centred {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+}
+
+.card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  padding: 30px 28px 26px;
+  backdrop-filter: blur(10px);
+}
+
+.card-narrow { width: min(430px, 100%); }
+
+.card-head { text-align: center; margin-bottom: 20px; }
+.card-head .mark { display: block; margin: 0 auto 12px; }
+.card-head h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+.card-head .sub { margin: 4px 0 0; color: var(--text-3); font-size: 13px; }
+
+form label {
+  display: block;
+  margin: 14px 0 5px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font: inherit;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hint { color: var(--text-3); font-size: 12.5px; margin: 14px 0 0; }
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 4px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.rule::before, .rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+.btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); color: var(--accent-ink); }
+
+.btn-danger { border-color: rgba(255, 111, 130, 0.5); color: var(--danger); }
+.btn-danger:hover { background: rgba(255, 111, 130, 0.14); border-color: var(--danger); color: var(--danger); }
+
+.btn-quiet { border-color: transparent; background: transparent; color: var(--text-2); font-weight: 500; }
+.btn-quiet:hover { background: var(--surface-3); border-color: var(--line); }
+
+.btn-block { width: 100%; margin-top: 20px; }
+.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+
+/* --------------------------------------------------------------------------
+   Banners
+   -------------------------------------------------------------------------- */
+
+.banner {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-3);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.banner-error { border-color: rgba(255, 111, 130, 0.5); color: #ffd6dc; background: rgba(255, 111, 130, 0.1); }
+.banner-warn  { border-color: rgba(247, 195, 107, 0.5); color: #ffeecb; background: rgba(247, 195, 107, 0.1); }
+.banner-info  { border-color: rgba(90, 210, 255, 0.4);  color: #d5f2ff; background: rgba(90, 210, 255, 0.08); }
+.banner-ok    { border-color: rgba(78, 255, 176, 0.45); color: #d8ffee; background: rgba(78, 255, 176, 0.08); }
+.banner-wide  { margin: 0 24px 16px; }
+
+/* --------------------------------------------------------------------------
+   The administration area
+   -------------------------------------------------------------------------- */
+
+body.page-admin { display: flex; flex-direction: column; }
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+}
+
+.admin-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.tag {
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.admin-who { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.chip-muted { color: var(--text-3); }
+.chip-admin { border-color: var(--line-strong); color: var(--accent); }
+.chip-warn { border-color: rgba(247, 195, 107, 0.5); color: var(--warn); }
+.chip-danger { border-color: rgba(255, 111, 130, 0.5); color: var(--danger); }
+
+.admin-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 10px 24px 0;
+}
+.admin-nav-item {
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-nav-item:hover { background: var(--surface-3); color: var(--text); }
+.admin-nav-item.is-current {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--accent);
+}
+
+.main-admin {
+  flex: 1;
+  padding: 16px 24px 32px;
+  border-top: 1px solid var(--line);
+  margin-top: -1px;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 18px 0 10px;
+}
+.section-head h2 { font-size: 17px; margin: 0; }
+.section-head p { margin: 0; color: var(--text-3); font-size: 13px; max-width: 68ch; }
+
+.panel {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tile {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.tile .label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.tile .value { font-family: var(--font-mono); font-size: 26px; font-weight: 700; margin-top: 4px; }
+.tile .note { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.tile.is-alert .value { color: var(--warn); }
+
+.table-wrap { overflow-x: auto; }
+
+table.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.grid th, table.grid td {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+table.grid th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+table.grid tbody tr:hover { background: rgba(78, 255, 176, 0.04); }
+table.grid td.actions { white-space: nowrap; text-align: right; }
+table.grid td.mono { font-family: var(--font-mono); }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
+.filters input[type="search"], .filters select { width: auto; min-width: 180px; }
+
+.empty { padding: 26px 10px; text-align: center; color: var(--text-3); }
+
+.muted { color: var(--text-3); }
+.small { font-size: 12px; }
+.right { text-align: right; }
+.nowrap { white-space: nowrap; }
+
+.outcome-success { color: var(--ok); }
+.outcome-failure { color: var(--warn); }
+.outcome-denied  { color: var(--danger); }
+
+/* Modal dialogs: add an account, reset a password, edit a group. */
+
+.modal-back {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(1, 8, 6, 0.72);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+}
+.modal-back[hidden] { display: none; }
+.modal {
+  width: min(520px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--surface-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  padding: 22px 24px;
+}
+.modal h2 { margin: 0 0 4px; font-size: 18px; }
+.modal .sub { margin: 0 0 12px; color: var(--text-3); font-size: 13px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+.generated {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.generated input { font-family: var(--font-mono); }
+
+.checklist {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  background: var(--surface-3);
+}
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 3px 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+.checklist input[type="checkbox"] { width: auto; }
+.checklist label.is-locked { color: var(--text-3); }
+
+/* A checkbox with its label on one line, for a single option outside a list. */
+label.checkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+label.checkline input { width: auto; }
+
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 60;
+  max-width: 380px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-2);
+  font-size: 13.5px;
+}
+.toast[hidden] { display: none; }
+.toast.is-error { border-color: rgba(255, 111, 130, 0.6); color: #ffd6dc; }
+.toast.is-ok { border-color: rgba(78, 255, 176, 0.55); color: #d8ffee; }
+
+/* --------------------------------------------------------------------------
+   Footer, responsiveness, motion
+   -------------------------------------------------------------------------- */
+
+.page-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px 20px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+@media (max-width: 620px) {
+  .admin-topbar, .admin-nav, .main-admin, .page-footer { padding-left: 14px; padding-right: 14px; }
+  .banner-wide { margin-left: 14px; margin-right: 14px; }
+  .card { padding: 22px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+}
+
+/* The console ships one theme; this is the light-mode courtesy for anyone
+   whose operating system insists, so the sign-in page is not a black rectangle
+   on a white desktop. Deliberately only the tokens — the layout above is
+   theme-independent. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="phosphor"]) {
+    --bg: #f3f7f5;
+    --surface: rgba(255, 255, 255, 0.86);
+    --surface-2: #ffffff;
+    --surface-3: #eef4f1;
+    --surface-solid: #ffffff;
+    --line: rgba(6, 60, 42, 0.14);
+    --line-strong: rgba(6, 60, 42, 0.3);
+    --text: #08251c;
+    --text-2: #235c48;
+    --text-3: #5b7d70;
+    --accent: #0d8f5f;
+    --accent-2: #0b7a51;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(13, 143, 95, 0.12);
+  }
+}

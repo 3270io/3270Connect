@@ -96,6 +96,40 @@ The API responds with the rendered output in the JSON response body (it does not
 
   The Start Process modal on the dashboard now includes a dedicated **RSA Token** field. Values supplied through the modal are forwarded to the API as the `Token` property, matching the `-token` flag used on the command line.
 
+#### Requiring a credential
+
+The API listener binds `localhost` and, by default, asks for nothing: one
+operator on their own machine is already the person the request would be
+attributed to. There are two ways to close it, and which one applies follows
+from the deployment:
+
+=== "One operator"
+
+    Set `API_TOKEN`, and every request must present it:
+
+    ```bash
+    API_TOKEN=$(openssl rand -hex 32) 3270Connect -api -api-port 8080
+    curl -H "Authorization: Bearer $API_TOKEN" -X POST http://localhost:8080/api/execute -d @workflow.json
+    ```
+
+=== "Several people"
+
+    Set `AUTH_MODE=local` and issue a token per account. Each one reaches
+    exactly what its owner reaches, is revocable on its own, and appears in the
+    audit trail by name:
+
+    ```bash
+    3270Connect token add alice "ci pipeline"
+    3270Connect token add watcher "grafana" --read-only
+    ```
+
+    `API_TOKEN` is refused alongside accounts — one credential held by
+    everybody would be a hole straight through the separation the mode was
+    turned on for — so unset it.
+
+Either way, a request without a usable credential is answered `401` and
+recorded. See [Accounts and Sign-In](authentication.md#api-tokens).
+
 ### API Mode with Docker
 
 `3270Connect` can also run as an API server using the `-api` and `-api-port` flags:

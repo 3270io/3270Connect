@@ -1,0 +1,92 @@
+{{/* The shell every sign-in and administration page is served in.
+
+     Parsed alongside exactly one page at a time (see parseAuthPages), so the
+     blocks below belong to that page and cannot be overwritten by the next
+     one. */}}
+{{- define "layout" -}}
+<!doctype html>
+<html lang="en" data-theme="phosphor">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ .Title }} — 3270Connect</title>
+  <link rel="shortcut icon" href="/static/images/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/static/css/auth.css?v={{ .Version }}">
+</head>
+<body class="{{ block "bodyClass" . }}page-centred{{ end }}">
+{{ block "chrome" . }}{{ end }}
+<main class="{{ block "mainClass" . }}main-centred{{ end }}">
+{{ block "content" . }}{{ end }}
+</main>
+<footer class="page-footer">
+  <span>3270Connect {{ .Version }}</span>
+  <a href="https://3270connect.3270.io/authentication/" rel="noreferrer">Documentation</a>
+</footer>
+{{ block "scripts" . }}{{ end }}
+</body>
+</html>
+{{- end -}}
+
+{{/* The banner a form shows when the connection is not encrypted.
+
+     Two messages, because they need two different actions. Nothing in front of
+     the console means "put TLS in front of it". Something in front saying it
+     terminated TLS means this server has simply not been told to believe the
+     header, which is one environment variable away — and a warning that only
+     describes the symptom gets ignored. */}}
+{{- define "tlsWarning" -}}
+{{ if .ShowNoTLS }}
+  {{ if .ProxySaysHTTPS }}
+  <p class="banner banner-info">
+    Something in front of this console says the browser reached it over HTTPS,
+    but 3270Connect has not been told to believe forwarding headers, so the
+    sign-in cookie will not be marked <code>Secure</code>. Set
+    <code>TRUST_PROXY_HEADERS=true</code>.
+  </p>
+  {{ else }}
+  <p class="banner banner-warn">
+    This connection is not encrypted. Anything typed here, the password
+    included, crosses the network in the clear. Put TLS in front of the console
+    before using it over anything but localhost.
+  </p>
+  {{ end }}
+{{ end }}
+{{- end -}}
+
+{{- define "formMessages" -}}
+{{ if .Error }}<p class="banner banner-error" role="alert">{{ .Error }}</p>{{ end }}
+{{ if .Notice }}<p class="banner banner-info">{{ .Notice }}</p>{{ end }}
+{{- end -}}
+
+{{/* The administration area's header: where you are, who you are, and the way
+     back to the console you came from. */}}
+{{- define "adminChrome" -}}
+<header class="admin-topbar">
+  <a class="admin-brand" href="/dashboard">
+    <img src="/static/images/favicon.png" alt="" width="26" height="26">
+    <span>3270Connect</span>
+    <span class="tag">Administration</span>
+  </a>
+  <div class="admin-who">
+    {{ if .Auth.SignedIn }}
+      <span class="chip">{{ .Auth.Username }}</span>
+      <a class="btn btn-quiet" href="/account/password">Password</a>
+      <a class="btn btn-quiet" href="/logout">Sign out</a>
+    {{ else }}
+      <span class="chip chip-muted">no sign-in configured</span>
+    {{ end }}
+    <a class="btn btn-quiet" href="/dashboard">Console</a>
+  </div>
+</header>
+<nav class="admin-nav" aria-label="Administration">{{ adminNav .Active }}</nav>
+{{ if eq .AuthMode "none" }}
+<p class="banner banner-info banner-wide">
+  This console has no sign-in: <code>AUTH_MODE</code> is <code>none</code>, so
+  everything below describes an instance with one operator. Accounts, groups
+  and tokens need <code>AUTH_MODE=local</code> or <code>AUTH_MODE=oidc</code>.
+  <a href="https://3270connect.3270.io/authentication/" rel="noreferrer">How to turn it on</a>.
+</p>
+{{ end }}
+{{- end -}}

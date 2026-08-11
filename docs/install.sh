@@ -1224,6 +1224,13 @@ ${ports_note}
       # console is exposed to is decided by "ports:" above, not by this
       # line -- do not change it to 127.0.0.1 to keep the console private.
       - DASHBOARD_BIND=0.0.0.0
+      # Accounts. Uncomment for a console more than one person can reach: a
+      # sign-in page, per-user passwords, an administration area at /admin and
+      # an audit trail. On first start it prints a one-time setup code --
+      # \`docker compose logs\` shows it -- and waits for the first
+      # administrator. The accounts live in /data below, so keep that volume.
+      # https://3270connect.3270.io/authentication/
+      # - AUTH_MODE=local
     volumes:
       # The metrics every run publishes, the console's logs, and whatever a
       # workflow writes. It has to outlive the container: recreating one

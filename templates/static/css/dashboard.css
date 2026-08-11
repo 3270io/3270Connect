@@ -412,6 +412,30 @@ hr.rule {
 .btn-x:active:not(:disabled) { transform: translateY(0); }
 .btn-x:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-x .ic { font-size: 1.02em; }
+/* Admin and Sign out are links rather than buttons — they navigate — so they
+   need the underline and inherited colour turning off to sit in the same row
+   as the buttons beside them. */
+a.btn-x { text-decoration: none; }
+
+/* Who is signed in. Not a control, so it is quieter than the buttons it sits
+   between; absent entirely where there is no sign-in and nobody to name. */
+.signed-in {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .btn-x.primary {
   --btn-bg: linear-gradient(180deg, var(--accent-2), var(--accent));

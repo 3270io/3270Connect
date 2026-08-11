@@ -28,6 +28,8 @@ import (
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
+	"github.com/3270io/3270Connect/internal/audit"
+	"github.com/3270io/3270Connect/internal/authz"
 	metricsPkg "github.com/3270io/3270Connect/internal/metrics"
 	"github.com/3270io/3270Connect/internal/runstore"
 	"github.com/3270io/3270Connect/internal/workflow"
@@ -1209,17 +1211,29 @@ func runAPIWorkflow() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
+	// The same principals, from the same stores, as the console - see
+	// GinAuth. With a single operator and no API_TOKEN set this admits
+	// everybody, which is what this listener has always done.
+	r.Use(auth.GinAuth())
 	r.POST("/api/execute", func(c *gin.Context) {
 		workflowConfig := Configuration{WaitForField: WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10}}
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload - JSON’s drunk", err)
 			return
 		}
+		target := net.JoinHostPort(workflowConfig.Host, strconv.Itoa(workflowConfig.Port))
 		output, err := executeWorkflowOnce(&workflowConfig)
 		if err != nil {
+			// Recorded either way: a workflow that reached a host and failed
+			// still typed into it, and a refusal is the line somebody looking
+			// for a misconfigured client will search for.
+			auth.auditRequest(c.Request, audit.EventWorkflowRun, audit.Failure, target,
+				map[string]string{"steps": strconv.Itoa(len(workflowConfig.Steps))})
 			sendErrorResponse(c, statusForWorkflowError(err), "Workflow execution failed", err)
 			return
 		}
+		auth.auditRequest(c.Request, audit.EventWorkflowRun, audit.Success, target,
+			map[string]string{"steps": strconv.Itoa(len(workflowConfig.Steps))})
 		c.JSON(http.StatusOK, gin.H{
 			"returnCode": http.StatusOK,
 			"status":     "okay",
@@ -1229,6 +1243,14 @@ func runAPIWorkflow() {
 	})
 	apiAddr := listenAddress(resolveBindHost(apiBind, apiBindEnv), apiPort)
 	pterm.Success.Printf("API server rocking on %s - let’s roll!\n", apiAddr)
+	switch {
+	case auth.separatesUsers():
+		pterm.Info.Printf("Requests need a Bearer token issued with `3270Connect token add <username> <name>`.\n")
+	case auth.sharedToken != "":
+		pterm.Info.Println("Requests need the Bearer token in API_TOKEN.")
+	default:
+		pterm.Warning.Printf("No credential is required. Set API_TOKEN, or %s=local for per-account tokens.\n", authz.ModeEnv)
+	}
 	if err := r.Run(apiAddr); err != nil {
 		pterm.Error.Printf("API server crashed - send coffee: %v\n", err)
 	}
@@ -1510,7 +1532,36 @@ func main() {
 		return
 	}
 
+	// Settings before anything reads them. 3270Connect.env sits beside the
+	// binary and fills in only what the real environment has not already set,
+	// which is how a double-clicked console on a desktop gets an AUTH_MODE at
+	// all — there is no shell to export one from.
+	loadEnvFile()
+
+	// The account and token commands are dispatched here for the same reason
+	// mcp is: flag.Parse stops at the first non-flag argument, so `user add
+	// alice` would leave its own arguments unparsed, and everything after this
+	// point prints a banner or opens a window.
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "user":
+			os.Exit(runUserCLI(os.Args[2:], os.Stdout, os.Stderr, os.Stdin))
+		case "token":
+			os.Exit(runTokenCLI(os.Args[2:], os.Stdout, os.Stderr))
+		}
+	}
+
 	flag.Parse()
+
+	// Validated before either listener exists, so a misconfiguration stops
+	// startup rather than surfacing at somebody's first sign-in. Fatal on
+	// purpose: an operator who asked for authentication and did not get it
+	// would otherwise be running an open console believing it was guarded.
+	if err := auth.configure(); err != nil {
+		pterm.Error.Printf("Authentication is misconfigured: %v\n", err)
+		os.Exit(1)
+	}
+	auth.startAuthHousekeeping()
 	metricsConfigFilePath = configFile
 
 	// Wire Prometheus metrics into the emulator. Cheap when -promListen is
@@ -2676,6 +2727,15 @@ func pageBaseURL(r *http.Request) string {
 	return scheme + "://" + host
 }
 
+// dashboardRoutesOnce guards the route registrations below.
+//
+// runDashboard has two callers - the double-click launcher and the branch that
+// starts a console alongside a concurrent run - and a command line can trigger
+// both. Registering the same pattern on a ServeMux twice panics, so the second
+// call would take the process down; this makes it a no-op instead, which is
+// what it was always meant to be.
+var dashboardRoutesOnce sync.Once
+
 func runDashboard() {
 
 	// Serve embedded static files
@@ -2684,48 +2744,60 @@ func runDashboard() {
 		pterm.Error.Println("Failed to load embedded static files:", err)
 		return
 	}
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFiles))))
+	dashboardRoutesOnce.Do(func() {
+		http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFiles))))
 
-	// Register the start-process endpoint
-	http.HandleFunc("/start-process", startProcessHandler)
-	http.HandleFunc("/kill", killProcessHandler) // register kill endpoint
-	http.HandleFunc("/test-connection", testConnectionHandler)
+		// Register the start-process endpoint
+		http.HandleFunc("/start-process", startProcessHandler)
+		http.HandleFunc("/kill", killProcessHandler) // register kill endpoint
+		http.HandleFunc("/test-connection", testConnectionHandler)
 
-	// Liveness, for anything supervising this process: a container
-	// HEALTHCHECK, a compose stack waiting for the port to answer, an uptime
-	// probe. Deliberately the cheapest handler here - it reads no metrics
-	// files and touches no disk, so a busy load run cannot make the console
-	// look unhealthy.
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		// The dashboard goroutine is started just before main stamps
-		// programStart, so a probe that wins that race would otherwise report
-		// an uptime measured from the zero time.
-		var uptime int64
-		if !programStart.IsZero() {
-			uptime = int64(time.Since(programStart).Seconds())
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
-			"status":  "ok",
-			"version": version,
-			"pid":     os.Getpid(),
-			"uptime":  uptime,
-		}); err != nil {
-			pterm.Warning.Printf("Failed to write health response: %v\n", err)
-		}
-	})
+		// Signing in, signing out, first-run setup and the administration
+		// area. Registered whatever AUTH_MODE says, so a bookmark saved on an
+		// instance that has accounts does something sensible on one that does
+		// not; each handler decides for itself what the mode means.
+		auth.registerAuthHandlers(http.DefaultServeMux)
+		auth.registerAdminHandlers(http.DefaultServeMux)
 
-	// The console lives at /dashboard, but the address people are given is the
-	// origin - a published port, a bookmark, whatever the installer printed.
-	// Send the root there rather than answering a bare 404 to somebody who
-	// typed exactly what they were told to.
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-		http.Redirect(w, r, "/dashboard", http.StatusFound)
+		// Liveness, for anything supervising this process: a container
+		// HEALTHCHECK, a compose stack waiting for the port to answer, an
+		// uptime probe. Deliberately the cheapest handler here - it reads no
+		// metrics files and touches no disk, so a busy load run cannot make
+		// the console look unhealthy. It is also reachable without signing in,
+		// for the same reason: a probe has no credentials and a health check
+		// that needs one is a health check that reports every instance as
+		// broken.
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			// The dashboard goroutine is started just before main stamps
+			// programStart, so a probe that wins that race would otherwise
+			// report an uptime measured from the zero time.
+			var uptime int64
+			if !programStart.IsZero() {
+				uptime = int64(time.Since(programStart).Seconds())
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			if err := json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":  "ok",
+				"version": version,
+				"pid":     os.Getpid(),
+				"uptime":  uptime,
+			}); err != nil {
+				pterm.Warning.Printf("Failed to write health response: %v\n", err)
+			}
+		})
+
+		// The console lives at /dashboard, but the address people are given is
+		// the origin - a published port, a bookmark, whatever the installer
+		// printed. Send the root there rather than answering a bare 404 to
+		// somebody who typed exactly what they were told to.
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/" {
+				http.NotFound(w, r)
+				return
+			}
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
+		})
 	})
 
 	bindHost := resolveBindHost(dashboardBind, dashboardBindEnv)
@@ -2828,6 +2900,11 @@ func runDashboard() {
 			ExtendedJSON                    string
 			Version                         string
 			BaseURL                         string
+			// Auth is who is looking at the console: whether there is a
+			// sign-in at all, who they are, and whether the administration
+			// controls belong on the page. Without it a signed-in operator has
+			// no way to reach /admin or to sign out again.
+			Auth consoleAuthView
 		}{
 			ActiveWorkflows:         agg.ActiveWorkflows,
 			TotalWorkflowsStarted:   agg.TotalWorkflowsStarted,
@@ -2847,6 +2924,7 @@ func runDashboard() {
 			ExtendedJSON:            string(extendedJSON),
 			Version:                 version, // Holds the value of the const `version`
 			BaseURL:                 pageBaseURL(r),
+			Auth:                    auth.consoleAuthView(r),
 		}
 		// Use a buffer to write the template output first, then write it all at once
 		// This prevents partial responses from being written if the connection closes
@@ -2877,10 +2955,18 @@ func runDashboard() {
 		payload := struct {
 			AggregatedMetrics Metrics           `json:"aggregated"`
 			ExtendedMetrics   []ExtendedMetrics `json:"extendedMetrics"`
-			Timestamp         int64             `json:"timestamp"`
+			// Owners names the account behind each run, keyed by process id.
+			// Alongside the metrics rather than inside them because a metrics
+			// file is written by the run's own process, which does not know
+			// who asked for it - the console does, and only the console.
+			// Absent entirely where there is one operator and nobody to tell
+			// apart.
+			Owners    map[string]string `json:"owners,omitempty"`
+			Timestamp int64             `json:"timestamp"`
 		}{
 			AggregatedMetrics: aggregateExtendedMetrics(filtered),
 			ExtendedMetrics:   filtered,
+			Owners:            auth.ownerNamesFor(filtered),
 			Timestamp:         time.Now().Unix(),
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -2889,10 +2975,14 @@ func runDashboard() {
 		}
 	})
 	pterm.Info.Printf("Dashboard live at %s - check it out!\n", pterm.FgBlue.Sprintf("%s", dashboardURL(bindHost, dashboardPort)))
-	if bindsEveryInterface(bindHost) {
+	if auth.separatesUsers() {
+		pterm.Info.Printf("Sign-in is on (%s=%s). Accounts live in %s.\n",
+			authz.ModeEnv, auth.mode, auth.userStore().Path())
+	} else if bindsEveryInterface(bindHost) {
 		// Said once, plainly: this listener has no sign-in and /start-process
 		// launches a load run for whoever reaches it.
-		pterm.Warning.Printf("Listening on every interface (%s). The console has no sign-in - put it behind a firewall or a reverse proxy on a shared network.\n", addr)
+		pterm.Warning.Printf("Listening on every interface (%s) with no sign-in. Set %s=local to require accounts, or keep it behind a firewall or a reverse proxy.\n",
+			addr, authz.ModeEnv)
 	}
 	pterm.Println()
 	go func() {
@@ -2901,7 +2991,11 @@ func runDashboard() {
 			time.Sleep(2 * time.Second)
 		}
 	}()
-	if err := http.Serve(listener, nil); err != nil {
+	// Everything the console serves goes through the gate: who is calling,
+	// whether they may, and whether the request came from a page this console
+	// served. Wrapping the mux rather than each route is deliberate - a route
+	// registered later cannot forget to opt in. See auth.go.
+	if err := http.Serve(listener, auth.Gate(http.DefaultServeMux)); err != nil {
 		pterm.Error.Printf("Dashboard server crashed - send a medic: %v\n", err)
 	}
 }
@@ -3503,6 +3597,11 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		executablePath := getExecutablePath()
 		args := []string{"-runApp", runApp, "-runApp-port", runAppPort}
+		// Recorded before the process exists rather than after: this binds a
+		// port on the machine the console runs on, and that is worth a line
+		// whether or not the child manages to start.
+		auth.auditRequest(r, audit.EventSampleAppStarted, audit.Success, "app"+runApp,
+			map[string]string{"port": runAppPort})
 		go func() {
 			logLine := fmt.Sprintf("%s %s", executablePath, strings.Join(args, " "))
 			pterm.Info.Printf("Executing sample app command: %s\n", logLine)
@@ -3663,16 +3762,37 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	commandForLog := strings.Join(maskedArgs, " ")
 	storeLog("Command to execute: " + commandForLog)
-	go func(args []string, logCommand string) {
+
+	// Who asked for this run, captured here rather than inside the goroutine:
+	// the request is finished by the time the child is up, and the context it
+	// carries is cancelled with it.
+	starter := auditActor(r)
+	auth.auditRequest(r, audit.EventRunStarted, audit.Success,
+		net.JoinHostPort(config.Host, strconv.Itoa(config.Port)),
+		map[string]string{
+			"concurrent": concurrent,
+			"runtime":    runtime,
+			"workflow":   safeConfigName,
+		})
+
+	go func(args []string, logCommand string, owner audit.Actor) {
 		pterm.Info.Printf("Executing command: %s\n", logCommand)
 
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
+		// Start and Wait rather than Run, so the process id exists to be
+		// recorded. It is what /kill is addressed by, and therefore the only
+		// thing an ownership check has to compare against.
+		if err := cmd.Start(); err != nil {
+			pterm.Error.Printf("Failed to execute command: %v\n", err)
+			return
+		}
+		auth.runs.claim(cmd.Process.Pid, owner.UserID, owner.Username)
+		if err := cmd.Wait(); err != nil {
 			pterm.Error.Printf("Failed to execute command: %v\n", err)
 		}
-	}(commandArgs, commandForLog)
+	}(commandArgs, commandForLog, starter)
 	storeLog("Process started successfully")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Process started successfully"))
@@ -3709,6 +3829,10 @@ func testConnectionHandler(w http.ResponseWriter, r *http.Request) {
 
 	address := net.JoinHostPort(host, strconv.Itoa(payload.Port))
 	storeLog("Testing connectivity to " + address)
+	// Cheap on its own; a run of them against addresses that are not this
+	// deployment's is what scanning from inside the console would look like,
+	// which is the only reason it is in the trail at all.
+	auth.auditRequest(r, audit.EventConnectionTest, audit.Success, address, nil)
 	conn, err := net.DialTimeout("tcp", address, 5*time.Second)
 	if err != nil {
 		storeLog("Connection test failed for " + address + ": " + err.Error())
@@ -3767,6 +3891,18 @@ func killProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Cannot kill the dashboard process itself", http.StatusForbidden)
 		return
 	}
+	// Stopping a run is not a read: somebody may be depending on it. Your own
+	// is yours to stop; anybody else's needs an administrator, who is also the
+	// one who can reclaim capacity from a run left pointed at a production
+	// region. Under AUTH_MODE=none there is one operator, who is an
+	// administrator, so this changes nothing for the default deployment.
+	if allowed, why := auth.mayStopRun(r, pid); !allowed {
+		storeLog("Refused kill request for PID " + pidStr + ": " + why)
+		auth.auditRequest(r, audit.EventRunKilled, audit.Denied, pidStr,
+			map[string]string{"reason": why})
+		http.Error(w, why, http.StatusForbidden)
+		return
+	}
 	if err := proc.Kill(); err != nil {
 		storeLog("Failed to kill process gracefully, attempting hard kill for PID: " + pidStr)
 		var hardKillErr error
@@ -3787,6 +3923,14 @@ func killProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Force the dashboard to reload the updated metrics
 	updateMetricsFile()
+
+	// Whose run it was, so the trail answers "who stopped my soak test" from
+	// both ends. Empty where the console did not start it.
+	detail := map[string]string{}
+	if owner, known := auth.runs.owner(pid); known {
+		detail["owner"] = owner.Username
+	}
+	auth.auditRequest(r, audit.EventRunKilled, audit.Success, pidStr, detail)
 
 	storeLog("Process killed successfully PID: " + pidStr)
 	w.WriteHeader(http.StatusOK)

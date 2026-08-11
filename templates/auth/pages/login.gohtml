@@ -1,0 +1,44 @@
+{{- define "content" -}}
+<section class="card card-narrow">
+  <header class="card-head">
+    <img class="mark" src="/static/images/favicon.png" alt="" width="40" height="40">
+    <h1>3270Connect</h1>
+    <p class="sub">Operations console</p>
+  </header>
+
+  {{ template "tlsWarning" . }}
+  {{ template "formMessages" . }}
+
+  {{ if .SSOEnabled }}
+  <a class="btn btn-primary btn-block" href="{{ .SSOStartPath }}?next={{ .Next }}">
+    Sign in with single sign-on
+  </a>
+  <p class="rule"><span>or use an account with a password</span></p>
+  {{ end }}
+
+  <form method="post" action="/login" autocomplete="on">
+    <input type="hidden" name="next" value="{{ .Next }}">
+
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username"
+           autocapitalize="none" spellcheck="false" required autofocus>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+    <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+  </form>
+
+  {{ if .SSOEnabled }}
+  <p class="hint">
+    The password form is here on purpose: it is the way back in when the
+    identity provider cannot be reached.
+  </p>
+  {{ else }}
+  <p class="hint">
+    No account yet? An administrator creates one, or so does the console
+    command <code>3270Connect user add &lt;name&gt;</code>.
+  </p>
+  {{ end }}
+</section>
+{{- end -}}

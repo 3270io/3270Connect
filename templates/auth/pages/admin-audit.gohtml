@@ -1,0 +1,40 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>Audit trail</h2>
+  <p>
+    Who did what, kept apart from the debug log because it is read for a
+    different reason and for longer: sign-ins and refusals, account and group
+    changes, tokens issued and revoked, and every load run started or stopped.
+    The newest {{ .Limit }} entries are shown; the download is the whole file.
+  </p>
+</div>
+
+<div class="filters">
+  <input type="search" id="filter" placeholder="Filter by event, account, address or target" aria-label="Filter the trail">
+  <select id="outcome" aria-label="Narrow by outcome">
+    <option value="all">Every outcome</option>
+    <option value="refused">Refusals only</option>
+    <option value="success">Successes only</option>
+  </select>
+  <a class="btn btn-sm" href="/admin/api/audit.jsonl" download>Download all of it</a>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr><th>When</th><th>Event</th><th>Who</th><th>From</th><th>Target</th><th>Outcome</th><th>Detail</th></tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<p class="hint" id="path"></p>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}

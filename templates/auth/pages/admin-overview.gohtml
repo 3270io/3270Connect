@@ -1,0 +1,41 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>Overview</h2>
+  <p>
+    Where the instance stands: who has an account, who is signed in, what is
+    running against a mainframe right now, and what has been refused.
+  </p>
+</div>
+
+<div class="tiles" id="tiles">
+  <div class="tile"><div class="label">Accounts</div><div class="value" data-tile="accounts">—</div><div class="note" data-tile="accountsNote"></div></div>
+  <div class="tile"><div class="label">Signed in</div><div class="value" data-tile="logins">—</div><div class="note" data-tile="loginsNote"></div></div>
+  <div class="tile"><div class="label">Load runs</div><div class="value" data-tile="runs">—</div><div class="note" data-tile="runsNote"></div></div>
+  <div class="tile"><div class="label">API tokens</div><div class="value" data-tile="tokens">—</div><div class="note" data-tile="tokensNote"></div></div>
+  <div class="tile" data-tile-card="refused"><div class="label">Refused (24h)</div><div class="value" data-tile="refused">—</div><div class="note" data-tile="refusedNote"></div></div>
+</div>
+
+<div class="section-head">
+  <h2>Recent activity</h2>
+  <p>The newest entries in the audit trail. <a href="/admin/audit">See all of it</a>.</p>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr><th>When</th><th>Event</th><th>Who</th><th>Target</th><th>Outcome</th></tr>
+    </thead>
+    <tbody id="recent"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<p class="hint" id="uptime"></p>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}

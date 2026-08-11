@@ -8,10 +8,12 @@ Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted wor
 ## Project Structure
 
 ```
-go3270Connect.go          # Main entry point (~3,800 lines) — CLI, API, dashboard, workflow runner
+go3270Connect.go          # Main entry point (~3,900 lines) — CLI, API, dashboard, workflow runner
 connect3270/emulator.go   # Core TN3270 protocol implementation (x3270/s3270 wrapper)
 charmui.go                # Terminal UI rendering (lipgloss/pterm)
+auth*.go                  # Authentication and authorization — see below
 templates/dashboard.gohtml # Web dashboard markup (+ inline icon sprite)
+templates/auth/            # Sign-in, setup and administration pages (layout + pages/)
 templates/static/          # Embedded dashboard assets (css/, js/, vendor/, images/)
 sampleapps/               # Embedded sample 3270 apps for testing
 binaries/                 # Pre-compiled x3270 binaries (linux/ and windows/)
@@ -36,6 +38,10 @@ dist/                     # Build output — committed to repo by CI
 
 # Run embedded sample app for testing
 ./dist/3270Connect -runApp 1 -runApp-port 3270
+
+# Accounts (only meaningful with AUTH_MODE=local or oidc)
+./dist/3270Connect user add root --admin
+./dist/3270Connect token add root "ci pipeline"
 
 # Tests
 go test -v ./...
@@ -94,11 +100,51 @@ required whenever any step uses it.
 
 ## REST API Endpoints
 
-- `POST /api/execute` — Execute a workflow
+- `POST /api/execute` — Execute a workflow (the `-api` listener)
 - `GET /dashboard` — Web dashboard
 - `GET /dashboard/data` — Live metrics JSON
 - `POST /start-process` / `POST /kill` — Process lifecycle
 - `POST /test-connection` — Connectivity test
+- `GET /healthz` — Liveness; reachable without a credential in every mode
+- `/login`, `/logout`, `/setup`, `/account/password`, `/whoami`, `/auth/sso*` — Sign-in
+- `/admin`, `/admin/{users,groups,tokens,runs,audit}` and `/admin/api/*` — Administration (admin role)
+
+## Authentication and Authorization
+
+Off by default (`AUTH_MODE=none`): one operator, no sign-in, everything open —
+and that must stay true, because it is what every existing install relies on.
+`AUTH_MODE=local` adds accounts; `AUTH_MODE=oidc` adds an identity provider.
+The variable names, roles, group model and token format are deliberately
+identical to 3270Web's, and `internal/{authz,authsession,users,apitoken,audit,oidc,reqsec}`
+are the same packages — keep them in step rather than letting them drift.
+
+| File | Holds |
+|------|-------|
+| `auth.go` | `authState`, the request gate, principals, run ownership, the sweep |
+| `authlogin.go` | Sign in, sign out, change password, `whoami` |
+| `authsetup.go` | First-run setup and its one-time code |
+| `authsso.go` | OIDC sign-in |
+| `authtokens.go` | Bearer tokens, scopes, the gin middleware for `-api` |
+| `authadmin.go` | The `/admin` pages and their JSON endpoints |
+| `authcli.go` | `3270Connect user …` and `3270Connect token …` |
+| `authlimit.go` | Failed-sign-in throttling |
+| `authpages.go` | Page templates; one parsed set per page, and their CSP |
+
+Things that are load-bearing and easy to break:
+
+- **The gate wraps the whole mux** (`http.Serve(listener, auth.Gate(...))`), so
+  a route registered later cannot forget to opt in. `/admin` is gated by
+  prefix for the same reason. Do not move either to per-route middleware.
+- **State lives under `os.UserConfigDir()/3270Connect`** — `/data` in the image,
+  via `XDG_CONFIG_HOME`. `users.json`, `api-tokens.json`, `audit.log`.
+- **CSRF uses `Sec-Fetch-Site` first**, then `Origin`/`Referer`, and allows a
+  request carrying none of the three. That last part is not an oversight: curl,
+  CI and the installer's checks call these endpoints and send no browser
+  headers.
+- **`AUTH_MODE=none` + no `API_TOKEN` leaves the REST API open.** Changing that
+  breaks every existing deployment.
+- A run's owner lives in memory (`runOwners`), keyed by pid, and unowned means
+  admin-only rather than anybody's.
 
 ## CI/CD
 
