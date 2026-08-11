@@ -73,6 +73,15 @@ jobs:
             dist/3270Connect.exe
             dist/3270Connect_linux
 
+  # The Linux image, published to GHCR.
+  #
+  # Every build and push step in this job used to be commented out, so the
+  # image the installer and the compose stacks name did not exist: `docker
+  # pull ghcr.io/3270io/3270connect` was a manifest-unknown error on a
+  # documented command.
+  #
+  # A pull request builds without pushing, so a Dockerfile that no longer
+  # builds is caught in review rather than on main.
   build-and-push-docker:
     runs-on: ubuntu-latest
     permissions:
@@ -84,43 +93,43 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver: docker
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
-        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build and Push Linux Docker Image
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: true
-#          platforms: linux/amd64
-#          file: ./Dockerfile.linux
-#          tags: ghcr.io/${{ github.repository_owner }}/3270connect:linux-latest
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/3270connect
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
 
-#      - name: Build and Push Windows Docker Image
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: true
-#          platforms: windows/amd64
-#          file: ./Dockerfile.windows
-#          tags: ghcr.io/${{ github.repository_owner }}/3270connect:windows-latest
+      # linux/amd64 only: the s3270 the emulator drives is embedded in the
+      # binary as an x86-64 ELF, so an arm64 image would serve the console and
+      # then fail the first workflow it was asked to run.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-#      - name: Build and Push Windows GUI Docker Image
-##        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: true
-#          platforms: windows/amd64
-#          file: ./Dockerfile.windows.gui
-#          tags: ghcr.io/${{ github.repository_owner }}/3270connect:windows-gui-latest
+  # The Windows image is built from Dockerfile.windows and is not published
+  # here: a Windows container image cannot be built on an ubuntu runner, and
+  # the build job above already produces the Windows binary as a release asset.
 
   build-and-deploy-mkdocs:
     runs-on: ubuntu-latest
