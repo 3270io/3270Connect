@@ -1,0 +1,62 @@
+# 3270Connect — https://3270connect.3270.io
+#
+# The operations console, on its own. To run it against a 3270 host to
+# practise on, use docker-compose.lab.yml instead: that brings up this console,
+# the browser terminal and a sample TN3270 host together.
+
+services:
+  3270connect:
+    build: .
+    # Tagged :local, not :latest — `docker compose up --build` would otherwise
+    # overwrite the published ghcr.io/3270io/3270connect:latest on this host
+    # with a local build, so a later `docker pull` would look up to date while
+    # serving something else entirely.
+    image: ghcr.io/3270io/3270connect:local
+    ports:
+      # Bound to 127.0.0.1, and that is the setting to think about before
+      # changing. The console has no sign-in, and its start-process dialog
+      # launches a load run — against any host it is given — for whoever can
+      # reach the port. Published on every interface it is a button on your
+      # network that starts traffic.
+      #
+      # To reach it from another machine, forward the port over SSH:
+      #   ssh -L 9200:localhost:9200 user@runner-01
+      # To publish it deliberately, change this to "9200:9200" and put an
+      # authenticating reverse proxy in front of it.
+      - "127.0.0.1:9200:9200"
+    environment:
+      # Listen on all interfaces *inside* the container. A published port
+      # forwards to the container's external interface, so a loopback listener
+      # here would refuse every connection from the host however the ports are
+      # mapped. What the console is exposed to is decided by "ports:" above,
+      # not by this line — do not change it to 127.0.0.1 to keep the console
+      # private.
+      - DASHBOARD_BIND=0.0.0.0
+    volumes:
+      # The metrics every run publishes, the console's logs, and whatever a
+      # workflow writes. In a folder beside this file so it can be backed up,
+      # inspected and copied with ordinary tools, and so it outlives the
+      # container: recreating one without this — which is what pulling a new
+      # image does — takes the history of every run with it.
+      #
+      # It is also where the console looks for workflow files to start, so a
+      # workflow dropped in here is one you can launch from the page.
+      #
+      # 3270Connect runs as uid 10001 and a bind mount keeps the host's
+      # ownership, so create the folder and give it to that user before the
+      # first start:
+      #
+      #   mkdir -p ./data && sudo chown -R 10001:10001 ./data
+      #
+      # Without it the console starts but cannot write, and the run history
+      # stays empty with the reason only in the log.
+      - ./data:/data
+    restart: unless-stopped
+
+# Running a workflow rather than the console — the image takes any other set of
+# flags as its command, so no second service is needed:
+#
+#   docker compose run --rm 3270connect -config workflow.json -headless
+#   docker compose run --rm 3270connect -config workflow.json -concurrent 25 -runtime 600
+#
+# Both read /data, so the workflow file goes in ./data beside the output.

@@ -58,6 +58,41 @@ run by prompt  ←────────────────────�
 > If Windows shows **“protected your PC”**, click **More info → Run anyway**.  
 > The warning disappears automatically as usage grows.
 
+## Install
+
+```shell
+curl -fsSL https://3270connect.3270.io/install.sh | bash
+```
+
+The installer asks how you want it: a single binary on your PATH, one Docker
+container running the operations console, a Compose stack you can edit, or the
+**lab** — the console, a browser terminal and a 3270 host to point them both
+at, on one network.
+
+```shell
+# The whole thing, without being asked anything
+curl -fsSL https://3270connect.3270.io/install.sh | bash -s -- --method lab --yes
+```
+
+```
+http://localhost:3270    the terminal. Connect to host "sampleapps", port 3271
+http://localhost:9200    the operations console
+```
+
+Nothing in the lab is a mainframe: the applications are 3270Web's bundled
+sample screens served as an ordinary TN3270 host, which is what makes them safe
+to point a load test at. The same stack is checked in here as
+`docker-compose.lab.yml`, and the console on its own as `docker-compose.yml`.
+
+Direct downloads for Linux and Windows, and the container image
+(`ghcr.io/3270io/3270connect`), are covered in the
+[installation guide](https://3270connect.3270.io/installation/).
+
+> The operations console has no sign-in, and its *Start Process* dialog
+> launches a load run for whoever can open the page — so every stack here
+> publishes on `127.0.0.1`. Reach it from elsewhere over an SSH tunnel, or put
+> an authenticating reverse proxy in front of it.
+
 ## Features
 
 Here are the key features of 3270Connect:

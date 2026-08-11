@@ -1227,7 +1227,7 @@ func runAPIWorkflow() {
 			"output":     output,
 		})
 	})
-	apiAddr := fmt.Sprintf("localhost:%d", apiPort) // Bind to localhost
+	apiAddr := listenAddress(resolveBindHost(apiBind, apiBindEnv), apiPort)
 	pterm.Success.Printf("API server rocking on %s - let’s roll!\n", apiAddr)
 	if err := r.Run(apiAddr); err != nil {
 		pterm.Error.Printf("API server crashed - send coffee: %v\n", err)
@@ -2691,7 +2691,45 @@ func runDashboard() {
 	http.HandleFunc("/kill", killProcessHandler) // register kill endpoint
 	http.HandleFunc("/test-connection", testConnectionHandler)
 
-	addr := fmt.Sprintf("localhost:%d", dashboardPort) // Bind to localhost
+	// Liveness, for anything supervising this process: a container
+	// HEALTHCHECK, a compose stack waiting for the port to answer, an uptime
+	// probe. Deliberately the cheapest handler here - it reads no metrics
+	// files and touches no disk, so a busy load run cannot make the console
+	// look unhealthy.
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// The dashboard goroutine is started just before main stamps
+		// programStart, so a probe that wins that race would otherwise report
+		// an uptime measured from the zero time.
+		var uptime int64
+		if !programStart.IsZero() {
+			uptime = int64(time.Since(programStart).Seconds())
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  "ok",
+			"version": version,
+			"pid":     os.Getpid(),
+			"uptime":  uptime,
+		}); err != nil {
+			pterm.Warning.Printf("Failed to write health response: %v\n", err)
+		}
+	})
+
+	// The console lives at /dashboard, but the address people are given is the
+	// origin - a published port, a bookmark, whatever the installer printed.
+	// Send the root there rather than answering a bare 404 to somebody who
+	// typed exactly what they were told to.
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.Redirect(w, r, "/dashboard", http.StatusFound)
+	})
+
+	bindHost := resolveBindHost(dashboardBind, dashboardBindEnv)
+	addr := listenAddress(bindHost, dashboardPort)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		//pterm.Warning.Printf("Dashboard already vibing on port %d - skipping the encore!\n", dashboardPort)
@@ -2850,7 +2888,12 @@ func runDashboard() {
 			pterm.Warning.Printf("Failed to marshal dashboard data response: %v\n", err)
 		}
 	})
-	pterm.Info.Printf("Dashboard live at %s - check it out!\n", pterm.FgBlue.Sprintf("http://localhost:%d/dashboard", dashboardPort))
+	pterm.Info.Printf("Dashboard live at %s - check it out!\n", pterm.FgBlue.Sprintf("%s", dashboardURL(bindHost, dashboardPort)))
+	if bindsEveryInterface(bindHost) {
+		// Said once, plainly: this listener has no sign-in and /start-process
+		// launches a load run for whoever reaches it.
+		pterm.Warning.Printf("Listening on every interface (%s). The console has no sign-in - put it behind a firewall or a reverse proxy on a shared network.\n", addr)
+	}
 	pterm.Println()
 	go func() {
 		for {

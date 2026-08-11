@@ -52,7 +52,9 @@ go test -v ./...
 | `-concurrent` | Number of parallel workflows (default: 1) |
 | `-runtime` | Max run duration in seconds |
 | `-api` / `-api-port` | REST API mode |
+| `-api-bind` | Interface for the API listener (default `localhost`; env `API_BIND`) |
 | `-dashboard` / `-dashboardPort` | Web dashboard |
+| `-dashboardBind` | Interface for the dashboard listener (default `localhost`, `all` for every interface; env `DASHBOARD_BIND`). The container image sets it to `0.0.0.0` |
 | `-headless` | No terminal UI (for CI/CD) |
 | `-verbose` | Verbose logging |
 | `-workflowTimeout` | Per-workflow hard timeout (seconds) |
@@ -118,10 +120,31 @@ Pre-built binaries are checked into `binaries/`.
 
 ## Docker
 
+`Dockerfile` is the Linux image: linux/amd64 only (the embedded s3270 is an
+x86-64 binary), glibc runtime for it to link against, non-root uid 10001, state
+in `/data` via `XDG_CONFIG_HOME`, `CMD ["-dashboard"]` so it serves the console
+unless given other flags. Published to `ghcr.io/3270io/3270connect` by CI.
+
 ```bash
-docker build -f Dockerfile -t 3270connect .        # Linux
-docker build -f Dockerfile.windows -t 3270connect . # Windows
+docker build -f Dockerfile -t 3270connect .         # Linux
+docker build -f Dockerfile.windows -t 3270connect . # Windows (on a Windows host)
+
+docker compose up -d                                # the console alone
+docker compose -f docker-compose.lab.yml up -d      # + a terminal and a 3270 host
 ```
+
+`docker-compose.lab.yml` runs 3270Web's sample applications as a TN3270 host
+(`3270Web sampleapp`), the browser terminal and this console together;
+`lab/workflow-sampleapp.json` is aimed at it. The mirror of that file lives in
+the 3270Web repository.
+
+## Installer
+
+`docs/install.sh` publishes to <https://3270connect.3270.io/install.sh>. Four
+methods — binary, docker, compose, lab. `install_test.go` runs it against
+`testdata/fake-docker.sh`, a Docker stand-in, and checks the generated stacks
+and the re-run carry-forward (a second run must update the install that is
+already here, against the data folder it already uses).
 
 ## Dependencies
 

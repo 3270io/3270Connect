@@ -53,11 +53,33 @@ double-clicking the executable — also forces dashboard mode.
 |---|---|---|
 | `-dashboard` | off | Start the dashboard server. |
 | `-dashboardPort` | `9200` | Port for the dashboard HTTP listener. |
+| `-dashboardBind` | `localhost` | Interface to listen on. An address, or `all` for every interface. Overrides `DASHBOARD_BIND`. |
+
+The console answers `GET /healthz` with a small JSON document — status,
+version, pid and uptime — for a container healthcheck or an uptime probe. It
+reads nothing from disk, so a busy load run cannot make the console look
+unhealthy. `/` redirects to `/dashboard`.
 
 !!! note "Bound to localhost"
-    The listener binds to `localhost` only, so the console is never exposed on
-    the network. To view it from another machine, forward the port over SSH:
-    `ssh -L 9200:localhost:9200 user@runner-01`.
+    The listener binds `localhost`, so the console is not on the network
+    unless you put it there. To view it from another machine, forward the port
+    over SSH: `ssh -L 9200:localhost:9200 user@runner-01`.
+
+    Change it with `-dashboardBind` or the `DASHBOARD_BIND` environment
+    variable — and know what you are turning on when you do. The console has no
+    sign-in, and *Start Process* launches a load run, against any host it is
+    given, for whoever can open the page. On a shared network put an
+    authenticating reverse proxy in front of it.
+
+!!! info "In a container"
+    The [published image](installation.md#docker) sets `DASHBOARD_BIND=0.0.0.0`
+    because it has to: a published port forwards to the container's external
+    interface, so a loopback listener inside one refuses every connection from
+    the host while the container still reports healthy. What the console is
+    exposed to is then decided by the port mapping, which the supplied stacks
+    keep on `127.0.0.1`.
+
+    The same setting exists for the REST API as `-api-bind` / `API_BIND`.
 
 ## Layout at a glance
 

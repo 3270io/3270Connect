@@ -1,0 +1,30 @@
+# Kept out of the build context. Everything the image needs is Go source plus
+# the embedded assets — binaries/bindata.go, templates/ and sampleapps/ — so
+# the large directories that are output rather than input are excluded here.
+# Without this the context carries the built binaries in dist/, the rendered
+# MkDocs site and the whole of .git, several times the size of the image.
+.git
+.github
+.claude
+.vscode
+
+# Build output, committed to the repository by CI.
+dist/
+site/
+overrides/
+docs/
+
+# Local binaries and run artifacts.
+/3270Connect
+/3270Connect.exe
+/3270Connect_linux
+logs/
+data/
+output.html
+**/*.log
+**/*.out
+**/*.tmp
+failure_*.txt
+
+**/.DS_Store
+**/node_modules
