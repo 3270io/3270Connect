@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	figure "github.com/common-nighthawk/go-figure"
+	"golang.org/x/term"
 )
 
 const (
@@ -77,8 +79,8 @@ type Prefix struct {
 
 // Message printer with a styled prefix.
 type MessagePrinter struct {
-	Prefix        Prefix
-	style         lipgloss.Style
+	Prefix           Prefix
+	style            lipgloss.Style
 	IncludeTimestamp bool // When true, adds HH:MM:SS timestamp before the prefix
 }
 
@@ -600,30 +602,327 @@ func (p *charmPterm) Sprintf(format string, args ...interface{}) string {
 	return fmt.Sprintf(format, args...)
 }
 
-func (p *charmPterm) RenderBanner(title, subtitle string) {
-	accent := lipgloss.NewStyle().Foreground(lipgloss.Color("#0c6600")).Bold(true)
-	shadow := lipgloss.NewStyle().Foreground(lipgloss.Color("#00bb2fff"))
-	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("#00e927ff")).Bold(true)
+// ---------------------------------------------------------------------------
+// Phosphor theme
+//
+// The header and the end-of-run summary share a palette with the web console
+// and the docs, so the three surfaces read as one product. Tokens mirror
+// templates/static/css/dashboard.css and docs/stylesheets/3270-theme.css.
+// The live progress rows keep the older palette above and are unaffected.
+// ---------------------------------------------------------------------------
 
-	text := strings.TrimSpace(strings.ToUpper(strings.TrimSpace(strings.Join(filterEmpty([]string{title, subtitle}), " "))))
+const (
+	themeAccent = "#4effb3" // --accent      phosphor green
+	themeText   = "#e6fff5" // --text
+	themeText2  = "#9fe6c8" // --text-2
+	themeText3  = "#5f9e86" // --text-3
+	themeLine   = "#1e5a44" // --line        alpha flattened onto --bg
+	themeInfo   = "#5ad2ff" // --info
+	themeWarn   = "#f7c36b" // --warn
+	themeDanger = "#ff6f82" // --danger
+
+	// themeWidth is the widest the header and summary will draw. 80 columns
+	// is the width of the screens the tool drives; narrower terminals clamp.
+	themeWidth    = 80
+	themeMinWidth = 48
+	themeIndent   = "  "
+)
+
+var (
+	styleAccent  = lipgloss.NewStyle().Foreground(lipgloss.Color(themeAccent))
+	styleText    = lipgloss.NewStyle().Foreground(lipgloss.Color(themeText))
+	styleText2   = lipgloss.NewStyle().Foreground(lipgloss.Color(themeText2))
+	styleText3   = lipgloss.NewStyle().Foreground(lipgloss.Color(themeText3))
+	styleLine    = lipgloss.NewStyle().Foreground(lipgloss.Color(themeLine))
+	styleEyebrow = lipgloss.NewStyle().Foreground(lipgloss.Color(themeAccent)).Bold(true)
+)
+
+// themeContentWidth is the drawable width inside the standard indent.
+func themeContentWidth() int {
+	w := themeWidth
+	if fd := int(os.Stdout.Fd()); term.IsTerminal(fd) {
+		if tw, _, err := term.GetSize(fd); err == nil && tw > 0 && tw < w {
+			w = tw
+		}
+	}
+	if w < themeMinWidth {
+		w = themeMinWidth
+	}
+	return w - 2*len(themeIndent)
+}
+
+func themePad(s string, w int) string {
+	if n := w - lipgloss.Width(s); n > 0 {
+		return s + strings.Repeat(" ", n)
+	}
+	return s
+}
+
+func themeRule(w int) string { return styleLine.Render(strings.Repeat("─", w)) }
+
+func themeHexRGB(h string) (float64, float64, float64) {
+	r, _ := strconv.ParseInt(h[1:3], 16, 32)
+	g, _ := strconv.ParseInt(h[3:5], 16, 32)
+	b, _ := strconv.ParseInt(h[5:7], 16, 32)
+	return float64(r), float64(g), float64(b)
+}
+
+// themeMix interpolates between two #rrggbb colours.
+func themeMix(from, to string, t float64) string {
+	fr, fg, fb := themeHexRGB(from)
+	tr, tg, tb := themeHexRGB(to)
+	return fmt.Sprintf("#%02x%02x%02x",
+		int(fr+(tr-fr)*t), int(fg+(tg-fg)*t), int(fb+(tb-fb)*t))
+}
+
+// themeGradient paints text left to right across two colours. span fixes the
+// ramp to the whole wordmark so hue lines up column-wise across its rows.
+func themeGradient(s, from, to string, span int) string {
+	if span <= 1 {
+		span = 2
+	}
+	var b strings.Builder
+	for i, r := range []rune(s) {
+		if r == ' ' {
+			b.WriteRune(r)
+			continue
+		}
+		colour := lipgloss.Color(themeMix(from, to, float64(i)/float64(span-1)))
+		b.WriteString(lipgloss.NewStyle().Foreground(colour).Render(string(r)))
+	}
+	return b.String()
+}
+
+// themeWordmark renders the figlet wordmark and strips the font's left pad so
+// it sits flush with everything else.
+func themeWordmark(text string) []string {
+	lines := strings.Split(strings.TrimRight(figure.NewFigure(text, "small", true).String(), "\n"), "\n")
+	indent := -1
+	for _, l := range lines {
+		trimmed := strings.TrimLeft(l, " ")
+		if trimmed == "" {
+			continue
+		}
+		if n := len(l) - len(trimmed); indent < 0 || n < indent {
+			indent = n
+		}
+	}
+	if indent < 0 {
+		indent = 0
+	}
+	for i, l := range lines {
+		if len(l) >= indent {
+			lines[i] = strings.TrimRight(l[indent:], " ")
+		}
+	}
+	return lines
+}
+
+// RenderBanner draws the wordmark and the tagline that opens every run.
+func (p *charmPterm) RenderBanner(title, subtitle string) {
+	text := strings.TrimSpace(strings.ToUpper(strings.Join(filterEmpty([]string{title, subtitle}), " ")))
 	if text == "" {
 		text = "3270CONNECT"
 	}
 
-	fig := figure.NewFigure(text, "", true)
-	raw := strings.TrimRight(fig.String(), "\n")
-	lines := strings.Split(raw, "\n")
-	for i, line := range lines {
-		if i%2 == 0 {
-			fmt.Println(accent.Render(line))
-		} else {
-			fmt.Println(shadow.Render(line))
+	lines := themeWordmark(text)
+	span := 0
+	for _, l := range lines {
+		if lipgloss.Width(l) > span {
+			span = lipgloss.Width(l)
 		}
 	}
 
 	fmt.Println()
-	tagline := "🔨 Hammering 3270 screens since 2023"
-	fmt.Println(highlight.Render(strings.ToUpper(tagline)))
+	for _, line := range lines {
+		fmt.Println(themeIndent + themeGradient(line, themeAccent, themeInfo, span))
+	}
+	fmt.Println()
+	fmt.Println(themeIndent + styleEyebrow.Render("MAINFRAME AUTOMATION TOOLKIT") +
+		styleLine.Render("  ·  ") + styleText3.Render("hammering 3270 screens since 2023"))
+}
+
+// RenderIdentityStrip draws one dot-separated line of run identity, replacing
+// the stack of INFO-prefixed lines the header used to print.
+func (p *charmPterm) RenderIdentityStrip(lead string, leadValue string, rest ...string) {
+	line := styleText3.Render(lead+" ") + styleText.Render(leadValue)
+	for _, item := range rest {
+		if strings.TrimSpace(item) == "" {
+			continue
+		}
+		line += styleLine.Render("   ·   ") + styleText3.Render(item)
+	}
+	fmt.Println(themeIndent + line)
+}
+
+// RenderSectionRule draws a ruled section heading: a bold eyebrow, an optional
+// note beside it, and an optional right-aligned value.
+func (p *charmPterm) RenderSectionRule(label, note, right string) {
+	w := themeContentWidth()
+	heading := styleEyebrow.Render(label)
+	if note != "" {
+		heading += styleLine.Render("  ") + styleText3.Render(note)
+	}
+	if right != "" {
+		gap := w - lipgloss.Width(heading) - lipgloss.Width(right)
+		if gap < 1 {
+			gap = 1
+		}
+		heading += strings.Repeat(" ", gap) + styleText3.Render(right)
+	}
+	fmt.Println(themeIndent + themeRule(w))
+	fmt.Println(themeIndent + heading)
+	fmt.Println(themeIndent + themeRule(w))
+}
+
+// ThemeKV is one cell of the two-column configuration grid.
+type ThemeKV struct {
+	Key    string
+	Value  string
+	Accent bool // draw the value in the phosphor accent rather than plain text
+}
+
+// RenderKeyValueGrid lays pairs out in two columns, dim keys against bright
+// values. Falls back to a single column when the terminal is too narrow.
+func (p *charmPterm) RenderKeyValueGrid(items []ThemeKV, keyWidth int) {
+	w := themeContentWidth()
+	columns := 2
+	colWidth := w / 2
+	if colWidth < keyWidth+18 {
+		columns = 1
+		colWidth = w
+	}
+
+	cell := func(it ThemeKV) string {
+		value := styleText.Render(it.Value)
+		if it.Accent {
+			value = styleAccent.Render(it.Value)
+		}
+		return styleText3.Render(themePad(it.Key, keyWidth)) + value
+	}
+
+	for i := 0; i < len(items); i += columns {
+		line := ""
+		for c := 0; c < columns && i+c < len(items); c++ {
+			if c > 0 {
+				line = themePad(line, colWidth*c)
+			}
+			line += cell(items[i+c])
+		}
+		fmt.Println(themeIndent + line)
+	}
+}
+
+// RenderNote draws a dim key with a secondary value, used for the CLI line and
+// the saved-summary path.
+func (p *charmPterm) RenderNote(key, value string) {
+	line := styleText3.Render(key)
+	if value != "" {
+		line += " " + styleText2.Render(value)
+	}
+	fmt.Println(themeIndent + line)
+}
+
+// themeStatLabelWidth / themeStatValueWidth keep the summary's three columns
+// aligned whether the row carries a glyph, a meter or neither.
+const (
+	themeStatLabelWidth = 26
+	themeStatValueWidth = 12
+)
+
+// ThemeTone selects the semantic colour of a summary row's marker and note.
+type ThemeTone int
+
+const (
+	ToneNeutral ThemeTone = iota
+	ToneGood
+	ToneWarn
+	ToneBad
+	ToneInfo
+)
+
+func (t ThemeTone) style() lipgloss.Style {
+	switch t {
+	case ToneGood:
+		return styleAccent
+	case ToneWarn:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(themeWarn))
+	case ToneBad:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(themeDanger))
+	case ToneInfo:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(themeInfo))
+	default:
+		return styleText3
+	}
+}
+
+// RenderStatRow draws one summary metric: dim label, bright value, and a
+// glyph-prefixed note in the row's semantic colour.
+func (p *charmPterm) RenderStatRow(label, value, glyph, note string, tone ThemeTone) {
+	toneStyle := tone.style()
+	valueStyle := styleText
+	if tone == ToneGood || tone == ToneBad {
+		valueStyle = toneStyle
+	}
+	trailer := ""
+	if note != "" {
+		trailer = toneStyle.Render(strings.TrimSpace(glyph + " " + note))
+	}
+	fmt.Println(themeIndent +
+		styleText3.Render(themePad(label, themeStatLabelWidth)) +
+		themePad(valueStyle.Render(value), themeStatValueWidth) +
+		trailer)
+}
+
+// RenderMeterRow draws a metric as a phosphor usage bar. The bar warms through
+// amber to red as the reading climbs, matching the console's meters.
+func (p *charmPterm) RenderMeterRow(label, value string, percent float64, note string) {
+	width := themeContentWidth() - themeStatLabelWidth - themeStatValueWidth - lipgloss.Width(note) - 2
+	if width < 8 {
+		width = 8
+	}
+	if width > 24 {
+		width = 24
+	}
+
+	filled := int(percent / 100 * float64(width))
+	if filled < 1 && percent > 0 {
+		filled = 1
+	}
+	if filled > width {
+		filled = width
+	}
+	if filled < 0 {
+		filled = 0
+	}
+
+	colour := themeAccent
+	switch {
+	case percent >= 80:
+		colour = themeDanger
+	case percent >= 50:
+		colour = themeWarn
+	}
+	bar := lipgloss.NewStyle().Foreground(lipgloss.Color(colour)).Render(strings.Repeat("█", filled)) +
+		styleLine.Render(strings.Repeat("░", width-filled))
+
+	fmt.Println(themeIndent +
+		styleText3.Render(themePad(label, themeStatLabelWidth)) +
+		themePad(styleText.Render(value), themeStatValueWidth) +
+		bar + "  " + styleText3.Render(note))
+}
+
+// RenderOutcome draws the single line that opens the summary.
+func (p *charmPterm) RenderOutcome(headline, note string, tone ThemeTone) {
+	glyph := "✓"
+	if tone == ToneBad {
+		glyph = "✕"
+	}
+	line := tone.style().Bold(true).Render(glyph) + "  " + styleText.Render(headline)
+	if note != "" {
+		line += styleLine.Render("  ·  ") + styleText3.Render(note)
+	}
+	fmt.Println(themeIndent + line)
 }
 
 func filterEmpty(items []string) []string {

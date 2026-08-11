@@ -66,8 +66,6 @@ type (
 	Step               = workflow.Step
 )
 
-var configPrinter *MessagePrinter
-
 func runtimeEnvironmentString() string {
 	args := strings.Join(os.Args[1:], " ")
 	if args == "" {
@@ -125,6 +123,23 @@ func formatWaitForField(cfg WaitForFieldConfig) string {
 	return fmt.Sprintf("enabled (delay %s, retries %d)", formatSeconds(delay), retries)
 }
 
+// formatWaitForFieldCompact is the grid-sized form of formatWaitForField. The
+// long sentence form stays in the saved summary text, where width is free.
+func formatWaitForFieldCompact(cfg WaitForFieldConfig) string {
+	if !cfg.Enabled {
+		return "off"
+	}
+	delay := cfg.Delay
+	if delay == 0 {
+		delay = 1.0
+	}
+	retries := cfg.Retries
+	if retries == 0 {
+		retries = 10
+	}
+	return fmt.Sprintf("on · %s × %d", formatSeconds(delay), retries)
+}
+
 func workflowMetadataText(configPath string, config *Configuration) string {
 	label := strings.TrimSpace(configPath)
 	if label == "" {
@@ -152,47 +167,44 @@ func workflowMetadataText(configPath string, config *Configuration) string {
 	}, "\n")
 }
 
+// printWorkflowMetadata draws the workflow configuration as a ruled section
+// with a two-column grid, so the eleven settings read at a glance instead of
+// as eleven badge-prefixed lines.
 func printWorkflowMetadata(configPath string, config *Configuration) {
-	if configPrinter == nil {
-		// Fallback: should never happen because init() wires it.
-		//pterm.Info.Println("Workflow Configuration")
-		pterm.Println(workflowMetadataText(configPath, config))
-		pterm.Println()
-		return
-	}
-	//configPrinter.Println("Workflow Configuration")
-
-	// Print the summary lines with light highlighting on values.
 	label := strings.TrimSpace(configPath)
 	if label == "" {
 		label = "(none)"
 	}
 
-	outputPath := strings.TrimSpace("")
-	if config != nil {
-		outputPath = strings.TrimSpace(config.OutputFilePath)
+	pterm.RenderSectionRule("WORKFLOW", label, "")
+	pterm.Println()
+
+	if config == nil {
+		pterm.RenderNote("(no workflow configuration loaded)", "")
+		pterm.Println()
+		pterm.RenderNote("cli  ·", cliArgsString())
+		pterm.Println()
+		return
 	}
+
+	outputPath := strings.TrimSpace(config.OutputFilePath)
 	if outputPath == "" {
 		outputPath = "(auto temp file)"
 	}
 
-	//configPrinter.Printf("Config file: %s\n", pterm.LightGreen(label))
-	configPrinter.Printf("CLI args: %s", pterm.White(cliArgsString()))
-	if config == nil {
-		configPrinter.Println("(no workflow configuration loaded)")
-		pterm.Println()
-		return
-	}
-	configPrinter.Printf("Host: %s", pterm.LightGreen(config.Host))
-	configPrinter.Printf("Port: %s", pterm.LightGreen(fmt.Sprintf("%d", config.Port)))
-	configPrinter.Printf("EveryStepDelay: %s", pterm.LightGreen(formatDelayRange(config.EveryStepDelay)))
-	configPrinter.Printf("WaitForField: %s", pterm.LightGreen(formatWaitForField(config.WaitForField)))
-	configPrinter.Printf("OutputFilePath: %s", pterm.LightGreen(outputPath))
-	configPrinter.Printf("RampUpBatchSize: %s", pterm.LightGreen(fmt.Sprintf("%d", config.RampUpBatchSize)))
-	configPrinter.Printf("RampUpDelay: %s", pterm.LightGreen(formatSeconds(config.RampUpDelay)))
-	configPrinter.Printf("EndOfTaskDelay: %s", pterm.LightGreen(formatDelayRange(config.EndOfTaskDelay)))
-	configPrinter.Printf("GracePeriod: %s", pterm.LightGreen(formatSeconds(resolveGracePeriod(config).Seconds())))
-	configPrinter.Printf("AutoShutdownTimeout: %s", pterm.LightGreen(formatSeconds(resolveAutoShutdownTimeout(config).Seconds())))
+	pterm.RenderKeyValueGrid([]ThemeKV{
+		{Key: "host", Value: fmt.Sprintf("%s:%d", config.Host, config.Port), Accent: true},
+		{Key: "output", Value: outputPath},
+		{Key: "step delay", Value: formatDelayRange(config.EveryStepDelay)},
+		{Key: "wait for field", Value: formatWaitForFieldCompact(config.WaitForField)},
+		{Key: "ramp up", Value: fmt.Sprintf("%d / %s", config.RampUpBatchSize, formatSeconds(config.RampUpDelay))},
+		{Key: "end of task", Value: formatDelayRange(config.EndOfTaskDelay)},
+		{Key: "grace period", Value: formatSeconds(resolveGracePeriod(config).Seconds())},
+		{Key: "auto shutdown", Value: formatSeconds(resolveAutoShutdownTimeout(config).Seconds())},
+	}, 16)
+
+	pterm.Println()
+	pterm.RenderNote("cli  ·", cliArgsString())
 	pterm.Println()
 }
 
@@ -573,11 +585,6 @@ func init() {
 	pterm.Error.Prefix = Prefix{Text: "ERROR", Style: pterm.NewStyle(pterm.BgRed, pterm.FgWhite)}
 	pterm.Success.Prefix = Prefix{Text: "SUCCESS", Style: pterm.NewStyle(pterm.BgGreen, pterm.FgBlack)}
 	pterm.Warning.Prefix = Prefix{Text: "WARNING", Style: pterm.NewStyle(pterm.BgYellow, pterm.FgBlack)}
-
-	configPrinter = &MessagePrinter{
-		Prefix: Prefix{Text: "CONFIG", Style: pterm.NewStyle(Color{value: "#7c3aed", background: true}, pterm.FgWhite)},
-		style:  lipgloss.NewStyle(),
-	}
 
 	if err := os.MkdirAll("logs", 0755); err != nil {
 		pterm.Error.Println("Failed to create logs directory:", err)
@@ -1463,10 +1470,10 @@ func printBanner() {
 
 	pterm.RenderBanner("3270Connect", "")
 	pterm.Println()
-	pterm.Info.Println("Version: " + pterm.LightGreen(version))
-	pterm.Info.Println("Website: " + pterm.LightGreen("https://3270.io"))
-	pterm.Info.Println("Author: " + pterm.LightGreen("EyUp.io"))
-	//pterm.Info.Println("Runtime Environment: " + pterm.LightYellow(getExecutablePath()+" ") + pterm.White(strings.Join(os.Args[1:], " ")))
+	pterm.RenderIdentityStrip("version", version,
+		"3270.io", "EyUp.io",
+		fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		fmt.Sprintf("pid %d", os.Getpid()))
 	pterm.Println()
 }
 
@@ -2159,67 +2166,110 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 	clear()
 	printBanner()
 	printWorkflowMetadata(configPath, config)
-	pterm.Success.Println("All workflows wrapped up - Time for a victory lap!")
 	elapsed := int(time.Since(overallStart).Seconds())
-	pterm.Println()
-	pterm.DefaultSection.WithStyle(pterm.NewStyle(pterm.FgCyan)).Println("Run Summary - Performance Report")
-	pterm.Println()
-	pterm.DefaultTable.
-		WithHasHeader().
-		WithLeftAlignment().
-		WithData(TableData{
-			{"Metric", "Value", "Status"},
-			{"Total Workflows Started", fmt.Sprintf("%d", adjustedStarted), "🚀 Launch Party"},
-			{"Total Workflows Completed", fmt.Sprintf("%d", adjustedCompleted), "🏁 Victory Lap"},
-			{"Total Workflows Failed", fmt.Sprintf("%d", finalFailed), func() string {
-				if finalFailed > 0 {
-					return "💥 Gremlins"
-				}
-				return "🧼 Squeaky"
-			}()},
-			{"Final Active vUsers", fmt.Sprintf("%d/%d", adjustedActive, workerCount), func() string {
-				if adjustedActive > 0 {
-					return "🐝 Still Buzzing"
-				}
-				return "🧘 All Zen"
-			}()},
-			{"Average CPU Usage", fmt.Sprintf("%.1f%%", avgCPU), cpuStatus(avgCPU)},
-			{"Average Memory Usage", fmt.Sprintf("%.1f%%", avgMem), memStatus(avgMem)},
-			{"Average Workflow Time", fmt.Sprintf("%.2fs", avgWorkflowTime), "⏱️ Pace Setter"},
-			{"Run Duration", fmt.Sprintf("%ds", elapsed), "🛎️ Completed"},
-		}).Render()
+
+	printRunSummary(runSummary{
+		headline:        "All workflows wrapped up",
+		started:         adjustedStarted,
+		completed:       adjustedCompleted,
+		failed:          finalFailed,
+		active:          adjustedActive,
+		workers:         workerCount,
+		showActive:      true,
+		avgCPU:          avgCPU,
+		avgMem:          avgMem,
+		avgWorkflowTime: avgWorkflowTime,
+		elapsed:         elapsed,
+	})
 
 	summaryText := generateSummaryText(configPath, config, adjustedStarted, adjustedCompleted, finalFailed, adjustedActive, avgCPU, avgMem, avgWorkflowTime, float64(elapsed))
 	summaryFile := filepath.Join("logs", fmt.Sprintf("summary_%d.txt", os.Getpid()))
 	if err := os.WriteFile(summaryFile, []byte(summaryText), 0644); err != nil {
 		pterm.Warning.Printf("Failed to save summary: %v\n", err)
+	} else {
+		pterm.RenderNote("summary saved to", summaryFile)
 	}
+	pterm.Println()
 
 	storeLog("All workflows completed")
 	updateMetricsFile()
 }
 
-// Helper functions for summary status
-func cpuStatus(cpu float64) string {
+// Helper functions for summary status. The meter carries the reading, so the
+// note beside it only has to say how hard the machine is working.
+func loadStatus(pct float64) string {
 	switch {
-	case cpu < 50:
-		return "🧊 Chill"
-	case cpu < 80:
-		return "🌶️ Toasty"
+	case pct < 50:
+		return "chill"
+	case pct < 80:
+		return "toasty"
 	default:
-		return "🔥 Melting"
+		return "melting"
 	}
 }
 
-func memStatus(mem float64) string {
-	switch {
-	case mem < 50:
-		return "🧊 Chill"
-	case mem < 80:
-		return "🌶️ Toasty"
-	default:
-		return "🔥 Melting"
+// runSummary is everything the end-of-run report draws. Concurrent runs set
+// showActive to include the vUser row; single-workflow runs leave it off.
+type runSummary struct {
+	headline        string
+	started         int64
+	completed       int64
+	failed          int64
+	active          int
+	workers         int
+	showActive      bool
+	avgCPU          float64
+	avgMem          float64
+	avgWorkflowTime float64
+	elapsed         int
+}
+
+// printRunSummary draws the performance report: a ruled heading, the workflow
+// counts, phosphor meters for CPU and memory, and the timings.
+func printRunSummary(s runSummary) {
+	outcomeTone := ToneGood
+	outcomeNote := "time for a victory lap"
+	if s.failed > 0 {
+		outcomeTone = ToneBad
+		outcomeNote = fmt.Sprintf("%d workflow(s) hit gremlins", s.failed)
 	}
+	pterm.Println()
+	pterm.RenderOutcome(s.headline, outcomeNote, outcomeTone)
+	pterm.Println()
+
+	pterm.RenderSectionRule("RUN SUMMARY", "performance report", fmt.Sprintf("%ds elapsed", s.elapsed))
+	pterm.Println()
+
+	pterm.RenderStatRow("workflows started", fmt.Sprintf("%d", s.started), "▲", "launched", ToneInfo)
+
+	completedNote := "all green"
+	if s.started > 0 && s.completed < s.started {
+		completedNote = fmt.Sprintf("%.1f%% of started", float64(s.completed)/float64(s.started)*100)
+	}
+	pterm.RenderStatRow("workflows completed", fmt.Sprintf("%d", s.completed), "●", completedNote, ToneGood)
+
+	failedTone, failedNote := ToneNeutral, "none"
+	if s.failed > 0 {
+		failedTone, failedNote = ToneBad, "gremlins"
+	}
+	pterm.RenderStatRow("workflows failed", fmt.Sprintf("%d", s.failed), "●", failedNote, failedTone)
+
+	if s.showActive {
+		activeTone, activeNote := ToneNeutral, "all zen"
+		if s.active > 0 {
+			activeTone, activeNote = ToneWarn, "still buzzing"
+		}
+		pterm.RenderStatRow("final active vUsers", fmt.Sprintf("%d/%d", s.active, s.workers), "●", activeNote, activeTone)
+	}
+
+	pterm.Println()
+	pterm.RenderMeterRow("average cpu", fmt.Sprintf("%.1f%%", s.avgCPU), s.avgCPU, loadStatus(s.avgCPU))
+	pterm.RenderMeterRow("average memory", fmt.Sprintf("%.1f%%", s.avgMem), s.avgMem, loadStatus(s.avgMem))
+	pterm.Println()
+
+	pterm.RenderStatRow("average workflow time", fmt.Sprintf("%.2fs", s.avgWorkflowTime), "◇", "pace setter", ToneNeutral)
+	pterm.RenderStatRow("run duration", fmt.Sprintf("%ds", s.elapsed), "◇", "completed", ToneNeutral)
+	pterm.Println()
 }
 
 func generateSummaryText(configPath string, config *Configuration, finalStarted, finalCompleted, finalFailed int64, finalActive int, avgCPU, avgMem, avgWorkflowTime, elapsed float64) string {
@@ -2463,36 +2513,28 @@ func printSingleWorkflowSummary(configPath string, config *Configuration) {
 
 	elapsed := int(time.Since(programStart).Seconds())
 
-	pterm.Success.Println("Workflow completed - Time for a victory lap!")
-	printWorkflowMetadata(configPath, config)
-
-	// Display summary report
-	pterm.DefaultSection.WithStyle(pterm.NewStyle(pterm.FgCyan)).Println("Run Summary - Performance Report")
-	pterm.DefaultTable.
-		WithHasHeader().
-		WithLeftAlignment().
-		WithData(TableData{
-			{"Metric", "Value", "Status"},
-			{"Total Workflows Started", fmt.Sprintf("%d", finalStarted), "🚀 Launch Party"},
-			{"Total Workflows Completed", fmt.Sprintf("%d", finalCompleted), "🏁 Victory Lap"},
-			{"Total Workflows Failed", fmt.Sprintf("%d", finalFailed), func() string {
-				if finalFailed > 0 {
-					return "💥 Gremlins"
-				}
-				return "🧼 Squeaky"
-			}()},
-			{"Average CPU Usage", fmt.Sprintf("%.1f%%", avgCPU), cpuStatus(avgCPU)},
-			{"Average Memory Usage", fmt.Sprintf("%.1f%%", avgMem), memStatus(avgMem)},
-			{"Average Workflow Time", fmt.Sprintf("%.2fs", avgWorkflowTime), "⏱️ Pace Setter"},
-			{"Run Duration", fmt.Sprintf("%ds", elapsed), "🛎️ Completed"},
-		}).Render()
+	// The workflow configuration is already on screen from startup — the
+	// summary follows straight on from it rather than repeating it.
+	printRunSummary(runSummary{
+		headline:        "Workflow completed",
+		started:         finalStarted,
+		completed:       finalCompleted,
+		failed:          finalFailed,
+		avgCPU:          avgCPU,
+		avgMem:          avgMem,
+		avgWorkflowTime: avgWorkflowTime,
+		elapsed:         elapsed,
+	})
 
 	// Save summary to file
 	summaryText := generateSummaryText(configPath, config, finalStarted, finalCompleted, finalFailed, 0, avgCPU, avgMem, avgWorkflowTime, float64(elapsed))
 	summaryFile := filepath.Join("logs", fmt.Sprintf("summary_%d.txt", os.Getpid()))
 	if err := os.WriteFile(summaryFile, []byte(summaryText), 0644); err != nil {
 		pterm.Warning.Printf("Failed to save summary: %v\n", err)
+	} else {
+		pterm.RenderNote("summary saved to", summaryFile)
 	}
+	pterm.Println()
 
 	storeLog("Workflow completed")
 	updateMetricsFile()
