@@ -14,10 +14,25 @@
   <title>{{ .Title }} — 3270Connect</title>
   <link rel="shortcut icon" href="/static/images/favicon.png" type="image/png">
   <link rel="stylesheet" href="/static/css/auth.css?v={{ .Version }}">
+  <script src="/static/js/background.js?v={{ .Version }}" defer></script>
 </head>
 <body class="{{ block "bodyClass" . }}page-centred{{ end }}">
+{{/* The drifting character field, on the centred pages only. The
+     administration area is tables and figures read across the full width, and
+     characters wandering behind a column of timestamps make it harder to read
+     for no gain — a sign-in card has the room for it and they do not.
+
+     Keyed on Active because that is what tells the two apart: an
+     administration page names the tab it is, and a centred page names nothing.
+     aria-hidden because it says nothing, and the canvas is inert if the script
+     never runs. */}}
+{{ if not .Active }}
+<div class="bg-overlay" aria-hidden="true">
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+</div>
+{{ end }}
 {{ block "chrome" . }}{{ end }}
-<main class="{{ block "mainClass" . }}main-centred{{ end }}">
+<main class="{{ block "mainClass" . }}auth-wrap{{ end }}">
 {{ block "content" . }}{{ end }}
 </main>
 <footer class="page-footer">
@@ -29,7 +44,63 @@
 </html>
 {{- end -}}
 
-{{/* The banner a form shows when the connection is not encrypted.
+{{/* The 3270Connect mark: the session stack — terminal screens receding in
+     depth, one workflow driving many. 3270Connect's variant carries the
+     chevrons of a script stepping through them.
+
+     Inlined rather than served as an image because an <img>-loaded SVG cannot
+     see the page's custom properties: drawn here, it reads --accent and
+     --accent-2 and re-tints with the palette. The generated source is
+     brand/3270connect-mark-themed.svg — regenerate it from the brand kit
+     rather than editing the geometry here. The one edit it carries is the
+     filter's flood-color, which moved to auth.css because these pages are
+     served under a policy that allows no inline style. */}}
+{{- define "brandMark" -}}
+<svg class="brand-mark" viewBox="21 28.5 96 88" fill="none" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="mark-face" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="var(--accent-2)"/>
+      <stop offset="1" stop-color="var(--accent)"/>
+    </linearGradient>
+    <linearGradient id="mark-spec" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.26"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="mark-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-opacity="0.45"/>
+    </filter>
+    <mask id="mark-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <rect width="128" height="128" fill="#fff"/>
+      <g fill="#000">
+        <path d="M52 59 62 69 52 79" fill="none" stroke="#000" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M67 59 77 69 67 79" fill="none" stroke="#000" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </mask>
+    <clipPath id="mark-face-clip">
+      <rect x="30" y="46" width="70" height="46" rx="11"/>
+    </clipPath>
+  </defs>
+
+  <!-- Receding planes: the sessions behind the one in front. -->
+  <rect x="54" y="39" width="54" height="46" rx="9" fill="var(--accent)" fill-opacity="0.2"/>
+  <rect x="42" y="42.5" width="62" height="46" rx="10" fill="var(--accent)" fill-opacity="0.38"/>
+
+  <g filter="url(#mark-glow)">
+    <rect x="30" y="46" width="70" height="46" rx="11"
+          fill="url(#mark-face)" mask="url(#mark-cut)"/>
+  </g>
+
+  <!-- Specular sweep, clipped to the front face. -->
+  <g clip-path="url(#mark-face-clip)">
+    <path d="M30 46h70v20L30 84Z" fill="url(#mark-spec)"/>
+  </g>
+</svg>
+{{- end -}}
+
+{{/* The warning a form shows when the connection is not encrypted.
 
      Two messages, because they need two different actions. Nothing in front of
      the console means "put TLS in front of it". Something in front saying it
@@ -39,25 +110,33 @@
 {{- define "tlsWarning" -}}
 {{ if .ShowNoTLS }}
   {{ if .ProxySaysHTTPS }}
-  <p class="banner banner-info">
-    Something in front of this console says the browser reached it over HTTPS,
-    but 3270Connect has not been told to believe forwarding headers, so the
-    sign-in cookie will not be marked <code>Secure</code>. Set
-    <code>TRUST_PROXY_HEADERS=true</code>.
-  </p>
+  <div class="auth-alert auth-alert--info">
+    <span>
+      Something in front of this console says the browser reached it over
+      HTTPS, but 3270Connect has not been told to believe forwarding headers,
+      so the sign-in cookie will not be marked <code>Secure</code>. Set
+      <code>TRUST_PROXY_HEADERS=true</code>.
+    </span>
+  </div>
   {{ else }}
-  <p class="banner banner-warn">
-    This connection is not encrypted. Anything typed here, the password
-    included, crosses the network in the clear. Put TLS in front of the console
-    before using it over anything but localhost.
-  </p>
+  <div class="auth-alert auth-alert--warn">
+    <span>
+      This connection is not encrypted. Anything typed here, the password
+      included, crosses the network in the clear. Put TLS in front of the
+      console before using it over anything but localhost.
+    </span>
+  </div>
   {{ end }}
 {{ end }}
 {{- end -}}
 
 {{- define "formMessages" -}}
-{{ if .Error }}<p class="banner banner-error" role="alert">{{ .Error }}</p>{{ end }}
-{{ if .Notice }}<p class="banner banner-info">{{ .Notice }}</p>{{ end }}
+{{ if .Error }}
+<div class="auth-alert auth-alert--error" role="alert" aria-live="assertive"><span>{{ .Error }}</span></div>
+{{ end }}
+{{ if .Notice }}
+<div class="auth-alert auth-alert--info"><span>{{ .Notice }}</span></div>
+{{ end }}
 {{- end -}}
 
 {{/* The administration area's header: where you are, who you are, and the way

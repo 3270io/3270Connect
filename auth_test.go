@@ -752,6 +752,51 @@ func TestPagesRender(t *testing.T) {
 	}
 }
 
+// The centred pages share one card: the mark, a title, a stacked form and one
+// primary action. Every part of that is a class the stylesheet is written
+// around, so dropping one loses the styling silently rather than failing to
+// render. This pins the shape rather than the wording.
+func TestCentredPagesShareTheCard(t *testing.T) {
+	cases := []struct {
+		page string
+		data authPageData
+	}{
+		{"login.gohtml", authPageData{Title: "Sign in", Next: "/dashboard"}},
+		{"setup.gohtml", authPageData{Title: "First run", MinLength: 12}},
+		{"change-password.gohtml", authPageData{Title: "Change your password", MinLength: 12}},
+		{"denied.gohtml", authPageData{Title: "Not for you", Message: "This page requires an administrator account."}},
+	}
+	for _, tc := range cases {
+		w := httptest.NewRecorder()
+		renderAuthPage(w, httptest.NewRequest(http.MethodGet, "/", nil), http.StatusOK, tc.page, tc.data)
+		body := w.Body.String()
+		for _, want := range []string{
+			`class="auth-card`,
+			`class="auth-head"`,
+			`class="brand-mark"`,
+			`class="auth-title"`,
+			`class="auth-submit`,
+			// The backdrop belongs to these pages and not to administration.
+			`class="bg-overlay"`,
+		} {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s: the card is missing %s", tc.page, want)
+			}
+		}
+	}
+}
+
+// The drifting characters are for the sign-in card. Administration is tables
+// read across the full width, and they are only noise over it.
+func TestAdminPagesHaveNoBackdrop(t *testing.T) {
+	w := httptest.NewRecorder()
+	renderAuthPage(w, httptest.NewRequest(http.MethodGet, "/", nil), http.StatusOK,
+		"admin-overview.gohtml", authPageData{Title: "Administration", Active: "overview"})
+	if strings.Contains(w.Body.String(), `class="bg-overlay"`) {
+		t.Error("an administration page must not carry the moving backdrop")
+	}
+}
+
 func TestAdminNavMarksTheCurrentPage(t *testing.T) {
 	html := string(adminNavHTML("groups"))
 	if !strings.Contains(html, `aria-current="page"`) {

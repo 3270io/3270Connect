@@ -1,48 +1,61 @@
 {{- define "content" -}}
-<section class="card card-narrow">
-  <header class="card-head">
-    <img class="mark" src="/static/images/favicon.png" alt="" width="40" height="40">
-    <h1>First run</h1>
-    <p class="sub">Create the administrator for this console</p>
-  </header>
+<section class="auth-card auth-card--wide">
+  <div class="auth-head">
+    {{ template "brandMark" }}
+    <h1 class="auth-title">Set up 3270Connect</h1>
+  </div>
+  <p class="auth-sub">
+    This console has no accounts yet. Create the first administrator to finish
+    setting it up.
+  </p>
 
   {{ template "tlsWarning" . }}
   {{ template "formMessages" . }}
 
-  <p class="hint">
-    3270Connect printed a <strong>setup code</strong> to its log and to
-    standard error when it started. Under Docker,
-    <code>docker compose logs 3270connect</code> shows it. Case, spaces and
-    dashes are ignored, so type it however you copied it.
-  </p>
+  <div class="auth-alert auth-alert--info">
+    <span>
+      3270Connect printed a <strong>setup code</strong> to its log and to
+      standard error when it started. Under Docker,
+      <code>docker compose logs 3270connect</code> shows it. Case, spaces and
+      dashes are ignored, so type it however you copied it.
+    </span>
+  </div>
 
-  <form method="post" action="/setup" autocomplete="on">
-    <label for="setupCode">Setup code</label>
-    <input id="setupCode" name="setupCode" type="text" autocomplete="off"
-           autocapitalize="characters" spellcheck="false" required autofocus>
+  <form action="/setup" method="post" class="auth-form" autocomplete="on">
+    <div class="field">
+      <label for="setupCode">Setup code</label>
+      <input type="text" id="setupCode" name="setupCode" class="code-input"
+             autocomplete="off" autocapitalize="characters" spellcheck="false"
+             required autofocus>
+    </div>
 
-    <label for="username">Username</label>
-    <input id="username" name="username" type="text" autocomplete="username"
-           autocapitalize="none" spellcheck="false" required>
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username"
+             autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    </div>
 
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" autocomplete="new-password"
-           minlength="{{ .MinLength }}" required>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             autocomplete="new-password" minlength="{{ .MinLength }}" required>
+    </div>
 
-    <label for="confirmPassword">Confirm password</label>
-    <input id="confirmPassword" name="confirmPassword" type="password"
-           autocomplete="new-password" minlength="{{ .MinLength }}" required>
+    <div class="field">
+      <label for="confirmPassword">Confirm password</label>
+      <input type="password" id="confirmPassword" name="confirmPassword"
+             autocomplete="new-password" minlength="{{ .MinLength }}" required>
+      <p class="field-hint">
+        At least {{ .MinLength }} characters. There are no composition rules —
+        required digits and symbols shrink the search space more than they
+        enlarge it, while a length floor does not.
+      </p>
+    </div>
 
-    <p class="hint">
-      At least {{ .MinLength }} characters. There are no composition rules —
-      required digits and symbols shrink the search space more than they
-      enlarge it, while a length floor does not.
-    </p>
-
-    <button class="btn btn-primary btn-block" type="submit">Create administrator</button>
+    <button type="submit" class="auth-submit">Create administrator</button>
   </form>
 
-  <p class="hint">
+  <p class="auth-note">
     Nothing is created behind your back: until this form is completed there are
     no credentials to leak, and this password is one you chose rather than one
     printed in a log.
