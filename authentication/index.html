@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+        <meta name="description" content="The console has no sign-in by default. AUTH_MODE=local adds accounts, groups, passwords and per-account API tokens; AUTH_MODE=oidc adds single sign-on. Turn it on as soon as the port is shared.">
       
       
         <meta name="author" content="3270.io">
       
       
-        <link rel="canonical" href="https://3270connect.3270.io/compatibility-profile-schema/">
+        <link rel="canonical" href="https://3270connect.3270.io/authentication/">
       
       
-        <link rel="prev" href="../host-profiler/">
+        <link rel="prev" href="../dashboard/">
       
       
-        <link rel="next" href="../BUILD/">
+        <link rel="next" href="../administration/">
       
       
         
@@ -28,7 +28,7 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
-    <title>CompatibilityProfile schema as 3270Connect writes it</title>
+    <title>3270Connect accounts, sign-in, API tokens and OIDC SSO</title>
 
     
       <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
@@ -87,9 +87,9 @@
 
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="3270Connect">
-    <meta property="og:url" content="https://3270connect.3270.io/compatibility-profile-schema/">
-    <meta property="og:title" content="CompatibilityProfile schema as 3270Connect writes it">
-    <meta property="og:description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+    <meta property="og:url" content="https://3270connect.3270.io/authentication/">
+    <meta property="og:title" content="3270Connect accounts, sign-in, API tokens and OIDC SSO">
+    <meta property="og:description" content="The console has no sign-in by default. AUTH_MODE=local adds accounts, groups, passwords and per-account API tokens; AUTH_MODE=oidc adds single sign-on. Turn it on as soon as the port is shared.">
     <meta property="og:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:secure_url" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200">
@@ -99,8 +99,8 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@3270io">
-    <meta name="twitter:title" content="CompatibilityProfile schema as 3270Connect writes it">
-    <meta name="twitter:description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+    <meta name="twitter:title" content="3270Connect accounts, sign-in, API tokens and OIDC SSO">
+    <meta name="twitter:description" content="The console has no sign-in by default. AUTH_MODE=local adds accounts, groups, passwords and per-account API tokens; AUTH_MODE=oidc adds single sign-on. Turn it on as soon as the port is shared.">
     <meta name="twitter:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta name="twitter:image:alt" content="3270Connect — replay the mainframe at any scale"><script type="application/ld+json">
     {
@@ -124,9 +124,9 @@
         },
         {
           "@type": "TechArticle",
-          "headline": "Compatibility Profile Schema",
-          "description": "The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.",
-          "url": "https://3270connect.3270.io/compatibility-profile-schema/",
+          "headline": "Accounts and Sign-In",
+          "description": "The console has no sign-in by default. AUTH_MODE=local adds accounts, groups, passwords and per-account API tokens; AUTH_MODE=oidc adds single sign-on. Turn it on as soon as the port is shared.",
+          "url": "https://3270connect.3270.io/authentication/",
           "inLanguage": "en-GB",
           "isPartOf": { "@id": "https://3270connect.3270.io/#website" },
           "publisher": { "@id": "https://3270.io/#organization" }
@@ -152,7 +152,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#compatibilityprofile-schema-v100" class="md-skip">
+        <a href="#accounts-and-sign-in" class="md-skip">
           Skip to content
         </a>
       
@@ -187,7 +187,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Compatibility Profile Schema
+              Accounts and Sign-In
             
           </span>
         </div>
@@ -367,9 +367,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../authentication/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -595,11 +597,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../compatibility-profile-schema/" class="md-tabs__link">
         
   
   
@@ -853,10 +853,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../authentication/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts and Sign-In
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -872,6 +899,236 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#turning-it-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turning it on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#first-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passwords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passwords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-the-command-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the command line
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API tokens
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API tokens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-single-shared-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The single shared token
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-sign-on-oidc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single sign-on (OIDC)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Single sign-on (OIDC)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuring-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roles-from-the-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles from the directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-an-account-looks-like" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What an account looks like
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-the-provider-is-unreachable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        If the provider is unreachable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-lifetime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session lifetime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behind-a-reverse-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behind a reverse proxy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-the-state-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the state lives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-sign-in-does-not-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a sign-in does not do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1177,37 +1434,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compatibility Profile Schema
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../compatibility-profile-schema/" class="md-nav__link">
         
   
   
@@ -1223,142 +1453,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#versioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Versioning
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#top-level-fields" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Top-level fields
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Top-level fields">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#profiler" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        profiler
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#host" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        host
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        device
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        protocol
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#capabilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        capabilities
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#timing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        timing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#raw-optional" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        raw (optional)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-environment-comparison" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-environment comparison
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1551,7 +1645,7 @@
 
 
   
-    <a href="https://github.com/3270io/3270Connect/edit/main/docs/compatibility-profile-schema.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/3270io/3270Connect/edit/main/docs/authentication.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1560,163 +1654,482 @@
     
       
     
-    <a href="https://github.com/3270io/3270Connect/raw/main/docs/compatibility-profile-schema.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/3270io/3270Connect/raw/main/docs/authentication.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<div><h1 id="compatibilityprofile-schema-v100">CompatibilityProfile schema (v1.0.0)<a class="headerlink" href="#compatibilityprofile-schema-v100" title="Permanent link">¶</a></h1>
-<p>The <code>CompatibilityProfile</code> JSON document is the shared output format
-produced by both <code>3270Web</code> (via the <code>internal/profiler</code> package, exposed
-as <code>POST /profile</code> and <code>POST /api/v1/sessions/:id/profile</code>) and
-<code>3270Connect</code> (via <code>3270Connect -profile</code>). Both repositories carry
-<strong>identical bytes</strong> of this document; bump in lock-step.</p>
-<h2 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">¶</a></h2>
-<ul>
-<li><code>schema_version</code> follows semver. Breaking changes bump the major;
-  additive fields bump the minor.</li>
-<li><strong>Consumers MUST tolerate unknown fields.</strong> New fields can be added in
-  minor versions without breaking older readers.</li>
-<li>Current: <code>1.0.0</code>.</li>
-</ul>
-<h2 id="top-level-fields">Top-level fields<a class="headerlink" href="#top-level-fields" title="Permanent link">¶</a></h2>
+<div><h1 id="accounts-and-sign-in">Accounts and Sign-In<a class="headerlink" href="#accounts-and-sign-in" title="Permanent link">¶</a></h1>
+<p>By default the operations console has no sign-in. It assumes one operator on a
+machine they control, which is right for a laptop, for <code>go run</code>, and for the
+double-clicked executable — and it is why every install method publishes on
+<code>127.0.0.1</code>.</p>
+<p>Setting <code>AUTH_MODE=local</code> turns on accounts: a sign-in page, per-user
+passwords, sessions that expire, and an administration area. Turn it on
+whenever more than one person can reach the port.</p>
+<div class="admonition warning">
+<p class="admonition-title">A load run is not a read</p>
+<p>The console's start dialog points a chosen number of virtual users at a
+chosen host. That is traffic somebody else's mainframe has to absorb, and
+<code>/kill</code> stops a run a colleague may be depending on. Those are the two
+things an account boundary is protecting — not a page of graphs.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">The same settings as 3270Web</p>
+<p>The variable names, the roles, the group model and the token format are
+deliberately the same as <a href="https://3270Web.3270.io">3270Web</a>'s. The two are
+frequently run side by side, and nobody should have to learn this twice.</p>
+</div>
+<hr>
+<h2 id="turning-it-on">Turning it on<a class="headerlink" href="#turning-it-on" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="nv">AUTH_MODE</span><span class="o">=</span><span class="nb">local</span>
+</code></pre></div>
+<p>Or in <code>docker-compose.yml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">3270connect</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/3270io/3270connect:latest</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:9200:9200"</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AUTH_MODE=local</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data:/data</span>
+</code></pre></div>
+<p>Three values are accepted: <code>none</code> (the default), <code>local</code>, and <code>oidc</code> for
+<a href="#single-sign-on-oidc">single sign-on</a>. Any other value stops startup with an
+error rather than quietly running without authentication — a setting that looks
+like protection but is not would be worse than none at all.</p>
+<p>On a desktop where there is no shell to export a variable from, put it in
+<code>3270Connect.env</code> beside the executable:</p>
+<div class="highlight"><pre><span></span><code>AUTH_MODE=local
+</code></pre></div>
+<p>Real environment variables win over that file, so a container can still
+override it without editing anything.</p>
+<h2 id="first-start">First start<a class="headerlink" href="#first-start" title="Permanent link">¶</a></h2>
+<p>Start with <code>AUTH_MODE=local</code> and no accounts, and 3270Connect waits in setup
+mode: every page redirects to a one-time setup screen where you create the
+first administrator.</p>
+<p>To stop the first person who reaches the port from claiming the console, the
+form asks for a <strong>setup code</strong> printed in the server log:</p>
+<div class="highlight"><pre><span></span><code>auth: no accounts yet — open the console to create the first administrator
+auth: setup code: EJWQ-RUYN-7XL3-PT3O
+auth: the code is required once, and stops working as soon as the account exists
+</code></pre></div>
+<p>The code goes to the log file and to standard error, so under Docker
+<code>docker compose logs 3270connect</code> shows it. Case, spaces and dashes are all
+ignored, so it can be typed however it was copied.</p>
+<div class="admonition warning">
+<p class="admonition-title">Put the data directory on a volume first</p>
+<p>A container keeps its accounts in the image layer unless told otherwise, so
+the next deploy would delete the administrator you are about to create and
+reopen first-run setup. See <a href="#where-the-state-lives">Where the state lives</a>.</p>
+</div>
+<p>Open the console in a browser, enter the code, and choose your own username and
+password. You are signed in immediately, and setup closes for good.</p>
+<div class="admonition note">
+<p class="admonition-title">Nothing is created behind your back</p>
+<p>3270Connect never invents an account or a default password. Until you
+complete setup there are no credentials to leak, and the administrator's
+password is one you chose rather than one printed in a log.</p>
+</div>
+<p>If you would rather not use the web form, create the account with the console
+command before starting the server. Setup does not arm when an account already
+exists:</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin
+</code></pre></div>
+<h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Type</th>
-<th>Notes</th>
+<th>Role</th>
+<th>May</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>schema_version</code></td>
-<td>string</td>
-<td>Always <code>"1.0.0"</code> for this revision.</td>
+<td><code>user</code></td>
+<td>Sign in, start load runs and workflows, watch every run, and stop <strong>their own</strong></td>
 </tr>
 <tr>
-<td><code>run_id</code></td>
-<td>string</td>
-<td>Random opaque identifier; lets a fleet probe correlate logs.</td>
-</tr>
-<tr>
-<td><code>timestamp</code></td>
-<td>RFC3339 UTC</td>
-<td>When the probe ran.</td>
-</tr>
-<tr>
-<td><code>profiler</code></td>
-<td>object</td>
-<td>Tool metadata — see below.</td>
-</tr>
-<tr>
-<td><code>host</code></td>
-<td>object</td>
-<td>Network-side identity + first-screen fingerprint.</td>
-</tr>
-<tr>
-<td><code>device</code></td>
-<td>object</td>
-<td>Negotiated terminal model.</td>
-</tr>
-<tr>
-<td><code>protocol</code></td>
-<td>object</td>
-<td>TN3270 negotiation outcome.</td>
-</tr>
-<tr>
-<td><code>capabilities</code></td>
-<td>object</td>
-<td>Discovered capabilities + list of unanswered queries.</td>
-</tr>
-<tr>
-<td><code>timing</code></td>
-<td>object</td>
-<td>Connect / first-screen / keyboard-unlock latencies (ms).</td>
-</tr>
-<tr>
-<td><code>raw</code></td>
-<td>object</td>
-<td>Optional; raw s3270 <code>Query</code> responses keyed by query name.</td>
+<td><code>admin</code></td>
+<td>The same, plus the <a href="../administration/">administration area</a> and stopping <strong>anybody's</strong> run</td>
 </tr>
 </tbody>
 </table>
-<h3 id="profiler"><code>profiler</code><a class="headerlink" href="#profiler" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"tool"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270Web"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"3270Connect"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;semver&gt;"</span><span class="p">}</span>
-</code></pre></div>
-<h3 id="host"><code>host</code><a class="headerlink" href="#host" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs01.example.com"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"tls"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"banner_signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;sha256 hex&gt;"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"banner_preview"</span><span class="p">:</span><span class="w"> </span><span class="s2">"first ~240 chars of first screen, normalised"</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>New accounts are <code>user</code> unless <code>--admin</code> is given.</p>
+<p>Two rules are worth stating plainly, because they are what the roles actually
+buy:</p>
 <ul>
-<li><code>banner_signature</code> is the sha256 of the first screen after collapsing
-  whitespace, stripping control characters, and ASCII-folding
-  non-printable codepoints. Two hosts that show the same logon banner
-  will have the same signature.</li>
-<li><code>host</code> and <code>port</code> are populated from <code>Query(Host)</code> when the host
-  answers, falling back to the caller-supplied identity otherwise.</li>
+<li><strong>A run belongs to whoever started it from the console.</strong> Its owner may stop
+  it; a colleague may not. An administrator may stop anything, which is how
+  capacity is reclaimed from a run somebody left pointed at a production
+  region.</li>
+<li><strong>A run started from a command line has no owner recorded</strong>, because nothing
+  asked the console for it. It is therefore an administrator's to stop — the
+  fail-closed reading, since "unowned" must not mean "belongs to whoever
+  asked".</li>
 </ul>
-<h3 id="device"><code>device</code><a class="headerlink" href="#device" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"terminal_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"rows"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"cols"</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"extended_attributes"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"alt_screen"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="p">}</span>
+<p>Every start and every stop is written to the <a href="../administration/#audit-trail">audit
+trail</a>, with whose run it was.</p>
+<h2 id="passwords">Passwords<a class="headerlink" href="#passwords" title="Permanent link">¶</a></h2>
+<p>At least 12 characters. There are no composition rules — required digits and
+symbols shrink the search space more than they enlarge it, while a length floor
+does not. Passwords are stored as Argon2id hashes; the plaintext is never
+written anywhere.</p>
+<p>Changing a password signs out that account's other sessions, which is usually
+the point of changing one.</p>
+<p>Failed sign-ins are throttled per username <strong>and</strong> per address: five free
+attempts, then a lockout that doubles up to fifteen minutes. Username alone
+would let an attacker lock out an account they know the name of; address alone
+would let a distributed attacker spread guesses across one account. Requiring
+both to be clear covers each gap with the other.</p>
+<h2 id="from-the-command-line">From the command line<a class="headerlink" href="#from-the-command-line" title="Permanent link">¶</a></h2>
+<p>Account management is also a console command. It edits the same file the server
+reads, so it works whether or not the server is running — a new account can
+sign in immediately, without a restart.</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>alice<span class="w">              </span><span class="c1"># create a regular account</span>
+3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin<span class="w">       </span><span class="c1"># create an administrator</span>
+3270Connect<span class="w"> </span>user<span class="w"> </span>list
+3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
+3270Connect<span class="w"> </span>user<span class="w"> </span>disable<span class="w"> </span>alice
+3270Connect<span class="w"> </span>user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>alice
 </code></pre></div>
-<h3 id="protocol"><code>protocol</code><a class="headerlink" href="#protocol" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"tn3270e"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"bind_image_present"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"structured_fields"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"lu_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"LU01"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"negotiated_functions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BIND-IMAGE"</span><span class="p">,</span><span class="w"> </span><span class="s2">"RESPONSES"</span><span class="p">,</span><span class="w"> </span><span class="s2">"SYSREQ"</span><span class="p">]</span>
-<span class="p">}</span>
+<p>Passwords are prompted for on a terminal, or read from stdin when piped:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NEW_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
 </code></pre></div>
-<h3 id="capabilities"><code>capabilities</code><a class="headerlink" href="#capabilities" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"ind_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"yes"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"no"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"query_reply_ids"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"..."</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"unknown"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BindPluName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tn3270eFunctions"</span><span class="p">]</span>
-<span class="p">}</span>
+<p>They are never taken as a command-line argument, where they would be visible to
+every other process on the machine and recorded in shell history.</p>
+<p>Inside a container:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>alice
 </code></pre></div>
+<p>One difference from the web interface: a running server does not see the file
+change immediately. Disabling an account from the console command stops its API
+tokens at once — the owner is looked up on every call — but a browser already
+signed in is ended by a periodic sweep instead, so allow up to five minutes.
+Disabling from the Accounts page ends those logins on the spot.</p>
+<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">¶</a></h2>
+<p>An automated client — a CI job, a scheduled soak test, a script — presents a
+token instead of signing in.</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
+3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">"pipeline"</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
+3270Connect<span class="w"> </span>token<span class="w"> </span>list
+3270Connect<span class="w"> </span>token<span class="w"> </span>revoke<span class="w"> </span>&lt;id&gt;
+3270Connect<span class="w"> </span>token<span class="w"> </span>revoke-all<span class="w"> </span>alice
+</code></pre></div>
+<p>The token is shown once, when it is issued. It is stored as a SHA-256 hash, so
+a lost token is replaced rather than recovered. Present it as an ordinary
+bearer credential:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span>http://localhost:9200/dashboard/data
+</code></pre></div>
+<p>A token <strong>belongs to an account and reaches exactly what that account
+reaches</strong> — their runs, and nothing belonging to anybody else. It carries the
+account's effective role, so a token issued to somebody who administers through
+a group administers too.</p>
+<p>Two scopes, decided by HTTP method rather than by route, so an endpoint added
+later does not default to whatever somebody remembered:</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>read</code></td>
+<td><code>GET</code>, <code>HEAD</code>, <code>OPTIONS</code> — run metrics, logs, captured output</td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td>Everything else — executing a workflow, starting a run, stopping one</td>
+</tr>
+</tbody>
+</table>
+<p><code>--read-only</code> issues a token with <code>read</code> alone.</p>
+<p>A token stops working the moment its account is disabled or deleted; the owner
+is looked up on every call rather than trusted from the token.</p>
+<h3 id="the-single-shared-token">The single shared token<a class="headerlink" href="#the-single-shared-token" title="Permanent link">¶</a></h3>
+<p>Where there is one operator there is nothing to tell apart, so per-account
+tokens do not exist. Instead:</p>
+<table>
+<thead>
+<tr>
+<th><code>AUTH_MODE</code></th>
+<th><code>API_TOKEN</code></th>
+<th>The REST API (<code>-api</code>)</th>
+<th>The console (<code>-dashboard</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td>unset</td>
+<td>Open — the historical default</td>
+<td>Open</td>
+</tr>
+<tr>
+<td><code>none</code></td>
+<td>set</td>
+<td>Requires that token</td>
+<td>Open</td>
+</tr>
+<tr>
+<td><code>local</code> / <code>oidc</code></td>
+<td>must be unset</td>
+<td>Requires a per-account token</td>
+<td>Requires a sign-in</td>
+</tr>
+</tbody>
+</table>
+<p>Setting <code>API_TOKEN</code> alongside accounts stops startup with an error. One
+credential held by everybody would be a hole straight through the separation
+the mode was turned on for, and starting anyway would leave an operator
+believing users were separated while one variable said otherwise.</p>
+<p>Note the second row: with a single operator, <code>API_TOKEN</code> closes the REST API
+and leaves the console as it was. The console under <code>AUTH_MODE=none</code> is
+protected by the interface it binds, not by a credential — if you want a
+sign-in on it, that is what <code>AUTH_MODE=local</code> is for.</p>
+<div class="admonition note">
+<p class="admonition-title">MCP needs none of this</p>
+<p><code>3270Connect mcp</code> speaks the Model Context Protocol over stdin and stdout
+to a client that launched the process. There is no listener and no
+credential: whoever can start the process is already the operator. See
+<a href="../mcp/">MCP Server</a>.</p>
+</div>
+<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">¶</a></h2>
+<p>A group is a team. It can carry a role, so a console is administered by
+"whoever is on the ops rota" rather than by a list of names that goes out of
+date.</p>
+<p>Groups are made and maintained on the <a href="../administration/#groups">Groups
+page</a>. Everyone in a group holds the role it grants
+<em>on top of</em> whatever their account holds in its own right — an account's
+effective role is the stronger of the two. Inheritance is additive only, so
+adding somebody to a team can never quietly demote them.</p>
+<p>A group may be empty. That is deliberate: a console is usually set up
+teams-first, and a group that only existed while somebody was in it could not
+be prepared in advance.</p>
+<h2 id="single-sign-on-oidc">Single sign-on (OIDC)<a class="headerlink" href="#single-sign-on-oidc" title="Permanent link">¶</a></h2>
+<p><code>AUTH_MODE=oidc</code> signs people in through an OpenID Connect identity provider —
+the directory an organisation already runs — instead of asking them to invent
+another password. Accounts appear the first time somebody signs in; nobody has
+to be added in advance.</p>
+<p><strong>Local accounts keep working.</strong> This is not an either/or, and the reason
+matters: a console whose only door depends on a service it does not run can be
+locked out of itself by somebody else's outage or a mistyped setting. First-run
+setup still asks for a local administrator, and that account is the way back
+in.</p>
+<h3 id="configuring-it">Configuring it<a class="headerlink" href="#configuring-it" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">AUTH_MODE</span><span class="o">=</span>oidc
+<span class="nv">OIDC_ISSUER</span><span class="o">=</span>https://login.example.com/realms/staff
+<span class="nv">OIDC_CLIENT_ID</span><span class="o">=</span>3270connect
+<span class="nv">OIDC_CLIENT_SECRET</span><span class="o">=</span>…
+<span class="nv">OIDC_REDIRECT_URL</span><span class="o">=</span>https://console.example.com/auth/sso/callback
+</code></pre></div>
+<p>Register <code>OIDC_REDIRECT_URL</code> with the provider as an allowed redirect URI. It
+must be the address a browser actually reaches, and it must end in
+<code>/auth/sso/callback</code>.</p>
+<p>Everything else — the authorization and token endpoints, the signing keys — is
+read from the provider's discovery document. The issuer must be <code>https</code>, the
+one exception being a loopback address so a provider on the same machine can be
+tried without a certificate.</p>
+<p>3270Connect asks for the authorization code flow with PKCE. There is no
+implicit or hybrid flow: the browser only ever carries a one-time code, and the
+token exchange happens server to server.</p>
+<h3 id="roles-from-the-directory">Roles from the directory<a class="headerlink" href="#roles-from-the-directory" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OIDC_GROUPS_CLAIM</code></td>
+<td>Which claim carries group membership (default <code>groups</code>)</td>
+</tr>
+<tr>
+<td><code>OIDC_ADMIN_GROUPS</code></td>
+<td>Members of these groups get the <code>admin</code> role</td>
+</tr>
+<tr>
+<td><code>OIDC_ALLOWED_GROUPS</code></td>
+<td>If set, only members of these groups may sign in at all</td>
+</tr>
+<tr>
+<td><code>OIDC_USERNAME_CLAIM</code></td>
+<td>Which claim to take a display name from</td>
+</tr>
+<tr>
+<td><code>OIDC_SCOPES</code></td>
+<td>Extra scopes to request alongside <code>openid</code></td>
+</tr>
+<tr>
+<td><code>OIDC_END_SESSION</code></td>
+<td>Also end the provider's session when signing out here</td>
+</tr>
+</tbody>
+</table>
+<p>Both group lists are comma-separated and matched without regard to case. The
+claim may be an array of strings or one space-separated string; either is read.</p>
+<p><code>OIDC_ADMIN_GROUPS</code> is re-applied on <strong>every</strong> sign-in, in both directions —
+somebody removed from the group is an ordinary user the next time they sign in.
+That is the point of managing roles centrally.</p>
+<p>Leave it unset and the provider says nothing about roles: everybody arrives as
+a <code>user</code>, and an administrator promotes people on the Accounts page. Those
+promotions survive later sign-ins.</p>
+<p><code>OIDC_ALLOWED_GROUPS</code> answers a different question — not what somebody may do
+here, but whether they belong here at all. One directory usually serves many
+services, and everybody in it being able to start a load test is rarely what
+was meant. Somebody outside every listed group is refused, and no account is
+created for them.</p>
+<h3 id="what-an-account-looks-like">What an account looks like<a class="headerlink" href="#what-an-account-looks-like" title="Permanent link">¶</a></h3>
+<p>An account is found by the provider's <strong>issuer and subject</strong>, never by name. A
+directory renames people, and the subject is the one claim a provider promises
+not to recycle. So a rename follows through to the username here and changes
+nothing else — the same account, the same tokens, the same audit history.</p>
+<p>The username is a display name derived from a claim. Characters the account
+store does not accept become dashes, so <code>alice@corp.example</code> appears as
+<code>alice-corp.example</code>.</p>
+<p>Two things an administrator can still do, and one they cannot:</p>
 <ul>
-<li><code>ind_file</code> defaults to <code>"unknown"</code>. The mildly-destructive probe is
-  opt-in via the <code>ind_file_probe</code> request flag (3270Web) or
-  <code>-indFileProbe</code> (3270Connect — when added in a future slice).</li>
-<li><code>unknown</code> lists queries the host did not answer. This list is the
-  <strong>primary signal</strong> for spotting mainframe-vs-Rocket divergence: a
-  query present in one environment's <code>unknown</code> and absent from the
-  other's highlights a capability gap.</li>
+<li><strong>Disabling works</strong>, and outranks the provider. An account disabled here
+  stays out however happily the directory goes on authenticating it.</li>
+<li><strong>Roles work</strong>, unless <code>OIDC_ADMIN_GROUPS</code> is set, in which case the
+  directory is the authority.</li>
+<li><strong>Passwords do not.</strong> An account that signs in through the provider has no
+  local password and cannot be given one. A second door the provider knows
+  nothing about is one it cannot close when it closes the person's access.</li>
 </ul>
-<h3 id="timing"><code>timing</code><a class="headerlink" href="#timing" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"connect_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="nt">"first_screen_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span><span class="w"> </span><span class="nt">"keyboard_unlock_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">}</span>
-</code></pre></div>
-<p>Zero indicates the value was not measured (e.g. the host does not expose
-connect timing).</p>
-<h3 id="raw-optional"><code>raw</code> (optional)<a class="headerlink" href="#raw-optional" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"Bind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rows 24 cols 80 ..."</span><span class="p">,</span><span class="w"> </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">}</span>
-</code></pre></div>
-<p>Only emitted when the caller passes <code>collect_raw: true</code> (3270Web) or
-<code>-profileCollectRaw</code> (3270Connect). Useful for debugging parser drift
-against new s3270 versions.</p>
-<h2 id="cross-environment-comparison">Cross-environment comparison<a class="headerlink" href="#cross-environment-comparison" title="Permanent link">¶</a></h2>
-<p>The canonical comparison key is the tuple
-<code>(device.terminal_type, host.banner_signature, protocol.tn3270e,
-protocol.structured_fields)</code>.</p>
-<p>Two profiles whose tuples match are compatible at the wire level even if
-their <code>capabilities.unknown</code> lists differ — the latter is a hint that
-the hosts implement different optional features (e.g. IND$FILE on z/OS
-but not on a stripped-down Rocket Enterprise Server image).</p></div>
+<p>A name a local account already holds is refused rather than linked. Otherwise
+anybody who can be named in the directory could take over the break-glass
+administrator by being called <code>root</code>.</p>
+<h3 id="if-the-provider-is-unreachable">If the provider is unreachable<a class="headerlink" href="#if-the-provider-is-unreachable" title="Permanent link">¶</a></h3>
+<p>The sign-in page says so and offers the password form. Discovery is deferred
+until somebody presses the button, so a provider that is down does not stop
+3270Connect from starting — which is exactly when the local administrator is
+needed.</p>
+<h2 id="session-lifetime">Session lifetime<a class="headerlink" href="#session-lifetime" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUTH_SESSION_IDLE</code></td>
+<td><code>30m</code></td>
+<td>Sign out after this long with no activity</td>
+</tr>
+<tr>
+<td><code>AUTH_SESSION_MAX</code></td>
+<td><code>12h</code></td>
+<td>Sign out this long after signing in, however active</td>
+</tr>
+<tr>
+<td><code>AUTH_BIND_SESSION_IP</code></td>
+<td><code>auto</code></td>
+<td>Pin a session to the address that created it</td>
+</tr>
+</tbody>
+</table>
+<p>Sessions live in memory, so restarting the console signs everyone out. That is
+deliberate: persisting them would mean writing bearer-equivalent credentials to
+disk for a benefit — not having to sign in again after an upgrade — that does
+not justify it. <strong>The load runs themselves are unaffected</strong>; they are separate
+processes and go on running.</p>
+<p><code>AUTH_BIND_SESSION_IP</code> accepts <code>auto</code>, <code>true</code> or <code>false</code>. <code>auto</code> enables
+pinning on plain HTTP and disables it behind TLS: without TLS the cookie
+travels in the clear and can be copied off the wire, so requiring the replay to
+come from the same address is most of what stands between a passive
+eavesdropper and a usable session. Set it to <code>false</code> if people reach the
+console through a NAT or VPN whose address changes mid-session, and <code>true</code> to
+enforce it regardless.</p>
+<h2 id="behind-a-reverse-proxy">Behind a reverse proxy<a class="headerlink" href="#behind-a-reverse-proxy" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TRUST_PROXY_HEADERS</code></td>
+<td>Believe <code>X-Forwarded-For</code> and <code>X-Forwarded-Proto</code></td>
+</tr>
+<tr>
+<td><code>TLS_TERMINATED_UPSTREAM</code></td>
+<td>Assert that something in front terminates TLS, whatever the headers say</td>
+</tr>
+</tbody>
+</table>
+<p>Both are opt-in and must stay that way: the headers are set by whoever sends
+the request, so trusting them unconditionally would let any client assert that
+its own connection is secure — which is exactly the property the <code>Secure</code>
+cookie flag is supposed to guarantee.</p>
+<p>Without one of them behind a TLS-terminating proxy, the sign-in cookie loses
+its <code>Secure</code> flag and every rate-limit bucket collapses onto the proxy's
+address. The sign-in page notices the common case and says which variable to
+set rather than only warning that the connection is not encrypted.</p>
+<h2 id="where-the-state-lives">Where the state lives<a class="headerlink" href="#where-the-state-lives" title="Permanent link">¶</a></h2>
+<p>Three files, under the same directory the metrics files use — which under
+Docker is <code>/data</code>, because the image sets <code>XDG_CONFIG_HOME</code>:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+<th>Override</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users.json</code></td>
+<td>Accounts, groups and group roles</td>
+<td><code>USERS_PATH</code></td>
+</tr>
+<tr>
+<td><code>api-tokens.json</code></td>
+<td>Issued tokens, as hashes</td>
+<td><code>API_TOKENS_PATH</code></td>
+</tr>
+<tr>
+<td><code>audit.log</code></td>
+<td>The audit trail, one JSON object per line</td>
+<td><code>AUDIT_LOG_PATH</code></td>
+</tr>
+</tbody>
+</table>
+<p>All three are written <code>0600</code> in a <code>0700</code> directory, and <code>users.json</code> is
+replaced atomically — a torn write there would lock every account out at once.</p>
+<div class="admonition danger">
+<p class="admonition-title">Put them on a volume</p>
+<p>A container without a volume keeps these in the image layer, which the next
+deploy discards. The symptom is an instance that reopens first-run setup
+after an upgrade, with every account gone.</p>
+</div>
+<h2 id="what-a-sign-in-does-not-do">What a sign-in does not do<a class="headerlink" href="#what-a-sign-in-does-not-do" title="Permanent link">¶</a></h2>
+<p>An account boundary decides <em>who</em> may use the console. It is one of several
+things a shared instance needs, and it is worth being explicit about what it
+leaves alone:</p>
+<ul>
+<li><strong>It does not encrypt anything.</strong> Put TLS in front of the console before
+  putting it on a network you do not control.</li>
+<li><strong>It does not restrict which hosts a workflow may reach.</strong> Anybody who may
+  start a run may aim it anywhere the machine can route to.</li>
+<li><strong>It does not bind the listener for you.</strong> <code>DASHBOARD_BIND</code> and <code>API_BIND</code>
+  still decide what can reach the port, and <code>localhost</code> is still the default.</li>
+</ul>
+<hr>
+<h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">¶</a></h2>
+<p><strong>→ <a href="../administration/">The administration area</a></strong> — accounts, groups, tokens,
+runs and the audit trail, from the browser.</p></div>
 
 
 
@@ -1758,7 +2171,7 @@ but not on a stripped-down Rocket Enterprise Server image).</p></div>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../host-profiler/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Host Compatibility Profiler">
+          <a href="../dashboard/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Web Dashboard">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1768,20 +2181,20 @@ but not on a stripped-down Rocket Enterprise Server image).</p></div>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Host Compatibility Profiler
+                Web Dashboard
               </div>
             </div>
           </a>
         
         
           
-          <a href="../BUILD/" class="md-footer__link md-footer__link--next" aria-label="Next: Build Guide">
+          <a href="../administration/" class="md-footer__link md-footer__link--next" aria-label="Next: Administration">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Build Guide
+                Administration
               </div>
             </div>
             <div class="md-footer__button md-icon">

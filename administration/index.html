@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+        <meta name="description" content="Administrators get /admin: an instance overview, account and group management, API tokens, every load run on the machine, and the audit trail of who did what.">
       
       
         <meta name="author" content="3270.io">
       
       
-        <link rel="canonical" href="https://3270connect.3270.io/compatibility-profile-schema/">
+        <link rel="canonical" href="https://3270connect.3270.io/administration/">
       
       
-        <link rel="prev" href="../host-profiler/">
+        <link rel="prev" href="../authentication/">
       
       
-        <link rel="next" href="../BUILD/">
+        <link rel="next" href="../ai-chat-mode/">
       
       
         
@@ -28,7 +28,7 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
-    <title>CompatibilityProfile schema as 3270Connect writes it</title>
+    <title>The 3270Connect administration area — accounts, groups and audit</title>
 
     
       <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
@@ -87,9 +87,9 @@
 
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="3270Connect">
-    <meta property="og:url" content="https://3270connect.3270.io/compatibility-profile-schema/">
-    <meta property="og:title" content="CompatibilityProfile schema as 3270Connect writes it">
-    <meta property="og:description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+    <meta property="og:url" content="https://3270connect.3270.io/administration/">
+    <meta property="og:title" content="The 3270Connect administration area — accounts, groups and audit">
+    <meta property="og:description" content="Administrators get /admin: an instance overview, account and group management, API tokens, every load run on the machine, and the audit trail of who did what.">
     <meta property="og:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:secure_url" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200">
@@ -99,8 +99,8 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@3270io">
-    <meta name="twitter:title" content="CompatibilityProfile schema as 3270Connect writes it">
-    <meta name="twitter:description" content="The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.">
+    <meta name="twitter:title" content="The 3270Connect administration area — accounts, groups and audit">
+    <meta name="twitter:description" content="Administrators get /admin: an instance overview, account and group management, API tokens, every load run on the machine, and the audit trail of who did what.">
     <meta name="twitter:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta name="twitter:image:alt" content="3270Connect — replay the mainframe at any scale"><script type="application/ld+json">
     {
@@ -124,9 +124,9 @@
         },
         {
           "@type": "TechArticle",
-          "headline": "Compatibility Profile Schema",
-          "description": "The CompatibilityProfile document 3270Connect writes in -profile mode, field by field, so it can be diffed against one 3270Web captured in a browser.",
-          "url": "https://3270connect.3270.io/compatibility-profile-schema/",
+          "headline": "Administration",
+          "description": "Administrators get /admin: an instance overview, account and group management, API tokens, every load run on the machine, and the audit trail of who did what.",
+          "url": "https://3270connect.3270.io/administration/",
           "inLanguage": "en-GB",
           "isPartOf": { "@id": "https://3270connect.3270.io/#website" },
           "publisher": { "@id": "https://3270.io/#organization" }
@@ -152,7 +152,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#compatibilityprofile-schema-v100" class="md-skip">
+        <a href="#the-administration-area" class="md-skip">
           Skip to content
         </a>
       
@@ -187,7 +187,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Compatibility Profile Schema
+              Administration
             
           </span>
         </div>
@@ -386,9 +386,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../administration/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -595,11 +597,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../compatibility-profile-schema/" class="md-tabs__link">
         
   
   
@@ -880,10 +880,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../administration/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -899,6 +926,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accounts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accounts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accounts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#roles-from-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles from groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API tokens
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#load-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Load runs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-trail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit trail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-json-behind-the-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The JSON behind the pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1177,37 +1329,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compatibility Profile Schema
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../compatibility-profile-schema/" class="md-nav__link">
         
   
   
@@ -1223,142 +1348,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#versioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Versioning
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#top-level-fields" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Top-level fields
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Top-level fields">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#profiler" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        profiler
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#host" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        host
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        device
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        protocol
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#capabilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        capabilities
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#timing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        timing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#raw-optional" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        raw (optional)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-environment-comparison" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-environment comparison
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1551,7 +1540,7 @@
 
 
   
-    <a href="https://github.com/3270io/3270Connect/edit/main/docs/compatibility-profile-schema.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/3270io/3270Connect/edit/main/docs/administration.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1560,163 +1549,335 @@
     
       
     
-    <a href="https://github.com/3270io/3270Connect/raw/main/docs/compatibility-profile-schema.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/3270io/3270Connect/raw/main/docs/administration.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<div><h1 id="compatibilityprofile-schema-v100">CompatibilityProfile schema (v1.0.0)<a class="headerlink" href="#compatibilityprofile-schema-v100" title="Permanent link">¶</a></h1>
-<p>The <code>CompatibilityProfile</code> JSON document is the shared output format
-produced by both <code>3270Web</code> (via the <code>internal/profiler</code> package, exposed
-as <code>POST /profile</code> and <code>POST /api/v1/sessions/:id/profile</code>) and
-<code>3270Connect</code> (via <code>3270Connect -profile</code>). Both repositories carry
-<strong>identical bytes</strong> of this document; bump in lock-step.</p>
-<h2 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">¶</a></h2>
-<ul>
-<li><code>schema_version</code> follows semver. Breaking changes bump the major;
-  additive fields bump the minor.</li>
-<li><strong>Consumers MUST tolerate unknown fields.</strong> New fields can be added in
-  minor versions without breaking older readers.</li>
-<li>Current: <code>1.0.0</code>.</li>
-</ul>
-<h2 id="top-level-fields">Top-level fields<a class="headerlink" href="#top-level-fields" title="Permanent link">¶</a></h2>
+<div><h1 id="the-administration-area">The Administration Area<a class="headerlink" href="#the-administration-area" title="Permanent link">¶</a></h1>
+<p>Administrators get an <strong>Administration</strong> area at <code>/admin</code>. Six pages, each
+answering one question:</p>
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Type</th>
-<th>Notes</th>
+<th>Page</th>
+<th>Answers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>schema_version</code></td>
-<td>string</td>
-<td>Always <code>"1.0.0"</code> for this revision.</td>
+<td><a href="#overview">Overview</a></td>
+<td>Is everything all right?</td>
 </tr>
 <tr>
-<td><code>run_id</code></td>
-<td>string</td>
-<td>Random opaque identifier; lets a fleet probe correlate logs.</td>
+<td><a href="#accounts">Accounts</a></td>
+<td>Who has an account?</td>
 </tr>
 <tr>
-<td><code>timestamp</code></td>
-<td>RFC3339 UTC</td>
-<td>When the probe ran.</td>
+<td><a href="#groups">Groups</a></td>
+<td>Which teams are there?</td>
 </tr>
 <tr>
-<td><code>profiler</code></td>
-<td>object</td>
-<td>Tool metadata — see below.</td>
+<td><a href="#api-tokens">API tokens</a></td>
+<td>What automated clients can reach this console?</td>
 </tr>
 <tr>
-<td><code>host</code></td>
-<td>object</td>
-<td>Network-side identity + first-screen fingerprint.</td>
+<td><a href="#load-runs">Load runs</a></td>
+<td>What is running right now, and whose is it?</td>
 </tr>
 <tr>
-<td><code>device</code></td>
-<td>object</td>
-<td>Negotiated terminal model.</td>
-</tr>
-<tr>
-<td><code>protocol</code></td>
-<td>object</td>
-<td>TN3270 negotiation outcome.</td>
-</tr>
-<tr>
-<td><code>capabilities</code></td>
-<td>object</td>
-<td>Discovered capabilities + list of unanswered queries.</td>
-</tr>
-<tr>
-<td><code>timing</code></td>
-<td>object</td>
-<td>Connect / first-screen / keyboard-unlock latencies (ms).</td>
-</tr>
-<tr>
-<td><code>raw</code></td>
-<td>object</td>
-<td>Optional; raw s3270 <code>Query</code> responses keyed by query name.</td>
+<td><a href="#audit-trail">Audit trail</a></td>
+<td>What has happened?</td>
 </tr>
 </tbody>
 </table>
-<h3 id="profiler"><code>profiler</code><a class="headerlink" href="#profiler" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"tool"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270Web"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"3270Connect"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;semver&gt;"</span><span class="p">}</span>
-</code></pre></div>
-<h3 id="host"><code>host</code><a class="headerlink" href="#host" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs01.example.com"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"tls"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"banner_signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;sha256 hex&gt;"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"banner_preview"</span><span class="p">:</span><span class="w"> </span><span class="s2">"first ~240 chars of first screen, normalised"</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>Everything under <code>/admin</code> requires the <code>admin</code> role. The gate is applied to the
+whole prefix rather than route by route, so a page added later cannot forget to
+opt in.</p>
+<div class="admonition info">
+<p class="admonition-title">It works without accounts too</p>
+<p>Under <code>AUTH_MODE=none</code> there is one operator who may do everything, so the
+area opens and the Load runs and Audit trail pages are useful immediately.
+The Accounts, Groups and Tokens pages say what to set to make them
+meaningful. See <a href="../authentication/">Accounts and Sign-In</a>.</p>
+</div>
+<hr>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<p>The front page is the state of the instance: how many accounts exist, who holds
+a live sign-in, how many load runs are going, how many tokens are active, and
+how many requests were refused in the last 24 hours — followed by the most
+recent audit entries. The numbers refresh themselves every half minute while
+the page is open.</p>
+<p>The <strong>Refused (24h)</strong> tile is the one to look at. A handful is somebody
+mistyping a password; a run of them is the shape of something else.</p>
+<h2 id="accounts">Accounts<a class="headerlink" href="#accounts" title="Permanent link">¶</a></h2>
+<p><code>/admin/users</code> is where you add accounts, change roles, reset passwords,
+disable and re-enable people, and delete accounts. The list can be filtered by
+name or group, or narrowed to administrators, disabled accounts, accounts that
+still owe a password change, or accounts that arrive by single sign-on.</p>
+<p>A few actions are deliberately unavailable, because each would strand you on a
+page you could no longer use, with no way back except the console command:</p>
 <ul>
-<li><code>banner_signature</code> is the sha256 of the first screen after collapsing
-  whitespace, stripping control characters, and ASCII-folding
-  non-printable codepoints. Two hosts that show the same logon banner
-  will have the same signature.</li>
-<li><code>host</code> and <code>port</code> are populated from <code>Query(Host)</code> when the host
-  answers, falling back to the caller-supplied identity otherwise.</li>
+<li>Removing your own administrator role</li>
+<li>Disabling or deleting your own account</li>
+<li>Demoting, disabling or deleting the last enabled administrator</li>
+<li>Leaving, or clearing the role of, the group your own administration comes
+  from</li>
 </ul>
-<h3 id="device"><code>device</code><a class="headerlink" href="#device" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"terminal_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"rows"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"cols"</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"extended_attributes"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"alt_screen"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="p">}</span>
+<p>Disabling an account, resetting its password or deleting it signs that person
+out everywhere immediately. <strong>Deleting an account also revokes every token it
+holds</strong> — disabling deliberately does not, because the same live lookup already
+refuses a disabled account's tokens, and re-enabling should give somebody their
+automated clients back rather than making them reissue everything.</p>
+<p>A password an administrator sets is temporary: its owner is asked to choose
+their own the next time they sign in, and until they do, the only page that
+account can reach is the password form.</p>
+<p>The <strong>Add account</strong> and <strong>Reset password</strong> dialogs both offer <strong>Generate</strong>,
+which invents a 20-character password from the browser's cryptographic random
+source and reveals it so you can read it out or hand it over — <strong>Copy</strong> puts it
+on the clipboard. It is worth using: the alternative is a password you thought
+of, which in practice is the same one for every account you create. The
+generated alphabet leaves out <code>O</code>/<code>0</code> and <code>I</code>/<code>l</code>/<code>1</code>, because a temporary
+password exists to be transcribed by somebody else.</p>
+<p>Nothing shows the password again after the account is saved. If it is lost
+before it reaches its owner, reset it — that is what <strong>Reset password</strong> is for.</p>
+<p><strong>Changing a role takes effect immediately, in whatever browser that person
+already has open.</strong> It does not wait for them to sign in again, and it does not
+sign them out. Demotion is the direction that matters: a demoted administrator
+who kept the role until their session expired could restore it from the page
+they were still standing on.</p>
+<h3 id="roles-from-groups">Roles from groups<a class="headerlink" href="#roles-from-groups" title="Permanent link">¶</a></h3>
+<p>Below the account list, <strong>Roles from groups</strong> shows which teams grant
+administration and lets you grant or revoke it in one click. The account list
+above reports the result honestly: somebody who administers because of a group
+wears the same Administrator badge with <em>via ‹group›</em> under it, and the
+administrator count on the overview counts them.</p>
+<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">¶</a></h2>
+<p><code>/admin/groups</code> is where a group is made and maintained. One row per team, and
+one dialog that does the whole job:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Name</strong></td>
+<td>What the group is called. No commas — a comma separates one group from the next everywhere a list of them is written</td>
+</tr>
+<tr>
+<td><strong>Description</strong></td>
+<td>An optional note, shown beside the name in the table</td>
+</tr>
+<tr>
+<td><strong>Role granted</strong></td>
+<td>The role every member holds on top of their own</td>
+</tr>
+<tr>
+<td><strong>Members</strong></td>
+<td>The accounts in the group, ticked from the account list</td>
+</tr>
+</tbody>
+</table>
+<p><strong>A group may be empty.</strong> A console is usually set up teams-first — the rota is
+written before the people arrive — and a group that only existed while somebody
+was in it could not be prepared in advance.</p>
+<p><strong>Renaming a group carries everything with it</strong>: its members and the role it
+grants. Renaming is what to do when the same team ends up spelled two ways; the
+old name stops existing rather than lingering as an empty group beside the new
+one.</p>
+<p><strong>Deleting a group</strong> removes it from every account in it and drops the role it
+granted. The accounts themselves are untouched — only the group is.</p>
+<p>Groups that were never declared here are listed alongside declared ones, marked
+<strong>in use</strong>: those are names that exist only because an account carries one or a
+role is assigned to one, including the groups an identity provider sends. They
+can be described, renamed, filled and deleted like any other.</p>
+<p>Where <a href="../authentication/#single-sign-on-oidc">single sign-on</a> maps a groups
+claim, membership of a directory-owned account belongs to the directory: those
+accounts appear in the member list marked <strong>single sign-on</strong> and cannot be
+ticked here, because the next sign-in would overwrite the change. Change them
+in the directory.</p>
+<p>Creating, changing and deleting a group is written to the audit trail as
+<code>group.created</code>, <code>group.updated</code> and <code>group.deleted</code>.</p>
+<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">¶</a></h2>
+<p><code>/admin/tokens</code> lists every token issued on this console — who owns it, what it
+was issued for, its scopes, whether it is still active and when it was last
+used — and issues new ones.</p>
+<p>The secret is shown once, in a dialog, and never again: the store keeps a hash,
+so a lost token is replaced rather than recovered. Closing the dialog clears it
+from the page rather than leaving it in the DOM of a tab somebody may leave
+open on a shared screen.</p>
+<p>Everything on this page is also a console command, which is usually easier
+inside a container:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
 </code></pre></div>
-<h3 id="protocol"><code>protocol</code><a class="headerlink" href="#protocol" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"tn3270e"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"bind_image_present"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"structured_fields"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"lu_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"LU01"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"negotiated_functions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BIND-IMAGE"</span><span class="p">,</span><span class="w"> </span><span class="s2">"RESPONSES"</span><span class="p">,</span><span class="w"> </span><span class="s2">"SYSREQ"</span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3 id="capabilities"><code>capabilities</code><a class="headerlink" href="#capabilities" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"ind_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"yes"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"no"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"query_reply_ids"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"..."</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"unknown"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BindPluName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tn3270eFunctions"</span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>See <a href="../authentication/#api-tokens">API tokens</a> for what a token reaches and how
+scopes work.</p>
+<h2 id="load-runs">Load runs<a class="headerlink" href="#load-runs" title="Permanent link">¶</a></h2>
+<p><code>/admin/runs</code> lists every load run this machine is publishing metrics for,
+whoever started it: the process id, the owner, how many virtual users are
+active, how many workflows have finished and failed, when it started and the
+parameters it was given. The list refreshes itself every few seconds.</p>
+<p><strong>Stop</strong> ends a run and frees its capacity. This is the page for a run somebody
+left pointed at a production region, and for reclaiming a machine that is
+saturated.</p>
+<p>Two rows behave differently, and the page says so:</p>
 <ul>
-<li><code>ind_file</code> defaults to <code>"unknown"</code>. The mildly-destructive probe is
-  opt-in via the <code>ind_file_probe</code> request flag (3270Web) or
-  <code>-indFileProbe</code> (3270Connect — when added in a future slice).</li>
-<li><code>unknown</code> lists queries the host did not answer. This list is the
-  <strong>primary signal</strong> for spotting mainframe-vs-Rocket divergence: a
-  query present in one environment's <code>unknown</code> and absent from the
-  other's highlights a capability gap.</li>
+<li>A run started from a command line rather than from the console has <strong>no owner
+  recorded</strong>, because nothing asked the console for it.</li>
+<li>The console's own process appears here too — it publishes a metrics file like
+  any other — marked <em>serving this page</em>, with Stop disabled. Stopping it would
+  stop the page you are reading.</li>
 </ul>
-<h3 id="timing"><code>timing</code><a class="headerlink" href="#timing" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"connect_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="nt">"first_screen_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span><span class="w"> </span><span class="nt">"keyboard_unlock_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">}</span>
+<p>Every stop is written to the audit trail with whose run it was, so "who stopped
+my soak test" is answerable from both ends.</p>
+<h2 id="audit-trail">Audit trail<a class="headerlink" href="#audit-trail" title="Permanent link">¶</a></h2>
+<p><code>/admin/audit</code> is the security record, kept apart from the debug log because it
+is read for a different reason and for far longer. One JSON object per line,
+append-only, holding only what an administrator would be asked about months
+later.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Recorded when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>login.succeeded</code>, <code>login.failed</code>, <code>login.locked_out</code>, <code>logout</code></td>
+<td>Somebody signs in, fails to, is throttled, or signs out</td>
+</tr>
+<tr>
+<td><code>account.created</code>, <code>account.updated</code>, <code>account.deleted</code>, <code>account.password_changed</code>, <code>account.first_admin_created</code></td>
+<td>An account changes</td>
+</tr>
+<tr>
+<td><code>group.created</code>, <code>group.updated</code>, <code>group.deleted</code>, <code>group.role_changed</code></td>
+<td>A group changes</td>
+</tr>
+<tr>
+<td><code>token.issued</code>, <code>token.revoked</code>, <code>token.refused</code></td>
+<td>A token is issued, revoked, or presented and refused</td>
+</tr>
+<tr>
+<td><code>run.started</code>, <code>run.killed</code></td>
+<td>A load run is started or stopped</td>
+</tr>
+<tr>
+<td><code>workflow.executed</code></td>
+<td>A workflow is run through the REST API</td>
+</tr>
+<tr>
+<td><code>connection.tested</code></td>
+<td>Somebody dials a host to see whether the port answers</td>
+</tr>
+<tr>
+<td><code>sampleapp.started</code></td>
+<td>A bundled sample application is started as a TN3270 host</td>
+</tr>
+</tbody>
+</table>
+<p>Each line records who, from where, what was acted on, whether it worked and a
+few named details. <strong>Never a password, a token, or the contents of a screen</strong>:
+the point of the file is that an administrator can read it, which means
+anything in it is disclosed to every administrator for as long as it exists.</p>
+<p>The page shows the newest 500 entries and filters them by text or by outcome.
+<strong>Download all of it</strong> streams the whole file as newline-delimited JSON, for
+keeping or for shipping somewhere that keeps it:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://localhost:9200/admin/api/audit.jsonl<span class="w"> </span>&gt;<span class="w"> </span>audit.jsonl
 </code></pre></div>
-<p>Zero indicates the value was not measured (e.g. the host does not expose
-connect timing).</p>
-<h3 id="raw-optional"><code>raw</code> (optional)<a class="headerlink" href="#raw-optional" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"Bind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rows 24 cols 80 ..."</span><span class="p">,</span><span class="w"> </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">}</span>
-</code></pre></div>
-<p>Only emitted when the caller passes <code>collect_raw: true</code> (3270Web) or
-<code>-profileCollectRaw</code> (3270Connect). Useful for debugging parser drift
-against new s3270 versions.</p>
-<h2 id="cross-environment-comparison">Cross-environment comparison<a class="headerlink" href="#cross-environment-comparison" title="Permanent link">¶</a></h2>
-<p>The canonical comparison key is the tuple
-<code>(device.terminal_type, host.banner_signature, protocol.tn3270e,
-protocol.structured_fields)</code>.</p>
-<p>Two profiles whose tuples match are compatible at the wire level even if
-their <code>capabilities.unknown</code> lists differ — the latter is a hint that
-the hosts implement different optional features (e.g. IND$FILE on z/OS
-but not on a stripped-down Rocket Enterprise Server image).</p></div>
+<p>The file rolls over at 8 MiB and one previous generation is kept. Beyond that,
+a deployment that needs long retention needs somewhere to ship the lines to,
+not a bigger file on the same disk.</p>
+<div class="admonition note">
+<p class="admonition-title">A refused login says less to the browser than to you</p>
+<p>The sign-in page answers every failure the same way, because distinguishing
+them would report which usernames exist and which accounts are disabled.
+The trail is allowed the distinction the caller is not: <code>login.failed</code>
+carries a <code>reason</code> of <code>bad credentials</code>, <code>account disabled</code> or
+<code>store error</code>.</p>
+</div>
+<h2 id="the-json-behind-the-pages">The JSON behind the pages<a class="headerlink" href="#the-json-behind-the-pages" title="Permanent link">¶</a></h2>
+<p>The tables are painted from endpoints under <code>/admin/api</code>, all of them
+administrator-only and all of them usable from a script with a token:</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/admin/api/overview</code></td>
+<td><code>GET</code></td>
+<td>The overview's counters and recent trail</td>
+</tr>
+<tr>
+<td><code>/admin/api/users</code></td>
+<td><code>GET</code>, <code>POST</code></td>
+<td>List accounts; create one</td>
+</tr>
+<tr>
+<td><code>/admin/api/users/&lt;id&gt;</code></td>
+<td><code>PATCH</code>, <code>DELETE</code></td>
+<td>Change role, enabled state, groups or password; delete</td>
+</tr>
+<tr>
+<td><code>/admin/api/groups</code></td>
+<td><code>GET</code>, <code>POST</code></td>
+<td>List groups; create one</td>
+</tr>
+<tr>
+<td><code>/admin/api/groups/&lt;name&gt;</code></td>
+<td><code>PATCH</code>, <code>DELETE</code></td>
+<td>Rename, describe, set members and role; delete</td>
+</tr>
+<tr>
+<td><code>/admin/api/group-roles</code></td>
+<td><code>POST</code></td>
+<td>Grant or clear the role a group carries</td>
+</tr>
+<tr>
+<td><code>/admin/api/tokens</code></td>
+<td><code>GET</code>, <code>POST</code></td>
+<td>List tokens; issue one</td>
+</tr>
+<tr>
+<td><code>/admin/api/tokens/&lt;id&gt;</code></td>
+<td><code>DELETE</code></td>
+<td>Revoke a token</td>
+</tr>
+<tr>
+<td><code>/admin/api/runs</code></td>
+<td><code>GET</code></td>
+<td>Every load run on the machine</td>
+</tr>
+<tr>
+<td><code>/admin/api/audit</code></td>
+<td><code>GET</code></td>
+<td>The recent trail, <code>?limit=</code> up to 2000</td>
+</tr>
+<tr>
+<td><code>/admin/api/audit.jsonl</code></td>
+<td><code>GET</code></td>
+<td>The whole trail, oldest first</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../authentication/">Accounts and Sign-In</a> — turning authentication on, roles, tokens and SSO</li>
+<li><a href="../dashboard/">Web Dashboard</a> — the console these pages sit beside</li>
+<li><a href="../installation/">Installation</a> — where the state directory lives</li>
+</ul></div>
 
 
 
@@ -1758,7 +1919,7 @@ but not on a stripped-down Rocket Enterprise Server image).</p></div>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../host-profiler/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Host Compatibility Profiler">
+          <a href="../authentication/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Accounts and Sign-In">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1768,20 +1929,20 @@ but not on a stripped-down Rocket Enterprise Server image).</p></div>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Host Compatibility Profiler
+                Accounts and Sign-In
               </div>
             </div>
           </a>
         
         
           
-          <a href="../BUILD/" class="md-footer__link md-footer__link--next" aria-label="Next: Build Guide">
+          <a href="../ai-chat-mode/" class="md-footer__link md-footer__link--next" aria-label="Next: AI Chat Mode">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Build Guide
+                AI Chat Mode
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -369,6 +369,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="../authentication/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accounts and Sign-In
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../administration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Administration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../ai-chat-mode/" class="md-tabs__link">
         
   
@@ -799,6 +837,60 @@
     
   
     Web Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts and Sign-In
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../administration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administration
   
 
     
@@ -1276,10 +1368,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_19" >
         
           
-          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19" id="__nav_19_label" tabindex="0">
             
   
   
@@ -1297,8 +1389,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1597,6 +1689,17 @@ requested one, is worse than a refusal.</p>
 <p><code>MCP_ALLOWED_HOSTS</code> is how you fence off production:</p>
 <div class="highlight"><pre><span></span><code>MCP_ALLOWED_HOSTS=*.test.example.com,10.20.*,127.0.0.1
 </code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">No sign-in, and none needed</p>
+<p>The MCP server speaks over stdin and stdout to the client that launched the
+process. There is no listener, so there is nothing to authenticate to:
+whoever can start the process is already the operator, and
+<a href="../authentication/"><code>AUTH_MODE</code></a> does not apply to it. The caps above are
+the control surface here.</p>
+<p>A run started this way therefore has no account behind it, which is what
+the <a href="../administration/#load-runs">Load runs page</a> means by "not started
+here" — an administrator's to stop.</p>
+</div>
 <h2 id="settings-file">Settings file<a class="headerlink" href="#settings-file" title="Permanent link">¶</a></h2>
 <p>An AI client launches the server with a command line and no terminal, so
 there is nowhere interactive to put a setting. <code>3270Connect.env</code>, beside the

@@ -372,6 +372,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="authentication/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accounts and Sign-In
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="administration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Administration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="ai-chat-mode/" class="md-tabs__link">
         
   
@@ -984,6 +1022,60 @@
   
   
     <li class="md-nav__item">
+      <a href="authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts and Sign-In
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="administration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ai-chat-mode/" class="md-nav__link">
         
   
@@ -1296,10 +1388,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_19" >
         
           
-          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19" id="__nav_19_label" tabindex="0">
             
   
   
@@ -1317,8 +1409,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1548,6 +1640,14 @@ streaming logs — served straight from the binary, no external services.</p>
 <p><a href="dashboard/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"></path></svg></span> Web dashboard</a></p>
 </li>
 <li>
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M11 10v2H9v2H7v-2H5.8c-.4 1.2-1.5 2-2.8 2-1.7 0-3-1.3-3-3s1.3-3 3-3c1.3 0 2.4.8 2.8 2zm-8 0c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1m13 4c2.7 0 8 1.3 8 4v2H8v-2c0-2.7 5.3-4 8-4m0-2c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4"></path></svg></span> <strong>Accounts when you need them</strong></p>
+<hr>
+<p>One operator needs no sign-in and gets none. Share the port and <code>AUTH_MODE=local</code>
+adds accounts, groups, per-account API tokens, single sign-on and an audit trail
+of who aimed what at which host.</p>
+<p><a href="authentication/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"></path></svg></span> Accounts and sign-in</a></p>
+</li>
+<li>
 <p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="m16 11.78 4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z"></path></svg></span> <strong>Prometheus metrics</strong></p>
 <hr>
 <p>Scrape <code>tn3270_connect_seconds</code>, <code>tn3270_step_seconds</code>, workflow outcomes and live
@@ -1622,6 +1722,8 @@ per-process controls and log streaming, served straight from the binary.
 <p>Once you've mastered the basics, you can dive into more advanced features:</p>
 <ul>
 <li><a href="advanced-features/">API Mode</a>: Discover how to run 3270Connect as an API server for advanced automation and load performance testing.</li>
+<li><a href="authentication/">Accounts and Sign-In</a>: Put a sign-in on the console with <code>AUTH_MODE=local</code>, issue per-account API tokens, and connect an OIDC identity provider.</li>
+<li><a href="administration/">Administration</a>: Manage accounts, groups and tokens from the browser, see every load run on the machine, and read the audit trail.</li>
 <li><a href="ai-chat-mode/">AI Chat Mode</a>: Use 3270Web to drive a live 3270 session through conversation, approve tool calls, and run chaos exploration.</li>
 <li><a href="chaos-mode/">Chaos Mode</a>: Learn how toolbar controls and AI Chat share the same exploration state and export workflows.</li>
 <li><a href="metrics/">Metrics &amp; Monitoring</a>: Scrape <code>tn3270_connect_seconds</code>, <code>tn3270_step_seconds</code>, workflow outcomes, and live worker counts from <code>-promListen</code>.</li>

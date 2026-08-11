@@ -18,7 +18,7 @@
         <link rel="prev" href="../terminal-ui/">
       
       
-        <link rel="next" href="../ai-chat-mode/">
+        <link rel="next" href="../authentication/">
       
       
         
@@ -359,6 +359,44 @@
     
   
   Web Dashboard
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../authentication/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accounts and Sign-In
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../administration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Administration
 
       </a>
     </li>
@@ -1095,6 +1133,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sharing-the-console" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sharing the console
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related-pages" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1109,6 +1158,60 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts and Sign-In
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../administration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1432,10 +1535,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_19" >
         
           
-          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19" id="__nav_19_label" tabindex="0">
             
   
   
@@ -1453,8 +1556,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2124,6 +2227,16 @@ them convenient for scripting or for a health check.</p>
 <td><code>POST</code></td>
 <td>Dials <code>{"host": …, "port": …}</code> and reports reachability</td>
 </tr>
+<tr>
+<td><code>/healthz</code></td>
+<td><code>GET</code></td>
+<td>Liveness, for a container health check or an uptime probe</td>
+</tr>
+<tr>
+<td><code>/whoami</code></td>
+<td><code>GET</code></td>
+<td>Who is signed in, and whether they may administer</td>
+</tr>
 </tbody>
 </table>
 <div class="highlight"><pre><span></span><code><span class="c1"># Current totals across every live process</span>
@@ -2131,6 +2244,12 @@ curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:9200/dash
 
 <span class="c1"># Tail a specific process from the terminal</span>
 curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">"http://localhost:9200/terminal-console?pid=12345"</span>
+</code></pre></div>
+<p>Where the console has <a href="../authentication/">accounts</a>, the same endpoints take a
+bearer token, and <code>/healthz</code> stays reachable without one so a probe does not
+need a credential:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.aggregated'</span>
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
 <details class="question">
@@ -2160,9 +2279,24 @@ setting is remembered between visits.</p>
 bypass (<span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-shift">Shift</kbd><span>+</span><kbd class="key-r">R</kbd></span>); the tiles, latency percentiles and table remain
 fully functional in the meantime.</p>
 </details>
+<h2 id="sharing-the-console">Sharing the console<a class="headerlink" href="#sharing-the-console" title="Permanent link">¶</a></h2>
+<p>The console binds <code>localhost</code> and has no sign-in until you ask for one, which
+is right for one operator on their own machine and wrong the moment somebody
+else needs the page. <code>AUTH_MODE=local</code> adds accounts, and with them:</p>
+<ul>
+<li>a sign-in page, per-user passwords and sessions that expire;</li>
+<li><strong>ownership of a run</strong> — yours is yours to stop, a colleague's is not, and an
+  administrator may stop anything;</li>
+<li>an <a href="../administration/">administration area</a> at <code>/admin</code>, with every run on
+  the machine and who started it;</li>
+<li>an audit trail of who aimed what at which host.</li>
+</ul>
+<p><strong>→ <a href="../authentication/">Accounts and Sign-In</a></strong></p>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">¶</a></h2>
 <ul>
 <li><a href="../basic-usage/">Basic Usage</a> — the flags the dashboard's start dialog mirrors</li>
+<li><a href="../authentication/">Accounts and Sign-In</a> — putting a sign-in on the console</li>
+<li><a href="../administration/">Administration</a> — accounts, groups, tokens, runs and the audit trail</li>
 <li><a href="../injection-config/">Dynamic Field Injection</a> — the optional injection config</li>
 <li><a href="../metrics/">Metrics &amp; Monitoring</a> — Prometheus metrics for fleet-scale monitoring</li>
 <li><a href="../advanced-features/">API Mode</a> — driving 3270Connect over HTTP instead</li>
@@ -2225,13 +2359,13 @@ fully functional in the meantime.</p>
         
         
           
-          <a href="../ai-chat-mode/" class="md-footer__link md-footer__link--next" aria-label="Next: AI Chat Mode">
+          <a href="../authentication/" class="md-footer__link md-footer__link--next" aria-label="Next: Accounts and Sign-In">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                AI Chat Mode
+                Accounts and Sign-In
               </div>
             </div>
             <div class="md-footer__button md-icon">

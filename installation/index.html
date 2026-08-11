@@ -371,6 +371,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="../authentication/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accounts and Sign-In
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../administration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Administration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../ai-chat-mode/" class="md-tabs__link">
         
   
@@ -993,6 +1031,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accounts and Sign-In
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../administration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ai-chat-mode/" class="md-nav__link">
         
   
@@ -1305,10 +1397,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_19" >
         
           
-          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19" id="__nav_19_label" tabindex="0">
             
   
   
@@ -1326,8 +1418,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1584,14 +1676,22 @@ something different. It finds that install through Docker, not through the
 directory you happen to be standing in, so running the one-line command a
 second time from somewhere else does not strand the first one.</p>
 <div class="admonition warning">
-<p class="admonition-title">The console has no sign-in</p>
-<p>Its start-process dialog launches a load run — against any host it is
-given — for whoever can open the page. That is why every method publishes
-on <code>127.0.0.1</code> by default. To reach it from another machine, forward the
-port over SSH rather than publishing it:</p>
+<p class="admonition-title">The console has no sign-in until you turn one on</p>
+<p>Out of the box its start-process dialog launches a load run — against any
+host it is given — for whoever can open the page. That is why every method
+publishes on <code>127.0.0.1</code> by default.</p>
+<p>Two ways to share it. Forward the port over SSH, which needs no
+configuration:</p>
 <div class="highlight"><pre><span></span><code>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">9200</span>:localhost:9200<span class="w"> </span>user@runner-01
 </code></pre></div>
-<p>If you do publish it, put an authenticating reverse proxy in front.</p>
+<p>Or give it accounts, which is what to do when more than one person needs
+it:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">AUTH_MODE</span><span class="o">=</span><span class="nb">local</span>
+</code></pre></div>
+<p>That adds a sign-in page, per-user passwords, an
+<a href="../administration/">administration area</a> and an audit trail. See
+<a href="../authentication/">Accounts and Sign-In</a>. Either way, put TLS in front
+before publishing it on a network you do not control.</p>
 </div>
 <hr>
 <h2 id="the-lab">The lab<a class="headerlink" href="#the-lab" title="Permanent link">¶</a></h2>
