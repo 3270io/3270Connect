@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -65,6 +66,14 @@ func TestLogAndRead(t *testing.T) {
 // The file is read by administrators and can be shipped elsewhere, so it must
 // not be readable by other accounts on the host.
 func TestFileIsOwnerOnly(t *testing.T) {
+	// Windows has no POSIX mode bits: Go maps them onto the read-only
+	// attribute alone, so a file created 0600 stats as 0666 there and the
+	// assertion below would be testing the operating system rather than this
+	// package. The permission still matters — it is what stops another account
+	// on a Unix host reading the trail — so it is checked where it means something.
+	if runtime.GOOS == "windows" {
+		t.Skip("file modes are not POSIX permissions on Windows")
+	}
 	r := newTestRecorder(t)
 	r.Log(Entry{Event: EventLogout})
 

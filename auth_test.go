@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -856,21 +857,60 @@ func TestWantsJSON(t *testing.T) {
 }
 
 func TestStatePathsFollowTheStateDirectory(t *testing.T) {
-	// The container image points XDG_CONFIG_HOME at the volume, and the
-	// accounts file has to land there rather than in the image layer.
-	dir := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", dir)
+	// All three live together, wherever the state directory turns out to be.
+	// Asserted against stateDir() rather than against a path built here,
+	// because where that is differs by platform — %AppData% on Windows, the
+	// XDG directory elsewhere — and the property that matters is that the
+	// three agree, not which convention the host uses.
 	t.Setenv("USERS_PATH", "")
 	t.Setenv("API_TOKENS_PATH", "")
 	t.Setenv("AUDIT_LOG_PATH", "")
 
+	dir := stateDir()
 	for name, got := range map[string]string{
 		"users":  resolveUsersPath(),
 		"tokens": resolveTokensPath(),
 		"audit":  resolveAuditPath(),
 	} {
-		if !strings.HasPrefix(got, dir) {
-			t.Errorf("%s path %q is not under the state directory %q", name, got, dir)
+		if filepath.Dir(got) != dir {
+			t.Errorf("%s path %q is not in the state directory %q", name, got, dir)
+		}
+	}
+}
+
+func TestStateDirFollowsXDGConfigHome(t *testing.T) {
+	// The container image points XDG_CONFIG_HOME at the mounted volume, and
+	// the accounts file has to land there rather than in the image layer that
+	// the next deploy discards. This is the whole of what makes that work.
+	//
+	// Unix only: os.UserConfigDir reads %AppData% on Windows and ignores the
+	// XDG variable entirely, so there would be nothing to assert.
+	if runtime.GOOS == "windows" {
+		t.Skip("XDG_CONFIG_HOME is not how Windows names its configuration directory")
+	}
+	dir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", dir)
+
+	if got := stateDir(); !strings.HasPrefix(got, dir) {
+		t.Fatalf("state directory %q is not under XDG_CONFIG_HOME %q", got, dir)
+	}
+}
+
+func TestOverridesWinOverTheStateDirectory(t *testing.T) {
+	// A deployment that keeps its accounts somewhere else — a secret mount, a
+	// path an operator already backs up — says so with these.
+	dir := t.TempDir()
+	t.Setenv("USERS_PATH", filepath.Join(dir, "u.json"))
+	t.Setenv("API_TOKENS_PATH", filepath.Join(dir, "t.json"))
+	t.Setenv("AUDIT_LOG_PATH", filepath.Join(dir, "a.log"))
+
+	for name, got := range map[string]string{
+		"USERS_PATH":      resolveUsersPath(),
+		"API_TOKENS_PATH": resolveTokensPath(),
+		"AUDIT_LOG_PATH":  resolveAuditPath(),
+	} {
+		if filepath.Dir(got) != dir {
+			t.Errorf("%s was ignored: got %q", name, got)
 		}
 	}
 }

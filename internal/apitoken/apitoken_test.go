@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -75,6 +76,14 @@ func TestTheSecretIsNeverStored(t *testing.T) {
 }
 
 func TestFilePermissions(t *testing.T) {
+	// Windows has no POSIX mode bits: Go maps them onto the read-only
+	// attribute alone, so a file created 0600 stats as 0666 there and the
+	// assertion below would be testing the operating system rather than this
+	// package. The permission still matters — it is what stops another account
+	// on a Unix host reading issued credentials — so it is checked where it means something.
+	if runtime.GOOS == "windows" {
+		t.Skip("file modes are not POSIX permissions on Windows")
+	}
 	store := newTestStore(t)
 	if _, _, err := store.Issue("aaaa1111", "ci", nil, nil); err != nil {
 		t.Fatal(err)
