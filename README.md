@@ -88,10 +88,11 @@ Direct downloads for Linux and Windows, and the container image
 (`ghcr.io/3270io/3270connect`), are covered in the
 [installation guide](https://3270connect.3270.io/installation/).
 
-> The operations console has no sign-in, and its *Start Process* dialog
-> launches a load run for whoever can open the page — so every stack here
-> publishes on `127.0.0.1`. Reach it from elsewhere over an SSH tunnel, or put
-> an authenticating reverse proxy in front of it.
+> Out of the box the operations console has no sign-in, and its *Start
+> Process* dialog launches a load run for whoever can open the page — so every
+> stack here publishes on `127.0.0.1`. Reach it from elsewhere over an SSH
+> tunnel, or give it accounts with `AUTH_MODE=local`. See
+> [Accounts and Sign-In](https://3270connect.3270.io/authentication/).
 
 ## Features
 
@@ -102,6 +103,7 @@ Here are the key features of 3270Connect:
 - Capturing the 3270 screens as the workflow executes.
 - Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
 - [Operations console](https://3270connect.3270.io/dashboard/) for live workflow metrics, latency percentiles, log streaming and per-process control — served entirely from the binary, with no external dependencies at runtime.
+- Optional [accounts and sign-in](https://3270connect.3270.io/authentication/) (`AUTH_MODE=local`): per-user passwords, groups that carry a role, per-account API tokens, OIDC single sign-on, and an [administration area](https://3270connect.3270.io/administration/) with an audit trail. Off by default, because one operator on their own machine does not need it.
 - Headless mode for running workflows without a graphical user interface.
 - Verbose mode for detailed output, plus failure-only logging with `-verboseFailures` for noisy test loads.
 - API mode for advanced automation.
@@ -176,10 +178,15 @@ Recent releases tightened input handling across the dashboard and API surfaces. 
 - Uploaded workflow filenames in the dashboard's `start-process` handler are sanitised; path separators and traversal sequences are rejected.
 - The dashboard rejects absolute or parent-escaping values for `overrideOutputFilePath`; outputs always land under the configured working directory.
 - `getNextAvailablePort` is bounded and propagates exhaustion errors instead of looping indefinitely under heavy concurrency.
+- Optional authentication (`AUTH_MODE=local` / `oidc`): Argon2id password hashes, throttled sign-ins, sessions that expire and can be pinned to an address, per-account API tokens stored as hashes, and an append-only audit trail. A load run belongs to whoever started it; stopping somebody else's needs an administrator.
+- Browser-initiated cross-site requests are refused on every state-changing endpoint, using `Sec-Fetch-Site` where the browser sends it and `Origin`/`Referer` otherwise. Scripted clients, which send none of the three, are unaffected.
+- The sign-in and administration pages carry a strict content-security policy and are served with no inline script or style.
 
 ## Documentation
 
 - [Documentation](https://3270connect.3270.io)
+- [Accounts and Sign-In](https://3270connect.3270.io/authentication/)
+- [Administration](https://3270connect.3270.io/administration/)
 - [AI Chat Mode](https://3270connect.3270.io/ai-chat-mode/)
 - [Metrics & Monitoring](https://3270connect.3270.io/metrics/)
 - [Host Compatibility Profiler](https://3270connect.3270.io/host-profiler/)

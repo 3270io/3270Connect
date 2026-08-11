@@ -159,6 +159,28 @@
         <button class="btn-x icon" id="openShortcuts" type="button" data-tip="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
           <svg class="ic" aria-hidden="true"><use href="#i-keyboard"></use></svg>
         </button>
+
+        <!-- Who is here, and the way out again.
+
+             CanAdminister rather than IsAdmin: with no sign-in there is no
+             principal to be an administrator, but the single operator may do
+             everything the area offers, and hiding it from them would hide it
+             from the one person the default deployment is for.
+
+             The signed-in chip and Sign out only appear where there is a
+             sign-in to appear for. Without one there is nobody to name and
+             nothing to sign out of. -->
+        {{ if .Auth.CanAdminister }}
+        <a class="btn-x accentline" href="/admin" data-tip="Accounts, groups, tokens, runs and the audit trail">
+          <svg class="ic" aria-hidden="true"><use href="#i-server"></use></svg><span class="txt">Admin</span>
+        </a>
+        {{ end }}
+        {{ if .Auth.SignedIn }}
+        <span class="signed-in" data-tip="Signed in">{{ .Auth.Username }}</span>
+        <a class="btn-x icon" href="/logout" data-tip="Sign out" aria-label="Sign out">
+          <svg class="ic" aria-hidden="true"><use href="#i-plug-circle-xmark"></use></svg>
+        </a>
+        {{ end }}
       </div>
     </header>
 

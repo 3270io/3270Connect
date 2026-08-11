@@ -1,0 +1,41 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>Load runs</h2>
+  <p>
+    Every run this machine is publishing metrics for, whoever started it.
+    <strong>Stop</strong> ends the run and frees its capacity — useful for one
+    somebody left pointed at a production region, or for reclaiming a machine
+    that is saturated. A run started from a command line rather than from the
+    console has no owner recorded, and is an administrator's to stop.
+  </p>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>PID</th><th>Owner</th><th>Status</th><th>Active</th>
+        <th>Completed</th><th>Failed</th><th>Started</th><th>Parameters</th>
+        <th class="right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<p class="hint">
+  Stopping a run is written to the audit trail with whose it was, so "who
+  stopped my soak test" is answerable from both ends. The list refreshes itself
+  every few seconds.
+</p>
+
+<div class="toast" id="toast" hidden></div>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}

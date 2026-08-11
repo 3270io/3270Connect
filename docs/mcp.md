@@ -127,6 +127,17 @@ requested one, is worse than a refusal.
 MCP_ALLOWED_HOSTS=*.test.example.com,10.20.*,127.0.0.1
 ```
 
+!!! note "No sign-in, and none needed"
+    The MCP server speaks over stdin and stdout to the client that launched the
+    process. There is no listener, so there is nothing to authenticate to:
+    whoever can start the process is already the operator, and
+    [`AUTH_MODE`](authentication.md) does not apply to it. The caps above are
+    the control surface here.
+
+    A run started this way therefore has no account behind it, which is what
+    the [Load runs page](administration.md#load-runs) means by "not started
+    here" — an administrator's to stop.
+
 ## Settings file
 
 An AI client launches the server with a command line and no terminal, so

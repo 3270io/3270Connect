@@ -14,15 +14,15 @@ services:
     image: ghcr.io/3270io/3270connect:local
     ports:
       # Bound to 127.0.0.1, and that is the setting to think about before
-      # changing. The console has no sign-in, and its start-process dialog
-      # launches a load run — against any host it is given — for whoever can
-      # reach the port. Published on every interface it is a button on your
-      # network that starts traffic.
+      # changing. Out of the box the console has no sign-in, and its
+      # start-process dialog launches a load run — against any host it is
+      # given — for whoever can reach the port. Published on every interface it
+      # is a button on your network that starts traffic.
       #
       # To reach it from another machine, forward the port over SSH:
       #   ssh -L 9200:localhost:9200 user@runner-01
-      # To publish it deliberately, change this to "9200:9200" and put an
-      # authenticating reverse proxy in front of it.
+      # To publish it deliberately, change this to "9200:9200", set AUTH_MODE
+      # below, and put TLS in front of it.
       - "127.0.0.1:9200:9200"
     environment:
       # Listen on all interfaces *inside* the container. A published port
@@ -32,12 +32,25 @@ services:
       # not by this line — do not change it to 127.0.0.1 to keep the console
       # private.
       - DASHBOARD_BIND=0.0.0.0
+      # Accounts. Uncomment for a console more than one person can reach: it
+      # adds a sign-in page, per-user passwords, an administration area at
+      # /admin and an audit trail. On first start with no accounts the console
+      # prints a one-time setup code — `docker compose logs 3270connect` shows
+      # it — and waits for you to create the first administrator.
+      #
+      # The accounts file lives in /data below, so mount that volume before
+      # turning this on: without it the next `docker compose pull` deletes the
+      # administrator and reopens first-run setup.
+      #
+      # https://3270connect.3270.io/authentication/
+      # - AUTH_MODE=local
     volumes:
-      # The metrics every run publishes, the console's logs, and whatever a
-      # workflow writes. In a folder beside this file so it can be backed up,
-      # inspected and copied with ordinary tools, and so it outlives the
-      # container: recreating one without this — which is what pulling a new
-      # image does — takes the history of every run with it.
+      # The metrics every run publishes, the console's logs, its accounts and
+      # audit trail, and whatever a workflow writes. In a folder beside this
+      # file so it can be backed up, inspected and copied with ordinary tools,
+      # and so it outlives the container: recreating one without this — which
+      # is what pulling a new image does — takes the history of every run, and
+      # every account, with it.
       #
       # It is also where the console looks for workflow files to start, so a
       # workflow dropped in here is one you can launch from the page.

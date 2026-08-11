@@ -373,6 +373,8 @@ them convenient for scripting or for a health check.
 | `/start-process` | `POST` | Starts a run from a multipart form |
 | `/kill?pid=<pid>` | `POST` | Terminates a process |
 | `/test-connection` | `POST` | Dials `{"host": …, "port": …}` and reports reachability |
+| `/healthz` | `GET` | Liveness, for a container health check or an uptime probe |
+| `/whoami` | `GET` | Who is signed in, and whether they may administer |
 
 ```bash
 # Current totals across every live process
@@ -380,6 +382,15 @@ curl -s http://localhost:9200/dashboard/data | jq '.aggregated'
 
 # Tail a specific process from the terminal
 curl -s "http://localhost:9200/terminal-console?pid=12345"
+```
+
+Where the console has [accounts](authentication.md), the same endpoints take a
+bearer token, and `/healthz` stays reachable without one so a probe does not
+need a credential:
+
+```bash
+curl -s -H "Authorization: Bearer 3270c_…" \
+  http://localhost:9200/dashboard/data | jq '.aggregated'
 ```
 
 ## Troubleshooting
@@ -407,9 +418,26 @@ curl -s "http://localhost:9200/terminal-console?pid=12345"
     bypass (++ctrl+shift+r++); the tiles, latency percentiles and table remain
     fully functional in the meantime.
 
+## Sharing the console
+
+The console binds `localhost` and has no sign-in until you ask for one, which
+is right for one operator on their own machine and wrong the moment somebody
+else needs the page. `AUTH_MODE=local` adds accounts, and with them:
+
+- a sign-in page, per-user passwords and sessions that expire;
+- **ownership of a run** — yours is yours to stop, a colleague's is not, and an
+  administrator may stop anything;
+- an [administration area](administration.md) at `/admin`, with every run on
+  the machine and who started it;
+- an audit trail of who aimed what at which host.
+
+**→ [Accounts and Sign-In](authentication.md)**
+
 ## Related pages
 
 - [Basic Usage](basic-usage.md) — the flags the dashboard's start dialog mirrors
+- [Accounts and Sign-In](authentication.md) — putting a sign-in on the console
+- [Administration](administration.md) — accounts, groups, tokens, runs and the audit trail
 - [Dynamic Field Injection](injection-config.md) — the optional injection config
 - [Metrics & Monitoring](metrics.md) — Prometheus metrics for fleet-scale monitoring
 - [API Mode](advanced-features.md) — driving 3270Connect over HTTP instead

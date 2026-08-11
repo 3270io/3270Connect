@@ -92,6 +92,16 @@ on a live operations console and a Prometheus endpoint.
 
     [:octicons-arrow-right-24: Web dashboard](dashboard.md)
 
+-   :material-account-key: **Accounts when you need them**
+
+    ---
+
+    One operator needs no sign-in and gets none. Share the port and `AUTH_MODE=local`
+    adds accounts, groups, per-account API tokens, single sign-on and an audit trail
+    of who aimed what at which host.
+
+    [:octicons-arrow-right-24: Accounts and sign-in](authentication.md)
+
 -   :material-chart-line: **Prometheus metrics**
 
     ---
@@ -183,6 +193,8 @@ If you're new to 3270Connect, you can start by exploring the following sections:
 Once you've mastered the basics, you can dive into more advanced features:
 
 - [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
+- [Accounts and Sign-In](authentication.md): Put a sign-in on the console with `AUTH_MODE=local`, issue per-account API tokens, and connect an OIDC identity provider.
+- [Administration](administration.md): Manage accounts, groups and tokens from the browser, see every load run on the machine, and read the audit trail.
 - [AI Chat Mode](ai-chat-mode.md): Use 3270Web to drive a live 3270 session through conversation, approve tool calls, and run chaos exploration.
 - [Chaos Mode](chaos-mode.md): Learn how toolbar controls and AI Chat share the same exploration state and export workflows.
 - [Metrics & Monitoring](metrics.md): Scrape `tn3270_connect_seconds`, `tn3270_step_seconds`, workflow outcomes, and live worker counts from `-promListen`.

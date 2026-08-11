@@ -48,17 +48,29 @@ something different. It finds that install through Docker, not through the
 directory you happen to be standing in, so running the one-line command a
 second time from somewhere else does not strand the first one.
 
-!!! warning "The console has no sign-in"
-    Its start-process dialog launches a load run — against any host it is
-    given — for whoever can open the page. That is why every method publishes
-    on `127.0.0.1` by default. To reach it from another machine, forward the
-    port over SSH rather than publishing it:
+!!! warning "The console has no sign-in until you turn one on"
+    Out of the box its start-process dialog launches a load run — against any
+    host it is given — for whoever can open the page. That is why every method
+    publishes on `127.0.0.1` by default.
+
+    Two ways to share it. Forward the port over SSH, which needs no
+    configuration:
 
     ```shell
     ssh -L 9200:localhost:9200 user@runner-01
     ```
 
-    If you do publish it, put an authenticating reverse proxy in front.
+    Or give it accounts, which is what to do when more than one person needs
+    it:
+
+    ```shell
+    AUTH_MODE=local
+    ```
+
+    That adds a sign-in page, per-user passwords, an
+    [administration area](administration.md) and an audit trail. See
+    [Accounts and Sign-In](authentication.md). Either way, put TLS in front
+    before publishing it on a network you do not control.
 
 ---
 

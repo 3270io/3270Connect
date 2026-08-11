@@ -74,6 +74,8 @@ nav:
   - Basic Usage: basic-usage.md
   - Terminal UI: terminal-ui.md
   - Web Dashboard: dashboard.md
+  - Accounts and Sign-In: authentication.md
+  - Administration: administration.md
   - AI Chat Mode: ai-chat-mode.md
   - Chaos Mode: chaos-mode.md
   - Keyboard and Controls: keyboard-and-controls.md

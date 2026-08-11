@@ -1,0 +1,51 @@
+{{- define "content" -}}
+<section class="card card-narrow">
+  <header class="card-head">
+    <img class="mark" src="/static/images/favicon.png" alt="" width="40" height="40">
+    <h1>First run</h1>
+    <p class="sub">Create the administrator for this console</p>
+  </header>
+
+  {{ template "tlsWarning" . }}
+  {{ template "formMessages" . }}
+
+  <p class="hint">
+    3270Connect printed a <strong>setup code</strong> to its log and to
+    standard error when it started. Under Docker,
+    <code>docker compose logs 3270connect</code> shows it. Case, spaces and
+    dashes are ignored, so type it however you copied it.
+  </p>
+
+  <form method="post" action="/setup" autocomplete="on">
+    <label for="setupCode">Setup code</label>
+    <input id="setupCode" name="setupCode" type="text" autocomplete="off"
+           autocapitalize="characters" spellcheck="false" required autofocus>
+
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username"
+           autocapitalize="none" spellcheck="false" required>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password"
+           minlength="{{ .MinLength }}" required>
+
+    <label for="confirmPassword">Confirm password</label>
+    <input id="confirmPassword" name="confirmPassword" type="password"
+           autocomplete="new-password" minlength="{{ .MinLength }}" required>
+
+    <p class="hint">
+      At least {{ .MinLength }} characters. There are no composition rules —
+      required digits and symbols shrink the search space more than they
+      enlarge it, while a length floor does not.
+    </p>
+
+    <button class="btn btn-primary btn-block" type="submit">Create administrator</button>
+  </form>
+
+  <p class="hint">
+    Nothing is created behind your back: until this form is completed there are
+    no credentials to leak, and this password is one you chose rather than one
+    printed in a log.
+  </p>
+</section>
+{{- end -}}

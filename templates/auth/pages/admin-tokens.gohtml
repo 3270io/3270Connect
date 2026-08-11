@@ -1,0 +1,90 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>API tokens</h2>
+  <p>
+    What an automated client presents instead of signing in: a CI job, a
+    scheduled soak test, an AI client driving the REST API. A token belongs to
+    an account and reaches exactly what that account reaches — their load runs,
+    and nothing belonging to anybody else. A read-only token can watch runs but
+    not start or stop them.
+  </p>
+</div>
+
+<div class="filters">
+  <input type="search" id="filter" placeholder="Filter by account or name" aria-label="Filter tokens">
+  <button class="btn btn-primary btn-sm" id="add">Issue token</button>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>Token</th><th>Account</th><th>Name</th><th>Scopes</th>
+        <th>Status</th><th>Last used</th><th class="right">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<div class="modal-back" id="dialog" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Issue a token</h2>
+    <p class="sub">Shown once. It is stored as a hash, so a lost token is replaced rather than recovered.</p>
+
+    <label for="t-account">Account</label>
+    <select id="t-account"></select>
+
+    <label for="t-name">What is it for</label>
+    <input id="t-name" type="text" placeholder="nightly soak, ci pipeline, claude desktop">
+    <p class="hint">A name, so the list reads as a list of purposes rather than of hex strings.</p>
+
+    <label for="t-expires">Expires in</label>
+    <select id="t-expires">
+      <option value="">Never</option>
+      <option value="24h">24 hours</option>
+      <option value="720h">30 days</option>
+      <option value="2160h">90 days</option>
+      <option value="8760h">A year</option>
+    </select>
+
+    <label class="checkline" for="t-readonly">
+      <input id="t-readonly" type="checkbox"> Read-only — may watch runs, not start or stop them
+    </label>
+
+    <p class="banner banner-error" id="t-error" hidden role="alert"></p>
+
+    <div class="modal-actions">
+      <button class="btn" id="t-cancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="t-save" type="button">Issue</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="secret" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="secret-title">
+    <h2 id="secret-title">Here is the token</h2>
+    <p class="sub">This is the only time it is shown. Store it somewhere the client can read and nobody else can.</p>
+    <input id="s-value" type="text" readonly spellcheck="false">
+    <div class="generated">
+      <button class="btn btn-sm" id="s-copy" type="button">Copy</button>
+    </div>
+    <p class="hint">
+      Present it as <code>Authorization: Bearer &lt;token&gt;</code>.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="s-done" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}

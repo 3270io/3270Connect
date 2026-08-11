@@ -1,0 +1,73 @@
+{{- define "bodyClass" -}}page-admin{{- end -}}
+{{- define "mainClass" -}}main-admin{{- end -}}
+{{- define "chrome" -}}{{ template "adminChrome" . }}{{- end -}}
+
+{{- define "content" -}}
+<div class="section-head">
+  <h2>Groups</h2>
+  <p>
+    A group is a team. It can carry a role, so an instance is administered by
+    "whoever is on the ops rota" rather than by a list of names that goes out
+    of date. A group may be empty on purpose: the teams are usually written
+    before the people arrive, and one that could not exist while empty could
+    not be prepared in advance.
+  </p>
+</div>
+
+<div class="filters">
+  <input type="search" id="filter" placeholder="Filter by name or member" aria-label="Filter groups">
+  <button class="btn btn-primary btn-sm" id="add">Create group</button>
+</div>
+
+<div class="panel table-wrap">
+  <table class="grid">
+    <thead>
+      <tr><th>Group</th><th>Members</th><th>Grants</th><th>Source</th><th class="right">Actions</th></tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<p class="hint" id="provider-note" hidden>
+  Membership of an account that signs in through the identity provider belongs
+  to the directory: it is rewritten from the groups claim at every sign-in, so
+  those accounts are shown here but cannot be ticked. Change them in the
+  directory.
+</p>
+
+<div class="modal-back" id="dialog" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Create group</h2>
+    <p class="sub">One dialog does the whole job: the name, what it is for, the role it grants and who is in it.</p>
+
+    <label for="g-name">Name</label>
+    <input id="g-name" type="text" maxlength="{{ .MaxGroupName }}" spellcheck="false">
+    <p class="hint">No commas — a comma separates one group from the next everywhere a list of them is written.</p>
+
+    <label for="g-description">Description</label>
+    <input id="g-description" type="text" maxlength="{{ .MaxGroupDescription }}">
+
+    <label for="g-role">Role granted</label>
+    <select id="g-role">
+      <option value="user">None — members keep their own role</option>
+      <option value="admin">Administrator — every member administers this instance</option>
+    </select>
+
+    <label>Members</label>
+    <div class="checklist" id="g-members"></div>
+
+    <p class="banner banner-error" id="g-error" hidden role="alert"></p>
+
+    <div class="modal-actions">
+      <button class="btn" id="g-cancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="g-save" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+{{- end -}}
+
+{{- define "scripts" -}}
+<script src="/static/js/admin.js?v={{ .Version }}" defer></script>
+{{- end -}}
