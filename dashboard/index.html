@@ -1669,13 +1669,37 @@ double-clicking the executable — also forces dashboard mode.</p>
 <td><code>9200</code></td>
 <td>Port for the dashboard HTTP listener.</td>
 </tr>
+<tr>
+<td><code>-dashboardBind</code></td>
+<td><code>localhost</code></td>
+<td>Interface to listen on. An address, or <code>all</code> for every interface. Overrides <code>DASHBOARD_BIND</code>.</td>
+</tr>
 </tbody>
 </table>
+<p>The console answers <code>GET /healthz</code> with a small JSON document — status,
+version, pid and uptime — for a container healthcheck or an uptime probe. It
+reads nothing from disk, so a busy load run cannot make the console look
+unhealthy. <code>/</code> redirects to <code>/dashboard</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Bound to localhost</p>
-<p>The listener binds to <code>localhost</code> only, so the console is never exposed on
-the network. To view it from another machine, forward the port over SSH:
-<code>ssh -L 9200:localhost:9200 user@runner-01</code>.</p>
+<p>The listener binds <code>localhost</code>, so the console is not on the network
+unless you put it there. To view it from another machine, forward the port
+over SSH: <code>ssh -L 9200:localhost:9200 user@runner-01</code>.</p>
+<p>Change it with <code>-dashboardBind</code> or the <code>DASHBOARD_BIND</code> environment
+variable — and know what you are turning on when you do. The console has no
+sign-in, and <em>Start Process</em> launches a load run, against any host it is
+given, for whoever can open the page. On a shared network put an
+authenticating reverse proxy in front of it.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">In a container</p>
+<p>The <a href="../installation/#docker">published image</a> sets <code>DASHBOARD_BIND=0.0.0.0</code>
+because it has to: a published port forwards to the container's external
+interface, so a loopback listener inside one refuses every connection from
+the host while the container still reports healthy. What the console is
+exposed to is then decided by the port mapping, which the supplied stacks
+keep on <code>127.0.0.1</code>.</p>
+<p>The same setting exists for the REST API as <code>-api-bind</code> / <code>API_BIND</code>.</p>
 </div>
 <h2 id="layout-at-a-glance">Layout at a glance<a class="headerlink" href="#layout-at-a-glance" title="Permanent link">¶</a></h2>
 <p>The console is a single page in three bands: a <strong>command bar</strong> and <strong>status

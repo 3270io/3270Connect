@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Install the 3270Connect command-line utility on Linux, Windows or Docker — a direct release download, the container image, or a build from source in Go.">
+        <meta name="description" content="Install 3270Connect with one command, as a container running the operations console, as a Compose stack, or as a lab with a 3270 host to practise against — plus direct downloads for Linux and Windows.">
       
       
         <meta name="author" content="3270.io">
@@ -89,7 +89,7 @@
     <meta property="og:site_name" content="3270Connect">
     <meta property="og:url" content="https://3270connect.3270.io/installation/">
     <meta property="og:title" content="Install 3270Connect on Linux, Windows or Docker">
-    <meta property="og:description" content="Install the 3270Connect command-line utility on Linux, Windows or Docker — a direct release download, the container image, or a build from source in Go.">
+    <meta property="og:description" content="Install 3270Connect with one command, as a container running the operations console, as a Compose stack, or as a lab with a 3270 host to practise against — plus direct downloads for Linux and Windows.">
     <meta property="og:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:secure_url" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200">
@@ -100,7 +100,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@3270io">
     <meta name="twitter:title" content="Install 3270Connect on Linux, Windows or Docker">
-    <meta name="twitter:description" content="Install the 3270Connect command-line utility on Linux, Windows or Docker — a direct release download, the container image, or a build from source in Go.">
+    <meta name="twitter:description" content="Install 3270Connect with one command, as a container running the operations console, as a Compose stack, or as a lab with a 3270 host to practise against — plus direct downloads for Linux and Windows.">
     <meta name="twitter:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta name="twitter:image:alt" content="3270Connect — replay the mainframe at any scale"><script type="application/ld+json">
     {
@@ -125,7 +125,7 @@
         {
           "@type": "TechArticle",
           "headline": "Installation",
-          "description": "Install the 3270Connect command-line utility on Linux, Windows or Docker \u2014 a direct release download, the container image, or a build from source in Go.",
+          "description": "Install 3270Connect with one command, as a container running the operations console, as a Compose stack, or as a lab with a 3270 host to practise against \u2014 plus direct downloads for Linux and Windows.",
           "url": "https://3270connect.3270.io/installation/",
           "inLanguage": "en-GB",
           "isPartOf": { "@id": "https://3270connect.3270.io/#website" },
@@ -770,6 +770,56 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#one-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The lab
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compose
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#linux" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -782,21 +832,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#direct-installation" class="md-nav__link">
+  <a href="#direct-download" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Direct Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Docker Installation
+        Direct download
       
     </span>
   </a>
@@ -821,10 +860,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#direct-installation_1" class="md-nav__link">
+  <a href="#direct-download_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Direct Installation
+        Direct download
       
     </span>
   </a>
@@ -832,10 +871,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#docker-installation_1" class="md-nav__link">
+  <a href="#docker_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Docker Installation
+        Docker
       
     </span>
   </a>
@@ -844,6 +883,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building from source
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1438,93 +1488,244 @@
 
 
 <div><h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">¶</a></h1>
-<p>To use the 3270Connect command-line utility, you need to install it on your system. Follow the steps below based on your platform:</p>
+<h2 id="one-command">One command<a class="headerlink" href="#one-command" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://3270connect.3270.io/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</code></pre></div>
+<p>The installer asks how you want it and gets out of the way. Four doors:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Binary</strong></td>
+<td>a single file on your PATH</td>
+<td>s3270 is bundled — nothing else to install</td>
+</tr>
+<tr>
+<td><strong>Docker</strong></td>
+<td>one container, the operations console</td>
+<td><code>ghcr.io/3270io/3270connect</code></td>
+</tr>
+<tr>
+<td><strong>Compose</strong></td>
+<td>a stack you can edit and re-<code>up</code></td>
+<td>writes <code>./3270connect/docker-compose.yml</code></td>
+</tr>
+<tr>
+<td><strong>Lab</strong></td>
+<td>the console, a browser terminal and a 3270 host to aim at</td>
+<td>three containers, no mainframe required</td>
+</tr>
+</tbody>
+</table>
+<p>Skip the questions by naming the method:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://3270connect.3270.io/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span>--<span class="w"> </span>--method<span class="w"> </span>lab<span class="w"> </span>--yes
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--method</code></td>
+<td>ask</td>
+<td><code>binary</code>, <code>docker</code>, <code>compose</code> or <code>lab</code></td>
+</tr>
+<tr>
+<td><code>--version</code></td>
+<td><code>latest</code></td>
+<td>A release tag, e.g. <code>v2.0</code></td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td><code>9200</code></td>
+<td>Host port for the console</td>
+</tr>
+<tr>
+<td><code>--bind</code></td>
+<td><code>127.0.0.1</code></td>
+<td>Host interface to publish on</td>
+</tr>
+<tr>
+<td><code>--dir</code></td>
+<td><code>./3270connect</code></td>
+<td>Compose project directory (<code>./3270-lab</code> for the lab)</td>
+</tr>
+<tr>
+<td><code>--system</code> / <code>--user</code></td>
+<td>user</td>
+<td>Binary install to <code>/usr/local/bin</code> or <code>~/.local/bin</code></td>
+</tr>
+<tr>
+<td><code>--dry-run</code></td>
+<td>off</td>
+<td>Print what would happen, change nothing</td>
+</tr>
+<tr>
+<td><code>--yes</code></td>
+<td>off</td>
+<td>Accept every prompt</td>
+</tr>
+</tbody>
+</table>
+<p>Re-running the installer updates an install that is already here rather than
+replacing it: the port it is published on, the version it is pinned to and the
+data folder holding its run history are all carried forward unless you pass
+something different. It finds that install through Docker, not through the
+directory you happen to be standing in, so running the one-line command a
+second time from somewhere else does not strand the first one.</p>
+<div class="admonition warning">
+<p class="admonition-title">The console has no sign-in</p>
+<p>Its start-process dialog launches a load run — against any host it is
+given — for whoever can open the page. That is why every method publishes
+on <code>127.0.0.1</code> by default. To reach it from another machine, forward the
+port over SSH rather than publishing it:</p>
+<div class="highlight"><pre><span></span><code>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">9200</span>:localhost:9200<span class="w"> </span>user@runner-01
+</code></pre></div>
+<p>If you do publish it, put an authenticating reverse proxy in front.</p>
+</div>
+<hr>
+<h2 id="the-lab">The lab<a class="headerlink" href="#the-lab" title="Permanent link">¶</a></h2>
+<p>The question after installing an automation tool is always "against what?".
+The lab answers it: a TN3270 host, a browser terminal to explore it by hand,
+and the console to replay what you did there.</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://3270connect.3270.io/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span>--<span class="w"> </span>--method<span class="w"> </span>lab
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>http://localhost:3270    the terminal. Connect to host "sampleapps", port 3271
+http://localhost:9200    the console
+</code></pre></div>
+<p>The applications are <a href="https://3270Web.3270.io">3270Web</a>'s bundled samples —
+a pet store with a back office on 3271, and the name-entry example on 3272 —
+served as an ordinary TN3270 host, so they negotiate, hold session state and
+behave like the real thing. Nothing there is a mainframe and nothing has data
+behind it, which is what makes it safe to point a load test at.</p>
+<p>The stack ships with a workflow already aimed at it:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span><span class="m">3270</span>-lab
+docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow-sampleapp.json<span class="w"> </span>-headless
+</code></pre></div>
+<p>The same three services are checked into both repositories as
+<code>docker-compose.lab.yml</code>, if you would rather start from a file you can read
+first.</p>
+<hr>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">¶</a></h2>
+<p>The image runs the operations console by default and takes any other set of
+flags as its command, so one image covers both.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">The console</label><label for="__tabbed_1_2">A workflow</label><label for="__tabbed_1_3">A load test</label><label for="__tabbed_1_4">A sample host</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>3270connect<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:9200:9200<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">DASHBOARD_BIND</span><span class="o">=</span><span class="m">0</span>.0.0.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest
+</code></pre></div>
+<p>Then open <a href="http://localhost:9200/dashboard">http://localhost:9200/dashboard</a>.</p>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">25</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">600</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="m">1</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="m">3270</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<div class="admonition info">
+<p class="admonition-title"><code>DASHBOARD_BIND</code> and why the image sets it</p>
+<p>The console binds <code>localhost</code>, which is right on a laptop and useless in a
+container: a published port forwards to the container's external
+interface, so a loopback listener refuses every connection from the host
+while the container still reports healthy. The image sets
+<code>DASHBOARD_BIND=0.0.0.0</code> for that reason. What the console is exposed to is
+decided by the port mapping, not by that variable.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><code>/data</code> and who owns it</p>
+<p>The container writes the metrics each run publishes, the console's logs and
+any workflow output to <code>/data</code>, and runs unprivileged as uid <code>10001</code>. A
+bind-mounted host folder keeps the host's ownership, so hand it over before
+the first start:</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>./data<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="m">10001</span>:10001<span class="w"> </span>./data
+</code></pre></div>
+<p>A named volume needs none of this — Docker sets its ownership from the
+image.</p>
+</div>
+<h3 id="compose">Compose<a class="headerlink" href="#compose" title="Permanent link">¶</a></h3>
+<p><code>docker-compose.yml</code> in the repository runs the console on its own:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+</code></pre></div>
+<p>The installer writes an equivalent stack, pinned to a version and configured
+with the port and data folder you chose.</p>
+<div class="admonition warning">
+<p class="admonition-title">linux/amd64 only</p>
+<p>The s3270 the emulator drives is embedded in the binary as an x86-64
+executable and written out when a workflow first connects, so there is no
+arm64 image: it would start, serve the console, and fail the first run.
+On Apple silicon the image runs under emulation.</p>
+</div>
+<hr>
 <h2 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h2>
-<h3 id="direct-installation">Direct Installation<a class="headerlink" href="#direct-installation" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
-<span class="nv">LATEST_URL</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.assets[] | select(.name == "3270Connect") | .browser_download_url'</span><span class="k">)</span>
+<h3 id="direct-download">Direct download<a class="headerlink" href="#direct-download" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># The latest release, straight from GitHub</span>
+curl<span class="w"> </span>-fsSLO<span class="w"> </span>https://github.com/3270io/3270Connect/releases/latest/download/3270Connect_linux
 
-<span class="c1"># Download the latest release</span>
-curl<span class="w"> </span>-LO<span class="w"> </span><span class="nv">$LATEST_URL</span>
-
-<span class="c1"># Make it executable</span>
-chmod<span class="w"> </span>+x<span class="w"> </span>3270Connect
-
-<span class="c1"># Move to a directory in PATH</span>
-sudo<span class="w"> </span>mv<span class="w"> </span>3270Connect<span class="w"> </span>/usr/local/bin/3270Connect
+chmod<span class="w"> </span>+x<span class="w"> </span>3270Connect_linux
+sudo<span class="w"> </span>mv<span class="w"> </span>3270Connect_linux<span class="w"> </span>/usr/local/bin/3270connect
 </code></pre></div>
-<h3 id="docker-installation">Docker Installation<a class="headerlink" href="#docker-installation" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Pull the Docker image</span>
-docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-linux:latest
-
-<span class="c1"># Run the Docker container</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-linux:latest
-</code></pre></div>
-<h4 id="additional-docker-run-examples-linux">Additional Docker Run Examples (Linux)<a class="headerlink" href="#additional-docker-run-examples-linux" title="Permanent link">¶</a></h4>
-<p>Run the container with a configuration file and expose the port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
-</code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
-</code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
-</code></pre></div>
-<p>Log only failing steps (concise failure diagnostics without full verbose noise):</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verboseFailures
-</code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
-</code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp
-</code></pre></div>
-<p>Run a specific test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
+<p>The binary is self-contained: s3270 travels inside it and is written to the
+temporary directory the first time a workflow connects. Run history goes to
+<code>~/.config/3270Connect/</code>, which is where the console reads it from.</p>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-dashboard<span class="w">                       </span><span class="c1"># the console on :9200</span>
+3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w">            </span><span class="c1"># one run</span>
+3270connect<span class="w"> </span>-runApp<span class="w"> </span><span class="m">1</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="m">3270</span><span class="w">      </span><span class="c1"># a 3270 host to aim at</span>
 </code></pre></div>
 <h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">¶</a></h2>
-<h3 id="direct-installation_1">Direct Installation<a class="headerlink" href="#direct-installation_1" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Fetch the latest release URL</span>
-<span class="nv">$latest_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Invoke-RestMethod<span class="w"> </span>-Uri<span class="w"> </span>https://api.github.com/repos/3270io/3270Connect/releases/latest<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>assets<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Where-Object<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">$_</span>.name<span class="w"> </span>-eq<span class="w"> </span><span class="s2">"3270Connect.exe"</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="sb">`</span>
-<span class="w">    </span>Select-Object<span class="w"> </span>-ExpandProperty<span class="w"> </span>browser_download_url
+<h3 id="direct-download_1">Direct download<a class="headerlink" href="#direct-download_1" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">$latest</span> <span class="p">=</span> <span class="s2">"https://github.com/3270io/3270Connect/releases/latest/download/3270Connect.exe"</span>
+<span class="nb">Invoke-WebRequest</span> <span class="n">-Uri</span> <span class="nv">$latest</span> <span class="n">-OutFile</span> <span class="n">3270Connect</span><span class="p">.</span><span class="n">exe</span>
 
-<span class="c1"># Download the latest release</span>
-Invoke-WebRequest<span class="w"> </span>-Uri<span class="w"> </span><span class="nv">$latest_url</span><span class="w"> </span>-OutFile<span class="w"> </span>3270Connect.exe
-
-<span class="c1"># Optionally, move to a directory in PATH (requires admin privileges)</span>
-<span class="c1"># Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"</span>
+<span class="c"># Optionally, move it somewhere on PATH (requires admin)</span>
+<span class="c"># Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"</span>
 </code></pre></div>
-<h3 id="docker-installation_1">Docker Installation<a class="headerlink" href="#docker-installation_1" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Pull the Docker image</span>
-docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-windows:latest
-
-<span class="c1"># Run the Docker container</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>3270io/3270connect-windows:latest
+<p>Double-clicking <code>3270Connect.exe</code> with no arguments starts the console and
+opens it in a window.</p>
+<h3 id="docker_1">Docker<a class="headerlink" href="#docker_1" title="Permanent link">¶</a></h3>
+<p>A Windows container image is built from <code>Dockerfile.windows</code> and is not
+published: a Windows image cannot be built on a Linux runner. Build it
+yourself where you need it:</p>
+<div class="highlight"><pre><span></span><code><span class="n">docker</span> <span class="n">build</span> <span class="o">-f</span> <span class="n">Dockerfile</span><span class="p">.</span><span class="n">windows</span> <span class="n">-t</span> <span class="n">3270connect-windows</span> <span class="p">.</span>
 </code></pre></div>
-<h4 id="additional-docker-run-examples-windows">Additional Docker Run Examples (Windows)<a class="headerlink" href="#additional-docker-run-examples-windows" title="Permanent link">¶</a></h4>
-<p>Run the container with a configuration file and expose the port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
+<hr>
+<h2 id="building-from-source">Building from source<a class="headerlink" href="#building-from-source" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3270io/3270Connect.git
+<span class="nb">cd</span><span class="w"> </span>3270Connect
+./build.sh<span class="w">          </span><span class="c1"># binaries into dist/</span>
+go<span class="w"> </span><span class="nb">test</span><span class="w"> </span>./...
 </code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
-</code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
-</code></pre></div>
-<p>Log only failing steps (concise failure diagnostics without full verbose noise):</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verboseFailures
-</code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
-</code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp
-</code></pre></div>
-<p>Run a specific test 3270 sample application and listening port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="o">[</span>portNumber<span class="o">]</span>
-</code></pre></div></div>
+<p>Go 1.25 or newer. The x3270 binaries embedded in the build are produced
+separately; see <a href="https://github.com/3270io/3270Connect/blob/main/BUILD.md">BUILD.md</a>.</p></div>
 
 
 
