@@ -80,57 +80,64 @@ code {
 }
 
 /* --------------------------------------------------------------------------
-   The moving backdrop
-
-   A drifting field of characters, drawn by js/background.js. The console's own
-   backdrop is a static gradient; these pages get the moving one because
-   sign-in is the first thing an instance shows.
-
-   It sits at z-index 0 across the whole viewport and takes clicks, which pause
-   it — so everything meant to be read is lifted above it explicitly. Without a
-   canvas, or with the script blocked, what is left is the pair of soft
-   highlights below, which is a perfectly good backdrop on its own.
-   -------------------------------------------------------------------------- */
-
-.bg-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.bg-overlay::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.32;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.08), transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.06), transparent 35%);
-  transition: opacity 300ms ease;
-}
-
-.bg-overlay canvas { display: block; width: 100%; height: 100%; }
-
-/* Paused is not hidden. Something has to remain, or the click that stopped it
-   looks like a click that broke something. */
-body.bg-paused .bg-overlay::before,
-body.bg-paused .bg-overlay canvas { opacity: 0.05; }
-
-/* --------------------------------------------------------------------------
    Centred single-card pages: sign-in, setup, password change, refusals
+
+   These four wear the terminal's palette rather than the console's. Somebody
+   arriving at a sign-in form has not chosen a product yet — they have been
+   handed a URL — and the two 3270 front doors reading as one thing is worth
+   more here than matching the mint console they reach a second later. The
+   console keeps its own palette; nothing below this section is touched.
+
+   Everything is scoped to body.page-centred, which is exactly this set of
+   pages: the administration area sets page-admin and is unaffected.
    -------------------------------------------------------------------------- */
 
-body.page-centred { display: flex; flex-direction: column; }
+body.page-centred {
+  display: flex;
+  flex-direction: column;
+
+  --bg: #050905;
+  --bg-deep: #010301;
+
+  --surface: #070d07;
+  --surface-2: #070d07;
+  --surface-3: #0a130a;
+  --surface-solid: #070d07;
+
+  --line: #1a2b1a;
+  --line-strong: #2f4f2f;
+
+  --text: #45ff45;
+  /* One muted green rather than two. The terminal's palette has a single step
+     between "text" and "quiet", and inventing a third here would be the one
+     visible seam between the two front doors. */
+  --text-2: #64b664;
+  --text-3: #64b664;
+
+  --accent: #45ff45;
+  --accent-2: #98ff7a;
+  --accent-ink: #000;
+  --accent-soft: rgba(69, 255, 69, 0.15);
+
+  /* The whole page in the terminal face, not just the fields. This is most of
+     what makes the card read as a terminal rather than as a web form — the
+     heading and the running text carry it more than the inputs do.
+
+     The stack is the terminal's rather than the console's, which leads with
+     JetBrains Mono. On a machine with both installed, leading with one and
+     not the other is the seam that would give the two doors away. */
+  --font-mono: "Cascadia Mono", "Consolas", "Courier New", monospace;
+  font-family: var(--font-mono);
+  background:
+    radial-gradient(1100px 620px at 12% -10%, rgba(69, 255, 69, 0.06), transparent 60%),
+    var(--bg);
+}
 
 .auth-wrap {
   flex: 1;
   display: grid;
   place-items: center;
   padding: 32px 20px;
-  position: relative;
-  z-index: 1;
 }
 
 .auth-card {
@@ -141,13 +148,12 @@ body.page-centred { display: flex; flex-direction: column; }
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-3);
   padding: 32px;
-  backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
 }
 
 /* A hairline of accent along the top edge. The card is otherwise very plain,
-   and this is what ties it to the console's chrome. */
+   and this is what ties it to the terminal's chrome. */
 .auth-card::before {
   content: "";
   position: absolute;
@@ -185,11 +191,13 @@ body.page-centred { display: flex; flex-direction: column; }
    under a policy with no inline style, so it is set from here. */
 .brand-mark feDropShadow { flood-color: var(--accent); }
 
+/* Tracked open rather than tight. A sans heading is drawn closed up; a
+   terminal one is a row of cells, and negative tracking fights the face. */
 .auth-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 21.6px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   line-height: 1.2;
 }
 
@@ -359,10 +367,11 @@ form label,
 /* --------------------------------------------------------------------------
    What a form says back
 
-   Tint and glyph carry the severity; the words stay at full text colour. The
-   administration banners further down tint their text as well, which reads
-   only because the palette underneath it is fixed — leaving these at --text
-   means they survive a palette that is not.
+   A refusal is the one message somebody is scanning for, so it is the one that
+   takes the colour; a warning and a note keep the page's own green and let the
+   tint and the glyph do the work. Colouring text at all is only safe because
+   these pages pin their palette above — nothing here has to survive a
+   background it did not choose.
    -------------------------------------------------------------------------- */
 
 .auth-alert {
@@ -384,11 +393,17 @@ form label,
   line-height: 1.35;
 }
 
+/* An alert that closes the card rather than opening it. The margin has to flip
+   or the card ends on 18px of nothing; a modifier rather than an inline style,
+   because these pages are served under a policy that allows none. */
+.auth-alert--foot { margin: 18px 0 0; }
+
 .auth-alert--error {
   border-color: rgba(255, 111, 130, 0.5);
   background: rgba(255, 111, 130, 0.12);
+  color: #ff8f9d;
 }
-.auth-alert--error::before { content: "!"; color: var(--danger); }
+.auth-alert--error::before { content: "!"; }
 
 .auth-alert--warn {
   border-color: rgba(247, 195, 107, 0.5);
