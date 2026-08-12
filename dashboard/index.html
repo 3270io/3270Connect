@@ -978,6 +978,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#live-screen-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live screen flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Live screen flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-the-fleet-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the fleet is
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-the-same-data-from-an-ai-client" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1806,8 +1856,8 @@ keep on <code>127.0.0.1</code>.</p>
 </div>
 <h2 id="layout-at-a-glance">Layout at a glance<a class="headerlink" href="#layout-at-a-glance" title="Permanent link">¶</a></h2>
 <p>The console is a single page in three bands: a <strong>command bar</strong> and <strong>status
-bar</strong> pinned to the top, a <strong>metrics area</strong> (KPI tiles and charts), and the
-<strong>process table</strong>.</p>
+bar</strong> pinned to the top, a <strong>metrics area</strong> (KPI tiles, charts and the
+<a href="#live-screen-flow">live screen flow</a>), and the <strong>process table</strong>.</p>
 <h3 id="command-bar">Command bar<a class="headerlink" href="#command-bar" title="Permanent link">¶</a></h3>
 <p>Holds the primary actions — <em>Start Process</em>, <em>Start App</em>, <em>Console Logs</em>,
 <em>Refresh</em> and the shortcut sheet — alongside a live readout of running
@@ -1887,6 +1937,75 @@ p99 several times larger points at a tail problem rather than a general one.</p>
   range.</li>
 <li><strong>Export</strong> each chart as a <strong>PNG</strong> image or its underlying series as <strong>CSV</strong>.</li>
 </ul>
+<h2 id="live-screen-flow">Live screen flow<a class="headerlink" href="#live-screen-flow" title="Permanent link">¶</a></h2>
+<p><img alt="The live screen flow panel" class="shot" src="../assets/dashboard/screen-flow.webp"></p>
+<p>Every other panel counts workflows. This one shows the virtual users
+themselves: which step of the screen flow each is executing right now, and how
+long it has been sitting there. It appears as soon as a run has workers in
+flight and disappears when the last one finishes.</p>
+<p>The panel answers the question the counters cannot: <em>what is the run doing at
+this second, and is it still moving?</em></p>
+<h3 id="where-the-fleet-is">Where the fleet is<a class="headerlink" href="#where-the-fleet-is" title="Permanent link">¶</a></h3>
+<p>The left column groups every worker by the step it is on, busiest first. Each
+row shows the step's position in the workflow (<code>6/11</code>), its type, the screen
+position it works on, and how many workers are there.</p>
+<p>This is where a stall becomes obvious. Workers spread evenly across steps is a
+run making progress; <strong>every worker piled onto one step is a host that is slow
+at that particular transaction</strong>, not slow in general — and that tells you
+which screen to investigate rather than which server.</p>
+<h3 id="workers">Workers<a class="headerlink" href="#workers" title="Permanent link">¶</a></h3>
+<p>The right column is one row per virtual user: its script port, the host it is
+talking to, the step it is executing with the screen position or expected
+value, its progress through the workflow, and two times.</p>
+<table>
+<thead>
+<tr>
+<th>Figure</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>The large time</strong></td>
+<td>How long this worker has been on its <strong>current step</strong>.</td>
+</tr>
+<tr>
+<td><strong><code>… total</code></strong></td>
+<td>How long its workflow has been running altogether.</td>
+</tr>
+</tbody>
+</table>
+<p>The first is the one that matters. A worker two minutes into its workflow is
+ordinary; a worker two minutes into a single <code>CheckValue</code> is a host that has
+stopped painting screens. Rows are tinted by it — green while moving, amber
+past 10 s on one step, red past 30 s — and sorted by it, so whatever is stuck
+is at the top without scrolling.</p>
+<p><code>Connect</code>, <code>Disconnect</code> and <code>StepDelay</code> are never coloured as stalls however
+long they take: one waits on a TCP session and a host greeting, and a
+deliberate delay is a delay.</p>
+<p>These clocks tick every second regardless of your refresh interval, so a
+stalling worker keeps counting even at 60 s polling.</p>
+<h3 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Stalled only</strong> filters the list to workers that have been on one step for
+  more than 10 seconds.</li>
+<li><strong>Slowest / Step / Port</strong> sorts the workers. Sorting only re-applies on a
+  poll, so a row does not move out from under the pointer while you read it.</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">What a step reports, and what it does not</p>
+<p>A <code>CheckValue</code> shows the text it is waiting for, because that is the point
+of the step. A <code>FillString</code> shows its position and field length but
+<strong>never the value it types</strong> — workflows fill in usernames, passwords and
+account numbers, and this detail is published to the metrics file that the
+console, the REST API and any <a href="../mcp/">MCP client</a> can read.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Runs started by an older build</p>
+<p>Time on step is a newer field. A worker from a process that does not
+publish it shows <code>--</code> rather than <code>0s</code>, which would read as "it just moved
+on".</p>
+</div>
 <h2 id="reading-the-same-data-from-an-ai-client">Reading the same data from an AI client<a class="headerlink" href="#reading-the-same-data-from-an-ai-client" title="Permanent link">¶</a></h2>
 <p>The process table and the KPI tiles read the per-process metrics files every
 running 3270Connect writes. The <a href="../mcp/">MCP Server</a> reads the same files, so

@@ -1727,7 +1727,8 @@ returns the captured screens, so you can see it did what you meant.</p>
 <code>start_load_test</code> spawns the run and returns its pid.</p>
 <p><strong>How is it doing?</strong> <code>get_load_test_metrics</code> returns completed, failed and
 the duration percentiles; <code>get_live_workflow_status</code> shows where each worker
-currently is.</p>
+currently is, and — in <code>onStepSeconds</code> — how long it has been on that one
+step, which is what separates a slow run from a stuck one.</p>
 <p><strong>What does that mean?</strong> The assistant loads the <code>interpret-results</code> skill
 and reports p50, p95 and p99 with the sample size, keeping connect failures
 separate from transaction failures.</p>
