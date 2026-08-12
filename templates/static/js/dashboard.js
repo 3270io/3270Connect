@@ -15,6 +15,7 @@
    7.  Charts
    8.  KPI strip
    9.  Process table
+   9b. Live screen flow
    10. Refresh engine
    11. Modals
    12. Command palette & keyboard shortcuts
@@ -166,7 +167,9 @@
       autoRefresh: true,
       refreshPeriod: String(BOOT.refreshPeriod || 5),
       chartWindow: '30',
-      statusFilter: 'all'
+      statusFilter: 'all',
+      flowSort: 'onstep',
+      flowStalledOnly: false
     };
     var data;
 
@@ -451,6 +454,8 @@
     sortDir: 'asc',
     query: '',
     statusFilter: Prefs.get('statusFilter') || 'all',
+    flowSort: Prefs.get('flowSort') || 'onstep',
+    flowStalledOnly: !!Prefs.get('flowStalledOnly'),
     failures: 0,
     booted: false,
     seenPids: {}
@@ -1485,6 +1490,409 @@
   }
 
   /* ======================================================================
+     9b. Live screen flow
+
+     Every other panel counts workflows. This one shows the virtual users
+     themselves: which step of the screen flow each is on, and — the figure
+     that matters — how long it has been sitting there.
+
+     Time on a single step is what separates a slow run from a stuck one. A
+     worker two minutes into its workflow is ordinary; a worker two minutes
+     into one CheckValue is a host that has stopped painting screens. So the
+     rows are tinted and sorted by it, and the fleet distribution beside them
+     shows the pile-up that a stall produces.
+
+     Runs older than this field do not publish it (onStepSeconds is absent).
+     Those workers are shown plainly with a dash rather than a fabricated
+     zero, which would read as "just started".
+     ====================================================================== */
+
+  /* Seconds on one step before a worker is called slow, then stalled. A 3270
+     transaction is a fraction of a second when the host is healthy, so these
+     are generous rather than tight: the point is to catch a stop, not to
+     grumble about a busy mainframe. */
+  var FLOW_SLOW_SECONDS = 10;
+  var FLOW_STALLED_SECONDS = 30;
+
+  /* Most rows the worker list draws. Beyond this the list is a wall rather
+     than a view, and the fleet column answers the question better anyway. */
+  var FLOW_MAX_ROWS = 60;
+
+  /* Steps that are expected to take their time. Connect waits on a TCP
+     session and a host greeting, and a deliberate delay is a delay — neither
+     is a stall however long it sits, so neither is coloured as one. */
+  var FLOW_PATIENT_STEPS = { Connect: true, Disconnect: true, StepDelay: true, starting: true };
+
+  function flowWorkers() {
+    var workers = [];
+    (state.metrics || []).forEach(function (metric) {
+      if (!metric || !metric.isRunning) { return; }
+      (metric.liveSteps || []).forEach(function (step) {
+        workers.push({
+          pid: metric.pid,
+          scriptPort: step.scriptPort || '',
+          host: step.host || '',
+          port: num(step.port),
+          currentStep: num(step.currentStep),
+          totalSteps: num(step.totalSteps),
+          stepType: step.stepType || '',
+          stepDetail: step.stepDetail || '',
+          stepStartedAt: num(step.stepStartedAt),
+          startedAt: num(step.startedAt),
+          /* Absent rather than zero when the run does not publish it. */
+          onStep: sinceEpoch(step.stepStartedAt),
+          elapsed: sinceEpoch(step.startedAt)
+        });
+      });
+    });
+    return workers;
+  }
+
+  function nowSeconds() { return Math.floor(Date.now() / 1000); }
+
+  /* Seconds since a unix timestamp, or null where there is none to measure
+     from. Null travels all the way to the rendered dash: a run that cannot
+     report the figure must not be shown a zero, which reads as "just
+     started" — the opposite of what an unknown means here. */
+  function sinceEpoch(timestamp) {
+    var value = num(timestamp);
+    if (value <= 0) { return null; }
+    return Math.max(0, nowSeconds() - value);
+  }
+
+  /* 'ok' | 'slow' | 'stalled' | 'unknown' — drives both colour and filtering. */
+  function flowSeverity(worker) {
+    if (worker.onStep === null) { return 'unknown'; }
+    if (FLOW_PATIENT_STEPS[worker.stepType]) { return 'ok'; }
+    if (worker.onStep >= FLOW_STALLED_SECONDS) { return 'stalled'; }
+    if (worker.onStep >= FLOW_SLOW_SECONDS) { return 'slow'; }
+    return 'ok';
+  }
+
+  var FLOW_TONES = {
+    ok: 'var(--ok)',
+    slow: 'var(--warn)',
+    stalled: 'var(--danger)',
+    unknown: 'var(--text-3)'
+  };
+
+  function sortFlowWorkers(workers) {
+    var mode = state.flowSort;
+    return workers.slice().sort(function (a, b) {
+      if (mode === 'port') {
+        return String(a.scriptPort).localeCompare(String(b.scriptPort), undefined, { numeric: true });
+      }
+      if (mode === 'step') {
+        return (a.currentStep - b.currentStep) ||
+          String(a.scriptPort).localeCompare(String(b.scriptPort), undefined, { numeric: true });
+      }
+      /* Longest on its current step first: whatever is wrong surfaces at the
+         top without the operator scrolling for it. Workers whose run cannot
+         report the figure sort last rather than first, so an old run does not
+         crowd out a real stall. */
+      var av = a.onStep === null ? -1 : a.onStep;
+      var bv = b.onStep === null ? -1 : b.onStep;
+      return bv - av;
+    });
+  }
+
+  /* One entry per step position workers are sitting on, busiest first. */
+  function flowStages(workers) {
+    var byKey = {};
+    workers.forEach(function (worker) {
+      var key = worker.currentStep + '|' + worker.stepType;
+      if (!byKey[key]) {
+        byKey[key] = {
+          currentStep: worker.currentStep,
+          totalSteps: worker.totalSteps,
+          stepType: worker.stepType,
+          detail: worker.stepDetail,
+          count: 0,
+          slowest: null
+        };
+      }
+      var stage = byKey[key];
+      stage.count += 1;
+      if (worker.onStep !== null && (stage.slowest === null || worker.onStep > stage.slowest)) {
+        stage.slowest = worker.onStep;
+      }
+      /* Details can differ between workers on the same step only when their
+         workflows differ; first one wins and the count carries the rest. */
+      if (!stage.detail && worker.stepDetail) { stage.detail = worker.stepDetail; }
+    });
+
+    return Object.keys(byKey).map(function (key) { return byKey[key]; })
+      .sort(function (a, b) { return (b.count - a.count) || (a.currentStep - b.currentStep); });
+  }
+
+  function fmtOnStep(seconds) {
+    if (seconds === null) { return '--'; }
+    return fmtSeconds(seconds);
+  }
+
+  function renderFlowSummary(workers, stages) {
+    var host = $('#flowSummary');
+    if (!host) { return; }
+    host.innerHTML = '';
+    if (!workers.length) { return; }
+
+    var stalled = workers.filter(function (w) { return flowSeverity(w) === 'stalled'; });
+    var slow = workers.filter(function (w) { return flowSeverity(w) === 'slow'; });
+    var busiest = stages[0];
+    var hosts = {};
+    workers.forEach(function (w) { if (w.host) { hosts[w.host + ':' + w.port] = true; } });
+    var hostNames = Object.keys(hosts);
+
+    function stat(key, value, tone, tip) {
+      var node = el('span', 'flow-stat' + (tone ? ' ' + tone : ''));
+      node.appendChild(el('span', 'k', key));
+      node.appendChild(el('span', 'v', value));
+      if (tip) { node.setAttribute('data-tip', tip); }
+      host.appendChild(node);
+    }
+
+    stat('in flight', fmtInt(workers.length), null, 'Virtual users currently executing a step');
+    if (busiest) {
+      stat('busiest step', stepLabel(busiest) + ' × ' + fmtInt(busiest.count),
+        busiest.count > 1 && busiest.count === workers.length ? 'warn' : null,
+        busiest.count === workers.length && workers.length > 1
+          ? 'Every worker is on this step — the host is slow at this transaction, not slow in general'
+          : 'The step the most workers are sitting on');
+    }
+    if (stalled.length) {
+      stat('stalled', fmtInt(stalled.length), 'bad',
+        'On one step for ' + FLOW_STALLED_SECONDS + 's or more');
+    } else if (slow.length) {
+      stat('slow', fmtInt(slow.length), 'warn',
+        'On one step for ' + FLOW_SLOW_SECONDS + 's or more');
+    }
+    if (hostNames.length === 1) {
+      stat('host', hostNames[0], null, 'The host under test');
+    } else if (hostNames.length > 1) {
+      stat('hosts', fmtInt(hostNames.length), null, hostNames.join(', '));
+    }
+  }
+
+  function stepLabel(stage) {
+    var position = stage.totalSteps > 0
+      ? stage.currentStep + '/' + stage.totalSteps
+      : String(stage.currentStep);
+    return position + ' ' + (stage.stepType || '—');
+  }
+
+  function renderFlowStage(workers, stages) {
+    var host = $('#flowStage');
+    if (!host) { return; }
+    host.innerHTML = '';
+    if (!stages.length) { return; }
+
+    var max = stages[0].count || 1;
+    stages.forEach(function (stage) {
+      var row = el('div', 'stage-row' + (stage.count > 1 && stage.count >= workers.length / 2 ? ' hot' : ''));
+
+      var idx = el('span', 'idx', stage.totalSteps > 0
+        ? stage.currentStep + '/' + stage.totalSteps
+        : String(stage.currentStep));
+      row.appendChild(idx);
+
+      var meter = el('div', 'meter');
+      var fill = el('i');
+      fill.style.width = ((stage.count / max) * 100).toFixed(1) + '%';
+      meter.appendChild(fill);
+
+      var label = el('div', 'lbl');
+      label.appendChild(el('span', 'type', stage.stepType || '—'));
+      if (stage.detail) { label.appendChild(el('span', 'detail', stage.detail)); }
+      meter.appendChild(label);
+
+      var tip = fmtInt(stage.count) + ' worker' + (stage.count === 1 ? '' : 's') + ' on ' + stepLabel(stage);
+      if (stage.slowest !== null) { tip += ' · longest ' + fmtSeconds(stage.slowest) + ' on this step'; }
+      row.setAttribute('data-tip', tip);
+
+      row.appendChild(meter);
+      row.appendChild(el('span', 'n', fmtInt(stage.count)));
+      host.appendChild(row);
+    });
+  }
+
+  function renderFlowWorkers(workers) {
+    var host = $('#flowWorkers');
+    var note = $('#flowWorkerNote');
+    if (!host) { return; }
+    host.innerHTML = '';
+
+    flowTicking = [];
+
+    var rows = state.flowStalledOnly
+      ? workers.filter(function (w) { return flowSeverity(w) === 'stalled' || flowSeverity(w) === 'slow'; })
+      : workers;
+    rows = sortFlowWorkers(rows);
+
+    if (note) {
+      note.textContent = rows.length === workers.length
+        ? ''
+        : fmtInt(rows.length) + ' of ' + fmtInt(workers.length);
+    }
+
+    if (!rows.length) {
+      host.appendChild(el('div', 'flow-note', state.flowStalledOnly
+        ? 'Nothing is stalled — every worker has moved on within ' + FLOW_SLOW_SECONDS + 's.'
+        : 'No workers are reporting a step yet.'));
+      return;
+    }
+
+    /* A 500-user run would put 500 rows on the page every poll, which is a
+       list nobody scrolls and a lot of DOM to rebuild. The rows are already
+       sorted worst-first, so the cut falls on the healthy end — and it is
+       said out loud rather than left to be inferred from a short list. The
+       fleet column beside this one still counts every worker. */
+    var hidden = 0;
+    if (rows.length > FLOW_MAX_ROWS) {
+      hidden = rows.length - FLOW_MAX_ROWS;
+      rows = rows.slice(0, FLOW_MAX_ROWS);
+    }
+
+    var multiplePids = {};
+    workers.forEach(function (w) { multiplePids[w.pid] = true; });
+    var showPid = Object.keys(multiplePids).length > 1;
+
+    rows.forEach(function (worker) {
+      var severity = flowSeverity(worker);
+      var row = el('div', 'worker-row' + (severity === 'stalled' ? ' stalled' : ''));
+      row.style.setProperty('--tone', FLOW_TONES[severity]);
+
+      var who = el('div', 'who');
+      who.appendChild(el('span', 'port', (showPid ? worker.pid + ' · ' : '') + (worker.scriptPort || '—')));
+      who.appendChild(el('span', 'host', worker.host ? worker.host + ':' + worker.port : '—'));
+      row.appendChild(who);
+
+      var what = el('div', 'what');
+      var line = el('div', 'line');
+      line.appendChild(el('span', 'step-type', worker.stepType || '—'));
+      if (worker.stepDetail) { line.appendChild(el('span', 'step-detail', worker.stepDetail)); }
+      line.appendChild(el('span', 'step-count', worker.totalSteps > 0
+        ? worker.currentStep + '/' + worker.totalSteps
+        : 'step ' + worker.currentStep));
+      what.appendChild(line);
+
+      var track = el('div', 'track');
+      var fill = el('i');
+      fill.style.width = worker.totalSteps > 0
+        ? clamp((worker.currentStep / worker.totalSteps) * 100, 0, 100).toFixed(1) + '%'
+        : '0%';
+      track.appendChild(fill);
+      what.appendChild(track);
+      row.appendChild(what);
+
+      var when = el('div', 'when');
+      when.appendChild(el('span', 'on-step', fmtOnStep(worker.onStep)));
+      when.appendChild(el('span', 'total', worker.elapsed === null ? '' : fmtSeconds(worker.elapsed) + ' total'));
+      row.appendChild(when);
+
+      var tip = 'Script port ' + (worker.scriptPort || '—') + ' · pid ' + worker.pid;
+      if (worker.onStep === null) {
+        tip += ' · this run does not report time on step';
+      } else {
+        tip += ' · ' + fmtSeconds(worker.onStep) + ' on ' + (worker.stepType || 'this step');
+      }
+      row.setAttribute('data-tip', tip);
+      host.appendChild(row);
+      flowTicking.push({ node: row, worker: worker, onStepNode: when.firstChild, totalNode: when.lastChild });
+    });
+
+    if (hidden) {
+      host.appendChild(el('div', 'flow-note',
+        fmtInt(hidden) + ' more worker' + (hidden === 1 ? '' : 's') +
+        ' not shown — the list keeps the ' + FLOW_MAX_ROWS + ' longest on their current step.'));
+    }
+  }
+
+  /* Rows whose clocks are advanced every second between polls.
+
+     Only the times and the tint are refreshed, never the order: re-sorting
+     under the pointer would move the row an operator is reading. The next
+     poll re-sorts, which is soon enough for a figure measured in seconds. */
+  var flowTicking = [];
+  var flowTickId = null;
+
+  function tickFlow() {
+    var panel = $('#flowPanel');
+    if (!panel || panel.hidden || !flowTicking.length) { return; }
+    if (document.hidden) { return; }
+
+    flowTicking.forEach(function (entry) {
+      var worker = entry.worker;
+      if (worker.stepStartedAt <= 0) { return; }
+      worker.onStep = sinceEpoch(worker.stepStartedAt);
+      worker.elapsed = sinceEpoch(worker.startedAt);
+
+      var severity = flowSeverity(worker);
+      entry.node.style.setProperty('--tone', FLOW_TONES[severity]);
+      entry.node.classList.toggle('stalled', severity === 'stalled');
+      if (entry.onStepNode) { entry.onStepNode.textContent = fmtOnStep(worker.onStep); }
+      if (entry.totalNode && worker.elapsed !== null) {
+        entry.totalNode.textContent = fmtSeconds(worker.elapsed) + ' total';
+      }
+    });
+  }
+
+  function renderFlow() {
+    var panel = $('#flowPanel');
+    if (!panel) { return; }
+
+    var workers = flowWorkers();
+    /* Hidden rather than shown empty: the runs table below already says when
+       nothing is running, and a blank panel above it only repeats that. */
+    panel.hidden = workers.length === 0;
+    if (!workers.length) { flowTicking = []; return; }
+
+    var stages = flowStages(workers);
+    var count = $('#flowCount');
+    if (count) {
+      var stalled = workers.filter(function (w) { return flowSeverity(w) === 'stalled'; }).length;
+      count.textContent = fmtInt(workers.length) + ' worker' + (workers.length === 1 ? '' : 's') +
+        ' across ' + fmtInt(stages.length) + ' step' + (stages.length === 1 ? '' : 's') +
+        (stalled ? ' · ' + fmtInt(stalled) + ' stalled' : '');
+    }
+
+    renderFlowSummary(workers, stages);
+    renderFlowStage(workers, stages);
+    renderFlowWorkers(workers);
+  }
+
+  function bindFlow() {
+    var sort = $('#flowSort');
+    if (sort) {
+      $$('button', sort).forEach(function (button) {
+        button.setAttribute('aria-pressed', String(button.getAttribute('data-sort') === state.flowSort));
+        button.addEventListener('click', function () {
+          state.flowSort = button.getAttribute('data-sort');
+          Prefs.set('flowSort', state.flowSort);
+          $$('button', sort).forEach(function (other) {
+            other.setAttribute('aria-pressed', String(other === button));
+          });
+          renderFlow();
+        });
+      });
+    }
+
+    var stalledOnly = $('#flowStalledOnly');
+    if (stalledOnly) {
+      stalledOnly.checked = state.flowStalledOnly;
+      stalledOnly.addEventListener('change', function () {
+        state.flowStalledOnly = stalledOnly.checked;
+        Prefs.set('flowStalledOnly', state.flowStalledOnly);
+        renderFlow();
+      });
+    }
+
+    /* Independent of the refresh interval on purpose. At 30s or 60s polling
+       the snapshot is stale but the clocks are not, and a frozen timer on a
+       stalling worker is precisely the wrong thing to show. */
+    if (flowTickId === null) { flowTickId = setInterval(tickFlow, 1000); }
+  }
+
+  /* ======================================================================
      10. Refresh engine
      ====================================================================== */
 
@@ -1581,6 +1989,7 @@
       var agg = aggregate(state.metrics);
       pushHistorySample(agg, resourceSeries(state.metrics));
       renderKPIs();
+      renderFlow();
       renderTable();
       renderLatency();
       Charts.update();
@@ -2430,6 +2839,8 @@
         { group: 'View', title: 'Toggle CRT effects', sub: 'Scanlines and grid drift', icon: 'wand-magic-sparkles', run: toggleFx },
         { group: 'View', title: 'Toggle table / card view', sub: 'Switch the process layout', icon: 'table-cells-large', run: toggleView },
         { group: 'View', title: 'Toggle auto-refresh', sub: 'Pause or resume live polling', icon: 'play', run: toggleAutoRefresh },
+        { group: 'View', title: 'Jump to live screen flow', sub: 'What each virtual user is doing right now', icon: 'satellite-dish', run: focusFlow },
+        { group: 'View', title: 'Toggle stalled workers only', sub: 'Filter the flow to workers stuck on a step', icon: 'filter', run: toggleFlowStalledOnly },
         { group: 'Help', title: 'Keyboard shortcuts', sub: 'Show the shortcut sheet', icon: 'keyboard', run: function () { Modals.show('shortcutModal'); } }
       ];
 
@@ -2616,6 +3027,24 @@
     });
   }
 
+  function focusFlow() {
+    var panel = $('#flowPanel');
+    if (!panel || panel.hidden) {
+      Toast.push('info', 'Nothing in flight', 'The live screen flow appears once a run has workers executing steps.');
+      return;
+    }
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toggleFlowStalledOnly() {
+    var toggle = $('#flowStalledOnly');
+    state.flowStalledOnly = !state.flowStalledOnly;
+    Prefs.set('flowStalledOnly', state.flowStalledOnly);
+    if (toggle) { toggle.checked = state.flowStalledOnly; }
+    renderFlow();
+    focusFlow();
+  }
+
   function toggleAutoRefresh() {
     var next = !Prefs.get('autoRefresh');
     Prefs.set('autoRefresh', next);
@@ -2786,6 +3215,7 @@
     Dialog.bind();
     bindToolbar();
     bindTable();
+    bindFlow();
     Modals.bind();
     Palette.bind();
     Keys.bind();
