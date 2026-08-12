@@ -1,18 +1,18 @@
 {{- define "content" -}}
-<section class="card card-narrow">
-  <header class="card-head">
-    <img class="mark" src="/static/images/favicon.png" alt="" width="40" height="40">
-    <h1>{{ .Title }}</h1>
-  </header>
+<section class="auth-card">
+  <div class="auth-head">
+    {{ template "brandMark" }}
+    <h1 class="auth-title">{{ .Title }}</h1>
+  </div>
 
-  <p class="banner banner-error" role="alert">{{ .Message }}</p>
+  <div class="auth-alert auth-alert--error" role="alert"><span>{{ .Message }}</span></div>
 
-  <p class="hint">
+  <p class="auth-sub">
     Administration covers the whole instance: accounts, groups, tokens, other
     people's load runs and the audit trail. Running your own workflows does not
     need it.
   </p>
 
-  <a class="btn btn-primary btn-block" href="/dashboard">Back to the console</a>
+  <a class="auth-submit auth-submit-link" href="/dashboard">Back to the console</a>
 </section>
 {{- end -}}

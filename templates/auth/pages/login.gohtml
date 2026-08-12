@@ -1,41 +1,47 @@
 {{- define "content" -}}
-<section class="card card-narrow">
-  <header class="card-head">
-    <img class="mark" src="/static/images/favicon.png" alt="" width="40" height="40">
-    <h1>3270Connect</h1>
-    <p class="sub">Operations console</p>
-  </header>
+<section class="auth-card">
+  <div class="auth-head">
+    {{ template "brandMark" }}
+    <h1 class="auth-title">3270Connect</h1>
+  </div>
+  <p class="auth-sub">Sign in to reach the operations console.</p>
 
+  {{/* Both above the form: they are what to read before typing a password
+       into it, not a footnote to having typed one. */}}
   {{ template "tlsWarning" . }}
   {{ template "formMessages" . }}
 
   {{ if .SSOEnabled }}
-  <a class="btn btn-primary btn-block" href="{{ .SSOStartPath }}?next={{ .Next }}">
-    Sign in with single sign-on
-  </a>
-  <p class="rule"><span>or use an account with a password</span></p>
+  <a class="auth-submit auth-submit-link" href="{{ .SSOStartPath }}?next={{ .Next }}">Sign in with your organisation account</a>
+  <div class="auth-divider"><span>or sign in with a password</span></div>
   {{ end }}
 
-  <form method="post" action="/login" autocomplete="on">
+  <form action="/login" method="post" class="auth-form" autocomplete="on">
     <input type="hidden" name="next" value="{{ .Next }}">
 
-    <label for="username">Username</label>
-    <input id="username" name="username" type="text" autocomplete="username"
-           autocapitalize="none" spellcheck="false" required autofocus>
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username"
+             autocapitalize="none" autocorrect="off" spellcheck="false"
+             required autofocus>
+    </div>
 
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             autocomplete="current-password" required>
+    </div>
 
-    <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    <button type="submit" class="auth-submit">Sign in</button>
   </form>
 
   {{ if .SSOEnabled }}
-  <p class="hint">
+  <p class="auth-note">
     The password form is here on purpose: it is the way back in when the
     identity provider cannot be reached.
   </p>
   {{ else }}
-  <p class="hint">
+  <p class="auth-note">
     No account yet? An administrator creates one, or so does the console
     command <code>3270Connect user add &lt;name&gt;</code>.
   </p>

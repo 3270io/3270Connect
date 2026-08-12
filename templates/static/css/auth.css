@@ -80,35 +80,140 @@ code {
 }
 
 /* --------------------------------------------------------------------------
+   The moving backdrop
+
+   A drifting field of characters, drawn by js/background.js. The console's own
+   backdrop is a static gradient; these pages get the moving one because
+   sign-in is the first thing an instance shows.
+
+   It sits at z-index 0 across the whole viewport and takes clicks, which pause
+   it — so everything meant to be read is lifted above it explicitly. Without a
+   canvas, or with the script blocked, what is left is the pair of soft
+   highlights below, which is a perfectly good backdrop on its own.
+   -------------------------------------------------------------------------- */
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.bg-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.32;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.06), transparent 35%);
+  transition: opacity 300ms ease;
+}
+
+.bg-overlay canvas { display: block; width: 100%; height: 100%; }
+
+/* Paused is not hidden. Something has to remain, or the click that stopped it
+   looks like a click that broke something. */
+body.bg-paused .bg-overlay::before,
+body.bg-paused .bg-overlay canvas { opacity: 0.05; }
+
+/* --------------------------------------------------------------------------
    Centred single-card pages: sign-in, setup, password change, refusals
    -------------------------------------------------------------------------- */
 
 body.page-centred { display: flex; flex-direction: column; }
 
-.main-centred {
+.auth-wrap {
   flex: 1;
   display: grid;
   place-items: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
+  position: relative;
+  z-index: 1;
 }
 
-.card {
+.auth-card {
+  width: 100%;
+  max-width: 460px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-3);
-  padding: 30px 28px 26px;
+  padding: 32px;
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
 }
 
-.card-narrow { width: min(430px, 100%); }
+/* A hairline of accent along the top edge. The card is otherwise very plain,
+   and this is what ties it to the console's chrome. */
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent,
+      var(--accent) 22%,
+      var(--accent-2) 62%,
+      transparent);
+  opacity: 0.85;
+}
 
-.card-head { text-align: center; margin-bottom: 20px; }
-.card-head .mark { display: block; margin: 0 auto 12px; }
-.card-head h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
-.card-head .sub { margin: 4px 0 0; color: var(--text-3); font-size: 13px; }
+/* Setup asks for four things rather than two, and reads better given the room. */
+.auth-card--wide { max-width: 560px; }
 
-form label {
+.auth-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+/* The mark's viewBox is 96x88, so the box matches that ratio rather than
+   letterboxing the drawing inside a square. */
+.brand-mark {
+  width: 37px;
+  height: 34px;
+  flex: none;
+  filter: drop-shadow(0 2px 6px var(--accent-soft));
+}
+
+/* The drawing casts its own glow through an SVG filter. flood-color takes a
+   custom property as CSS but not as an attribute, and these pages are served
+   under a policy with no inline style, so it is set from here. */
+.brand-mark feDropShadow { flood-color: var(--accent); }
+
+.auth-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.auth-sub {
+  margin: 0 0 24px;
+  color: var(--text-3);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+form label,
+.field > label {
   display: block;
   margin: 14px 0 5px;
   font-size: 12px;
@@ -117,6 +222,186 @@ form label {
   text-transform: uppercase;
   color: var(--text-3);
 }
+
+/* Inside a stacked field the gap does the spacing, so the label brings none. */
+.field > label {
+  margin: 0;
+  font-size: 11.5px;
+  letter-spacing: 0.13em;
+}
+
+/* Scoped to the card so the administration dialogs keep the console's own
+   input styling, which their tables and pickers are drawn around. */
+.auth-card .field > input {
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  padding: 11px 12px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.auth-card .field > input:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
+/* The ring replaces the shared focus outline rather than joining it: on a
+   field that already has a border, two rings read as an error state. */
+.auth-card .field > input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* The setup code is transcribed from a log, so it gets room to breathe and
+   tracking wide enough to compare character by character. */
+.auth-card .field > input.code-input {
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 16px;
+  text-align: center;
+  padding: 13px 12px;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+/* The closing paragraph of a card — what to do if you have no account, where
+   the setup code came from. Ruled off, because it is not part of the form. */
+.auth-note {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+/* Fingers, wherever a finger is what there is. font-size is not cosmetic:
+   below 16px iOS Safari zooms the page in when a field takes focus and never
+   zooms back out, so tapping Username scrolls the button off the side of the
+   screen. 16px rather than 1rem because the threshold is the browser's and is
+   measured in pixels, so a root size the operator changed must not move it. */
+@media (pointer: coarse) {
+  .auth-card .field > input {
+    font-size: 16px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .auth-submit {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: filter 120ms ease, transform 60ms ease;
+}
+
+.auth-submit:hover:not(:disabled) { filter: brightness(1.1); }
+.auth-submit:active:not(:disabled) { transform: translateY(1px); }
+.auth-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* A card's primary action when it navigates rather than posts — the
+   identity-provider button, the way back to the console from a refusal. An
+   anchor is what a screen reader should announce for both, and it should still
+   look like the one thing on the card worth pressing.
+   Colour and decoration are restated because the stylesheet tints every
+   anchor, and a bare element selector would win against a single class. */
+.auth-card .auth-submit-link,
+.auth-card .auth-submit-link:hover {
+  display: block;
+  margin-bottom: 4px;
+  padding: 11px 14px;
+  color: var(--accent-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* A labelled rule, so the password form below reads as the alternative rather
+   than as a second thing to fill in. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 4px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* --------------------------------------------------------------------------
+   What a form says back
+
+   Tint and glyph carry the severity; the words stay at full text colour. The
+   administration banners further down tint their text as well, which reads
+   only because the palette underneath it is fixed — leaving these at --text
+   means they survive a palette that is not.
+   -------------------------------------------------------------------------- */
+
+.auth-alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.auth-alert::before {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.auth-alert--error {
+  border-color: rgba(255, 111, 130, 0.5);
+  background: rgba(255, 111, 130, 0.12);
+}
+.auth-alert--error::before { content: "!"; color: var(--danger); }
+
+.auth-alert--warn {
+  border-color: rgba(247, 195, 107, 0.5);
+  background: rgba(247, 195, 107, 0.12);
+}
+.auth-alert--warn::before { content: "\26A0"; color: var(--warn); }
+
+.auth-alert--info {
+  border-color: rgba(90, 210, 255, 0.4);
+  background: rgba(90, 210, 255, 0.1);
+}
+
+.auth-alert code { background: var(--surface-3); }
 
 input[type="text"],
 input[type="password"],
@@ -143,21 +428,6 @@ a:focus-visible {
 }
 
 .hint { color: var(--text-3); font-size: 12.5px; margin: 14px 0 0; }
-
-.rule {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 18px 0 4px;
-  color: var(--text-3);
-  font-size: 12px;
-}
-.rule::before, .rule::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-}
 
 /* --------------------------------------------------------------------------
    Buttons
@@ -471,6 +741,8 @@ label.checkline input { width: auto; }
    Footer, responsiveness, motion
    -------------------------------------------------------------------------- */
 
+/* Above the backdrop, or the two links in it would toggle the animation
+   instead of following. */
 .page-footer {
   display: flex;
   justify-content: space-between;
@@ -478,12 +750,14 @@ label.checkline input { width: auto; }
   padding: 14px 24px 20px;
   color: var(--text-3);
   font-size: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 620px) {
   .admin-topbar, .admin-nav, .main-admin, .page-footer { padding-left: 14px; padding-right: 14px; }
   .banner-wide { margin-left: 14px; margin-right: 14px; }
-  .card { padding: 22px 18px; }
+  .auth-card { padding: 24px 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
