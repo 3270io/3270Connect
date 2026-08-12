@@ -14,31 +14,26 @@
   <title>{{ .Title }} — 3270Connect</title>
   <link rel="shortcut icon" href="/static/images/favicon.png" type="image/png">
   <link rel="stylesheet" href="/static/css/auth.css?v={{ .Version }}">
-  <script src="/static/js/background.js?v={{ .Version }}" defer></script>
 </head>
 <body class="{{ block "bodyClass" . }}page-centred{{ end }}">
-{{/* The drifting character field, on the centred pages only. The
-     administration area is tables and figures read across the full width, and
-     characters wandering behind a column of timestamps make it harder to read
-     for no gain — a sign-in card has the room for it and they do not.
-
-     Keyed on Active because that is what tells the two apart: an
-     administration page names the tab it is, and a centred page names nothing.
-     aria-hidden because it says nothing, and the canvas is inert if the script
-     never runs. */}}
-{{ if not .Active }}
-<div class="bg-overlay" aria-hidden="true">
-  <canvas id="bg-canvas" aria-hidden="true"></canvas>
-</div>
-{{ end }}
 {{ block "chrome" . }}{{ end }}
 <main class="{{ block "mainClass" . }}auth-wrap{{ end }}">
 {{ block "content" . }}{{ end }}
 </main>
+{{/* The footer belongs to the administration area, not to the sign-in card.
+     A card with a rule, a note and a footer under it is three endings; the
+     version and the documentation link are worth having where somebody is
+     already working, and in the way where they are trying to get in.
+
+     Keyed on Active because that is what tells the two apart: an
+     administration page names the tab it is, and a centred page names
+     nothing. */}}
+{{ if .Active }}
 <footer class="page-footer">
   <span>3270Connect {{ .Version }}</span>
   <a href="https://3270connect.3270.io/authentication/" rel="noreferrer">Documentation</a>
 </footer>
+{{ end }}
 {{ block "scripts" . }}{{ end }}
 </body>
 </html>
@@ -100,7 +95,11 @@
 </svg>
 {{- end -}}
 
-{{/* The warning a form shows when the connection is not encrypted.
+{{/* The warning a form closes with when the connection is not encrypted.
+
+     Below the form rather than above it: it is a fact about the page, not an
+     instruction for filling it in, and above the fields it pushes the thing
+     somebody came to do off a phone screen.
 
      Two messages, because they need two different actions. Nothing in front of
      the console means "put TLS in front of it". Something in front saying it
@@ -110,7 +109,7 @@
 {{- define "tlsWarning" -}}
 {{ if .ShowNoTLS }}
   {{ if .ProxySaysHTTPS }}
-  <div class="auth-alert auth-alert--info">
+  <div class="auth-alert auth-alert--info auth-alert--foot">
     <span>
       Something in front of this console says the browser reached it over
       HTTPS, but 3270Connect has not been told to believe forwarding headers,
@@ -119,7 +118,7 @@
     </span>
   </div>
   {{ else }}
-  <div class="auth-alert auth-alert--warn">
+  <div class="auth-alert auth-alert--warn auth-alert--foot">
     <span>
       This connection is not encrypted. Anything typed here, the password
       included, crosses the network in the clear. Put TLS in front of the

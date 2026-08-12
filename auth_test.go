@@ -776,24 +776,33 @@ func TestCentredPagesShareTheCard(t *testing.T) {
 			`class="brand-mark"`,
 			`class="auth-title"`,
 			`class="auth-submit`,
-			// The backdrop belongs to these pages and not to administration.
-			`class="bg-overlay"`,
+			// The palette and the terminal face hang off this class.
+			`class="page-centred"`,
 		} {
 			if !strings.Contains(body, want) {
 				t.Errorf("%s: the card is missing %s", tc.page, want)
 			}
 		}
+		// Nothing below the card. The footer is the administration area's.
+		if strings.Contains(body, "page-footer") {
+			t.Errorf("%s: a centred page must not carry the footer", tc.page)
+		}
 	}
 }
 
-// The drifting characters are for the sign-in card. Administration is tables
-// read across the full width, and they are only noise over it.
-func TestAdminPagesHaveNoBackdrop(t *testing.T) {
+// The footer is worth having where somebody is already working and in the way
+// where they are trying to get in.
+func TestAdminPagesKeepTheFooter(t *testing.T) {
 	w := httptest.NewRecorder()
 	renderAuthPage(w, httptest.NewRequest(http.MethodGet, "/", nil), http.StatusOK,
 		"admin-overview.gohtml", authPageData{Title: "Administration", Active: "overview"})
-	if strings.Contains(w.Body.String(), `class="bg-overlay"`) {
-		t.Error("an administration page must not carry the moving backdrop")
+	body := w.Body.String()
+	if !strings.Contains(body, "page-footer") {
+		t.Error("an administration page keeps the version and the documentation link")
+	}
+	// The terminal palette is the sign-in card's; the console keeps its own.
+	if strings.Contains(body, `class="page-centred"`) {
+		t.Error("an administration page must not take the centred pages' palette")
 	}
 }
 
