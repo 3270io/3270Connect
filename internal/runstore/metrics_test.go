@@ -184,6 +184,25 @@ func TestAggregateCombinesProcesses(t *testing.T) {
 	}
 }
 
+// A worker's time on its current step is what separates a slow run from a
+// stuck one, and "not reported" has to stay distinguishable from "zero" —
+// a run older than the field would otherwise look like it had just moved on.
+func TestOnStepSeconds(t *testing.T) {
+	now := time.Unix(1_700_000_000, 0)
+
+	if got := (WorkflowStatus{StepStartedAt: now.Unix() - 42}).OnStepSeconds(now); got != 42 {
+		t.Errorf("expected 42 seconds on step, got %d", got)
+	}
+	if got := (WorkflowStatus{}).OnStepSeconds(now); got != -1 {
+		t.Errorf("an unreported step start should answer -1, got %d", got)
+	}
+	// Clocks and a two-second publishing interval can put a snapshot very
+	// slightly in the future; that is not a negative age.
+	if got := (WorkflowStatus{StepStartedAt: now.Unix() + 3}).OnStepSeconds(now); got != 0 {
+		t.Errorf("a future step start should floor at 0, got %d", got)
+	}
+}
+
 func TestReadFindsOneProcess(t *testing.T) {
 	dir := t.TempDir()
 	writeMetrics(t, dir, Metrics{PID: 101})

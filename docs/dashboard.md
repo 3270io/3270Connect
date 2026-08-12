@@ -84,8 +84,8 @@ unhealthy. `/` redirects to `/dashboard`.
 ## Layout at a glance
 
 The console is a single page in three bands: a **command bar** and **status
-bar** pinned to the top, a **metrics area** (KPI tiles and charts), and the
-**process table**.
+bar** pinned to the top, a **metrics area** (KPI tiles, charts and the
+[live screen flow](#live-screen-flow)), and the **process table**.
 
 ### Command bar
 
@@ -154,6 +154,72 @@ p99 several times larger points at a tail problem rather than a general one.
 - **Scroll to zoom**, **drag to pan**, and the reset button returns to the full
   range.
 - **Export** each chart as a **PNG** image or its underlying series as **CSV**.
+
+## Live screen flow
+
+![The live screen flow panel](assets/dashboard/screen-flow.webp){: .shot }
+
+Every other panel counts workflows. This one shows the virtual users
+themselves: which step of the screen flow each is executing right now, and how
+long it has been sitting there. It appears as soon as a run has workers in
+flight and disappears when the last one finishes.
+
+The panel answers the question the counters cannot: *what is the run doing at
+this second, and is it still moving?*
+
+### Where the fleet is
+
+The left column groups every worker by the step it is on, busiest first. Each
+row shows the step's position in the workflow (`6/11`), its type, the screen
+position it works on, and how many workers are there.
+
+This is where a stall becomes obvious. Workers spread evenly across steps is a
+run making progress; **every worker piled onto one step is a host that is slow
+at that particular transaction**, not slow in general — and that tells you
+which screen to investigate rather than which server.
+
+### Workers
+
+The right column is one row per virtual user: its script port, the host it is
+talking to, the step it is executing with the screen position or expected
+value, its progress through the workflow, and two times.
+
+| Figure | Meaning |
+|---|---|
+| **The large time** | How long this worker has been on its **current step**. |
+| **`… total`** | How long its workflow has been running altogether. |
+
+The first is the one that matters. A worker two minutes into its workflow is
+ordinary; a worker two minutes into a single `CheckValue` is a host that has
+stopped painting screens. Rows are tinted by it — green while moving, amber
+past 10 s on one step, red past 30 s — and sorted by it, so whatever is stuck
+is at the top without scrolling.
+
+`Connect`, `Disconnect` and `StepDelay` are never coloured as stalls however
+long they take: one waits on a TCP session and a host greeting, and a
+deliberate delay is a delay.
+
+These clocks tick every second regardless of your refresh interval, so a
+stalling worker keeps counting even at 60 s polling.
+
+### Controls
+
+- **Stalled only** filters the list to workers that have been on one step for
+  more than 10 seconds.
+- **Slowest / Step / Port** sorts the workers. Sorting only re-applies on a
+  poll, so a row does not move out from under the pointer while you read it.
+
+!!! info "What a step reports, and what it does not"
+    A `CheckValue` shows the text it is waiting for, because that is the point
+    of the step. A `FillString` shows its position and field length but
+    **never the value it types** — workflows fill in usernames, passwords and
+    account numbers, and this detail is published to the metrics file that the
+    console, the REST API and any [MCP client](mcp.md) can read.
+
+!!! note "Runs started by an older build"
+    Time on step is a newer field. A worker from a process that does not
+    publish it shows `--` rather than `0s`, which would read as "it just moved
+    on".
 
 ## Reading the same data from an AI client
 

@@ -1224,6 +1224,157 @@ table.grid tbody tr.flash-new { animation: row-flash 1.4s var(--ease-out); }
 html[data-view='cards'] .card-view { display: grid; }
 html[data-view='cards'] .grid-wrap { display: none; }
 
+/* --------------------------------------------------------------------------
+   Live screen flow
+
+   Two columns that answer two different questions from one snapshot: where
+   the fleet is as a whole, and what each worker is doing. Both are tinted by
+   how long a worker has sat on its current step, so a stall reads as colour
+   before it reads as a number.
+   -------------------------------------------------------------------------- */
+
+.flow-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.flow-summary:empty { display: none; }
+.flow-stat {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  min-width: 0;
+}
+.flow-stat .k { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+.flow-stat .v { font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.flow-stat.warn { border-color: color-mix(in srgb, var(--warn) 42%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.flow-stat.warn .v { color: var(--warn); }
+.flow-stat.bad  { border-color: color-mix(in srgb, var(--danger) 42%, transparent); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.flow-stat.bad .v { color: var(--danger); }
+
+.flow-cols { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; align-items: start; }
+.flow-subhead {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.flow-subnote { letter-spacing: 0.04em; text-transform: none; font-weight: 400; color: var(--text-3); }
+
+/* Fleet distribution: one row per step workers are sitting on. */
+.stage-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow: auto; }
+.stage-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: var(--surface-3);
+}
+.stage-row.hot { border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.stage-row .idx {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stage-row .meter { position: relative; height: 24px; border-radius: var(--r-xs); background: var(--surface-2); overflow: hidden; }
+.stage-row .meter i {
+  position: absolute; inset: 0 auto 0 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--info) 60%, transparent), color-mix(in srgb, var(--info) 24%, transparent));
+  transition: width var(--dur-2) var(--ease-out);
+}
+.stage-row.hot .meter i {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--warn) 66%, transparent), color-mix(in srgb, var(--warn) 26%, transparent));
+}
+.stage-row .meter .lbl {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 9px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden;
+}
+/* The label crosses the fill, so it carries its own ground rather than
+   relying on whatever colour the bar happens to end under. */
+.stage-row .meter .lbl .type { font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.stage-row .meter .lbl .detail {
+  color: var(--text-2); font-size: 0.64rem;
+  overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.stage-row .n {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-align: right;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Worker rows: one virtual user each. */
+.worker-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow: auto; }
+.worker-row {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr) minmax(78px, auto);
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tone, var(--ok));
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+.worker-row.stalled { background: color-mix(in srgb, var(--danger) 8%, var(--surface-3)); }
+.worker-row .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.worker-row .who .port { font-family: var(--font-mono); font-size: 0.76rem; font-weight: 700; color: var(--text); }
+.worker-row .who .host { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); overflow-wrap: anywhere; }
+.worker-row .what { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.worker-row .what .line { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.worker-row .what .step-type { font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600; color: var(--tone, var(--text)); white-space: nowrap; }
+.worker-row .what .step-detail {
+  font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.worker-row .what .step-count { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.worker-row .track {
+  position: relative; height: 4px; border-radius: var(--r-pill);
+  background: var(--surface-2); overflow: hidden;
+}
+/* Tinted by severity like everything else in the row, but softened: this is
+   a progress bar that happens to agree with the warning, not a second alarm
+   competing with the timer beside it. */
+.worker-row .track i {
+  position: absolute; inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--tone, var(--accent)) 62%, transparent);
+  transition: width var(--dur-2) var(--ease-out);
+}
+.worker-row .when { text-align: right; display: flex; flex-direction: column; gap: 2px; }
+.worker-row .when .on-step {
+  font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
+  color: var(--tone, var(--text)); font-variant-numeric: tabular-nums;
+}
+.worker-row .when .total { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+.flow-note {
+  padding: 14px 4px;
+  font-size: 0.78rem;
+  color: var(--text-3);
+  text-align: center;
+}
+
+@media (max-width: 1080px) {
+  .flow-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* ==========================================================================
    9. Forms & dropzone
    ========================================================================== */
@@ -1972,6 +2123,9 @@ html[data-density='compact'] .kpi-value { font-size: clamp(1.5rem, 2.4vw, 2rem);
 html[data-density='compact'] .panel-body { padding: 12px 14px 14px; }
 html[data-density='compact'] .chart-frame { height: 218px; }
 html[data-density='compact'] .main { gap: 14px; }
+html[data-density='compact'] .stage-list,
+html[data-density='compact'] .worker-list { max-height: 268px; }
+html[data-density='compact'] .worker-row { padding: 5px 9px; }
 
 @media (max-width: 1440px) {
   .span-8 { grid-column: span 12; }

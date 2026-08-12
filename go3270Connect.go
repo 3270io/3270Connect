@@ -277,6 +277,12 @@ type workflowStatus struct {
 	TotalSteps  int
 	StepType    string
 	StartedAt   time.Time
+	// StepStartedAt is when the current step began, which is what tells a
+	// slow run apart from a stuck one: StartedAt only grows.
+	StepStartedAt time.Time
+	// StepDetail is the screen position or expected value the current step
+	// works on. Never the text a FillString types — see runstore.
+	StepDetail string
 }
 
 var timingsMutex sync.Mutex
@@ -375,29 +381,94 @@ func registerWorkflowStatus(scriptPort string, config *Configuration, totalSteps
 	if scriptPort == "" || config == nil {
 		return
 	}
+	now := time.Now()
 	workflowStatusMu.Lock()
 	workflowStatuses[scriptPort] = &workflowStatus{
-		ScriptPort:  scriptPort,
-		Host:        config.Host,
-		Port:        config.Port,
-		CurrentStep: 0,
-		TotalSteps:  totalSteps,
-		StepType:    "starting",
-		StartedAt:   time.Now(),
+		ScriptPort:    scriptPort,
+		Host:          config.Host,
+		Port:          config.Port,
+		CurrentStep:   0,
+		TotalSteps:    totalSteps,
+		StepType:      "starting",
+		StartedAt:     now,
+		StepStartedAt: now,
 	}
 	workflowStatusMu.Unlock()
 }
 
-func updateWorkflowStatus(scriptPort string, stepIndex int, stepType string) {
+func updateWorkflowStatus(scriptPort string, stepIndex int, stepType, stepDetail string) {
 	if scriptPort == "" {
 		return
 	}
+	now := time.Now()
 	workflowStatusMu.Lock()
 	if status, ok := workflowStatuses[scriptPort]; ok {
 		status.CurrentStep = stepIndex
 		status.StepType = stepType
+		status.StepDetail = stepDetail
+		status.StepStartedAt = now
 	}
 	workflowStatusMu.Unlock()
+}
+
+// describeStep summarises where on the screen a step is working, for the
+// console's live view and the terminal's status lines.
+//
+// The text a FillString types is left out on purpose. Workflows fill in
+// usernames, passwords and account numbers, and this string is published to
+// the metrics file that the dashboard, the API and any AI client read — a
+// wider audience than the workflow file itself has. The field's length is
+// given instead, which is what an operator watching the flow actually needs:
+// it identifies the field without repeating its contents.
+func describeStep(step Step) string {
+	coords := step.Coordinates
+	position := ""
+	if coords.Row > 0 || coords.Column > 0 {
+		position = fmt.Sprintf("R%d,C%d", coords.Row, coords.Column)
+	}
+
+	switch step.Type {
+	case "FillString":
+		length := coords.Length
+		if length <= 0 {
+			length = len([]rune(step.Text))
+		}
+		if position == "" {
+			return ""
+		}
+		if length > 0 {
+			return fmt.Sprintf("%s len %d", position, length)
+		}
+		return position
+	case "CheckValue":
+		// The expected value is a screen label rather than a secret, and it
+		// is the whole point of the step, so it is shown.
+		expected := truncateForDisplay(step.Text, 32)
+		switch {
+		case position != "" && expected != "":
+			return fmt.Sprintf("%s = %q", position, expected)
+		case expected != "":
+			return fmt.Sprintf("= %q", expected)
+		default:
+			return position
+		}
+	case "AsciiScreenGrab", "InitializeOutput":
+		return ""
+	default:
+		return position
+	}
+}
+
+// truncateForDisplay shortens a value to fit a status line, marking that it
+// was cut rather than silently showing a prefix. Counted in runes, so a
+// screen label with an accented character is not cut mid-character.
+func truncateForDisplay(value string, max int) string {
+	value = strings.TrimSpace(value)
+	runes := []rune(value)
+	if max <= 1 || len(runes) <= max {
+		return value
+	}
+	return string(runes[:max-1]) + "…"
 }
 
 func clearWorkflowStatus(scriptPort string) {
@@ -437,14 +508,20 @@ func liveStepSnapshot() []runstore.WorkflowStatus {
 		if !s.StartedAt.IsZero() {
 			started = s.StartedAt.Unix()
 		}
+		stepStarted := int64(0)
+		if !s.StepStartedAt.IsZero() {
+			stepStarted = s.StepStartedAt.Unix()
+		}
 		out = append(out, runstore.WorkflowStatus{
-			ScriptPort:  s.ScriptPort,
-			Host:        s.Host,
-			Port:        s.Port,
-			CurrentStep: s.CurrentStep,
-			TotalSteps:  s.TotalSteps,
-			StepType:    s.StepType,
-			StartedAt:   started,
+			ScriptPort:    s.ScriptPort,
+			Host:          s.Host,
+			Port:          s.Port,
+			CurrentStep:   s.CurrentStep,
+			TotalSteps:    s.TotalSteps,
+			StepType:      s.StepType,
+			StartedAt:     started,
+			StepStartedAt: stepStarted,
+			StepDetail:    s.StepDetail,
 		})
 	}
 	return out
@@ -469,8 +546,18 @@ func formatWorkflowStatusLine(status workflowStatus, now time.Time) string {
 	if status.TotalSteps > 0 {
 		stepLabel = fmt.Sprintf("%d/%d (%s)", status.CurrentStep, status.TotalSteps, status.StepType)
 	}
+	if status.StepDetail != "" {
+		stepLabel += " " + status.StepDetail
+	}
 	elapsed := now.Sub(status.StartedAt).Seconds()
-	return fmt.Sprintf("ScriptPort %s | %s:%d | Step %s | Running %s", status.ScriptPort, status.Host, status.Port, stepLabel, formatSeconds(elapsed))
+	line := fmt.Sprintf("ScriptPort %s | %s:%d | Step %s | Running %s", status.ScriptPort, status.Host, status.Port, stepLabel, formatSeconds(elapsed))
+	// How long the worker has sat on this one step, which is the figure that
+	// separates a slow run from a stuck one. Omitted where it is not known,
+	// rather than printed as zero and read as "just started".
+	if !status.StepStartedAt.IsZero() {
+		line += fmt.Sprintf(" | On step %s", formatSeconds(now.Sub(status.StepStartedAt).Seconds()))
+	}
+	return line
 }
 
 func logActiveWorkflowStatuses() {
@@ -1018,7 +1105,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 		if connect3270.ShutdownRequested() {
 			break
 		}
-		updateWorkflowStatus(workflowKey, idx+1, step.Type)
+		updateWorkflowStatus(workflowKey, idx+1, step.Type, describeStep(step))
 		if idx > 0 {
 			delay, err := randomDuration(config.EveryStepDelay, true)
 			if err != nil {

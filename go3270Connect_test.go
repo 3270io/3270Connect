@@ -11,6 +11,7 @@ import (
 	"time"
 
 	connect3270 "github.com/3270io/3270Connect/connect3270"
+	"github.com/3270io/3270Connect/internal/runstore"
 )
 
 func TestRandomDurationWithinRange(t *testing.T) {
@@ -87,6 +88,185 @@ func TestFormatWorkflowStatusLine(t *testing.T) {
 	}
 	if !strings.Contains(line, "Running 5s") {
 		t.Fatalf("expected running duration in line, got %s", line)
+	}
+}
+
+// The console shows this string to whoever can reach the dashboard, so what
+// it must not contain matters as much as what it must.
+func TestDescribeStep(t *testing.T) {
+	cases := []struct {
+		name string
+		step Step
+		want string
+	}{
+		{
+			name: "fill string gives position and length, never the value",
+			step: Step{
+				Type:        "FillString",
+				Coordinates: connect3270.Coordinates{Row: 10, Column: 20, Length: 8},
+				Text:        "hunter2",
+			},
+			want: "R10,C20 len 8",
+		},
+		{
+			name: "fill string without a declared length falls back to the value's",
+			step: Step{
+				Type:        "FillString",
+				Coordinates: connect3270.Coordinates{Row: 5, Column: 21},
+				Text:        "user1-firstname",
+			},
+			want: "R5,C21 len 15",
+		},
+		{
+			name: "check value shows what is being waited for",
+			step: Step{
+				Type:        "CheckValue",
+				Coordinates: connect3270.Coordinates{Row: 24, Column: 1, Length: 5},
+				Text:        "READY",
+			},
+			want: `R24,C1 = "READY"`,
+		},
+		{
+			name: "long expected values are cut rather than run across the row",
+			step: Step{
+				Type:        "CheckValue",
+				Coordinates: connect3270.Coordinates{Row: 1, Column: 1},
+				Text:        strings.Repeat("A", 40),
+			},
+			want: `R1,C1 = "` + strings.Repeat("A", 31) + `…"`,
+		},
+		{
+			name: "keystrokes have no position of their own",
+			step: Step{Type: "PressEnter"},
+			want: "",
+		},
+		{
+			name: "screen grabs are about the whole screen",
+			step: Step{
+				Type:        "AsciiScreenGrab",
+				Coordinates: connect3270.Coordinates{Row: 1, Column: 1},
+			},
+			want: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := describeStep(tc.step)
+			if got != tc.want {
+				t.Fatalf("describeStep(%s) = %q, want %q", tc.step.Type, got, tc.want)
+			}
+		})
+	}
+}
+
+// A FillString's text is a username or a password often enough that it must
+// never reach the metrics file, whatever route it takes to get there.
+func TestDescribeStepNeverLeaksFilledText(t *testing.T) {
+	secret := "s3cr3t-password"
+	step := Step{
+		Type:        "FillString",
+		Coordinates: connect3270.Coordinates{Row: 7, Column: 12, Length: len(secret)},
+		Text:        secret,
+	}
+	if detail := describeStep(step); strings.Contains(detail, secret) {
+		t.Fatalf("describeStep leaked the filled value: %q", detail)
+	}
+}
+
+func TestUpdateWorkflowStatusRecordsCurrentStep(t *testing.T) {
+	const port = "5999"
+	registerWorkflowStatus(port, &Configuration{Host: "mainframe.host", Port: 3270}, 11)
+	defer clearWorkflowStatus(port)
+
+	updateWorkflowStatus(port, 4, "CheckValue", `R24,C1 = "READY"`)
+
+	statuses := snapshotWorkflowStatuses()
+	var found *workflowStatus
+	for i := range statuses {
+		if statuses[i].ScriptPort == port {
+			found = &statuses[i]
+		}
+	}
+	if found == nil {
+		t.Fatalf("status for script port %s was not recorded", port)
+	}
+	if found.CurrentStep != 4 || found.StepType != "CheckValue" {
+		t.Fatalf("unexpected position: step %d (%s)", found.CurrentStep, found.StepType)
+	}
+	if found.StepDetail != `R24,C1 = "READY"` {
+		t.Fatalf("unexpected detail: %q", found.StepDetail)
+	}
+	// Without this the console cannot tell a slow run from a stuck one.
+	if found.StepStartedAt.IsZero() {
+		t.Fatal("step start time was not recorded")
+	}
+	if found.StepStartedAt.Before(found.StartedAt) {
+		t.Fatal("the current step cannot have started before the workflow did")
+	}
+}
+
+func TestLiveStepSnapshotPublishesStepStart(t *testing.T) {
+	const port = "5998"
+	registerWorkflowStatus(port, &Configuration{Host: "mainframe.host", Port: 3270}, 11)
+	defer clearWorkflowStatus(port)
+	updateWorkflowStatus(port, 2, "FillString", "R10,C20 len 8")
+
+	var published *runstore.WorkflowStatus
+	for _, s := range liveStepSnapshot() {
+		if s.ScriptPort == port {
+			copied := s
+			published = &copied
+		}
+	}
+	if published == nil {
+		t.Fatalf("script port %s missing from the published snapshot", port)
+	}
+	if published.StepDetail != "R10,C20 len 8" {
+		t.Fatalf("unexpected published detail: %q", published.StepDetail)
+	}
+	if published.StepStartedAt <= 0 {
+		t.Fatalf("step start was not published: %d", published.StepStartedAt)
+	}
+	if seconds := published.OnStepSeconds(time.Now()); seconds < 0 {
+		t.Fatalf("time on step should be known once published, got %d", seconds)
+	}
+}
+
+func TestFormatWorkflowStatusLineReportsTimeOnStep(t *testing.T) {
+	start := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
+	status := workflowStatus{
+		ScriptPort:    "5001",
+		Host:          "localhost",
+		Port:          3270,
+		CurrentStep:   6,
+		TotalSteps:    11,
+		StepType:      "CheckValue",
+		StepDetail:    `R24,C1 = "READY"`,
+		StartedAt:     start,
+		StepStartedAt: start.Add(50 * time.Second),
+	}
+	line := formatWorkflowStatusLine(status, start.Add(80*time.Second))
+	if !strings.Contains(line, `Step 6/11 (CheckValue) R24,C1 = "READY"`) {
+		t.Fatalf("expected the step detail in the line, got %s", line)
+	}
+	// Two different figures: 80s in the workflow, 30s stuck on one step.
+	if !strings.Contains(line, "Running 80s") {
+		t.Fatalf("expected the workflow duration in the line, got %s", line)
+	}
+	if !strings.Contains(line, "On step 30s") {
+		t.Fatalf("expected the time on the current step in the line, got %s", line)
+	}
+}
+
+// A run that predates the field publishes no step start, and the line must
+// not invent one — "On step 0s" would read as "it just moved".
+func TestFormatWorkflowStatusLineOmitsUnknownTimeOnStep(t *testing.T) {
+	start := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
+	status := workflowStatus{ScriptPort: "5001", Host: "localhost", Port: 3270, CurrentStep: 2, TotalSteps: 5, StepType: "PressEnter", StartedAt: start}
+	line := formatWorkflowStatusLine(status, start.Add(5*time.Second))
+	if strings.Contains(line, "On step") {
+		t.Fatalf("expected no time-on-step claim when it is unknown, got %s", line)
 	}
 }
 

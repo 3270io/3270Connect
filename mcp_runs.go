@@ -315,10 +315,16 @@ func liveWorkflowStatus(pid int) (string, error) {
 		CurrentStep int    `json:"currentStep"`
 		TotalSteps  int    `json:"totalSteps"`
 		StepType    string `json:"stepType"`
+		StepDetail  string `json:"stepDetail,omitempty"`
 		RunningFor  int64  `json:"runningForSeconds"`
+		// OnStep is how long this worker has been on its current step. It is
+		// the figure that tells a slow run from a stuck one, and it is
+		// omitted rather than zeroed where the run cannot report it.
+		OnStep *int64 `json:"onStepSeconds,omitempty"`
 	}
 
-	now := time.Now().Unix()
+	nowTime := time.Now()
+	now := nowTime.Unix()
 	var rows []row
 	byStep := map[string]int{}
 	for _, e := range entries {
@@ -330,10 +336,15 @@ func liveWorkflowStatus(pid int) (string, error) {
 			if s.StartedAt > 0 {
 				elapsed = now - s.StartedAt
 			}
+			var onStep *int64
+			if seconds := s.OnStepSeconds(nowTime); seconds >= 0 {
+				onStep = &seconds
+			}
 			rows = append(rows, row{
 				PID: e.Metrics.PID, ScriptPort: s.ScriptPort, Host: s.Host, Port: s.Port,
 				CurrentStep: s.CurrentStep, TotalSteps: s.TotalSteps, StepType: s.StepType,
-				RunningFor: elapsed,
+				StepDetail: s.StepDetail,
+				RunningFor: elapsed, OnStep: onStep,
 			})
 			byStep[s.StepType]++
 		}
@@ -348,7 +359,7 @@ func liveWorkflowStatus(pid int) (string, error) {
 		"by_step": byStep,
 		// The clustering is the point of this tool, so it is said rather
 		// than left to be noticed in the table.
-		"note": "Workers clustered on one step mean the host is slow at that transaction rather than slow in general.",
+		"note": "Workers clustered on one step mean the host is slow at that transaction rather than slow in general. Read onStepSeconds rather than runningForSeconds to tell a stalled worker from a long-running one.",
 	})
 }
 

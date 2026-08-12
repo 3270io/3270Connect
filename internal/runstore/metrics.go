@@ -61,6 +61,36 @@ type WorkflowStatus struct {
 	TotalSteps  int    `json:"totalSteps"`
 	StepType    string `json:"stepType"`
 	StartedAt   int64  `json:"startedAt"`
+	// StepStartedAt is when the worker began the step it is on now, as
+	// opposed to StartedAt, which is when its workflow began.
+	//
+	// The two answer different questions and only this one answers the
+	// urgent one. A worker forty seconds into a workflow is unremarkable; a
+	// worker forty seconds into a single CheckValue is the host refusing to
+	// paint a screen, and that is what a stalled run looks like from here.
+	StepStartedAt int64 `json:"stepStartedAt,omitempty"`
+	// StepDetail says which part of the screen the current step is working
+	// on — "R10,C20 len 8" for a field, "READY" for the value being waited
+	// for. Enough to follow the flow against the workflow file without
+	// opening it.
+	//
+	// What a FillString actually types is deliberately not here: those are
+	// usernames and passwords, and a console page is a wider audience than
+	// the workflow file has.
+	StepDetail string `json:"stepDetail,omitempty"`
+}
+
+// OnStepSeconds is how long this worker has been on its current step, or -1
+// where the run publishing it predates StepStartedAt and cannot say.
+func (w WorkflowStatus) OnStepSeconds(now time.Time) int64 {
+	if w.StepStartedAt <= 0 {
+		return -1
+	}
+	elapsed := now.Unix() - w.StepStartedAt
+	if elapsed < 0 {
+		return 0
+	}
+	return elapsed
 }
 
 // ExtendedMetrics adds what can only be worked out by looking at the process

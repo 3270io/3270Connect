@@ -421,6 +421,51 @@
         </div>
       </section>
 
+      <!-- Live screen flow.
+
+           Every other panel counts workflows; this one shows the individual
+           virtual users and the step of the screen flow each is on right now.
+           It is the only view that answers "what is the run doing at this
+           second" rather than "how much has it done", and the only one that
+           makes a stall legible: forty workers all sat on step 6 is a host
+           that will not paint a screen, not a load generator that is busy.
+
+           Hidden entirely when nothing is in flight — the runs table below
+           already says a run has ended, and an empty flow panel above it
+           would only repeat that. -->
+      <section class="panel" id="flowPanel" aria-label="Live screen flow" hidden>
+        <div class="panel-head">
+          <h2><svg class="ic" aria-hidden="true"><use href="#i-satellite-dish"></use></svg> Live Screen Flow</h2>
+          <span class="sub" id="flowCount">no workers in flight</span>
+          <div class="tools">
+            <label class="switch" data-tip="Show only workers that have sat on one step longer than the stall threshold">
+              <input type="checkbox" id="flowStalledOnly">
+              <span class="track"></span>
+              <span class="switch-label">Stalled only</span>
+            </label>
+            <div class="segmented" id="flowSort" role="group" aria-label="Sort workers">
+              <button type="button" data-sort="onstep" aria-pressed="true" data-tip="Longest on its current step first">Slowest</button>
+              <button type="button" data-sort="step" aria-pressed="false" data-tip="By position in the workflow">Step</button>
+              <button type="button" data-sort="port" aria-pressed="false" data-tip="By script port">Port</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="flow-summary" id="flowSummary"></div>
+          <div class="flow-cols">
+            <div class="flow-stage">
+              <h3 class="flow-subhead">Where the fleet is</h3>
+              <div class="stage-list" id="flowStage"></div>
+            </div>
+            <div class="flow-workers">
+              <h3 class="flow-subhead">Workers <span class="flow-subnote" id="flowWorkerNote"></span></h3>
+              <div class="worker-list" id="flowWorkers"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Process intelligence -->
       <section class="panel" aria-label="Process intelligence">
         <div class="panel-head">

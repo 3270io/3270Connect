@@ -175,7 +175,8 @@ A typical exchange runs schema → validate → smoke → load → interpret:
 >
 > **How is it doing?** `get_load_test_metrics` returns completed, failed and
 > the duration percentiles; `get_live_workflow_status` shows where each worker
-> currently is.
+> currently is, and — in `onStepSeconds` — how long it has been on that one
+> step, which is what separates a slow run from a stuck one.
 >
 > **What does that mean?** The assistant loads the `interpret-results` skill
 > and reports p50, p95 and p99 with the sample size, keeping connect failures
