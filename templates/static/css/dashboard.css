@@ -1278,6 +1278,12 @@ html[data-view='cards'] .grid-wrap { display: none; }
   background: var(--surface-3);
 }
 .stage-row.hot { border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+/* Both columns are buttons now: a step isolates the workers standing on it,
+   a worker opens its screens. They are still rows, so the affordance is a
+   hover and a cursor rather than chrome that would crowd the numbers. */
+.stage-row { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.stage-row:hover { border-color: var(--line-strong); }
+.stage-row.isolated { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: var(--accent-soft); }
 .stage-row .idx {
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -1334,6 +1340,25 @@ html[data-view='cards'] .grid-wrap { display: none; }
   background: var(--surface-3);
 }
 .worker-row.stalled { background: color-mix(in srgb, var(--danger) 8%, var(--surface-3)); }
+.worker-row.linked {
+  position: relative;
+  width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  padding-right: 20px;
+}
+/* A row that leads somewhere should say so without a button competing with
+   the timer beside it. */
+.worker-row.linked::after {
+  content: '\203a';
+  position: absolute; right: 8px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 1rem;
+  opacity: 0.55;
+  transition: color var(--dur-1) var(--ease), opacity var(--dur-1) var(--ease);
+}
+.worker-row.linked:hover::after { color: var(--accent); opacity: 1; }
+.worker-row.linked:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.worker-row.linked.stalled:hover { background: color-mix(in srgb, var(--danger) 14%, var(--surface-3)); }
 .worker-row .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .worker-row .who .port { font-family: var(--font-mono); font-size: 0.76rem; font-weight: 700; color: var(--text); }
 .worker-row .who .host { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); overflow-wrap: anywhere; }
@@ -1370,6 +1395,12 @@ html[data-view='cards'] .grid-wrap { display: none; }
   color: var(--text-3);
   text-align: center;
 }
+.flow-link {
+  border: 0; background: none; padding: 0;
+  color: var(--accent); cursor: pointer;
+  font: inherit; text-decoration: underline;
+}
+.flow-link:hover { color: var(--text); }
 
 @media (max-width: 1080px) {
   .flow-cols { grid-template-columns: minmax(0, 1fr); }
@@ -1596,6 +1627,7 @@ body.modal-open { overflow: hidden; }
 .modal-card.sm { max-width: 480px; }
 .modal-card.lg { max-width: 760px; }
 .modal-card.xl { max-width: 1180px; }
+.modal-card.full { max-width: min(1560px, 96vw); }
 @keyframes modal-in { from { transform: translateY(16px) scale(0.985); opacity: 0; } }
 
 .modal-content {
@@ -1861,14 +1893,228 @@ html[data-wrap='off'] .log-line .msg { white-space: pre; overflow-wrap: normal; 
 .tok-null { color: var(--text-3); font-style: italic; }
 .tok-punc { color: var(--text-3); }
 
-/* Output preview frame */
-.preview-frame {
-  flex: 1;
-  min-height: 320px;
+/* --------------------------------------------------------------------------
+   Screen captures
+
+   A filmstrip of every screen the run captured on the left, one screen at
+   full size on the right. The screen keeps a terminal's proportions and its
+   own ruler, because the numbers being read off it — 1-based row, column and
+   length — are what a workflow step is written in.
+   -------------------------------------------------------------------------- */
+
+.captures-body {
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The strip. */
+.captures-rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-3) 55%, transparent);
+}
+.rail-filters { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 10px; border-bottom: 1px solid var(--line); }
+.rail-selects { display: flex; flex-direction: column; gap: 8px; }
+.rail-selects select { width: 100%; }
+.search-field.sm { min-width: 0; }
+.search-field.sm input { padding: 6px 28px 6px 28px; font-size: 0.72rem; }
+.search-field.sm .ic { left: 9px; font-size: 0.7rem; }
+
+.rail-active,
+.flow-filter {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-2);
+}
+.flow-filter { margin-bottom: 12px; }
+.rail-active .f-clear,
+.flow-filter .f-clear {
+  margin-left: auto;
+  border: 0; background: none; padding: 0;
+  color: var(--accent); cursor: pointer;
+  font-family: inherit; font-size: inherit;
+  text-decoration: underline;
+}
+.rail-active .f-clear:hover,
+.flow-filter .f-clear:hover { color: var(--text); }
+
+.rail-count {
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--line);
+}
+.rail-list { flex: 1; min-height: 0; overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+.rail-empty, .rail-note { padding: 14px 8px; font-size: 0.74rem; color: var(--text-3); text-align: center; }
+.rail-note { padding: 8px; font-size: 0.66rem; }
+
+.strip-item {
+  display: flex; flex-direction: column; gap: 3px;
   width: 100%;
+  padding: 7px 9px;
   border: 1px solid var(--line);
+  border-left: 3px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+.strip-item:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.strip-item.active {
+  border-left-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+}
+.strip-head { display: flex; align-items: baseline; gap: 7px; font-family: var(--font-mono); font-size: 0.62rem; }
+.strip-head .n { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.strip-head .time { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.strip-head .port { margin-left: auto; color: var(--accent); font-weight: 700; }
+.strip-head .repeat {
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  color: var(--warn);
+  font-size: 0.58rem;
+}
+.strip-preview {
+  font-family: var(--font-mono); font-size: 0.68rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.strip-step { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-3); }
+
+/* The screen. */
+.captures-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.captures-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  flex: none;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.captures-bar .spacer, .modal-footer .spacer, .captures-foot .spacer { flex: 1; }
+.nav-group { display: flex; align-items: center; gap: 6px; }
+.nav-group .pos {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-2);
+  font-variant-numeric: tabular-nums; min-width: 74px; text-align: center;
+}
+
+.screen-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
+    var(--bg-deep);
+}
+.screen-frame {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
-  background: #fff;
+  background: var(--bg-deep);
+  box-shadow: var(--glow);
+  /* The screen is measured in characters, so it is sized in them: 80
+     columns wide whatever the window does, shrinking by font size rather
+     than by reflowing a terminal into something that is not one. */
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 1.05vw, 0.86rem);
+  line-height: 1.35;
+}
+.screen-ruler {
+  padding-left: calc(3ch + 8px);
+  color: var(--text-3);
+  white-space: pre;
+  user-select: none;
+  letter-spacing: 0;
+}
+.screen-body { display: flex; gap: 8px; }
+.screen-gutter {
+  display: flex; flex-direction: column;
+  width: 3ch;
+  color: var(--text-3);
+  text-align: right;
+  white-space: pre;
+  user-select: none;
+}
+.screen-grid {
+  position: relative;
+  width: calc(var(--cols, 80) * 1ch);
+  white-space: pre;
+  color: var(--ok);
+  cursor: crosshair;
+}
+.scr-line { height: 1.35em; }
+/* What the host repainted since this worker's previous screen. The tint is
+   the answer to "did anything happen", which on a stalled worker is the
+   whole question. */
+.scr-line .r.chg { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+.scr-line .r.hit { background: color-mix(in srgb, var(--info) 30%, transparent); color: var(--text); }
+.scr-line .r.sel { background: var(--accent); color: var(--accent-ink); }
+.scr-line .r.sel.chg { background: var(--accent); color: var(--accent-ink); }
+/* Where the host left the cursor: an underline, as a terminal draws it. */
+.scr-line .r.cur { box-shadow: inset 0 -0.14em 0 var(--accent-2); color: var(--accent-2); }
+
+.screen-empty { margin: auto; text-align: center; color: var(--text-3); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.screen-empty .glyph {
+  display: grid; place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 16px;
+  border: 1px dashed var(--line-strong);
+  color: var(--accent);
+  font-size: 1.3rem;
+}
+.screen-empty .t { font-family: var(--font-mono); font-size: 0.84rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); }
+.screen-empty .d { font-size: 0.78rem; max-width: 420px; }
+.screen-empty code { font-family: var(--font-mono); color: var(--accent); }
+
+.captures-foot {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  flex: none;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-3) 55%, transparent);
+}
+.captures-foot .coord {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 0.74rem; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.captures-foot .coord .ic { color: var(--accent); }
+.captures-foot .sel-text {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-2);
+  max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.foot-hint { font-size: 0.66rem; color: var(--text-3); white-space: nowrap; }
+.foot-hint kbd { margin: 0 1px; }
+#capturesModal .modal-footer { flex-wrap: wrap; }
+@media (max-width: 1180px) { .foot-hint { display: none; } }
+
+@media (max-width: 900px) {
+  .captures-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(120px, 34%) minmax(0, 1fr); }
+  .captures-rail { border-right: 0; border-bottom: 1px solid var(--line); }
+  .foot-hint { display: none; }
 }
 
 /* PID summary strip in console modal */

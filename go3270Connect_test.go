@@ -2,8 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -736,4 +741,104 @@ func TestShouldWarnInjectionConcurrency(t *testing.T) {
 			}
 		})
 	}
+}
+
+// The console follows a live run by asking for the bytes it has not seen. The
+// capture file is append-only, so a byte offset is a valid resume point — and
+// the handler has to say which offset it served from, because the reader
+// cannot count bytes of a decoded string itself.
+func TestOutputPreviewHandlerServesFromOffset(t *testing.T) {
+	pid := writeCaptureFixture(t, "<pre data-capture=\"1\">first</pre>\n<pre data-capture=\"2\">second</pre>\n")
+
+	whole := httptest.NewRecorder()
+	outputPreviewHandler(whole, httptest.NewRequest(http.MethodGet, "/dashboard/output?pid="+pid, nil))
+	if whole.Code != http.StatusOK {
+		t.Fatalf("whole file: status %d, want 200", whole.Code)
+	}
+	total := whole.Body.Len()
+	if got := whole.Header().Get("X-Output-Total"); got != strconv.Itoa(total) {
+		t.Errorf("X-Output-Total = %q, want %d", got, total)
+	}
+	if got := whole.Header().Get("X-Output-From"); got != "0" {
+		t.Errorf("X-Output-From = %q, want 0", got)
+	}
+
+	offset := strings.Index(whole.Body.String(), "<pre data-capture=\"2\"")
+	tail := httptest.NewRecorder()
+	outputPreviewHandler(tail, httptest.NewRequest(http.MethodGet,
+		fmt.Sprintf("/dashboard/output?pid=%s&from=%d", pid, offset), nil))
+	if tail.Code != http.StatusOK {
+		t.Fatalf("tail: status %d, want 200", tail.Code)
+	}
+	if body := tail.Body.String(); body != "<pre data-capture=\"2\">second</pre>\n" {
+		t.Errorf("tail body = %q, want only the second capture", body)
+	}
+	if got := tail.Header().Get("X-Output-From"); got != strconv.Itoa(offset) {
+		t.Errorf("X-Output-From = %q, want %d", got, offset)
+	}
+}
+
+// A run that starts over the same output path leaves the console holding an
+// offset past the end of the file. That is a new file, not an error: it is
+// sent whole, and said to be.
+func TestOutputPreviewHandlerResetsWhenFileShrinks(t *testing.T) {
+	pid := writeCaptureFixture(t, "<pre>only</pre>\n")
+
+	recorder := httptest.NewRecorder()
+	outputPreviewHandler(recorder, httptest.NewRequest(http.MethodGet,
+		"/dashboard/output?pid="+pid+"&from=9999", nil))
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200", recorder.Code)
+	}
+	if got := recorder.Header().Get("X-Output-Reset"); got != "1" {
+		t.Errorf("X-Output-Reset = %q, want 1", got)
+	}
+	if got := recorder.Header().Get("X-Output-From"); got != "0" {
+		t.Errorf("X-Output-From = %q, want 0", got)
+	}
+	if body := recorder.Body.String(); body != "<pre>only</pre>\n" {
+		t.Errorf("body = %q, want the whole file", body)
+	}
+}
+
+func TestOutputPreviewHandlerRejectsBadOffset(t *testing.T) {
+	pid := writeCaptureFixture(t, "<pre>only</pre>\n")
+
+	for _, from := range []string{"abc", "-5"} {
+		recorder := httptest.NewRecorder()
+		outputPreviewHandler(recorder, httptest.NewRequest(http.MethodGet,
+			"/dashboard/output?pid="+pid+"&from="+from, nil))
+		if recorder.Code != http.StatusBadRequest {
+			t.Errorf("from=%s: status %d, want 400", from, recorder.Code)
+		}
+	}
+}
+
+// writeCaptureFixture publishes a metrics file pointing at a capture file, and
+// returns the pid the handler should be asked about.
+func writeCaptureFixture(t *testing.T, contents string) string {
+	t.Helper()
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	dir := dashboardMetricsDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("create metrics dir: %v", err)
+	}
+
+	outputPath := filepath.Join(t.TempDir(), "output.html")
+	if err := os.WriteFile(outputPath, []byte(contents), 0o644); err != nil {
+		t.Fatalf("write capture file: %v", err)
+	}
+
+	pid := "424242"
+	metric := ExtendedMetrics{Metrics: runstore.Metrics{OutputFilePath: outputPath}}
+	encoded, err := json.Marshal(metric)
+	if err != nil {
+		t.Fatalf("encode metrics: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "metrics_"+pid+".json"), encoded, 0o644); err != nil {
+		t.Fatalf("write metrics: %v", err)
+	}
+	return pid
 }
