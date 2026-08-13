@@ -456,6 +456,12 @@
     statusFilter: Prefs.get('statusFilter') || 'all',
     flowSort: Prefs.get('flowSort') || 'onstep',
     flowStalledOnly: !!Prefs.get('flowStalledOnly'),
+    /* Both transient on purpose: they answer "what is that one worker
+       doing", and a run that has moved on should not still be filtered to a
+       step it left ten minutes ago. */
+    flowQuery: '',
+    flowStep: null,
+    flowShowAll: false,
     failures: 0,
     booted: false,
     seenPids: {}
@@ -1273,7 +1279,7 @@
     }
 
     if (hasConfig && params !== '-dashboard') { add('workflow', 'file-code', 'View workflow JSON'); }
-    if (hasOutput) { add('output', 'display', 'Preview output HTML'); }
+    if (hasOutput) { add('output', 'film', 'Browse captured screens'); }
     if (hasConfig && metric.status === 'Ended') { add('summary', 'file-lines', 'View performance summary'); }
     add('logs', 'terminal', 'View logs for this PID');
     add('kill', 'skull-crossbones', 'Terminate process');
@@ -1688,7 +1694,20 @@
 
     var max = stages[0].count || 1;
     stages.forEach(function (stage) {
-      var row = el('div', 'stage-row' + (stage.count > 1 && stage.count >= workers.length / 2 ? ' hot' : ''));
+      var isolated = state.flowStep === stage.currentStep;
+      var row = el('button', 'stage-row' +
+        (stage.count > 1 && stage.count >= workers.length / 2 ? ' hot' : '') +
+        (isolated ? ' isolated' : ''));
+      row.type = 'button';
+      row.setAttribute('aria-pressed', String(isolated));
+      /* The pile-up is the question; the workers in it are the answer. One
+         click puts them beside it rather than leaving the operator to filter
+         the list by eye. */
+      row.addEventListener('click', function () {
+        state.flowStep = isolated ? null : stage.currentStep;
+        state.flowShowAll = false;
+        renderFlow();
+      });
 
       var idx = el('span', 'idx', stage.totalSteps > 0
         ? stage.currentStep + '/' + stage.totalSteps
@@ -1707,6 +1726,7 @@
 
       var tip = fmtInt(stage.count) + ' worker' + (stage.count === 1 ? '' : 's') + ' on ' + stepLabel(stage);
       if (stage.slowest !== null) { tip += ' · longest ' + fmtSeconds(stage.slowest) + ' on this step'; }
+      tip += isolated ? ' · click to show every worker again' : ' · click to show only these workers';
       row.setAttribute('data-tip', tip);
 
       row.appendChild(meter);
@@ -1723,10 +1743,7 @@
 
     flowTicking = [];
 
-    var rows = state.flowStalledOnly
-      ? workers.filter(function (w) { return flowSeverity(w) === 'stalled' || flowSeverity(w) === 'slow'; })
-      : workers;
-    rows = sortFlowWorkers(rows);
+    var rows = sortFlowWorkers(filterFlowWorkers(workers));
 
     if (note) {
       note.textContent = rows.length === workers.length
@@ -1735,9 +1752,11 @@
     }
 
     if (!rows.length) {
-      host.appendChild(el('div', 'flow-note', state.flowStalledOnly
-        ? 'Nothing is stalled — every worker has moved on within ' + FLOW_SLOW_SECONDS + 's.'
-        : 'No workers are reporting a step yet.'));
+      host.appendChild(el('div', 'flow-note', flowFilterActive()
+        ? 'No worker matches this filter.'
+        : (state.flowStalledOnly
+          ? 'Nothing is stalled — every worker has moved on within ' + FLOW_SLOW_SECONDS + 's.'
+          : 'No workers are reporting a step yet.')));
       return;
     }
 
@@ -1747,7 +1766,7 @@
        said out loud rather than left to be inferred from a short list. The
        fleet column beside this one still counts every worker. */
     var hidden = 0;
-    if (rows.length > FLOW_MAX_ROWS) {
+    if (rows.length > FLOW_MAX_ROWS && !state.flowShowAll) {
       hidden = rows.length - FLOW_MAX_ROWS;
       rows = rows.slice(0, FLOW_MAX_ROWS);
     }
@@ -1758,7 +1777,18 @@
 
     rows.forEach(function (worker) {
       var severity = flowSeverity(worker);
-      var row = el('div', 'worker-row' + (severity === 'stalled' ? ' stalled' : ''));
+      var screens = workerHasScreens(worker);
+      var row = el(screens ? 'button' : 'div',
+        'worker-row' + (severity === 'stalled' ? ' stalled' : '') + (screens ? ' linked' : ''));
+      if (screens) {
+        row.type = 'button';
+        /* The row says a worker has been on CheckValue for forty seconds.
+           The next question is always the same — what is on its screen —
+           and this is the shortest path to the answer. */
+        row.addEventListener('click', function () {
+          Captures.open(worker.pid, { port: worker.scriptPort });
+        });
+      }
       row.style.setProperty('--tone', FLOW_TONES[severity]);
 
       var who = el('div', 'who');
@@ -1795,16 +1825,99 @@
       } else {
         tip += ' · ' + fmtSeconds(worker.onStep) + ' on ' + (worker.stepType || 'this step');
       }
+      if (screens) { tip += ' · click for this worker’s screens'; }
       row.setAttribute('data-tip', tip);
       host.appendChild(row);
       flowTicking.push({ node: row, worker: worker, onStepNode: when.firstChild, totalNode: when.lastChild });
     });
 
     if (hidden) {
-      host.appendChild(el('div', 'flow-note',
+      var more = el('div', 'flow-note');
+      more.appendChild(el('span', null,
         fmtInt(hidden) + ' more worker' + (hidden === 1 ? '' : 's') +
-        ' not shown — the list keeps the ' + FLOW_MAX_ROWS + ' longest on their current step.'));
+        ' not shown — the list keeps the ' + FLOW_MAX_ROWS + ' longest on their current step. '));
+      var all = el('button', 'flow-link', 'Show all ' + fmtInt(rows.length + hidden));
+      all.type = 'button';
+      all.addEventListener('click', function () { state.flowShowAll = true; renderFlow(); });
+      more.appendChild(all);
+      host.appendChild(more);
+    } else if (state.flowShowAll && rows.length > FLOW_MAX_ROWS) {
+      var fewer = el('div', 'flow-note');
+      var collapse = el('button', 'flow-link', 'Show fewer');
+      collapse.type = 'button';
+      collapse.addEventListener('click', function () { state.flowShowAll = false; renderFlow(); });
+      fewer.appendChild(collapse);
+      host.appendChild(fewer);
     }
+  }
+
+  /* Does the run this worker belongs to write screens anywhere? Offering a
+     drill-down into a capture file that was never configured would be a
+     click that leads to an apology. */
+  function workerHasScreens(worker) {
+    var meta = metaByPid[worker.pid];
+    return !!(meta && meta.outputPath);
+  }
+
+  function flowFilterActive() {
+    return !!(state.flowQuery || state.flowStep !== null || state.flowStalledOnly);
+  }
+
+  function filterFlowWorkers(workers) {
+    var query = state.flowQuery.trim().toLowerCase();
+    return workers.filter(function (worker) {
+      if (state.flowStalledOnly) {
+        var severity = flowSeverity(worker);
+        if (severity !== 'stalled' && severity !== 'slow') { return false; }
+      }
+      if (state.flowStep !== null && worker.currentStep !== state.flowStep) { return false; }
+      if (query) {
+        var haystack = [
+          worker.scriptPort, worker.pid, worker.host, worker.port,
+          worker.stepType, worker.stepDetail
+        ].join(' ').toLowerCase();
+        if (haystack.indexOf(query) === -1) { return false; }
+      }
+      return true;
+    });
+  }
+
+  /* One line saying what the panel is currently hiding, and one click to
+     stop hiding it. A filtered view that does not admit it is filtered is
+     how an operator concludes the fleet is smaller than it is. */
+  function renderFlowFilterNote(workers) {
+    var host = $('#flowFilterNote');
+    if (!host) { return; }
+    host.innerHTML = '';
+
+    var bits = [];
+    if (state.flowStep !== null) {
+      var stage = flowStages(workers).filter(function (s) { return s.currentStep === state.flowStep; })[0];
+      bits.push('step ' + (stage ? stepLabel(stage) : state.flowStep));
+    }
+    if (state.flowQuery.trim()) { bits.push('“' + state.flowQuery.trim() + '”'); }
+    if (state.flowStalledOnly) { bits.push('slow and stalled only'); }
+
+    host.hidden = !bits.length;
+    if (!bits.length) { return; }
+
+    host.appendChild(el('span', 'f-label', 'Showing ' + bits.join(' · ')));
+    var clear = el('button', 'f-clear', 'Show every worker');
+    clear.type = 'button';
+    clear.addEventListener('click', function () {
+      state.flowStep = null;
+      state.flowQuery = '';
+      state.flowStalledOnly = false;
+      Prefs.set('flowStalledOnly', false);
+      var search = $('#flowSearch');
+      if (search) { search.value = ''; }
+      var searchClear = $('#flowSearchClear');
+      if (searchClear) { searchClear.hidden = true; }
+      var toggle = $('#flowStalledOnly');
+      if (toggle) { toggle.checked = false; }
+      renderFlow();
+    });
+    host.appendChild(clear);
   }
 
   /* Rows whose clocks are advanced every second between polls.
@@ -1847,6 +1960,7 @@
     if (!workers.length) { flowTicking = []; return; }
 
     var stages = flowStages(workers);
+    renderFlowFilterNote(workers);
     var count = $('#flowCount');
     if (count) {
       var stalled = workers.filter(function (w) { return flowSeverity(w) === 'stalled'; }).length;
@@ -1883,6 +1997,25 @@
         state.flowStalledOnly = stalledOnly.checked;
         Prefs.set('flowStalledOnly', state.flowStalledOnly);
         renderFlow();
+      });
+    }
+
+    var search = $('#flowSearch');
+    var searchClear = $('#flowSearchClear');
+    if (search) {
+      search.addEventListener('input', function () {
+        state.flowQuery = search.value;
+        if (searchClear) { searchClear.hidden = !search.value; }
+        renderFlow();
+      });
+    }
+    if (searchClear) {
+      searchClear.addEventListener('click', function () {
+        search.value = '';
+        state.flowQuery = '';
+        searchClear.hidden = true;
+        renderFlow();
+        search.focus();
       });
     }
 
@@ -2179,59 +2312,13 @@
       return response.text();
     }
 
-    /* --- Output preview --- */
-    var outputPid = null;
-    var outputTimer = null;
-    var outputEnabled = true;
-    var outputInterval = 4000;
+    /* --- Screen captures ---
 
-    function output(pid) {
-      outputPid = pid;
-      var meta = metaByPid[pid] || {};
-      $('#outputPath').textContent = meta.outputPath || 'Path unavailable';
-      $('#outputStatus').textContent = 'Loading…';
-      outputEnabled = true;
-      paintOutputToggle();
-      show('outputModal');
-
-      if (!meta.outputPath) {
-        $('#outputStatus').textContent = 'No output file configured for PID ' + pid + '.';
-        return;
-      }
-      loadOutput();
-      scheduleOutput();
-    }
-
-    function loadOutput() {
-      if (!outputPid) { return; }
-      fetch('/dashboard/output?pid=' + encodeURIComponent(outputPid), { cache: 'no-store' })
-        .then(readOrThrow)
-        .then(function (html) {
-          $('#outputFrame').srcdoc = html;
-          $('#outputStatus').textContent = 'Updated ' + fmtClock(new Date());
-        })
-        .catch(function (error) {
-          $('#outputStatus').textContent = 'Error: ' + error.message;
-        });
-    }
-
-    function scheduleOutput() {
-      if (outputTimer) { clearInterval(outputTimer); outputTimer = null; }
-      if (outputEnabled && outputPid) {
-        outputTimer = setInterval(loadOutput, outputInterval);
-      }
-    }
-
-    function paintOutputToggle() {
-      var button = $('#outputToggle');
-      if (!button) { return; }
-      button.setAttribute('aria-pressed', String(outputEnabled));
-      button.innerHTML = icon(outputEnabled ? 'pause' : 'play');
-      button.setAttribute('data-tip', outputEnabled ? 'Pause auto-refresh' : 'Resume auto-refresh');
-      var status = $('#outputInfo');
-      if (status) {
-        status.textContent = outputEnabled ? 'Auto-refreshing every ' + (outputInterval / 1000) + 's' : 'Auto-refresh paused';
-      }
+       The viewer itself lives in section 11b; this is the door into it, so
+       that a process row, the live flow panel and the command palette all
+       open the same thing. */
+    function output(pid, options) {
+      Captures.open(pid, options);
     }
 
     /* --- Summary --- */
@@ -2682,14 +2769,6 @@
         node.addEventListener('dialog:hidden', function () { Refresh.modalClosed(); });
       });
 
-      var outputModal = $('#outputModal');
-      if (outputModal) {
-        outputModal.addEventListener('dialog:hidden', function () {
-          if (outputTimer) { clearInterval(outputTimer); outputTimer = null; }
-          outputPid = null;
-        });
-      }
-
       var consoleModal = $('#consoleModal');
       if (consoleModal) {
         consoleModal.addEventListener('dialog:show', function () { syncPidOptions(state.metrics); loadLogs(); });
@@ -2737,18 +2816,6 @@
       on('#summaryDownload', 'click', function () {
         download('summary-' + Date.now() + '.txt', summaryRaw || $('#summaryCode').textContent);
       });
-
-      on('#outputToggle', 'click', function () {
-        outputEnabled = !outputEnabled;
-        paintOutputToggle();
-        scheduleOutput();
-      });
-      on('#outputIntervalSelect', 'change', function () {
-        outputInterval = num(this.value, 4000);
-        paintOutputToggle();
-        scheduleOutput();
-      });
-      on('#outputReload', 'click', loadOutput);
 
       on('#confirmKill', 'click', doKill);
 
@@ -2812,6 +2879,1050 @@
   })();
 
   /* ======================================================================
+     11b. Screen captures
+
+     A run appends every worker's screens to one file, one after another, so
+     the file is the whole fleet's terminal history in a single column. Shown
+     raw — which is what this used to do — finding the screen that mattered
+     meant scrolling past hundreds of near-identical ones with nothing to say
+     which worker or which step any of them came from.
+
+     So the file is read as what it is: a list of captures. Each one carries
+     the worker, the step and the moment it was taken (see captureAttrs in
+     the emulator), which is enough to narrow the strip to one virtual user,
+     one step or one phrase, and to tint what changed between one screen and
+     that worker's previous one.
+
+     The screen itself is rebuilt as a screen — 24 rows, 80 columns, a ruler
+     and the row/column under the pointer. Those coordinates are the reason
+     an operator opens a capture at all: workflow steps are written in
+     1-based Row/Column/Length, and counting characters off a screenshot is
+     how they get written wrong.
+
+     Older capture files carry no attributes. They still parse — the screens
+     are all there — they simply cannot say whose they are, and the filters
+     that need that metadata stay out of the way rather than showing empty.
+     ====================================================================== */
+
+  var Captures = (function () {
+    /* A long soak run captures without end; the strip keeps a rolling window
+       and says so rather than growing until the tab dies. */
+    var MAX_CAPTURES = 2000;
+    var MIN_COLS = 80;
+    var PREVIEW_CHARS = 46;
+
+    var PRE_RE = /<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi;
+    var ATTR_RE = /([a-zA-Z-]+)\s*=\s*"([^"]*)"/g;
+
+    var cs = {
+      pid: null,
+      path: '',
+      isOpen: false,
+      /* Unparsed tail of the file. Everything already turned into a capture
+         is dropped, so this stays the size of one screen no matter how long
+         the run goes on. */
+      raw: '',
+      offset: 0,          // bytes of the file consumed, for incremental polls
+      dropped: 0,         // captures aged out of the rolling window
+      counter: 0,         // captures seen, for files that carry no sequence
+      all: [],
+      view: [],           // filtered, with runs of identical screens collapsed
+      index: -1,
+      query: '',
+      worker: '',
+      step: '',
+      follow: true,
+      diff: true,
+      interval: 4000,
+      timer: null,
+      cols: MIN_COLS,
+      selection: null,    // { row, from, to } — 1-based, inclusive
+      dragging: false
+    };
+
+    /* ---------- parsing ---------- */
+
+    function decodeAttr(value) {
+      return String(value)
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+    }
+
+    function readAttrs(chunk) {
+      var map = {};
+      var match;
+      ATTR_RE.lastIndex = 0;
+      while ((match = ATTR_RE.exec(chunk)) !== null) {
+        map[match[1].toLowerCase()] = decodeAttr(match[2]);
+      }
+      return map;
+    }
+
+    /* s3270 answers Ascii() in its script protocol: every screen row comes
+       back behind a "data: " prefix, and the last line is the emulator's
+       status rather than anything the host painted. Both are stripped here,
+       and stripping them is not cosmetic — six characters of prefix is six
+       columns of error in every coordinate read off this screen, which is
+       the one number the panel exists to get right. */
+    var STATUS_RE = /^[A-Z?] [A-Z?] [A-Z?] C\(/;
+
+    function splitScreen(body) {
+      var text = String(body).replace(/^\r?\n/, '').replace(/\s+$/, '');
+      var lines = [];
+      var status = null;
+
+      text.split('\n').forEach(function (raw) {
+        var line = raw.replace(/\r$/, '');
+        if (line.indexOf('data: ') === 0) { lines.push(line.slice(6)); return; }
+        if (line === 'data:') { lines.push(''); return; }
+        if (!status && STATUS_RE.test(line)) { status = parseStatus(line); return; }
+        if (line.trim() === 'ok') { return; }
+        /* Anything else is taken at face value: a capture file written by
+           hand, or by a future emulator, is still a screen. */
+        lines.push(line);
+      });
+
+      return { lines: lines, status: status };
+    }
+
+    /* The s3270 status line, which carries the one thing the screen text
+       cannot: where the cursor was left sitting. Its row and column are
+       0-based; everything this panel shows an operator is 1-based, because
+       that is what a workflow step is written in. */
+    function parseStatus(line) {
+      var fields = line.split(/\s+/);
+      if (fields.length < 10) { return null; }
+      var row = num(fields[8], -1);
+      var col = num(fields[9], -1);
+      return {
+        rows: num(fields[6], 0),
+        cols: num(fields[7], 0),
+        cursorRow: row >= 0 ? row + 1 : 0,
+        cursorCol: col >= 0 ? col + 1 : 0,
+        keyboardLocked: fields[0] === 'L',
+        connected: fields[3] !== 'N'
+      };
+    }
+
+    /* The screen text inside <pre> is written unescaped, so it is taken as
+       it stands — decoding it would corrupt an ampersand a host really
+       painted. */
+    function toCapture(attrChunk, body) {
+      var attrs = readAttrs(attrChunk);
+      var screen = splitScreen(body);
+      var text = screen.lines.join('\n');
+      return {
+        seq: num(attrs['data-capture'], 0),
+        at: num(attrs['data-at'], 0),
+        port: attrs['data-port'] || '',
+        host: attrs['data-host'] || '',
+        hostPort: num(attrs['data-hostport'], 0),
+        step: num(attrs['data-step'], 0),
+        steps: num(attrs['data-steps'], 0),
+        type: attrs['data-type'] || '',
+        lines: screen.lines,
+        status: screen.status,
+        text: text,
+        haystack: text.toLowerCase()
+      };
+    }
+
+    /* Only complete <pre>…</pre> blocks become captures: the tail of the
+       file is very often a screen a worker is still writing. */
+    function ingest(chunk) {
+      cs.raw += chunk;
+      PRE_RE.lastIndex = 0;
+      var match;
+      var consumed = 0;
+      var added = 0;
+      while ((match = PRE_RE.exec(cs.raw)) !== null) {
+        var capture = toCapture(match[1], match[2]);
+        cs.counter += 1;
+        /* The run numbers its own captures; only a file written before it
+           did needs the console to count them. */
+        capture.ordinal = capture.seq || cs.counter;
+        cs.all.push(capture);
+        consumed = PRE_RE.lastIndex;
+        added += 1;
+      }
+      if (consumed > 0) { cs.raw = cs.raw.slice(consumed); }
+      if (cs.all.length > MAX_CAPTURES) {
+        var excess = cs.all.length - MAX_CAPTURES;
+        cs.all = cs.all.slice(excess);
+        cs.dropped += excess;
+      }
+      return added;
+    }
+
+    /* ---------- loading ---------- */
+
+    function load(fromScratch) {
+      if (!cs.pid || !cs.isOpen) { return; }
+      var url = '/dashboard/output?pid=' + encodeURIComponent(cs.pid);
+      if (!fromScratch && cs.offset > 0) { url += '&from=' + cs.offset; }
+
+      fetch(url, { cache: 'no-store' })
+        .then(function (response) {
+          if (!response.ok) {
+            return response.text().then(function (body) {
+              throw new Error((body || response.statusText || 'Request failed').trim());
+            });
+          }
+          var reset = response.headers.get('X-Output-Reset') === '1';
+          var from = num(response.headers.get('X-Output-From'), 0);
+          return response.arrayBuffer().then(function (buffer) {
+            return { reset: reset, from: from, buffer: buffer };
+          });
+        })
+        .then(function (payload) {
+          /* Offsets are counted in bytes, as the server counts them: the
+             decoded string is a different length the moment a host paints a
+             character outside ASCII. */
+          if (payload.reset || payload.from === 0) { clearCaptures(); }
+          cs.offset = payload.from + payload.buffer.byteLength;
+          var text = new TextDecoder('utf-8').decode(payload.buffer);
+          var added = ingest(text);
+          setStatus(cs.all.length
+            ? fmtInt(cs.all.length + cs.dropped) + ' captured · updated ' + fmtClock(new Date())
+            : 'No screens captured yet · checked ' + fmtClock(new Date()));
+          if (added || payload.reset || payload.from === 0) { rebuild(); }
+        })
+        .catch(function (error) {
+          setStatus('Error: ' + error.message, true);
+        });
+    }
+
+    function clearCaptures() {
+      cs.raw = '';
+      cs.all = [];
+      cs.view = [];
+      cs.dropped = 0;
+      cs.counter = 0;
+      cs.index = -1;
+      cs.selection = null;
+    }
+
+    function schedule() {
+      if (cs.timer) { clearInterval(cs.timer); cs.timer = null; }
+      if (cs.isOpen) { cs.timer = setInterval(function () { load(false); }, cs.interval); }
+    }
+
+    /* ---------- filtering ---------- */
+
+    function matches(capture) {
+      if (cs.worker && capture.port !== cs.worker) { return false; }
+      if (cs.step && String(capture.step) !== cs.step) { return false; }
+      if (cs.query && capture.haystack.indexOf(cs.query) === -1) { return false; }
+      return true;
+    }
+
+    /* Consecutive identical screens from the same worker are one entry with
+       a count. A workflow that grabs a screen either side of a step that
+       changed nothing produces those by the dozen, and they are noise in a
+       strip you are scanning for the screen that looks wrong. */
+    function collapse(list) {
+      var out = [];
+      list.forEach(function (capture) {
+        var last = out[out.length - 1];
+        if (last && last.capture.port === capture.port && last.capture.text === capture.text) {
+          last.repeats += 1;
+          last.capture = capture;
+          return;
+        }
+        out.push({ capture: capture, repeats: 1 });
+      });
+      return out;
+    }
+
+    function rebuild() {
+      var previousSeq = cs.index >= 0 && cs.view[cs.index] ? cs.view[cs.index].capture.seq : null;
+
+      cs.view = collapse(cs.all.filter(matches));
+      syncFilterOptions();
+      renderList();
+
+      if (cs.follow) {
+        select(cs.view.length - 1, true);
+      } else if (previousSeq !== null) {
+        var found = -1;
+        cs.view.forEach(function (entry, i) { if (entry.capture.seq === previousSeq) { found = i; } });
+        select(found >= 0 ? found : Math.min(cs.index, cs.view.length - 1), true);
+      } else {
+        select(cs.view.length - 1, true);
+      }
+      renderCount();
+    }
+
+    function syncFilterOptions() {
+      var ports = {};
+      var steps = {};
+      cs.all.forEach(function (capture, i) {
+        if (capture.port) { ports[capture.port] = i; }
+        if (capture.step) { steps[capture.step] = capture.type || ''; }
+      });
+
+      /* Most recently active first. A script port belongs to one workflow
+         execution, not to a virtual user for the life of the run, so a soak
+         test leaves hundreds behind — and the one worth looking at is
+         invariably the one that captured a screen most recently. */
+      var portList = Object.keys(ports).sort(function (a, b) { return ports[b] - ports[a]; });
+      /* A worker whose screens have aged out of the window is still the
+         worker the operator asked for. Dropping it from the list would leave
+         the control saying "all workers" over a list showing none. */
+      if (cs.worker && portList.indexOf(cs.worker) === -1) { portList.unshift(cs.worker); }
+      fillSelect('#capturesWorker', 'All workers', portList.map(function (port) {
+        return { value: port, label: 'Worker ' + port };
+      }), cs.worker);
+
+      var stepList = Object.keys(steps).sort(function (a, b) { return num(a) - num(b); });
+      if (cs.step && stepList.indexOf(cs.step) === -1) { stepList.push(cs.step); }
+      fillSelect('#capturesStepFilter', 'All steps', stepList.map(function (step) {
+        return { value: step, label: 'Step ' + step + (steps[step] ? ' · ' + steps[step] : '') };
+      }), cs.step);
+
+      /* Nothing to choose between is not a choice: a single-worker run, or a
+         file written before captures carried a worker at all, hides the
+         control rather than offering one empty option. */
+      var selects = $('#capturesModal .rail-selects');
+      if (selects) {
+        var showWorker = portList.length > 1 || !!cs.worker;
+        var showStep = stepList.length > 1 || !!cs.step;
+        $('#capturesWorker').hidden = !showWorker;
+        $('#capturesStepFilter').hidden = !showStep;
+        selects.hidden = !showWorker && !showStep;
+      }
+    }
+
+    function fillSelect(selector, allLabel, options, current) {
+      var node = $(selector);
+      if (!node) { return; }
+      var wanted = current || '';
+      var signature = allLabel + '|' + options.map(function (o) { return o.value + ':' + o.label; }).join(',');
+      if (node.getAttribute('data-signature') !== signature) {
+        node.innerHTML = '';
+        node.appendChild(new Option(allLabel, ''));
+        options.forEach(function (option) { node.appendChild(new Option(option.label, option.value)); });
+        node.setAttribute('data-signature', signature);
+      }
+      node.value = wanted;
+      if (node.value !== wanted) { node.value = ''; }
+    }
+
+    /* ---------- the strip ---------- */
+
+    function shorten(line) {
+      return line.length > PREVIEW_CHARS ? line.slice(0, PREVIEW_CHARS - 1) + '…' : line;
+    }
+
+    /* What to say about a screen in one line. The first line of a 3270 screen
+       is nearly always the application's title, which is the same on every
+       screen it paints — a strip of forty rows all reading "3270 Example
+       Application" tells an operator nothing. So the line that changed is
+       preferred, and the title is the fallback rather than the answer. */
+    function previewLine(capture) {
+      var previous = previousFor(capture);
+      if (previous) {
+        for (var i = 0; i < capture.lines.length; i++) {
+          var line = capture.lines[i].trim();
+          if (line && line !== String(previous.lines[i] || '').trim()) { return shorten(line); }
+        }
+      }
+      for (var j = 0; j < capture.lines.length; j++) {
+        var first = capture.lines[j].trim();
+        if (first) { return shorten(first); }
+      }
+      return 'blank screen';
+    }
+
+    function captureClock(capture) {
+      return capture.at > 0 ? fmtClock(new Date(capture.at)) : '';
+    }
+
+    function renderList() {
+      var host = $('#capturesList');
+      if (!host) { return; }
+      host.innerHTML = '';
+
+      if (!cs.view.length) {
+        var note = el('div', 'rail-empty', cs.all.length
+          ? 'No screen matches this filter.'
+          : 'No screens captured yet.');
+        host.appendChild(note);
+        return;
+      }
+
+      if (cs.dropped) {
+        host.appendChild(el('div', 'rail-note',
+          fmtInt(cs.dropped) + ' earlier screen' + (cs.dropped === 1 ? '' : 's') +
+          ' aged out — the strip keeps the most recent ' + fmtInt(MAX_CAPTURES) + '.'));
+      }
+
+      cs.view.forEach(function (entry, i) {
+        var capture = entry.capture;
+        var row = el('button', 'strip-item' + (i === cs.index ? ' active' : ''));
+        row.type = 'button';
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', String(i === cs.index));
+        row.setAttribute('data-index', String(i));
+
+        var head = el('div', 'strip-head');
+        head.appendChild(el('span', 'n', '#' + fmtInt(capture.ordinal)));
+        var clock = captureClock(capture);
+        if (clock) { head.appendChild(el('span', 'time', clock)); }
+        if (capture.port) { head.appendChild(el('span', 'port', capture.port)); }
+        if (entry.repeats > 1) {
+          var repeat = el('span', 'repeat', '×' + entry.repeats);
+          repeat.setAttribute('data-tip', entry.repeats + ' identical screens in a row — shown once');
+          head.appendChild(repeat);
+        }
+        row.appendChild(head);
+
+        row.appendChild(el('div', 'strip-preview', previewLine(capture)));
+
+        if (capture.step) {
+          var step = el('div', 'strip-step',
+            'step ' + capture.step + (capture.steps ? '/' + capture.steps : '') +
+            (capture.type ? ' · ' + capture.type : ''));
+          row.appendChild(step);
+        }
+        host.appendChild(row);
+      });
+
+      var active = $('.strip-item.active', host);
+      if (active && active.scrollIntoView) { active.scrollIntoView({ block: 'nearest' }); }
+    }
+
+    function renderCount() {
+      var node = $('#capturesCount');
+      if (!node) { return; }
+      var shown = cs.view.length;
+      var total = cs.all.length;
+      var filtered = cs.query || cs.worker || cs.step;
+      node.textContent = !total
+        ? 'No screens yet'
+        : fmtInt(shown) + ' screen' + (shown === 1 ? '' : 's') +
+          (filtered ? ' of ' + fmtInt(total) : '') +
+          (shown < total && !filtered ? ' (' + fmtInt(total) + ' captured, repeats folded)' : '');
+
+      var note = $('#capturesFilterNote');
+      if (note) {
+        var bits = [];
+        if (cs.worker) { bits.push('worker ' + cs.worker); }
+        if (cs.step) { bits.push('step ' + cs.step); }
+        if (cs.query) { bits.push('“' + cs.query + '”'); }
+        note.hidden = !bits.length;
+        if (bits.length) {
+          note.innerHTML = '';
+          note.appendChild(el('span', 'f-label', 'Filtered to ' + bits.join(' · ')));
+          var clear = el('button', 'f-clear', 'Clear');
+          clear.type = 'button';
+          clear.addEventListener('click', clearFilters);
+          note.appendChild(clear);
+        }
+      }
+    }
+
+    function clearFilters() {
+      cs.query = '';
+      cs.worker = '';
+      cs.step = '';
+      var search = $('#capturesSearch');
+      if (search) { search.value = ''; }
+      var clear = $('#capturesSearchClear');
+      if (clear) { clear.hidden = true; }
+      rebuild();
+    }
+
+    /* ---------- the screen ---------- */
+
+    /* The worker's own previous screen, which is what "what changed" means
+       when twenty of them are writing to the same file. Without a worker to
+       key on — an older capture file — the screen before it is the best
+       available answer. */
+    function previousFor(capture) {
+      var index = cs.all.indexOf(capture);
+      if (index <= 0) { return null; }
+      if (!capture.port) { return cs.all[index - 1]; }
+      for (var i = index - 1; i >= 0; i--) {
+        if (cs.all[i].port === capture.port) { return cs.all[i]; }
+      }
+      return null;
+    }
+
+    var CHANGED = 1;
+    var HIT = 2;
+    var SELECTED = 4;
+    var CURSOR = 8;
+
+    function padded(line, cols) {
+      var text = line || '';
+      return text.length >= cols ? text : text + new Array(cols - text.length + 1).join(' ');
+    }
+
+    function currentCapture() {
+      var entry = cs.view[cs.index];
+      return entry ? entry.capture : null;
+    }
+
+    function renderScreen() {
+      var grid = $('#capturesScreen');
+      var frame = $('#capturesFrame');
+      var empty = $('#capturesEmpty');
+      if (!grid) { return; }
+
+      var capture = currentCapture();
+      if (frame) { frame.hidden = !capture; }
+      if (empty) { empty.hidden = !!capture; }
+      if (!capture) {
+        grid.innerHTML = '';
+        paintMeta(null);
+        return;
+      }
+
+      var cols = MIN_COLS;
+      capture.lines.forEach(function (line) { cols = Math.max(cols, line.length); });
+      cs.cols = cols;
+
+      var previous = cs.diff ? previousFor(capture) : null;
+      var query = cs.query;
+
+      grid.style.setProperty('--cols', String(cols));
+      grid.innerHTML = '';
+      capture.lines.forEach(function (line, rowIndex) {
+        var text = padded(line, cols);
+        var flags = new Uint8Array(cols);
+
+        if (previous) {
+          var before = padded(previous.lines[rowIndex] || '', cols);
+          for (var c = 0; c < cols; c++) {
+            if (text.charAt(c) !== before.charAt(c)) { flags[c] |= CHANGED; }
+          }
+        }
+        if (query) {
+          var haystack = text.toLowerCase();
+          var at = haystack.indexOf(query);
+          while (at !== -1) {
+            for (var h = at; h < at + query.length && h < cols; h++) { flags[h] |= HIT; }
+            at = haystack.indexOf(query, at + Math.max(1, query.length));
+          }
+        }
+        if (cs.selection && cs.selection.row === rowIndex + 1) {
+          for (var s = cs.selection.from - 1; s < cs.selection.to; s++) { flags[s] |= SELECTED; }
+        }
+        /* Where the host left the cursor. On a screen that is waiting for
+           input this is the field it is waiting on, which is usually the
+           field the next step has to fill. */
+        if (capture.status && capture.status.cursorRow === rowIndex + 1) {
+          var cursorCol = capture.status.cursorCol - 1;
+          if (cursorCol >= 0 && cursorCol < cols) { flags[cursorCol] |= CURSOR; }
+        }
+
+        grid.appendChild(lineNode(rowIndex, text, flags));
+      });
+
+      renderRuler(cols);
+      renderGutter(capture.lines.length);
+      paintMeta(capture);
+    }
+
+    function lineNode(rowIndex, text, flags) {
+      var node = el('div', 'scr-line');
+      node.setAttribute('data-row', String(rowIndex + 1));
+      var start = 0;
+      for (var i = 1; i <= text.length; i++) {
+        if (i === text.length || flags[i] !== flags[start]) {
+          node.appendChild(runNode(text.slice(start, i), flags[start]));
+          start = i;
+        }
+      }
+      if (!text.length) { node.appendChild(document.createTextNode(' ')); }
+      return node;
+    }
+
+    function runNode(text, flag) {
+      if (!flag) { return document.createTextNode(text); }
+      var cls = 'r';
+      if (flag & CHANGED) { cls += ' chg'; }
+      if (flag & HIT) { cls += ' hit'; }
+      if (flag & SELECTED) { cls += ' sel'; }
+      if (flag & CURSOR) { cls += ' cur'; }
+      return el('span', cls, text);
+    }
+
+    /* x3270's own ruler: a dot a column, a plus every five, the tens digit
+       every ten. Counting to column 47 by eye is exactly the mistake this
+       panel exists to stop. */
+    function renderRuler(cols) {
+      var node = $('#capturesRuler');
+      if (!node) { return; }
+      var out = '';
+      for (var c = 1; c <= cols; c++) {
+        if (c % 10 === 0) { out += String((c / 10) % 10); }
+        else if (c % 5 === 0) { out += '+'; }
+        else { out += '·'; }
+      }
+      node.textContent = out;
+      node.style.setProperty('--cols', String(cols));
+    }
+
+    function renderGutter(rows) {
+      var node = $('#capturesGutter');
+      if (!node) { return; }
+      node.innerHTML = '';
+      for (var r = 1; r <= rows; r++) {
+        node.appendChild(el('span', 'g-row', String(r).padStart(2, ' ')));
+      }
+    }
+
+    function paintMeta(capture) {
+      var who = $('#capturesWho');
+      var when = $('#capturesWhen');
+      var stepChip = $('#capturesStepChip');
+      var pos = $('#capturesPos');
+
+      if (pos) {
+        pos.textContent = cs.view.length
+          ? fmtInt(cs.index + 1) + ' / ' + fmtInt(cs.view.length)
+          : '—';
+      }
+      if (who) {
+        who.textContent = !capture ? '—'
+          : (capture.port ? 'worker ' + capture.port : 'worker unknown') +
+            (capture.host ? ' · ' + capture.host + (capture.hostPort ? ':' + capture.hostPort : '') : '');
+      }
+      if (when) {
+        when.textContent = !capture ? '—' : (captureClock(capture) || 'time not recorded');
+      }
+      if (stepChip) {
+        var hasStep = !!(capture && capture.step);
+        stepChip.hidden = !hasStep;
+        if (hasStep) {
+          stepChip.textContent = 'step ' + capture.step + (capture.steps ? '/' + capture.steps : '') +
+            (capture.type ? ' · ' + capture.type : '');
+        }
+      }
+
+      var cursorChip = $('#capturesCursorChip');
+      if (cursorChip) {
+        var status = capture && capture.status;
+        var hasCursor = !!(status && status.cursorRow > 0);
+        cursorChip.hidden = !hasCursor;
+        if (hasCursor) {
+          cursorChip.textContent = 'cursor R' + status.cursorRow + ' C' + status.cursorCol;
+          cursorChip.setAttribute('data-tip',
+            'Where the host left the cursor when this screen was captured' +
+            (status.keyboardLocked ? ' · keyboard locked' : ''));
+        }
+      }
+
+      var prev = $('#capturesPrev');
+      var next = $('#capturesNext');
+      if (prev) { prev.disabled = cs.index <= 0; }
+      if (next) { next.disabled = cs.index < 0 || cs.index >= cs.view.length - 1; }
+    }
+
+    function select(index, keepFollow) {
+      var bounded = cs.view.length ? clamp(index, 0, cs.view.length - 1) : -1;
+      var changed = bounded !== cs.index;
+      cs.index = bounded;
+      if (changed) { cs.selection = null; }
+      if (!keepFollow) {
+        /* Picking a screen by hand is a statement that this is the screen
+           you want to look at, so the strip stops jumping to the newest. */
+        setFollow(cs.index === cs.view.length - 1);
+      }
+      renderScreen();
+      paintSelectionReadout();
+      if (changed) { renderList(); } else { markActive(); }
+    }
+
+    function markActive() {
+      $$('#capturesList .strip-item').forEach(function (node) {
+        var active = num(node.getAttribute('data-index'), -1) === cs.index;
+        node.classList.toggle('active', active);
+        node.setAttribute('aria-selected', String(active));
+      });
+    }
+
+    function step(delta) {
+      if (!cs.view.length) { return; }
+      select(cs.index < 0 ? cs.view.length - 1 : cs.index + delta);
+    }
+
+    function setFollow(value) {
+      cs.follow = !!value;
+      var button = $('#capturesFollow');
+      if (button) {
+        button.setAttribute('aria-pressed', String(cs.follow));
+        button.classList.toggle('primary', cs.follow);
+        button.setAttribute('data-tip', cs.follow
+          ? 'Following the run — every new screen is selected as it lands (F)'
+          : 'Jump to each new screen as the run captures it (F)');
+      }
+    }
+
+    function setStatus(text, isError) {
+      var node = $('#capturesStatus');
+      if (!node) { return; }
+      node.textContent = text;
+      node.classList.toggle('bad', !!isError);
+    }
+
+    /* ---------- coordinates ---------- */
+
+    function charWidth() {
+      var grid = $('#capturesScreen');
+      if (!grid) { return 0; }
+      var line = $('.scr-line', grid);
+      var width = (line || grid).getBoundingClientRect().width;
+      return cs.cols > 0 ? width / cs.cols : 0;
+    }
+
+    function positionFrom(event) {
+      var line = event.target && event.target.closest ? event.target.closest('.scr-line') : null;
+      if (!line) { return null; }
+      var width = charWidth();
+      if (!width) { return null; }
+      var rect = line.getBoundingClientRect();
+      var col = Math.floor((event.clientX - rect.left) / width) + 1;
+      return {
+        row: num(line.getAttribute('data-row'), 1),
+        col: clamp(col, 1, cs.cols)
+      };
+    }
+
+    function selectedText() {
+      var capture = currentCapture();
+      if (!capture || !cs.selection) { return ''; }
+      var line = padded(capture.lines[cs.selection.row - 1] || '', cs.cols);
+      return line.slice(cs.selection.from - 1, cs.selection.to);
+    }
+
+    function paintSelectionReadout(hover) {
+      var coord = $('#capturesCoord span');
+      var text = $('#capturesSelText');
+      var buttons = ['#capturesCopyCoords', '#capturesCopyFill', '#capturesCopyCheck']
+        .map(function (selector) { return $(selector); });
+
+      if (cs.selection) {
+        var length = cs.selection.to - cs.selection.from + 1;
+        if (coord) {
+          coord.textContent = 'Row ' + cs.selection.row + ' · Column ' + cs.selection.from + ' · Length ' + length;
+        }
+        var value = selectedText();
+        if (text) {
+          text.hidden = false;
+          text.textContent = value.trim() ? '“' + value + '”' : '(blank field)';
+        }
+        buttons.forEach(function (button) { if (button) { button.hidden = false; } });
+        return;
+      }
+
+      buttons.forEach(function (button) { if (button) { button.hidden = true; } });
+      if (text) { text.hidden = true; }
+      if (coord) {
+        coord.textContent = hover
+          ? 'Row ' + hover.row + ' · Column ' + hover.col
+          : 'Hover the screen for row and column · drag across a field for its length';
+      }
+    }
+
+    function coordinatesJSON() {
+      if (!cs.selection) { return ''; }
+      return JSON.stringify({
+        Row: cs.selection.row,
+        Column: cs.selection.from,
+        Length: cs.selection.to - cs.selection.from + 1
+      }, null, 2);
+    }
+
+    function stepJSON(type) {
+      if (!cs.selection) { return ''; }
+      var value = selectedText().trim();
+      return JSON.stringify({
+        Type: type,
+        Coordinates: {
+          Row: cs.selection.row,
+          Column: cs.selection.from,
+          Length: cs.selection.to - cs.selection.from + 1
+        },
+        Text: type === 'FillString' ? value : value
+      }, null, 2);
+    }
+
+    /* ---------- export ---------- */
+
+    function captureHeading(capture, index) {
+      var bits = ['#' + index];
+      var clock = capture.at > 0 ? new Date(capture.at).toISOString() : '';
+      if (clock) { bits.push(clock); }
+      if (capture.port) { bits.push('worker ' + capture.port); }
+      if (capture.host) { bits.push(capture.host + (capture.hostPort ? ':' + capture.hostPort : '')); }
+      if (capture.step) { bits.push('step ' + capture.step + (capture.steps ? '/' + capture.steps : '') + (capture.type ? ' ' + capture.type : '')); }
+      return bits.join(' · ');
+    }
+
+    function exportVisible() {
+      if (!cs.view.length) {
+        Toast.push('warn', 'Nothing to export', 'No screens match the current filter.');
+        return;
+      }
+      var parts = cs.view.map(function (entry, i) {
+        var heading = captureHeading(entry.capture, i + 1) +
+          (entry.repeats > 1 ? ' · ×' + entry.repeats + ' identical' : '');
+        return heading + '\n' + new Array(heading.length + 1).join('-') + '\n' + entry.capture.text;
+      });
+      download('3270connect-screens-' + cs.pid + '-' + Date.now() + '.txt', parts.join('\n\n'));
+      Toast.push('ok', 'Downloaded', fmtInt(cs.view.length) + ' screen' + (cs.view.length === 1 ? '' : 's') + ' saved.');
+    }
+
+    /* ---------- open / close ---------- */
+
+    function open(pid, options) {
+      var opts = options || {};
+      var meta = metaByPid[pid] || {};
+      var samePid = cs.pid === pid;
+
+      cs.pid = pid;
+      cs.path = meta.outputPath || '';
+      cs.isOpen = true;
+      if (!samePid) { clearCaptures(); cs.offset = 0; }
+
+      cs.worker = opts.port || '';
+      cs.step = opts.step ? String(opts.step) : '';
+      cs.query = '';
+      /* Opened from a worker row, following means following that worker —
+         which is exactly what someone watching a stalled one wants. */
+      setFollow(opts.follow !== false);
+
+      var pidValue = $('#capturesPidValue');
+      if (pidValue) { pidValue.textContent = pid; }
+      var path = $('#capturesPath');
+      if (path) { path.textContent = cs.path || 'Path unavailable'; }
+      var search = $('#capturesSearch');
+      if (search) { search.value = ''; }
+      var searchClear = $('#capturesSearchClear');
+      if (searchClear) { searchClear.hidden = true; }
+
+      Dialog.open('capturesModal');
+
+      if (!cs.path) {
+        setStatus('No output file is configured for PID ' + pid + '.', true);
+        clearCaptures();
+        rebuild();
+        return;
+      }
+
+      setStatus('Loading…');
+      rebuild();
+      load(!samePid);
+      schedule();
+    }
+
+    function close() {
+      cs.isOpen = false;
+      if (cs.timer) { clearInterval(cs.timer); cs.timer = null; }
+      cs.dragging = false;
+    }
+
+    /* ---------- wiring ---------- */
+
+    function bind() {
+      var modal = $('#capturesModal');
+      if (!modal) { return; }
+
+      modal.addEventListener('dialog:hidden', close);
+
+      var list = $('#capturesList');
+      if (list) {
+        list.addEventListener('click', function (event) {
+          var item = event.target.closest ? event.target.closest('.strip-item') : null;
+          if (!item) { return; }
+          select(num(item.getAttribute('data-index'), 0));
+        });
+      }
+
+      var search = $('#capturesSearch');
+      if (search) {
+        search.addEventListener('input', function () {
+          cs.query = search.value.trim().toLowerCase();
+          var clear = $('#capturesSearchClear');
+          if (clear) { clear.hidden = !search.value; }
+          rebuild();
+        });
+      }
+      var searchClear = $('#capturesSearchClear');
+      if (searchClear) {
+        searchClear.addEventListener('click', function () {
+          search.value = '';
+          cs.query = '';
+          searchClear.hidden = true;
+          rebuild();
+          search.focus();
+        });
+      }
+
+      var worker = $('#capturesWorker');
+      if (worker) {
+        worker.addEventListener('change', function () { cs.worker = worker.value; rebuild(); });
+      }
+      var stepFilter = $('#capturesStepFilter');
+      if (stepFilter) {
+        stepFilter.addEventListener('change', function () { cs.step = stepFilter.value; rebuild(); });
+      }
+
+      var follow = $('#capturesFollow');
+      if (follow) {
+        follow.addEventListener('click', function () {
+          setFollow(!cs.follow);
+          if (cs.follow) { select(cs.view.length - 1, true); }
+        });
+      }
+
+      var interval = $('#capturesInterval');
+      if (interval) {
+        interval.addEventListener('change', function () {
+          cs.interval = num(interval.value, 4000);
+          schedule();
+        });
+      }
+
+      var reload = $('#capturesReload');
+      if (reload) { reload.addEventListener('click', function () { load(false); }); }
+
+      var exportBtn = $('#capturesExport');
+      if (exportBtn) { exportBtn.addEventListener('click', exportVisible); }
+
+      var prev = $('#capturesPrev');
+      if (prev) { prev.addEventListener('click', function () { step(-1); }); }
+      var next = $('#capturesNext');
+      if (next) { next.addEventListener('click', function () { step(1); }); }
+
+      var diff = $('#capturesDiff');
+      if (diff) {
+        diff.checked = cs.diff;
+        diff.addEventListener('change', function () {
+          cs.diff = diff.checked;
+          renderScreen();
+        });
+      }
+
+      var copy = $('#capturesCopy');
+      if (copy) {
+        copy.addEventListener('click', function () {
+          var capture = currentCapture();
+          if (capture) { copyText(capture.text, 'Screen'); }
+        });
+      }
+      var save = $('#capturesSave');
+      if (save) {
+        save.addEventListener('click', function () {
+          var capture = currentCapture();
+          if (!capture) { return; }
+          download('3270connect-screen-' + (capture.seq || cs.index + 1) + '.txt',
+            captureHeading(capture, cs.index + 1) + '\n\n' + capture.text);
+        });
+      }
+
+      var copyCoords = $('#capturesCopyCoords');
+      if (copyCoords) { copyCoords.addEventListener('click', function () { copyText(coordinatesJSON(), 'Coordinates'); }); }
+      var copyFill = $('#capturesCopyFill');
+      if (copyFill) { copyFill.addEventListener('click', function () { copyText(stepJSON('FillString'), 'FillString step'); }); }
+      var copyCheck = $('#capturesCopyCheck');
+      if (copyCheck) { copyCheck.addEventListener('click', function () { copyText(stepJSON('CheckValue'), 'CheckValue step'); }); }
+
+      bindScreenPointer();
+      bindKeys(modal);
+    }
+
+    /* Drag across a field to read its coordinates. A 3270 field lives on one
+       row, so a drag stays on the row it started on however far up or down
+       the pointer wanders. */
+    function bindScreenPointer() {
+      var grid = $('#capturesScreen');
+      if (!grid) { return; }
+
+      grid.addEventListener('mousemove', function (event) {
+        var position = positionFrom(event);
+        if (!position) { return; }
+        if (cs.dragging && cs.selection) {
+          cs.selection.from = Math.min(cs.selection.anchor, position.col);
+          cs.selection.to = Math.max(cs.selection.anchor, position.col);
+          renderScreen();
+          paintSelectionReadout();
+          return;
+        }
+        if (!cs.selection) { paintSelectionReadout(position); }
+      });
+
+      grid.addEventListener('mouseleave', function () {
+        if (!cs.dragging && !cs.selection) { paintSelectionReadout(); }
+      });
+
+      grid.addEventListener('mousedown', function (event) {
+        var position = positionFrom(event);
+        if (!position) { return; }
+        event.preventDefault();
+        cs.dragging = true;
+        cs.selection = { row: position.row, from: position.col, to: position.col, anchor: position.col };
+        renderScreen();
+        paintSelectionReadout();
+      });
+
+      document.addEventListener('mouseup', function () {
+        if (!cs.dragging) { return; }
+        cs.dragging = false;
+        paintSelectionReadout();
+      });
+
+      /* Escape drops the selection without closing the dialog under it. */
+      grid.addEventListener('dblclick', function () {
+        cs.selection = null;
+        renderScreen();
+        paintSelectionReadout();
+      });
+    }
+
+    function bindKeys(modal) {
+      modal.addEventListener('keydown', function (event) {
+        var tag = (event.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'select' || tag === 'textarea') { return; }
+        if (event.ctrlKey || event.metaKey || event.altKey) { return; }
+
+        switch (event.key) {
+          case 'ArrowLeft': step(-1); event.preventDefault(); break;
+          case 'ArrowRight': step(1); event.preventDefault(); break;
+          case 'ArrowUp': step(-1); event.preventDefault(); break;
+          case 'ArrowDown': step(1); event.preventDefault(); break;
+          case 'Home': select(0); event.preventDefault(); break;
+          case 'End': select(cs.view.length - 1); event.preventDefault(); break;
+          case 'f':
+          case 'F':
+            setFollow(!cs.follow);
+            if (cs.follow) { select(cs.view.length - 1, true); }
+            event.preventDefault();
+            break;
+          case 'Escape':
+            if (cs.selection) {
+              cs.selection = null;
+              renderScreen();
+              paintSelectionReadout();
+              event.stopPropagation();
+              event.preventDefault();
+            }
+            break;
+          default: break;
+        }
+      });
+    }
+
+    return { open: open, bind: bind };
+  })();
+
+  /* ======================================================================
      12. Command palette & keyboard shortcuts
      ====================================================================== */
 
@@ -2827,6 +3938,7 @@
         { group: 'Actions', title: 'Start a 3270Connect process', sub: 'Upload a workflow and launch a run', icon: 'rocket', run: function () { Modals.show('startProcessModal'); } },
         { group: 'Actions', title: 'Start a sample 3270 app', sub: 'Launch a bundled demo host', icon: 'server', run: function () { Modals.show('startAppModal'); } },
         { group: 'Actions', title: 'Open console logs', sub: 'Stream, filter and export logs', icon: 'terminal', run: function () { Modals.show('consoleModal'); } },
+        { group: 'Actions', title: 'Browse screen captures', sub: 'Every screen the run captured, one at a time', icon: 'film', run: openScreenCaptures },
         { group: 'Actions', title: 'Refresh now', sub: 'Pull a fresh metrics snapshot', icon: 'rotate', run: function () { Refresh.now(); } },
         { group: 'Actions', title: 'Export process table (CSV)', sub: 'Download the current view', icon: 'file-csv', run: function () { $('#exportProcesses').click(); } },
         { group: 'Actions', title: 'Export duration chart (PNG)', sub: 'Save the chart as an image', icon: 'image', run: function () { Charts.exportPNG('duration'); } },
@@ -2852,6 +3964,15 @@
           icon: 'file-lines',
           run: function () { Modals.logsFor(m.pid); }
         });
+        if (m.outputFilePath && String(m.outputFilePath).trim()) {
+          base.push({
+            group: 'Processes',
+            title: 'PID ' + m.pid + ' · screens',
+            sub: 'Browse the screens this run captured',
+            icon: 'film',
+            run: function () { Captures.open(m.pid); }
+          });
+        }
         base.push({
           group: 'Processes',
           title: 'PID ' + m.pid + ' · terminate',
@@ -3036,6 +4157,25 @@
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* The keyboard and the palette do not have a process row to click, so they
+     pick one: the running run that is writing screens, newest first, and a
+     finished one only if nothing is running. */
+  function openScreenCaptures() {
+    var candidates = state.metrics.filter(function (m) {
+      return m.outputFilePath && String(m.outputFilePath).trim();
+    });
+    if (!candidates.length) {
+      Toast.push('info', 'No captured screens',
+        'A run writes screens once its workflow has an OutputFilePath and an AsciiScreenGrab step.');
+      return;
+    }
+    candidates.sort(function (a, b) {
+      if (!!a.isRunning !== !!b.isRunning) { return a.isRunning ? -1 : 1; }
+      return num(b.pid) - num(a.pid);
+    });
+    Captures.open(candidates[0].pid);
+  }
+
   function toggleFlowStalledOnly() {
     var toggle = $('#flowStalledOnly');
     state.flowStalledOnly = !state.flowStalledOnly;
@@ -3087,6 +4227,7 @@
             break;
           case 'r': Refresh.now(); break;
           case 'c': Modals.show('consoleModal'); break;
+          case 'v': openScreenCaptures(); break;
           case 's': Modals.show('startProcessModal'); break;
           case 'a': Modals.show('startAppModal'); break;
           case 'p': toggleAutoRefresh(); break;
@@ -3217,6 +4358,7 @@
     bindTable();
     bindFlow();
     Modals.bind();
+    Captures.bind();
     Palette.bind();
     Keys.bind();
 

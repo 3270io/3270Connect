@@ -1106,6 +1106,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 			break
 		}
 		updateWorkflowStatus(workflowKey, idx+1, step.Type, describeStep(step))
+		e.SetCaptureContext(idx+1, len(steps), step.Type)
 		if idx > 0 {
 			delay, err := randomDuration(config.EveryStepDelay, true)
 			if err != nil {
@@ -1410,6 +1411,7 @@ func executeWorkflowOnce(workflowConfig *Configuration) (string, error) {
 
 	connected := false
 	for idx, step := range workflowConfig.Steps {
+		e.SetCaptureContext(idx+1, len(workflowConfig.Steps), step.Type)
 		if idx > 0 {
 			delay, err := randomDuration(workflowConfig.EveryStepDelay, true)
 			if err != nil {
@@ -3555,39 +3557,90 @@ func setupWorkflowPreviewHandler() {
 }
 
 func setupOutputPreviewHandler() {
-	http.HandleFunc("/dashboard/output", func(w http.ResponseWriter, r *http.Request) {
-		pid := r.URL.Query().Get("pid")
-		metric, err := loadExtendedMetricByPID(pid)
-		if err != nil {
-			if os.IsNotExist(err) {
-				http.Error(w, "No metrics file found for PID "+pid, http.StatusNotFound)
-			} else {
-				http.Error(w, "Unable to load metrics: "+err.Error(), http.StatusInternalServerError)
+	http.HandleFunc("/dashboard/output", outputPreviewHandler)
+}
+
+// outputPreviewHandler streams a run's captured screens to the console.
+//
+// The file is append-only, so a console following a live run asks for the
+// bytes it has not seen yet rather than re-reading a file that grows by a
+// screen a second. Offsets are counted in bytes, and reported back, because
+// the reader cannot count them itself once a host paints anything outside
+// ASCII.
+func outputPreviewHandler(w http.ResponseWriter, r *http.Request) {
+	pid := r.URL.Query().Get("pid")
+	metric, err := loadExtendedMetricByPID(pid)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "No metrics file found for PID "+pid, http.StatusNotFound)
+		} else {
+			http.Error(w, "Unable to load metrics: "+err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	outputPath := metric.OutputFilePath
+	if outputPath == "" {
+		http.Error(w, "Output file path is not configured for PID "+pid, http.StatusNotFound)
+		return
+	}
+	file, err := os.Open(outputPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "Output file not found: "+outputPath, http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to open output file: "+err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	defer file.Close()
+
+	// The capture file is append-only, so a console that is following a
+	// run can ask for the bytes it has not seen instead of re-reading a
+	// file that grows by a screen a second. from=0 (or absent) is the
+	// whole file, which is what the first load and every old client ask
+	// for.
+	info, statErr := file.Stat()
+	total := int64(-1)
+	if statErr == nil {
+		total = info.Size()
+		w.Header().Set("X-Output-Total", strconv.FormatInt(total, 10))
+	}
+	from := int64(0)
+	if raw := strings.TrimSpace(r.URL.Query().Get("from")); raw != "" {
+		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
+		if parseErr != nil || parsed < 0 {
+			http.Error(w, "from must be a byte offset", http.StatusBadRequest)
+			return
+		}
+		from = parsed
+	}
+	if from > 0 {
+		switch {
+		case total < 0:
+			// The size is unknown, so a resume point cannot be honoured
+			// safely. Send the file whole and say that is what happened
+			// rather than let the reader stitch a gap into its buffer.
+			from = 0
+			w.Header().Set("X-Output-Reset", "1")
+		case from > total:
+			// The file was truncated or replaced under us — a new run
+			// writing over the same path. Say so, and send it whole.
+			from = 0
+			w.Header().Set("X-Output-Reset", "1")
+		default:
+			if _, seekErr := file.Seek(from, io.SeekStart); seekErr != nil {
+				http.Error(w, "Failed to seek output file: "+seekErr.Error(), http.StatusInternalServerError)
+				return
 			}
-			return
 		}
-		outputPath := metric.OutputFilePath
-		if outputPath == "" {
-			http.Error(w, "Output file path is not configured for PID "+pid, http.StatusNotFound)
-			return
-		}
-		file, err := os.Open(outputPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				http.Error(w, "Output file not found: "+outputPath, http.StatusNotFound)
-			} else {
-				http.Error(w, "Failed to open output file: "+err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-		defer file.Close()
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		if _, err := io.Copy(w, file); err != nil {
-			http.Error(w, "Failed to stream output file: "+err.Error(), http.StatusInternalServerError)
-		}
-	})
+	}
+	w.Header().Set("X-Output-From", strconv.FormatInt(from, 10))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if _, err := io.Copy(w, file); err != nil {
+		http.Error(w, "Failed to stream output file: "+err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func setupSummaryHandler() {

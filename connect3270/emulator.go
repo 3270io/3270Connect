@@ -91,6 +91,14 @@ type Emulator struct {
 	scriptReader *bufio.Reader
 	scriptMu     sync.Mutex
 
+	// Where in the workflow this emulator is, as SetCaptureContext was last
+	// told. Read by AsciiScreenGrab so a captured screen records the step it
+	// came from; guarded because the runner writes it between steps.
+	captureMu    sync.Mutex
+	captureStep  int
+	captureTotal int
+	captureType  string
+
 	connectMu       sync.RWMutex
 	connectDuration time.Duration
 }
@@ -861,6 +869,62 @@ func (e *Emulator) AsciiScreen() (string, error) {
 	return e.execCommandOutput("Ascii()")
 }
 
+// SetCaptureContext records the step the emulator is working on, so screens
+// written by AsciiScreenGrab can say which step of which workflow produced
+// them. The workflow runner calls it as it walks the steps; leaving it unset
+// simply omits the step from the capture's attributes.
+func (e *Emulator) SetCaptureContext(step, totalSteps int, stepType string) {
+	e.captureMu.Lock()
+	e.captureStep = step
+	e.captureTotal = totalSteps
+	e.captureType = stepType
+	e.captureMu.Unlock()
+}
+
+// captureSeq numbers every screen this process writes. One counter for the
+// whole process rather than one per emulator: concurrent workers append to
+// the same file, and a reader needs the order they landed in, not the order
+// each worker thinks it captured them.
+var captureSeq atomic.Int64
+
+// captureAttrs renders the metadata a capture carries as HTML attributes on
+// its <pre> element. Attributes rather than a comment or a wrapper: browsers
+// have shown this file unchanged since the first release and must carry on
+// doing so, while the console can now tell one worker's screens from
+// another's instead of showing every screen in the run as one wall of text.
+func (e *Emulator) captureAttrs(now time.Time) string {
+	e.captureMu.Lock()
+	step, total, stepType := e.captureStep, e.captureTotal, e.captureType
+	e.captureMu.Unlock()
+
+	attrs := fmt.Sprintf(` data-capture="%d" data-at="%d"`, captureSeq.Add(1), now.UnixMilli())
+	if e.ScriptPort != "" {
+		attrs += fmt.Sprintf(` data-port="%s"`, escapeAttr(e.ScriptPort))
+	}
+	if e.Host != "" {
+		attrs += fmt.Sprintf(` data-host="%s"`, escapeAttr(e.Host))
+		if e.Port > 0 {
+			attrs += fmt.Sprintf(` data-hostport="%d"`, e.Port)
+		}
+	}
+	if step > 0 {
+		attrs += fmt.Sprintf(` data-step="%d"`, step)
+	}
+	if total > 0 {
+		attrs += fmt.Sprintf(` data-steps="%d"`, total)
+	}
+	if stepType != "" {
+		attrs += fmt.Sprintf(` data-type="%s"`, escapeAttr(stepType))
+	}
+	return attrs
+}
+
+// escapeAttr makes a value safe to sit inside a double-quoted HTML attribute.
+func escapeAttr(value string) string {
+	replacer := strings.NewReplacer("&", "&amp;", `"`, "&quot;", "<", "&lt;", ">", "&gt;")
+	return replacer.Replace(value)
+}
+
 // AsciiScreenGrab captures an ASCII screen and saves it to a file.
 // If apiMode is true, it saves plain ASCII text. Otherwise, it formats the output as output.
 func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
@@ -877,8 +941,11 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 				// In API mode, just use plain ASCII output
 				content = output
 			} else {
-				// In non-API mode, format the output as output
-				content = fmt.Sprintf("<pre>%s</pre>\n", output)
+				// In non-API mode, format the output as output.
+				// Written in one call: concurrent workers append to the same
+				// file, and a screen split across two writes would interleave
+				// with another worker's.
+				content = fmt.Sprintf("<pre%s>%s</pre>\n", e.captureAttrs(time.Now()), output)
 				content += "</body></html>"
 			}
 

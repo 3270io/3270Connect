@@ -178,6 +178,11 @@ run making progress; **every worker piled onto one step is a host that is slow
 at that particular transaction**, not slow in general — and that tells you
 which screen to investigate rather than which server.
 
+**Click a step to isolate it.** The worker list beside it narrows to the
+workers standing on that step, and a line above both columns says what is
+being hidden and offers to show everything again. Click the same step a second
+time to clear it.
+
 ### Workers
 
 The right column is one row per virtual user: its script port, the host it is
@@ -202,12 +207,24 @@ deliberate delay is a delay.
 These clocks tick every second regardless of your refresh interval, so a
 stalling worker keeps counting even at 60 s polling.
 
+**Click a worker to see its screens.** The row opens the
+[screen captures](#screen-captures) viewer already filtered to that virtual
+user and following it, so the answer to "what is on the screen of the worker
+that has been on `CheckValue` for forty seconds" is one click away. Rows only
+lead somewhere when the run's workflow declares an `OutputFilePath`.
+
 ### Controls
 
+- **Search** narrows the worker list by script port, pid, host, step type or
+  the step's screen position.
 - **Stalled only** filters the list to workers that have been on one step for
   more than 10 seconds.
 - **Slowest / Step / Port** sorts the workers. Sorting only re-applies on a
   poll, so a row does not move out from under the pointer while you read it.
+
+The list draws at most 60 rows — worst first, so the cut falls on the healthy
+end — and offers to show the rest. The fleet column always counts every
+worker, filtered or not.
 
 !!! info "What a step reports, and what it does not"
     A `CheckValue` shows the text it is waiting for, because that is the point
@@ -260,7 +277,7 @@ visible.
 | Action | Available when | Opens |
 |---|---|---|
 | :material-file-code: **Workflow JSON** | The process was started with a config file | The workflow definition, syntax highlighted with line numbers, with copy and download |
-| :material-monitor: **Output preview** | The workflow declares `OutputFilePath` | The generated HTML output in a live-refreshing frame |
+| :material-filmstrip: **Screen captures** | The workflow declares `OutputFilePath` | Every screen the run captured, [one at a time](#screen-captures) |
 | :material-file-document: **Performance summary** | The run has ended | The `summary_<pid>.txt` report |
 | :material-console: **Logs** | Always | The console stream, pre-filtered to that PID |
 | :material-skull: **Terminate** | Always | A confirmation dialog, then sends a kill signal |
@@ -315,6 +332,68 @@ Severity is inferred from the message text, so lines mentioning failure,
 timeouts or refusals are marked as errors even though the underlying log format
 has no explicit level field.
 
+## Screen captures
+
+Every `AsciiScreenGrab` step appends the terminal to the workflow's
+`OutputFilePath`. In a concurrent run that is one file holding every screen of
+every virtual user, in the order they were captured — which is why the console
+does not show it to you as a file. It shows it as a list of screens.
+
+Open it from a process row's **screen captures** action, by clicking a worker
+in the [live screen flow](#live-screen-flow), from the command palette, or
+with ++v++.
+
+### The strip
+
+The left rail is one entry per screen, newest at the bottom, each showing its
+sequence number, the time it was taken, the worker that took it, the step it
+came from, and the line of the screen that **changed** — not the application's
+title, which is identical on every screen it paints.
+
+Narrow it three ways, in any combination:
+
+- **Search** matches the text of the screens themselves, so `INVALID PASSWORD`
+  finds the moment a run started failing.
+- **Worker** narrows to one virtual user. Script ports are listed
+  most-recently-active first, because a port belongs to one workflow execution
+  rather than to a worker for the life of the run.
+- **Step** narrows to one step of the workflow — every screen grabbed at step
+  6, across all workers, is how you compare the same moment between them.
+
+Consecutive identical screens from the same worker are folded into one entry
+with a `×n` badge. A long run keeps its most recent 2,000 screens in the
+browser and says how many aged out.
+
+### The screen
+
+The screen is drawn as a screen: 24 rows, 80 columns, a column ruler, row
+numbers, and an underline where the host left the cursor.
+
+**Hover for the row and column. Drag across a field for its length.** The
+readout below gives 1-based `Row`, `Column` and `Length` — exactly the shape a
+workflow step is written in — and the three buttons beside it copy the
+selection as a `Coordinates` block, a `FillString` step or a `CheckValue` step,
+ready to paste into a workflow. Double-click or press ++esc++ to drop the
+selection.
+
+**Changes** tints every character that differs from *that worker's* previous
+screen, which is what makes "the host repainted nothing" legible at a glance.
+
+### Following a live run
+
+**Follow** selects each new screen as the run captures it; picking a screen by
+hand turns it off so the view stops moving while you read, and pressing ++f++
+turns it back on. With a worker filter applied, following follows that worker.
+
+Polling asks only for the bytes of the capture file it has not already read,
+so following a run that has written a hundred megabytes of screens costs one
+screen's worth of transfer per poll.
+
+++left++ and ++right++ step through screens, ++home++ and ++end++ jump to the
+first and last, and the toolbar copies or downloads the current screen. The
+download button in the header saves every screen the filter currently shows as
+one plain-text file.
+
 ## Inspecting a workflow
 
 ![The workflow JSON viewer](assets/dashboard/workflow-viewer.webp){: .shot }
@@ -344,6 +423,7 @@ action, view setting and per-process operation — including "PID *n* · logs" a
 | ++slash++ | Focus the process filter |
 | ++r++ | Refresh now |
 | ++c++ | Console logs |
+| ++v++ | Screen captures |
 | ++s++ | Start process |
 | ++a++ | Start sample app |
 | ++p++ | Pause / resume polling |
@@ -432,7 +512,7 @@ them convenient for scripting or for a health check.
 | `/dashboard` | `GET` | The console page |
 | `/dashboard/data` | `GET` | Metrics as JSON for every running process — or the last snapshot when none are running |
 | `/dashboard/workflow?pid=<pid>` | `GET` | The workflow JSON for a process |
-| `/dashboard/output?pid=<pid>` | `GET` | The generated HTML output |
+| `/dashboard/output?pid=<pid>` | `GET` | The captured screens. `&from=<byte offset>` returns only what was appended after that offset; the response reports `X-Output-From`, `X-Output-Total` and, when the file has been replaced under the reader, `X-Output-Reset` |
 | `/dashboard/summary?pid=<pid>` | `GET` | The plain-text performance summary |
 | `/console` / `/console?pid=<pid>` | `GET` | Log entries as JSON |
 | `/terminal-console?pid=<pid>` | `GET` | The same log lines as plain text |
