@@ -1089,6 +1089,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#screen-captures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen captures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Screen captures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#following-a-live-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Following a live run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#inspecting-a-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1953,6 +2003,10 @@ position it works on, and how many workers are there.</p>
 run making progress; <strong>every worker piled onto one step is a host that is slow
 at that particular transaction</strong>, not slow in general — and that tells you
 which screen to investigate rather than which server.</p>
+<p><strong>Click a step to isolate it.</strong> The worker list beside it narrows to the
+workers standing on that step, and a line above both columns says what is
+being hidden and offers to show everything again. Click the same step a second
+time to clear it.</p>
 <h3 id="workers">Workers<a class="headerlink" href="#workers" title="Permanent link">¶</a></h3>
 <p>The right column is one row per virtual user: its script port, the host it is
 talking to, the step it is executing with the screen position or expected
@@ -1985,13 +2039,23 @@ long they take: one waits on a TCP session and a host greeting, and a
 deliberate delay is a delay.</p>
 <p>These clocks tick every second regardless of your refresh interval, so a
 stalling worker keeps counting even at 60 s polling.</p>
+<p><strong>Click a worker to see its screens.</strong> The row opens the
+<a href="#screen-captures">screen captures</a> viewer already filtered to that virtual
+user and following it, so the answer to "what is on the screen of the worker
+that has been on <code>CheckValue</code> for forty seconds" is one click away. Rows only
+lead somewhere when the run's workflow declares an <code>OutputFilePath</code>.</p>
 <h3 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">¶</a></h3>
 <ul>
+<li><strong>Search</strong> narrows the worker list by script port, pid, host, step type or
+  the step's screen position.</li>
 <li><strong>Stalled only</strong> filters the list to workers that have been on one step for
   more than 10 seconds.</li>
 <li><strong>Slowest / Step / Port</strong> sorts the workers. Sorting only re-applies on a
   poll, so a row does not move out from under the pointer while you read it.</li>
 </ul>
+<p>The list draws at most 60 rows — worst first, so the cut falls on the healthy
+end — and offers to show the rest. The fleet column always counts every
+worker, filtered or not.</p>
 <div class="admonition info">
 <p class="admonition-title">What a step reports, and what it does not</p>
 <p>A <code>CheckValue</code> shows the text it is waiting for, because that is the point
@@ -2082,9 +2146,9 @@ visible.</p>
 <td>The workflow definition, syntax highlighted with line numbers, with copy and download</td>
 </tr>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h7v2H8v2h8v-2h-2v-2h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2"></path></svg></span> <strong>Output preview</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M18 9h-2V7h2m0 6h-2v-2h2m0 6h-2v-2h2M8 9H6V7h2m0 6H6v-2h2m0 6H6v-2h2M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3z"></path></svg></span> <strong>Screen captures</strong></td>
 <td>The workflow declares <code>OutputFilePath</code></td>
-<td>The generated HTML output in a live-refreshing frame</td>
+<td>Every screen the run captured, <a href="#screen-captures">one at a time</a></td>
 </tr>
 <tr>
 <td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m9 16v-2H6v2zm3-4v-2H6v2z"></path></svg></span> <strong>Performance summary</strong></td>
@@ -2146,6 +2210,54 @@ without a real host.</p>
 <p>Severity is inferred from the message text, so lines mentioning failure,
 timeouts or refusals are marked as errors even though the underlying log format
 has no explicit level field.</p>
+<h2 id="screen-captures">Screen captures<a class="headerlink" href="#screen-captures" title="Permanent link">¶</a></h2>
+<p>Every <code>AsciiScreenGrab</code> step appends the terminal to the workflow's
+<code>OutputFilePath</code>. In a concurrent run that is one file holding every screen of
+every virtual user, in the order they were captured — which is why the console
+does not show it to you as a file. It shows it as a list of screens.</p>
+<p>Open it from a process row's <strong>screen captures</strong> action, by clicking a worker
+in the <a href="#live-screen-flow">live screen flow</a>, from the command palette, or
+with <span class="keys"><kbd class="key-v">V</kbd></span>.</p>
+<h3 id="the-strip">The strip<a class="headerlink" href="#the-strip" title="Permanent link">¶</a></h3>
+<p>The left rail is one entry per screen, newest at the bottom, each showing its
+sequence number, the time it was taken, the worker that took it, the step it
+came from, and the line of the screen that <strong>changed</strong> — not the application's
+title, which is identical on every screen it paints.</p>
+<p>Narrow it three ways, in any combination:</p>
+<ul>
+<li><strong>Search</strong> matches the text of the screens themselves, so <code>INVALID PASSWORD</code>
+  finds the moment a run started failing.</li>
+<li><strong>Worker</strong> narrows to one virtual user. Script ports are listed
+  most-recently-active first, because a port belongs to one workflow execution
+  rather than to a worker for the life of the run.</li>
+<li><strong>Step</strong> narrows to one step of the workflow — every screen grabbed at step
+  6, across all workers, is how you compare the same moment between them.</li>
+</ul>
+<p>Consecutive identical screens from the same worker are folded into one entry
+with a <code>×n</code> badge. A long run keeps its most recent 2,000 screens in the
+browser and says how many aged out.</p>
+<h3 id="the-screen">The screen<a class="headerlink" href="#the-screen" title="Permanent link">¶</a></h3>
+<p>The screen is drawn as a screen: 24 rows, 80 columns, a column ruler, row
+numbers, and an underline where the host left the cursor.</p>
+<p><strong>Hover for the row and column. Drag across a field for its length.</strong> The
+readout below gives 1-based <code>Row</code>, <code>Column</code> and <code>Length</code> — exactly the shape a
+workflow step is written in — and the three buttons beside it copy the
+selection as a <code>Coordinates</code> block, a <code>FillString</code> step or a <code>CheckValue</code> step,
+ready to paste into a workflow. Double-click or press <span class="keys"><kbd class="key-escape">Esc</kbd></span> to drop the
+selection.</p>
+<p><strong>Changes</strong> tints every character that differs from <em>that worker's</em> previous
+screen, which is what makes "the host repainted nothing" legible at a glance.</p>
+<h3 id="following-a-live-run">Following a live run<a class="headerlink" href="#following-a-live-run" title="Permanent link">¶</a></h3>
+<p><strong>Follow</strong> selects each new screen as the run captures it; picking a screen by
+hand turns it off so the view stops moving while you read, and pressing <span class="keys"><kbd class="key-f">F</kbd></span>
+turns it back on. With a worker filter applied, following follows that worker.</p>
+<p>Polling asks only for the bytes of the capture file it has not already read,
+so following a run that has written a hundred megabytes of screens costs one
+screen's worth of transfer per poll.</p>
+<p><span class="keys"><kbd class="key-arrow-left">Left</kbd></span> and <span class="keys"><kbd class="key-arrow-right">Right</kbd></span> step through screens, <span class="keys"><kbd class="key-home">Home</kbd></span> and <span class="keys"><kbd class="key-end">End</kbd></span> jump to the
+first and last, and the toolbar copies or downloads the current screen. The
+download button in the header saves every screen the filter currently shows as
+one plain-text file.</p>
 <h2 id="inspecting-a-workflow">Inspecting a workflow<a class="headerlink" href="#inspecting-a-workflow" title="Permanent link">¶</a></h2>
 <p><img alt="The workflow JSON viewer" class="shot" src="../assets/dashboard/workflow-viewer.webp"></p>
 <p>The workflow viewer reads the configuration file recorded for a process, pretty
@@ -2184,6 +2296,10 @@ action, view setting and per-process operation — including "PID <em>n</em> · 
 <tr>
 <td><span class="keys"><kbd class="key-c">C</kbd></span></td>
 <td>Console logs</td>
+</tr>
+<tr>
+<td><span class="keys"><kbd class="key-v">V</kbd></span></td>
+<td>Screen captures</td>
 </tr>
 <tr>
 <td><span class="keys"><kbd class="key-s">S</kbd></span></td>
@@ -2314,7 +2430,7 @@ them convenient for scripting or for a health check.</p>
 <tr>
 <td><code>/dashboard/output?pid=&lt;pid&gt;</code></td>
 <td><code>GET</code></td>
-<td>The generated HTML output</td>
+<td>The captured screens. <code>&amp;from=&lt;byte offset&gt;</code> returns only what was appended after that offset; the response reports <code>X-Output-From</code>, <code>X-Output-Total</code> and, when the file has been replaced under the reader, <code>X-Output-Reset</code></td>
 </tr>
 <tr>
 <td><code>/dashboard/summary?pid=&lt;pid&gt;</code></td>
