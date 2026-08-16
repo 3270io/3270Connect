@@ -363,92 +363,96 @@ Once running and listening on port 3270, run a separate 3270 Connect to run a wo
 
 ## Docker Usage
 
-### Linux
-
-Pull the latest image:
-
-```bash
-docker pull 3270io/3270connect-linux:latest
-```
-
-Run the container with a configuration file:
+The published image is `ghcr.io/3270io/3270connect`, rebuilt from `main` by CI.
+It is `linux/amd64` only: the `s3270` the emulator drives is embedded in the
+binary as an x86-64 ELF, so an arm64 image would serve the console and then
+fail the first workflow it was asked to run.
 
 ```bash
-docker run -it -v $(pwd)/workflow.json:/app/workflow.json -v $(pwd)/output.html:/app/output.html -p 3270:3270 3270io/3270connect-linux:latest -config /app/workflow.json
+docker pull ghcr.io/3270io/3270connect:latest
 ```
 
-Run in headless mode:
+!!! warning "The Docker Hub images are not maintained"
+    `3270io/3270connect-linux` and `3270io/3270connect-windows` still exist on
+    Docker Hub, but nothing has pushed to them since June 2024 — they predate
+    the operations console, sign-in, the MCP server and the host profiler.
+    Earlier versions of this page named them. Use the GHCR image above.
+
+### Where things live inside the container
+
+The image's working directory is `/data`, it runs as a non-root user, and
+`XDG_CONFIG_HOME` points at `/data` so the console keeps its metrics there.
+Mount your workflow into `/data` and give paths relative to it:
 
 ```bash
-docker run -it -v $(pwd)/workflow.json:/app/workflow.json -v $(pwd)/output.html:/app/output.html -p 3270:3270 3270io/3270connect-linux:latest -config /app/workflow.json -headless
+docker run --rm -v "$PWD/workflow.json":/data/workflow.json \
+  ghcr.io/3270io/3270connect:latest -config workflow.json -headless
 ```
 
-Run in verbose mode:
+Mount a **directory** rather than a file when you want the output back —
+bind-mounting a file that does not exist yet makes Docker create a directory
+with that name:
 
 ```bash
-docker run -it -v $(pwd)/workflow.json:/app/workflow.json -v $(pwd)/output.html:/app/output.html -p 3270:3270 3270io/3270connect-linux:latest -config /app/workflow.json -verbose
+mkdir -p out
+docker run --rm -v "$PWD/workflow.json":/data/workflow.json -v "$PWD/out":/data/out \
+  ghcr.io/3270io/3270connect:latest -config workflow.json -headless
 ```
 
-Run multiple workflows concurrently:
+with `"OutputFilePath": "out/screens.html"` in the workflow.
+
+### The console
+
+The console is what the image runs when you give it no other flags. It listens
+on 9200:
 
 ```bash
-docker run -it -v $(pwd)/workflow.json:/app/workflow.json -v $(pwd)/output.html:/app/output.html -p 3270:3270 3270io/3270connect-linux:latest -config /app/workflow.json -concurrent 2 -runtime 60
+docker run --rm -p 9200:9200 ghcr.io/3270io/3270connect:latest
 ```
 
-Run a test 3270 sample application:
+Keep runs across a container replacement by naming a volume for `/data`:
 
 ```bash
-docker run -it -p 3270:3270 3270io/3270connect-linux:latest -runApp
+docker run --rm -p 9200:9200 -v 3270connect-data:/data ghcr.io/3270io/3270connect:latest
 ```
 
-Run a specific test 3270 sample application:
+### Other modes
+
+Verbose, concurrent, API and sample-app runs are the same flags as everywhere
+else — anything after the image name replaces the default command:
 
 ```bash
-docker run -it -p 3270:3270 3270io/3270connect-linux:latest -runApp [number]
+# verbose
+docker run --rm -v "$PWD/workflow.json":/data/workflow.json \
+  ghcr.io/3270io/3270connect:latest -config workflow.json -headless -verbose
+
+# two workers for sixty seconds
+docker run --rm -v "$PWD/workflow.json":/data/workflow.json \
+  ghcr.io/3270io/3270connect:latest -config workflow.json -headless -concurrent 2 -runtime 60
+
+# the API listener
+docker run --rm -p 8080:8080 ghcr.io/3270io/3270connect:latest -api -api-port 8080
+
+# a bundled sample 3270 application
+docker run --rm -p 3270:3270 ghcr.io/3270io/3270connect:latest -runApp 1 -runApp-port 3270
 ```
+
+Add `-e DASHBOARD_BIND=0.0.0.0` only if you override it; the image already sets
+it, because a published port forwards to the container's external interface and
+the `localhost` default would refuse every connection from the host.
 
 ### Windows
 
-Pull the latest image:
+There is no published Windows image. A Windows container image cannot be built
+on the Linux runners CI uses, so the build job ships the Windows **binary** as a
+release asset instead — see [the releases
+page](https://github.com/3270io/3270Connect/releases).
 
-```bash
-docker pull 3270io/3270connect-windows:latest
-```
+To build one yourself on a Windows host, the repository carries
+`Dockerfile.windows`:
 
-Run the container with a configuration file:
-
-```bash
-docker run -it -v ${PWD}/workflow.json:/app/workflow.json -v ${PWD}/output.html:/app/output.html -p 3270:3270 3270io/3270connect-windows:latest -config /app/workflow.json
-```
-
-Run in headless mode:
-
-```bash
-docker run -it -v ${PWD}/workflow.json:/app/workflow.json -v ${PWD}/output.html:/app/output.html -p 3270:3270 3270io/3270connect-windows:latest -config /app/workflow.json -headless
-```
-
-Run in verbose mode:
-
-```bash
-docker run -it -v ${PWD}/workflow.json:/app/workflow.json -v ${PWD}/output.html:/app/output.html -p 3270:3270 3270io/3270connect-windows:latest -config /app/workflow.json -verbose
-```
-
-Run multiple workflows concurrently:
-
-```bash
-docker run -it -v ${PWD}/workflow.json:/app/workflow.json -v ${PWD}/output.html:/app/output.html -p 3270:3270 3270io/3270connect-windows:latest -config /app/workflow.json -concurrent 2 -runtime 60
-```
-
-Run a test 3270 sample application:
-
-```bash
-docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp
-```
-
-Run a specific test 3270 sample application and listening port:
-
-```bash
-docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp [number] -runApp-port [portNumber]
+```powershell
+docker build -f Dockerfile.windows -t 3270connect .
 ```
 
 ## Watch it end to end

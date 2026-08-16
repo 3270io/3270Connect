@@ -144,15 +144,20 @@ recorded. See [Accounts and Sign-In](authentication.md#api-tokens).
 
 To run `3270Connect` in API mode, use the following command:
 
-#### Linux
 ```bash
-docker run --rm -p 8080:8080 3270io/3270connect-linux:latest -api -api-port 8080
+docker run --rm -p 8080:8080 ghcr.io/3270io/3270connect:latest -api -api-port 8080
 ```
 
-#### Windows
+The listener binds to `localhost` inside the container by default, which a
+published port cannot reach — add `-e API_BIND=0.0.0.0` to expose it:
+
 ```bash
-docker run --rm -p 8080:8080 3270io/3270connect-windows:latest -api -api-port 8080
+docker run --rm -p 8080:8080 -e API_BIND=0.0.0.0 \
+  ghcr.io/3270io/3270connect:latest -api -api-port 8080
 ```
+
+There is no published Windows image; see [Docker
+Usage](basic-usage.md#docker-usage) for what ships instead.
 
 ### API mode in practice
 

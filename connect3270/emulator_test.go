@@ -262,29 +262,37 @@ func TestCaptureAttrsEscapeValues(t *testing.T) {
 }
 
 // The host compatibility profiler parses these replies into a document that is
-// diffed against 3270Web's, so the value has to arrive without s3270's framing
-// around it. Leaving the prefix on produced a profile that described the
-// framing: host "data", terminal type "data:", 24 columns instead of 80.
-func TestNormalizeQueryResponse(t *testing.T) {
+// compared against 3270Web's, so the payload has to arrive without s3270's
+// framing around it. Leaving the prefix on produced a profile that described
+// the framing: host "data", terminal type "data:", 24 columns instead of 80.
+//
+// The transform matches the one 3270Web applies in its host package: every
+// data line, prefix stripped, joined — not just the first, and nothing else.
+func TestNormalizeDataLines(t *testing.T) {
 	cases := []struct {
 		name string
 		raw  string
 		want string
 	}{
 		{
-			name: "strips the prefix and the status trailer",
+			name: "strips the prefix and drops the status trailer",
 			raw:  "data: 127.0.0.1:3270\nU F U C(127.0.0.1) I 2 24 80 4 20 0x0 0.000\nok\n",
 			want: "127.0.0.1:3270",
 		},
 		{
-			name: "handles the prefix without a following space",
-			raw:  "data:IBM-3279-2-E\nok\n",
-			want: "IBM-3279-2-E",
+			name: "keeps every data line, not just the first",
+			raw:  "data: first\ndata: second\ndata: third\nU F U C(h) I 2 24 80\n",
+			want: "first\nsecond\nthird",
 		},
 		{
-			name: "returns the reply unchanged when there is no data line",
-			raw:  "ok\n",
-			want: "ok",
+			name: "preserves indentation after the prefix",
+			raw:  "data:   3270 Example Application\ndata:\ndata:  First Name . . .\n",
+			want: "  3270 Example Application\n\n First Name . . .",
+		},
+		{
+			name: "a reply with no data lines says nothing",
+			raw:  "U F U C(127.0.0.1) I 2 24 80 4 20 0x0 0.000\nok\n",
+			want: "",
 		},
 		{
 			name: "empty stays empty",
@@ -295,8 +303,8 @@ func TestNormalizeQueryResponse(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := NormalizeQueryResponse(tc.raw); got != tc.want {
-				t.Errorf("NormalizeQueryResponse(%q) = %q, want %q", tc.raw, got, tc.want)
+			if got := NormalizeDataLines(tc.raw); got != tc.want {
+				t.Errorf("NormalizeDataLines(%q) = %q, want %q", tc.raw, got, tc.want)
 			}
 		})
 	}
