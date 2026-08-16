@@ -1911,9 +1911,14 @@
 <p><code>3270Connect</code> also emits a startup <code>WARNING</code> when the number of loaded injection entries is lower than requested concurrency, indicating potential scheduling contention.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <h3 id="headless-mode">Headless Mode<a class="headerlink" href="#headless-mode" title="Permanent link">&para;</a></h3>
-<p>You can run <code>3270Connect</code> in headless mode using the <code>-headless</code> flag. Headless mode is useful for running workflows without a graphical user interface.</p>
+<p><code>-headless</code> drives the session with <code>s3270</code> instead of opening an <code>x3270</code>
+window. Without it a run needs an X display, so this is the flag for a CI
+runner, a container, or any server you reach over SSH.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
+<p>It does not quiet the terminal: the header, the live stats and the run report
+all still print, which is what ends up in a CI log. There is no flag that turns
+that output off — <code>-verbose</code> and <code>-verboseFailures</code> below only add to it.</p>
 <h3 id="verbose-mode">Verbose Mode<a class="headerlink" href="#verbose-mode" title="Permanent link">&para;</a></h3>
 <p>To enable verbose mode for detailed output, use the <code>-verbose</code> flag.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
