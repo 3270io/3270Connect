@@ -1102,10 +1102,32 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#linux" class="md-nav__link">
+  <a href="#where-things-live-inside-the-container" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linux
+        Where things live inside the container
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-console" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The console
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other modes
       
     </span>
   </a>
@@ -2111,49 +2133,70 @@ or
 </code></pre></div></p>
 <p>Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.</p>
 <h2 id="docker-usage">Docker Usage<a class="headerlink" href="#docker-usage" title="Permanent link">&para;</a></h2>
-<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
-<p>Pull the latest image:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-linux:latest
+<p>The published image is <code>ghcr.io/3270io/3270connect</code>, rebuilt from <code>main</code> by CI.
+It is <code>linux/amd64</code> only: the <code>s3270</code> the emulator drives is embedded in the
+binary as an x86-64 ELF, so an arm64 image would serve the console and then
+fail the first workflow it was asked to run.</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/3270io/3270connect:latest
 </code></pre></div>
-<p>Run the container with a configuration file:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
+<div class="admonition warning">
+<p class="admonition-title">The Docker Hub images are not maintained</p>
+<p><code>3270io/3270connect-linux</code> and <code>3270io/3270connect-windows</code> still exist on
+Docker Hub, but nothing has pushed to them since June 2024 — they predate
+the operations console, sign-in, the MCP server and the host profiler.
+Earlier versions of this page named them. Use the GHCR image above.</p>
+</div>
+<h3 id="where-things-live-inside-the-container">Where things live inside the container<a class="headerlink" href="#where-things-live-inside-the-container" title="Permanent link">&para;</a></h3>
+<p>The image's working directory is <code>/data</code>, it runs as a non-root user, and
+<code>XDG_CONFIG_HOME</code> points at <code>/data</code> so the console keeps its metrics there.
+Mount your workflow into <code>/data</code> and give paths relative to it:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
+<p>Mount a <strong>directory</strong> rather than a file when you want the output back —
+bind-mounting a file that does not exist yet makes Docker create a directory
+with that name:</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>out
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/out&quot;</span>:/data/out<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
+<p>with <code>"OutputFilePath": "out/screens.html"</code> in the workflow.</p>
+<h3 id="the-console">The console<a class="headerlink" href="#the-console" title="Permanent link">&para;</a></h3>
+<p>The console is what the image runs when you give it no other flags. It listens
+on 9200:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9200</span>:9200<span class="w"> </span>ghcr.io/3270io/3270connect:latest
 </code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+<p>Keep runs across a container replacement by naming a volume for <code>/data</code>:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9200</span>:9200<span class="w"> </span>-v<span class="w"> </span>3270connect-data:/data<span class="w"> </span>ghcr.io/3270io/3270connect:latest
 </code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp
+<h3 id="other-modes">Other modes<a class="headerlink" href="#other-modes" title="Permanent link">&para;</a></h3>
+<p>Verbose, concurrent, API and sample-app runs are the same flags as everywhere
+else — anything after the image name replaces the default command:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># verbose</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-verbose
+
+<span class="c1"># two workers for sixty seconds</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+
+<span class="c1"># the API listener</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
+
+<span class="c1"># a bundled sample 3270 application</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="m">1</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="m">3270</span>
 </code></pre></div>
-<p>Run a specific test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
-</code></pre></div>
+<p>Add <code>-e DASHBOARD_BIND=0.0.0.0</code> only if you override it; the image already sets
+it, because a published port forwards to the container's external interface and
+the <code>localhost</code> default would refuse every connection from the host.</p>
 <h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h3>
-<p>Pull the latest image:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-windows:latest
-</code></pre></div>
-<p>Run the container with a configuration file:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json
-</code></pre></div>
-<p>Run in headless mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-headless
-</code></pre></div>
-<p>Run in verbose mode:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-verbose
-</code></pre></div>
-<p>Run multiple workflows concurrently:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/workflow.json:/app/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/output.html:/app/output.html<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-config<span class="w"> </span>/app/workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
-</code></pre></div>
-<p>Run a test 3270 sample application:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp
-</code></pre></div>
-<p>Run a specific test 3270 sample application and listening port:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="o">[</span>portNumber<span class="o">]</span>
+<p>There is no published Windows image. A Windows container image cannot be built
+on the Linux runners CI uses, so the build job ships the Windows <strong>binary</strong> as a
+release asset instead — see <a href="https://github.com/3270io/3270Connect/releases">the releases
+page</a>.</p>
+<p>To build one yourself on a Windows host, the repository carries
+<code>Dockerfile.windows</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">docker</span> <span class="n">build</span> <span class="o">-f</span> <span class="n">Dockerfile</span><span class="p">.</span><span class="n">windows</span> <span class="n">-t</span> <span class="n">3270connect</span> <span class="p">.</span>
 </code></pre></div>
 <h2 id="watch-it-end-to-end">Watch it end to end<a class="headerlink" href="#watch-it-end-to-end" title="Permanent link">&para;</a></h2>
 <h3 id="your-first-workflow">Your first workflow<a class="headerlink" href="#your-first-workflow" title="Permanent link">&para;</a></h3>
