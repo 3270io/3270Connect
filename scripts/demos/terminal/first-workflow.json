@@ -1,0 +1,62 @@
+{
+  "cols": 100,
+  "rows": 24,
+  "cwd": "../build",
+  "clean": [
+    "logs",
+    "screens.html",
+    "state"
+  ],
+  "env": {
+    "XDG_CONFIG_HOME": "${cwd}/state"
+  },
+  "services": [
+    {
+      "argv": [
+        "./3270Connect",
+        "-runApp",
+        "1",
+        "-runApp-port",
+        "3270"
+      ],
+      "wait": 2.5
+    }
+  ],
+  "steps": [
+    {
+      "id": "show",
+      "cmd": "cat first-run.json",
+      "argv": [
+        "cat",
+        "first-run.json"
+      ],
+      "wait_before": 0.8,
+      "wait_after": 6.5
+    },
+    {
+      "id": "run",
+      "cmd": "3270Connect -config first-run.json -headless",
+      "argv": [
+        "./3270Connect",
+        "-config",
+        "first-run.json",
+        "-headless"
+      ],
+      "wait_before": 1.0,
+      "wait_after": 6.0,
+      "timeout": 90
+    },
+    {
+      "id": "artifacts",
+      "cmd": "ls -lh logs screens.html",
+      "argv": [
+        "ls",
+        "-lh",
+        "logs",
+        "screens.html"
+      ],
+      "wait_before": 1.0,
+      "wait_after": 5.5
+    }
+  ]
+}

@@ -445,9 +445,36 @@ Run a specific test 3270 sample application and listening port:
 docker run -it -p 3270:3270 3270io/3270connect-windows:latest -runApp [number] -runApp-port [portNumber]
 ```
 
-### 3270Connect Basic Usage
+## Watch it end to end
 
-![type:video](3270Connect_1_0_3_9.mp4){: style=''}
+### Your first workflow
+
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-first-workflow.jpg">
+    <source src="/assets/video/terminal-first-workflow.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-first-workflow.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The workflow file, the run, and the two things it leaves behind — a summary
+    under <code>logs/</code> and the screens captured by
+    <code>AsciiScreenGrab</code>.
+  </figcaption>
+</figure>
+
+### Running it at scale
+
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-load-test.jpg">
+    <source src="/assets/video/terminal-load-test.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-load-test.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The same workflow with <code>-concurrent 8 -runtime 30</code>: workers ramping
+    up in batches, the live stats row, and what happens at the deadline.
+  </figcaption>
+</figure>
 
 ## Conclusion
 

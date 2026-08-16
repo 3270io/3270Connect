@@ -1,0 +1,24 @@
+{
+  "cols": 120,
+  "rows": 24,
+  "cwd": "../build",
+  "clean": ["logs", "screens.html", "state-load"],
+  "env": { "XDG_CONFIG_HOME": "${cwd}/state-load" },
+  "services": [
+    {
+      "argv": ["./3270Connect", "-runApp", "1", "-runApp-port", "3270"],
+      "wait": 2.5
+    }
+  ],
+  "steps": [
+    {
+      "id": "run",
+      "cmd": "3270Connect -config load-test.json -concurrent 8 -runtime 30 -headless",
+      "argv": ["./3270Connect", "-config", "load-test.json",
+               "-concurrent", "8", "-runtime", "30", "-headless"],
+      "wait_before": 1.0,
+      "wait_after": 7.0,
+      "timeout": 120
+    }
+  ]
+}

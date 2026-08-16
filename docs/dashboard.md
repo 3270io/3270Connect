@@ -14,6 +14,21 @@ configuration, tail logs and terminate processes without leaving the page.
 
 ![The 3270Connect operations console](assets/dashboard/console-overview.webp){: .shot }
 
+## A tour of the console
+
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-tour.jpg">
+    <source src="/assets/video/console-tour.mp4" type="video/mp4">
+    <a href="/assets/video/console-tour.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Uploading a workflow and setting a load profile, then the process table, the
+    live screen flow, the charts, the log stream and the four palettes. Recorded
+    against the bundled sample host — every number on screen is from that run.
+  </figcaption>
+</figure>
+
 !!! info "Runs entirely offline"
     Every asset the console needs — styles, scripts, charting library and icons —
     is embedded in the 3270Connect binary and served from `localhost`. Nothing is

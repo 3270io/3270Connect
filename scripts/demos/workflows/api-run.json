@@ -1,0 +1,14 @@
+{
+  "Host": "127.0.0.1",
+  "Port": 3270,
+  "OutputFilePath": "screen.html",
+  "EveryStepDelay": { "Min": 0.1, "Max": 0.2 },
+  "Steps": [
+    { "Type": "Connect" },
+    { "Type": "FillString", "Coordinates": { "Row": 5, "Column": 21 }, "Text": "ada" },
+    { "Type": "FillString", "Coordinates": { "Row": 6, "Column": 21 }, "Text": "lovelace" },
+    { "Type": "PressEnter" },
+    { "Type": "AsciiScreenGrab" },
+    { "Type": "Disconnect" }
+  ]
+}

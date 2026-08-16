@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>3270Connect demo stage</title>
+<link rel="stylesheet" href="/node_modules/@xterm/xterm/css/xterm.css">
+<link rel="stylesheet" href="stage.css">
+</head>
+<body>
+<!-- Everything the camera sees. Fixed at 1920x1080 so a scene's coordinates
+     mean the same thing in the recorder as they do here. -->
+<div id="stage">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header id="topbar">
+    <div class="wordmark">
+      <span class="mark">3270</span><span class="mark-2">Connect</span>
+    </div>
+    <div id="chapter" class="chapter"></div>
+  </header>
+
+  <main id="stagearea">
+    <!-- One window frame, two possible tenants: a terminal replay or a live
+         browser view. Scenes pick which by calling mountTerminal / mountWeb. -->
+    <section id="window" class="window">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span id="windowtitle" class="windowtitle"></span>
+      </div>
+      <div id="viewport" class="viewport">
+        <div id="term"></div>
+        <iframe id="web" title="3270Connect console" hidden></iframe>
+      </div>
+    </section>
+    <div id="spotlight" class="spotlight" hidden></div>
+    <div id="pointer" class="pointer" hidden></div>
+  </main>
+
+  <footer id="captionzone">
+    <div id="caption" class="caption">
+      <p id="captionText" class="caption-text"></p>
+      <p id="captionSub" class="caption-sub"></p>
+    </div>
+  </footer>
+
+  <div id="progress" class="progress"><span id="progressBar"></span></div>
+
+  <!-- Title and end cards sit above everything and are the only full-bleed
+       elements; they fade rather than cut so the video has bookends. -->
+  <div id="card" class="card" hidden>
+    <div class="card-inner">
+      <div class="card-kicker" id="cardKicker"></div>
+      <h1 class="card-title" id="cardTitle"></h1>
+      <div class="card-rule"></div>
+      <p class="card-sub" id="cardSub"></p>
+    </div>
+  </div>
+</div>
+
+<script src="/node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="stage.js"></script>
+</body>
+</html>

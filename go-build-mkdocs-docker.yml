@@ -124,7 +124,7 @@ jobs:
 
       - name: Install MkDocs and Dependencies
         run: |
-          pip install mkdocs mkdocs-material mkdocs-video
+          pip install mkdocs mkdocs-material
 
       - name: Build MkDocs Site
         run: |

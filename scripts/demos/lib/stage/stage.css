@@ -1,0 +1,366 @@
+/* The demo stage.
+ *
+ * Palette and type are lifted from docs/stylesheets/3270-theme.css (phosphor)
+ * so a video dropped into a docs page looks like it belongs to the page rather
+ * than to a screen recorder. Keep the tokens below in step with that file.
+ *
+ * Everything is sized in absolute pixels against a 1920x1080 stage. Videos are
+ * not responsive, and fixed numbers mean a scene can point at a coordinate and
+ * be sure of what is there.
+ */
+
+:root {
+  --bg: #03110d;
+  --bg-deep: #010806;
+  --surface: rgba(9, 40, 30, 0.62);
+  --surface-3: rgba(4, 20, 16, 0.86);
+  --line: rgba(78, 255, 176, 0.16);
+  --line-strong: rgba(78, 255, 176, 0.34);
+  --text: #e6fff5;
+  --text-2: #9fe6c8;
+  --text-3: #5f9e86;
+  --accent: #4effb3;
+  --accent-2: #7cf9d0;
+  --info: #5ad2ff;
+  --warn: #f7c36b;
+  --danger: #ff6f82;
+  --sans: "Inter", "Inter Display", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+/* Several stage layers set `display` themselves, which outranks the `hidden`
+ * attribute's user-agent rule. Without this a "hidden" title card still covers
+ * the stage and swallows every click meant for the console underneath it. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+#stage {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  background:
+    radial-gradient(1200px 700px at 18% -10%, rgba(78, 255, 176, 0.14), transparent 60%),
+    radial-gradient(900px 600px at 92% 8%, rgba(90, 210, 255, 0.10), transparent 60%),
+    radial-gradient(1000px 800px at 50% 120%, rgba(185, 140, 255, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+  font-family: var(--sans);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* A slow drift keeps the background from looking like a still image behind a
+   terminal that is itself mostly static. It is deliberately barely visible. */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(600px 400px at 30% 40%, rgba(78, 255, 176, 0.10), transparent 70%),
+    radial-gradient(500px 350px at 70% 60%, rgba(90, 210, 255, 0.08), transparent 70%);
+  filter: blur(20px);
+  animation: drift 48s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(2%, 2%, 0) scale(1.08); }
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 3px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+#topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+}
+
+.wordmark {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.wordmark .mark   { color: var(--accent); text-shadow: 0 0 24px rgba(78, 255, 176, 0.45); }
+.wordmark .mark-2 { color: var(--text-2); }
+
+.chapter {
+  font-family: var(--mono);
+  font-size: 17px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 22px;
+  background: var(--surface-3);
+  opacity: 0;
+  transition: opacity 360ms ease;
+}
+.chapter.on { opacity: 1; }
+
+/* ------------------------------------------------------------- the window */
+
+#stagearea {
+  position: absolute;
+  top: 96px;
+  left: 0; right: 0;
+  height: 800px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.window {
+  position: relative;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(3, 14, 11, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 34px 90px rgba(0, 0, 0, 0.62),
+    0 0 90px rgba(78, 255, 176, 0.10);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(14px) scale(0.995);
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+.window.on { opacity: 1; transform: none; }
+
+.titlebar {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  background: linear-gradient(180deg, rgba(9, 40, 30, 0.9), rgba(4, 20, 16, 0.9));
+  border-bottom: 1px solid var(--line);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.dot.r { background: #ff6f82; }
+.dot.y { background: #f7c36b; }
+.dot.g { background: #4effb3; }
+
+.windowtitle {
+  margin-left: 14px;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+}
+
+.viewport { position: relative; }
+#term { padding: 18px 20px; }
+#web  { border: 0; display: block; background: var(--bg); }
+
+/* The xterm canvas paints its own background; the wrapper only supplies the
+   glow that makes the phosphor read as phosphor. */
+#term .xterm-screen { text-shadow: 0 0 14px rgba(78, 255, 176, 0.18); }
+
+/* --------------------------------------------------- spotlight and cursor */
+
+/* A cut-out that dims the whole stage except one rectangle. Used to point at a
+   control in the console without an arrow graphic or a zoom. */
+.spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 320ms ease;
+  z-index: 40;
+}
+.spotlight.on { opacity: 1; }
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(1, 8, 6, 0.62);
+  /* The hole is punched with a box-shadow on the ring element below, which is
+     cheaper and sharper than a mask and animates without repainting the page. */
+  clip-path: var(--hole, none);
+}
+.spotlight .ring {
+  position: absolute;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(1, 8, 6, 0.60), 0 0 34px rgba(78, 255, 176, 0.5);
+  transition: all 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Screencasts do not capture the OS pointer, so the stage draws its own. */
+.pointer {
+  position: fixed;
+  width: 26px;
+  height: 26px;
+  margin: -3px 0 0 -3px;
+  z-index: 50;
+  pointer-events: none;
+  transition: transform 460ms cubic-bezier(0.33, 1, 0.68, 1);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7));
+}
+.pointer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  clip-path: polygon(0 0, 0 74%, 20% 58%, 34% 92%, 52% 84%, 38% 51%, 66% 50%);
+}
+.pointer.click::after {
+  content: "";
+  position: absolute;
+  left: -14px; top: -14px;
+  width: 54px; height: 54px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: ping 620ms ease-out forwards;
+}
+@keyframes ping {
+  from { transform: scale(0.2); opacity: 0.9; }
+  to   { transform: scale(1); opacity: 0; }
+}
+
+/* ------------------------------------------------------------- captions */
+
+#captionzone {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 184px;
+  display: flex;
+  align-items: center;
+  padding: 0 64px 12px;
+}
+
+.caption {
+  position: relative;
+  max-width: 1360px;
+  padding: 20px 30px 20px 28px;
+  border-left: 4px solid var(--accent);
+  border-radius: 4px 12px 12px 4px;
+  background: linear-gradient(90deg, rgba(6, 30, 23, 0.94), rgba(6, 30, 23, 0.55) 82%, transparent);
+  opacity: 0;
+  transform: translateX(-16px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.caption.on { opacity: 1; transform: none; }
+
+.caption-text {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.28;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.caption-sub {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 20px;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+.caption-sub:empty { display: none; }
+
+/* Inline emphasis for the one term a caption is really about. */
+.caption-text code, .caption-sub code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  color: var(--accent);
+  background: rgba(78, 255, 176, 0.10);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+
+/* -------------------------------------------------------- progress + cards */
+
+.progress {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 4px;
+  background: rgba(78, 255, 176, 0.10);
+}
+.progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--info));
+  box-shadow: 0 0 16px rgba(78, 255, 176, 0.6);
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(900px 600px at 50% 40%, rgba(78, 255, 176, 0.12), transparent 65%),
+    rgba(1, 8, 6, 0.94);
+  opacity: 0;
+  transition: opacity 520ms ease;
+}
+.card.on { opacity: 1; }
+
+.card-inner { text-align: center; max-width: 1280px; padding: 0 80px; }
+
+.card-kicker {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 26px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 84px;
+  line-height: 1.06;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  text-shadow: 0 0 60px rgba(78, 255, 176, 0.22);
+}
+
+.card-rule {
+  width: 132px;
+  height: 2px;
+  margin: 34px auto;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.card-sub {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.card-sub code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--accent-2);
+}

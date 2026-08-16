@@ -1,0 +1,38 @@
+{
+  "cols": 100,
+  "rows": 24,
+  "cwd": "../build",
+  "clean": ["state-api", "response.json"],
+  "env": { "XDG_CONFIG_HOME": "${cwd}/state-api" },
+  "services": [
+    {
+      "argv": ["./3270Connect", "-runApp", "1", "-runApp-port", "3270"],
+      "wait": 2.5
+    }
+  ],
+  "steps": [
+    {
+      "id": "serve",
+      "cmd": "3270Connect -api -api-port 8080 -config api-run.json &",
+      "argv": ["./3270Connect", "-api", "-api-port", "8080", "-config", "api-run.json"],
+      "background": 3.0,
+      "wait_before": 0.8,
+      "wait_after": 5.0
+    },
+    {
+      "id": "post",
+      "cmd": "curl -s localhost:8080/api/execute -d @api-run.json | tee response.json | jq '{status,message}'",
+      "argv": ["bash", "-lc", "curl -s -X POST localhost:8080/api/execute -H 'Content-Type: application/json' -d @api-run.json | tee response.json | jq '{status,message}'"],
+      "wait_before": 1.0,
+      "wait_after": 5.0,
+      "timeout": 90
+    },
+    {
+      "id": "screen",
+      "cmd": "jq -r .output response.json | head -12",
+      "argv": ["bash", "-lc", "jq -r .output response.json | head -12"],
+      "wait_before": 1.0,
+      "wait_after": 6.0
+    }
+  ]
+}

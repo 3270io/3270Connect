@@ -1,0 +1,18 @@
+{
+  "duration": 33.238522,
+  "marks": {
+    "end": 33.238522,
+    "post.done": 18.965451,
+    "post.prompt": 11.866592,
+    "post.start": 17.764742,
+    "post.typed": 17.414742,
+    "screen.done": 27.238522,
+    "screen.prompt": 23.965451,
+    "screen.start": 27.096365,
+    "screen.typed": 26.746365,
+    "serve.done": 6.866592,
+    "serve.prompt": 0.0,
+    "serve.start": 3.83774,
+    "serve.typed": 3.48774
+  }
+}
