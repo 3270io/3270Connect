@@ -61,7 +61,7 @@ go test -v ./...
 | `-api-bind` | Interface for the API listener (default `localhost`; env `API_BIND`) |
 | `-dashboard` / `-dashboardPort` | Web dashboard |
 | `-dashboardBind` | Interface for the dashboard listener (default `localhost`, `all` for every interface; env `DASHBOARD_BIND`). The container image sets it to `0.0.0.0` |
-| `-headless` | No terminal UI (for CI/CD) |
+| `-headless` | Drive the session with s3270 rather than opening an x3270 window. It does **not** silence the terminal UI — the header, live stats and run report still print, which is what CI logs capture. Without it a run needs an X display, so this is the flag for any headless box |
 | `-verbose` | Verbose logging |
 | `-workflowTimeout` | Per-workflow hard timeout (seconds) |
 | `-gracePeriod` | Seconds to wait for in-flight workflows after runtime ends (default: 30; overrides workflow `GracePeriod`) |

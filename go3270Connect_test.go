@@ -842,3 +842,45 @@ func writeCaptureFixture(t *testing.T, contents string) string {
 	}
 	return pid
 }
+
+// The API listener executes the workflow that arrives with each request, so a
+// missing -config file must not stop it starting. The image's working
+// directory has no workflow.json in it, and the documented
+// `docker run … -api -api-port 8080` exited before it listened.
+func TestStartupConfigurationAPIModeToleratesMissingFile(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "no-such-workflow.json")
+
+	config := startupConfiguration(missing, true)
+	if config == nil {
+		t.Fatal("startupConfiguration returned nil for API mode without a config file")
+	}
+	if !config.WaitForField.Enabled {
+		t.Error("WaitForField should default to enabled")
+	}
+	if config.RampUpBatchSize != 10 {
+		t.Errorf("RampUpBatchSize = %d, want the default 10", config.RampUpBatchSize)
+	}
+	if config.RampUpDelay != 1.0 {
+		t.Errorf("RampUpDelay = %v, want the default 1.0", config.RampUpDelay)
+	}
+}
+
+// A file that is there is still read, in API mode as anywhere else — the
+// tolerance above is for the absent file only, not for ignoring one somebody
+// deliberately passed.
+func TestStartupConfigurationAPIModeStillReadsAPresentFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "workflow.json")
+	body := `{"Host":"mainframe.example","Port":992,"OutputFilePath":"out.html",
+	          "Steps":[{"Type":"Connect"},{"Type":"Disconnect"}]}`
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	config := startupConfiguration(path, true)
+	if config.Host != "mainframe.example" {
+		t.Errorf("Host = %q, want the value from the file", config.Host)
+	}
+	if config.Port != 992 {
+		t.Errorf("Port = %d, want 992 from the file", config.Port)
+	}
+}
