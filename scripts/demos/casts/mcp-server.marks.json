@@ -1,0 +1,18 @@
+{
+  "duration": 37.462197,
+  "marks": {
+    "call.done": 30.962197,
+    "call.prompt": 21.530402,
+    "call.start": 25.86953,
+    "call.typed": 25.51953,
+    "end": 37.462197,
+    "list.done": 4.598997,
+    "list.prompt": 0.0,
+    "list.start": 4.492053,
+    "list.typed": 4.142053,
+    "schema.done": 17.030402,
+    "schema.prompt": 11.098997,
+    "schema.start": 16.917759,
+    "schema.typed": 16.567759
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "duration": 31.448105,
+  "marks": {
+    "device.done": 15.860326,
+    "device.prompt": 12.121413,
+    "device.start": 15.765456,
+    "device.typed": 15.415456,
+    "end": 31.448105,
+    "probe.done": 9.121413,
+    "probe.prompt": 0.0,
+    "probe.start": 5.713978,
+    "probe.typed": 5.363978,
+    "timing.done": 25.948105,
+    "timing.prompt": 22.360326,
+    "timing.start": 25.851949,
+    "timing.typed": 25.501949
+  }
+}

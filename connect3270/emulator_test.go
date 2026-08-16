@@ -151,28 +151,28 @@ func TestWaitForFieldErrorIncludesKeyboardLockDetail(t *testing.T) {
 	// We can't fully test WaitForField without a real connection,
 	// but we can verify that when it would fail, the error format includes
 	// the KeyboardLockDetail message.
-	
+
 	// This test verifies the error message structure by checking that the
 	// failure path includes the expected "KeyboardLockDetail:" text
 	// The actual implementation will add this detail when query succeeds
 	expectedSubstring := "KeyboardLockDetail:"
-	
+
 	// Create an emulator (won't be connected)
 	e := &Emulator{
 		Host:       "test.host",
 		Port:       23,
 		ScriptPort: "5000",
 	}
-	
+
 	// Call WaitForField with minimal retries (will fail without connection)
 	// This should timeout and include KeyboardLockDetail in the error
 	err := e.WaitForField(1, 1)
-	
+
 	// Verify error occurred (expected since there's no connection)
 	if err == nil {
 		t.Fatal("Expected WaitForField to fail without connection")
 	}
-	
+
 	// Verify the error message contains the KeyboardLockDetail marker
 	if !strings.Contains(err.Error(), expectedSubstring) {
 		t.Errorf("WaitForField error should contain '%s', got: %v", expectedSubstring, err)
@@ -258,5 +258,46 @@ func TestCaptureAttrsEscapeValues(t *testing.T) {
 
 	if !strings.Contains(attrs, `data-host="ho&quot;st&lt;&amp;"`) {
 		t.Errorf("captureAttrs() = %q, want the host escaped", attrs)
+	}
+}
+
+// The host compatibility profiler parses these replies into a document that is
+// diffed against 3270Web's, so the value has to arrive without s3270's framing
+// around it. Leaving the prefix on produced a profile that described the
+// framing: host "data", terminal type "data:", 24 columns instead of 80.
+func TestNormalizeQueryResponse(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{
+			name: "strips the prefix and the status trailer",
+			raw:  "data: 127.0.0.1:3270\nU F U C(127.0.0.1) I 2 24 80 4 20 0x0 0.000\nok\n",
+			want: "127.0.0.1:3270",
+		},
+		{
+			name: "handles the prefix without a following space",
+			raw:  "data:IBM-3279-2-E\nok\n",
+			want: "IBM-3279-2-E",
+		},
+		{
+			name: "returns the reply unchanged when there is no data line",
+			raw:  "ok\n",
+			want: "ok",
+		},
+		{
+			name: "empty stays empty",
+			raw:  "",
+			want: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := NormalizeQueryResponse(tc.raw); got != tc.want {
+				t.Errorf("NormalizeQueryResponse(%q) = %q, want %q", tc.raw, got, tc.want)
+			}
+		})
 	}
 }

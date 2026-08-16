@@ -224,6 +224,8 @@ Shorter walk-throughs of one thing at a time:
 | Call it over HTTP — one POST returns the screen | [Advanced Features](advanced-features.md#api-mode-in-practice) |
 | The operations console, end to end | [Web Dashboard](dashboard.md#a-tour-of-the-console) |
 | Sign-in and administration with `AUTH_MODE=local` | [Accounts and Sign-In](authentication.md#what-it-looks-like) |
+| Profile a host before you trust a workflow against it | [Host Compatibility Profiler](host-profiler.md#quick-start) |
+| Drive it from an AI client over MCP | [MCP Server](mcp.md#check-it-works-first) |
 
 ## Conclusion
 

@@ -17,7 +17,10 @@ mkdir -p "$build"
 echo "building 3270Connect…"
 (cd "$repo" && go build -o "$build/3270Connect" .)
 
-cp "$here"/workflows/*.json "$build/"
+# Everything in workflows/, not just *.json — the MCP recording drives the
+# server with a .jsonl of JSON-RPC lines, and a glob that missed it would leave
+# a re-record failing on a file that is right there in the repository.
+cp "$here"/workflows/* "$build/"
 
 echo "staged $build"
 "$build/3270Connect" -version 2>/dev/null || true
