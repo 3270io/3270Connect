@@ -1691,6 +1691,11 @@ func main() {
 		startPrometheusListener(promListen)
 	}
 
+	// Before the profiler branch, not after it: -verbose and -headless are only
+	// two assignments, and leaving them until later meant a -profile run was
+	// driven by whatever the defaults happened to be.
+	setGlobalSettings()
+
 	if profileMode {
 		runProfileMode()
 		return

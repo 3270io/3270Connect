@@ -1,0 +1,38 @@
+{
+  "cols": 100,
+  "rows": 24,
+  "cwd": "../build",
+  "clean": ["sample.profile.json", "state-profile"],
+  "env": { "XDG_CONFIG_HOME": "${cwd}/state-profile" },
+  "services": [
+    {
+      "argv": ["./3270Connect", "-runApp", "1", "-runApp-port", "3270"],
+      "wait": 2.5
+    }
+  ],
+  "steps": [
+    {
+      "id": "probe",
+      "cmd": "3270Connect -profile -profileHost 127.0.0.1 -profilePort 3270 -profileOut sample.profile.json",
+      "argv": ["./3270Connect", "-profile", "-profileHost", "127.0.0.1",
+               "-profilePort", "3270", "-profileOut", "sample.profile.json"],
+      "wait_before": 0.9,
+      "wait_after": 3.0,
+      "timeout": 90
+    },
+    {
+      "id": "device",
+      "cmd": "jq '{host, device, protocol}' sample.profile.json",
+      "argv": ["bash", "-lc", "jq '{host: (.host | del(.banner_preview, .banner_signature)), device, protocol}' sample.profile.json"],
+      "wait_before": 1.0,
+      "wait_after": 6.5
+    },
+    {
+      "id": "timing",
+      "cmd": "jq '{capabilities, timing}' sample.profile.json",
+      "argv": ["bash", "-lc", "jq '{capabilities, timing}' sample.profile.json"],
+      "wait_before": 1.0,
+      "wait_after": 5.5
+    }
+  ]
+}

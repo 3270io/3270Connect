@@ -31,6 +31,18 @@ captures the first screen's banner signature, records timing, and writes
 the JSON to `-profileOut` (or stdout when omitted). The process exits
 non-zero on failure so CI can fail fast.
 
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-host-profiler.jpg">
+    <source src="/assets/video/terminal-host-profiler.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-host-profiler.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Profiling the bundled sample host: the probe, the device and protocol it
+    reports, and the queries it could not get an answer to.
+  </figcaption>
+</figure>
+
 ## Flags
 
 | Flag | Description |

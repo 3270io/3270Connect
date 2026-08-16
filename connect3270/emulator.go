@@ -239,11 +239,11 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	unlockOutput, unlockErr := e.execCommand(unlockCommand)
 
 	// Query keyboard lock state after Wait(timeout, Unlock)
-	       if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-		       if Verbose {
-			       log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
-		       }
-	       }
+	if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
+		if Verbose {
+			log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
+		}
+	}
 
 	// Check if unlock failed or status is not "U"
 	needsReset := false
@@ -262,13 +262,13 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 			// Retry unlock after reset
 			time.Sleep(retryDelay)
 			unlockOutput, unlockErr = e.execCommand(unlockCommand)
-			
+
 			// Query keyboard lock state again after reset
-			       if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-				       if Verbose {
-					       log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
-				       }
-			       }
+			if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
+				if Verbose {
+					log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
+				}
+			}
 		}
 	}
 
@@ -279,12 +279,12 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	for retries := 0; retries < maxRetries; retries++ {
 		output, err := e.execCommand(command)
 		if err == nil {
-			       if output == "" {
-				       if Verbose {
-					       log.Println("Wait command executed successfully (no output)")
-				       }
-				       return nil
-			       }
+			if output == "" {
+				if Verbose {
+					log.Println("Wait command executed successfully (no output)")
+				}
+				return nil
+			}
 
 			// Extract the keyboard status from the command output
 			statusParts := strings.Fields(output)
@@ -509,6 +509,16 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	}
 
 	return "", fmt.Errorf("maximum GetValue retries reached")
+}
+
+// NormalizeQueryResponse reduces a raw Query reply to the value it carries.
+//
+// s3270 answers on the scripting protocol with the value on a "data:" line
+// followed by a status line and "ok". Callers that want to parse the value —
+// the host compatibility profiler is one — need the value alone, and Query
+// deliberately hands back the reply untouched.
+func NormalizeQueryResponse(raw string) string {
+	return normalizeAsciiData(raw)
 }
 
 // normalizeAsciiData trims the s3270/x3270 "data:" prefix and drops status lines.

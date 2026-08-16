@@ -1,0 +1,37 @@
+{
+  "cols": 100,
+  "rows": 24,
+  "cwd": "../build",
+  "clean": ["state-mcp"],
+  "env": { "XDG_CONFIG_HOME": "${cwd}/state-mcp" },
+  "services": [
+    {
+      "argv": ["./3270Connect", "-runApp", "1", "-runApp-port", "3270"],
+      "wait": 2.5
+    }
+  ],
+  "steps": [
+    {
+      "id": "list",
+      "cmd": "3270Connect mcp --list-tools | jq -r '.[] | \"\\(.tier)  \\(.name)\"'",
+      "argv": ["bash", "-lc", "./3270Connect mcp --list-tools | jq -r '.[] | \"\\(.tier)  \\(.name)\"'"],
+      "wait_before": 0.9,
+      "wait_after": 6.5
+    },
+    {
+      "id": "schema",
+      "cmd": "3270Connect mcp --list-tools | jq -r '.[] | select(.name==\"test_connection\") | .description'",
+      "argv": ["bash", "-lc", "./3270Connect mcp --list-tools | jq -r '.[] | select(.name==\"test_connection\") | .description'"],
+      "wait_before": 1.0,
+      "wait_after": 4.5
+    },
+    {
+      "id": "call",
+      "cmd": "(cat mcp-session.jsonl; sleep 5) | 3270Connect mcp | jq -c .",
+      "argv": ["bash", "-lc", "(cat mcp-session.jsonl; sleep 5) | ./3270Connect mcp 2>/dev/null | jq -c ."],
+      "wait_before": 1.0,
+      "wait_after": 6.5,
+      "timeout": 60
+    }
+  ]
+}

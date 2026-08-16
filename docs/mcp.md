@@ -31,6 +31,19 @@ That prints the tool catalogue as JSON and exits. It needs no host, no
 workflow and no run in progress. If you see JSON, the wiring is right and
 anything that fails afterwards is configuration.
 
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-mcp-server.jpg">
+    <source src="/assets/video/terminal-mcp-server.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-mcp-server.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The tool catalogue, the descriptions a model reads to choose between tools,
+    and a real stdio session — an <code>initialize</code> followed by a
+    <code>tools/call</code> — answered by the server by hand.
+  </figcaption>
+</figure>
+
 ## Setting up Claude Desktop
 
 1. Open **Claude Desktop** → **Settings** → **Developer** → **Edit Config**.

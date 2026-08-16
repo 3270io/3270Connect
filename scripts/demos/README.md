@@ -105,4 +105,10 @@ build/                staged binary and scratch space — disposable, untracked
   corrupts it, and starting a run from the console then fails.
 - **`-headless` is what the terminal videos use.** Without it the emulator is
   the x3270 GUI, which needs an X display; with it the terminal UI still prints
-  everything, which is what is being shown.
+  everything, which is what is being shown. `-profile` and `mcp` do not need
+  the flag — both force it themselves, because neither has any use for a
+  window.
+- **Chaos Mode and AI Chat cannot be recorded from this repository.** Both are
+  3270Web surfaces; `docs/chaos-mode.md` and `docs/ai-chat-mode.md` describe
+  another program. Recording them belongs in the 3270Web repository, against
+  its own harness.

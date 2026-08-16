@@ -41,6 +41,32 @@ func startPrometheusListener(addr string) {
 //
 // The workflow runner is intentionally not invoked. Failures are logged and
 // the process exits with a non-zero status so CI can fail fast.
+// profilerHost adapts the emulator to profiler.ProberHost.
+//
+// The probe's parsers want the value a Query answered with; the emulator hands
+// back s3270's reply as it arrived, "data: " prefix and status line included.
+// Stripping happens here rather than in internal/profiler because that package
+// is kept in step with 3270Web's parser so profiles from the two tools diff
+// cleanly — the prefix is this side's transport detail, not a parsing rule.
+//
+// Without it the document came out describing the prefix instead of the host:
+// host "data", terminal type "data:", 24 columns, and s3270's status line
+// recorded as the LU name.
+//
+// Embedding the emulator keeps the optional interfaces Probe looks for —
+// AsciiScreen and LastConnectDuration — promoted and satisfied.
+type profilerHost struct {
+	*connect3270.Emulator
+}
+
+func (h profilerHost) Query(arg string) (string, error) {
+	resp, err := h.Emulator.Query(arg)
+	if err != nil {
+		return "", err
+	}
+	return connect3270.NormalizeQueryResponse(resp), nil
+}
+
 func runProfileMode() {
 	host := strings.TrimSpace(profileHost)
 	port := profilePort
@@ -71,6 +97,14 @@ func runProfileMode() {
 		scriptPort = "5050"
 	}
 
+	// A probe connects once, writes JSON and exits — there is nothing for an
+	// x3270 window to show, and the mode is documented for CI, where opening
+	// one is not an option. Without this the probe spent ten connect retries
+	// failing to reach a display that was never going to be there, which is
+	// what the documented quick-start command did on any headless box.
+	// runAPIWorkflow does the same for the same reason.
+	connect3270.Headless = true
+
 	e := connect3270.NewEmulator(host, port, scriptPort)
 	e.CodePage = codePage
 	defer func() { _ = e.Disconnect() }()
@@ -81,7 +115,7 @@ func runProfileMode() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	p, err := profiler.Probe(ctx, e, profiler.ProbeOptions{
+	p, err := profiler.Probe(ctx, profilerHost{e}, profiler.ProbeOptions{
 		Tool:       "3270Connect",
 		Version:    version,
 		Host:       host,
