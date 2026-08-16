@@ -1567,7 +1567,7 @@
   
 
 
-<div><h1 id="ai-chat-mode">AI Chat Mode<a class="headerlink" href="#ai-chat-mode" title="Permanent link">¶</a></h1>
+<h1 id="ai-chat-mode">AI Chat Mode<a class="headerlink" href="#ai-chat-mode" title="Permanent link">&para;</a></h1>
 <p>AI Chat mode is a side panel in 3270Web, the 3270Connect web console, that lets you drive a 3270 session through conversation. You type instructions in plain language; the AI reads the current screen, fills fields, presses keys, and runs chaos exploration, all with your approval before each action.</p>
 <div class="admonition note">
 <p class="admonition-title">Driving 3270Connect itself</p>
@@ -1576,13 +1576,13 @@ client compose workflows and run load tests through 3270Connect, see the
 <a href="../mcp/">MCP Server</a> — it exposes the same capability to Claude Desktop
 and other MCP clients, with no browser involved.</p>
 </div>
-<h2 id="open-the-panel">Open the Panel<a class="headerlink" href="#open-the-panel" title="Permanent link">¶</a></h2>
+<h2 id="open-the-panel">Open the Panel<a class="headerlink" href="#open-the-panel" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Connect to a host.</li>
 <li>Click the <strong>Open Copilot chat</strong> button in the toolbar (the chat bubble icon).</li>
 <li>The side panel slides open on the right.</li>
 </ol>
-<h2 id="sign-in">Sign In<a class="headerlink" href="#sign-in" title="Permanent link">¶</a></h2>
+<h2 id="sign-in">Sign In<a class="headerlink" href="#sign-in" title="Permanent link">&para;</a></h2>
 <p>The first time you open the panel you need to authenticate with GitHub:</p>
 <ol>
 <li>Click <strong>Sign in with GitHub</strong>.</li>
@@ -1591,9 +1591,9 @@ and other MCP clients, with no browser involved.</p>
 <li>Return to 3270Connect. The panel polls automatically and logs you in once you approve.</li>
 </ol>
 <p>To sign out at any time, click the <strong>Sign out</strong> button in the panel header.</p>
-<h3 id="github-enterprise">GitHub Enterprise<a class="headerlink" href="#github-enterprise" title="Permanent link">¶</a></h3>
+<h3 id="github-enterprise">GitHub Enterprise<a class="headerlink" href="#github-enterprise" title="Permanent link">&para;</a></h3>
 <p>If your organization uses GitHub Enterprise, click <strong>Set Enterprise URL</strong> and enter your GitHub Enterprise instance URL before signing in.</p>
-<h2 id="send-a-message">Send a Message<a class="headerlink" href="#send-a-message" title="Permanent link">¶</a></h2>
+<h2 id="send-a-message">Send a Message<a class="headerlink" href="#send-a-message" title="Permanent link">&para;</a></h2>
 <p>Type any instruction in the input box and press <strong>Send</strong> (or <span class="keys"><kbd class="key-enter">Enter</kbd></span>).</p>
 <p>Examples:</p>
 <ul>
@@ -1602,7 +1602,7 @@ and other MCP clients, with no browser involved.</p>
 <li><em>"Run a chaos exploration and give me a summary when it finishes."</em></li>
 </ul>
 <p>The AI reads the current screen before acting, then proposes one tool call at a time.</p>
-<h2 id="tool-approval">Tool Approval<a class="headerlink" href="#tool-approval" title="Permanent link">¶</a></h2>
+<h2 id="tool-approval">Tool Approval<a class="headerlink" href="#tool-approval" title="Permanent link">&para;</a></h2>
 <p>Each AI action requires explicit approval:</p>
 <ul>
 <li>The panel shows a <strong>Run</strong> button before executing any tool call.</li>
@@ -1610,7 +1610,7 @@ and other MCP clients, with no browser involved.</p>
 <li>This prevents unintended writes or key presses.</li>
 </ul>
 <p>To let the AI proceed without pausing, enable <strong>Auto Mode</strong> (toggle in the panel header). In Auto Mode the panel runs tool calls automatically without waiting for you to click <strong>Run</strong> each time.</p>
-<h2 id="available-actions">Available Actions<a class="headerlink" href="#available-actions" title="Permanent link">¶</a></h2>
+<h2 id="available-actions">Available Actions<a class="headerlink" href="#available-actions" title="Permanent link">&para;</a></h2>
 <p>The AI can perform the following actions on your 3270 session:</p>
 <table>
 <thead>
@@ -1638,7 +1638,7 @@ and other MCP clients, with no browser involved.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="chaos-integration">Chaos Integration<a class="headerlink" href="#chaos-integration" title="Permanent link">¶</a></h2>
+<h2 id="chaos-integration">Chaos Integration<a class="headerlink" href="#chaos-integration" title="Permanent link">&para;</a></h2>
 <p>The AI can run and monitor chaos exploration directly from the chat panel. This gives you the same capability as the toolbar controls, but driven by conversation.</p>
 <table>
 <thead>
@@ -1683,12 +1683,12 @@ and other MCP clients, with no browser involved.</p>
 </table>
 <p>The default system prompt uses a five-phase workflow: read the screen -&gt; review existing hints -&gt; ask you to choose run mode -&gt; start exploration -&gt; export results. You can override this by writing your own instructions.</p>
 <p>Manual toolbar controls and the AI panel share the same run state, so you can freely mix both. See <a href="../chaos-mode/">Chaos Mode</a> for full details on toolbar controls, settings, and the discovery report format, and see <a href="../chaos-mode/#running-chaos-via-ai-chat">Running Chaos via AI Chat</a> for a side-by-side comparison.</p>
-<h2 id="model-selection">Model Selection<a class="headerlink" href="#model-selection" title="Permanent link">¶</a></h2>
+<h2 id="model-selection">Model Selection<a class="headerlink" href="#model-selection" title="Permanent link">&para;</a></h2>
 <p>Use the <strong>Model</strong> dropdown in the panel to switch between available Copilot models at any time. The default is Claude Opus 4.</p>
-<h2 id="clear-the-conversation">Clear the Conversation<a class="headerlink" href="#clear-the-conversation" title="Permanent link">¶</a></h2>
+<h2 id="clear-the-conversation">Clear the Conversation<a class="headerlink" href="#clear-the-conversation" title="Permanent link">&para;</a></h2>
 <p>Click <strong>Clear</strong> in the panel header to remove all messages from the current chat session. A confirmation dialog appears before the history is deleted.</p>
-<h2 id="keyboard-shortcut">Keyboard Shortcut<a class="headerlink" href="#keyboard-shortcut" title="Permanent link">¶</a></h2>
-<p>There is no default keyboard shortcut for the panel. All other 3270 key bindings remain active while the panel is open; see <a href="../keyboard-and-controls/">Keyboard and Controls</a>.</p></div>
+<h2 id="keyboard-shortcut">Keyboard Shortcut<a class="headerlink" href="#keyboard-shortcut" title="Permanent link">&para;</a></h2>
+<p>There is no default keyboard shortcut for the panel. All other 3270 key bindings remain active while the panel is open; see <a href="../keyboard-and-controls/">Keyboard and Controls</a>.</p>
 
 
 

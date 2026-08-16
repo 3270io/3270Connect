@@ -1528,46 +1528,46 @@
   
 
 
-<div><h1 id="dynamic-field-injection">Dynamic Field Injection<a class="headerlink" href="#dynamic-field-injection" title="Permanent link">¶</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<h1 id="dynamic-field-injection">Dynamic Field Injection<a class="headerlink" href="#dynamic-field-injection" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The injection configuration feature in <code>3270Connect</code> allows users to dynamically inject data into workflows. This is particularly useful for scenarios where workflows need to be parameterized or customized based on external inputs.</p>
-<h2 id="configuration-format">Configuration Format<a class="headerlink" href="#configuration-format" title="Permanent link">¶</a></h2>
+<h2 id="configuration-format">Configuration Format<a class="headerlink" href="#configuration-format" title="Permanent link">&para;</a></h2>
 <p>The injection configuration is defined in a JSON file. Below is an example structure:</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"{{firstname}}"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-firstname"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"{{lastname}}"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-lastname"</span>
+<span class="w">      </span><span class="nt">&quot;{{firstname}}&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-firstname&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;{{lastname}}&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-lastname&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"{{firstname}}"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user2-firstname"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"{{lastname}}"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user2-lastname"</span>
+<span class="w">      </span><span class="nt">&quot;{{firstname}}&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user2-firstname&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;{{lastname}}&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user2-lastname&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">]</span>
 </code></pre></div>
 <p>The workflow configuration is then define to use the key names of the injection configuration file. Below is an example structure:</p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{{firstname}}"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{firstname}}&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{{lastname}}"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{lastname}}&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 </code></pre></div>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">¶</a></h2>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>To use an injection configuration file, pass it as a parameter when running <code>3270Connect</code>:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-injectionConfig<span class="w"> </span>injection.json
 </code></pre></div>
-<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">¶</a></h2>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
 <p>Here is an example of running a workflow with an injection configuration:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-injectionConfig<span class="w"> </span>injection.json
 </code></pre></div>
 <p>This will replace the specified fields in the workflow with the values provided in the injection configuration.</p>
-<h2 id="concurrent-workflow-locking">Concurrent Workflow Locking<a class="headerlink" href="#concurrent-workflow-locking" title="Permanent link">¶</a></h2>
+<h2 id="concurrent-workflow-locking">Concurrent Workflow Locking<a class="headerlink" href="#concurrent-workflow-locking" title="Permanent link">&para;</a></h2>
 <p>When running with <code>-concurrent</code> and <code>-runtime</code> while using <code>-injectionConfig</code>, each injection entry is locked while a workflow is actively using it. This prevents a second active workflow from reusing the same injection values at the same time.</p>
 <p>Behavior details:</p>
 <ul>
@@ -1575,14 +1575,14 @@
 <li>If all injection entries are currently locked and in use, the workflow start for that slot is skipped for the current scheduling cycle.</li>
 <li>Processing continues normally on the next cycle.</li>
 </ul>
-<h2 id="warning-messages">Warning Messages<a class="headerlink" href="#warning-messages" title="Permanent link">¶</a></h2>
+<h2 id="warning-messages">Warning Messages<a class="headerlink" href="#warning-messages" title="Permanent link">&para;</a></h2>
 <p><code>3270Connect</code> emits <code>WARNING</code> terminal messages (same terminal log style and layout as existing warnings) in two cases:</p>
 <ul>
 <li>Startup mapping warning: if loaded injection entries are fewer than requested concurrency, for example <code>2</code> entries with <code>-concurrent 5</code>.</li>
 <li>Runtime lock warning: when all injection entries are locked/in use at a scheduling moment, so one or more workflow starts are skipped for that cycle.</li>
 </ul>
-<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">¶</a></h2>
-<p>The injection configuration feature enhances the flexibility of <code>3270Connect</code> by allowing workflows to be dynamically customized. This is especially useful for testing and automation scenarios where inputs vary across runs.</p></div>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>The injection configuration feature enhances the flexibility of <code>3270Connect</code> by allowing workflows to be dynamically customized. This is especially useful for testing and automation scenarios where inputs vary across runs.</p>
 
 
 

@@ -1550,7 +1550,7 @@
   
 
 
-<div><h1 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">¶</a></h1>
+<h1 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">&para;</a></h1>
 <p>3270Connect can act as a <strong>Model Context Protocol</strong> server, so an AI client
 drives performance and volume testing directly: compose a workflow, validate
 it, smoke-test it against a host, run it at concurrency, and read back
@@ -1558,14 +1558,14 @@ throughput and latency percentiles.</p>
 <p>It is the same binary. There is nothing extra to install.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>mcp
 </code></pre></div>
-<h2 id="check-it-works-first">Check it works first<a class="headerlink" href="#check-it-works-first" title="Permanent link">¶</a></h2>
+<h2 id="check-it-works-first">Check it works first<a class="headerlink" href="#check-it-works-first" title="Permanent link">&para;</a></h2>
 <p>Before configuring any client, confirm the binary answers:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>mcp<span class="w"> </span>--list-tools
 </code></pre></div>
 <p>That prints the tool catalogue as JSON and exits. It needs no host, no
 workflow and no run in progress. If you see JSON, the wiring is right and
 anything that fails afterwards is configuration.</p>
-<h2 id="setting-up-claude-desktop">Setting up Claude Desktop<a class="headerlink" href="#setting-up-claude-desktop" title="Permanent link">¶</a></h2>
+<h2 id="setting-up-claude-desktop">Setting up Claude Desktop<a class="headerlink" href="#setting-up-claude-desktop" title="Permanent link">&para;</a></h2>
 <ol>
 <li>
 <p>Open <strong>Claude Desktop</strong> → <strong>Settings</strong> → <strong>Developer</strong> → <strong>Edit Config</strong>.
@@ -1575,22 +1575,22 @@ anything that fails afterwards is configuration.</p>
 <p>Add 3270Connect to the <code>mcpServers</code> section.</p>
 <p><strong>Windows</strong></p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"3270connect"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C:\\3270Connect\\3270Connect.exe"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"mcp"</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"MCP_TOOLS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"smoke"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;3270connect&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;C:\\3270Connect\\3270Connect.exe&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;mcp&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;MCP_TOOLS&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smoke&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <p><strong>macOS and Linux</strong></p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"3270connect"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/opt/3270connect/3270Connect"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"mcp"</span><span class="p">],</span>
-<span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"MCP_TOOLS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"smoke"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;3270connect&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/opt/3270connect/3270Connect&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;mcp&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;MCP_TOOLS&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smoke&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -1610,7 +1610,7 @@ once and show me the captured screens.</p>
 </ol>
 <p>Other MCP clients — VS Code, Claude Code, Cursor, Windsurf — take the same
 command and arguments in their own configuration format.</p>
-<h2 id="tool-tiers">Tool tiers<a class="headerlink" href="#tool-tiers" title="Permanent link">¶</a></h2>
+<h2 id="tool-tiers">Tool tiers<a class="headerlink" href="#tool-tiers" title="Permanent link">&para;</a></h2>
 <p>The tools are grouped by what they can do, and the tier is set with the
 <code>MCP_TOOLS</code> environment variable. <strong>The default is <code>readonly</code>.</strong></p>
 <table>
@@ -1655,7 +1655,7 @@ assume is the screen size you will get.</p>
 3270Connect does that a host cannot ignore — every other operation asks a
 question, this one takes resources from whoever else is using the system. Opt
 in to that rather than out of it.</p>
-<h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">¶</a></h2>
+<h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
 <p>These apply whatever the tier:</p>
 <table>
 <thead>
@@ -1700,7 +1700,7 @@ the control surface here.</p>
 the <a href="../administration/#load-runs">Load runs page</a> means by "not started
 here" — an administrator's to stop.</p>
 </div>
-<h2 id="settings-file">Settings file<a class="headerlink" href="#settings-file" title="Permanent link">¶</a></h2>
+<h2 id="settings-file">Settings file<a class="headerlink" href="#settings-file" title="Permanent link">&para;</a></h2>
 <p>An AI client launches the server with a command line and no terminal, so
 there is nowhere interactive to put a setting. <code>3270Connect.env</code>, beside the
 binary, is read at startup:</p>
@@ -1715,7 +1715,7 @@ file without editing it.</p>
 <p>Prefer this over the <code>env</code> block in <code>claude_desktop_config.json</code> for anything
 secret. <code>RSA_TOKEN</code> in particular ends up in every screenshot and support
 paste of that config file.</p>
-<h2 id="what-a-session-looks-like">What a session looks like<a class="headerlink" href="#what-a-session-looks-like" title="Permanent link">¶</a></h2>
+<h2 id="what-a-session-looks-like">What a session looks like<a class="headerlink" href="#what-a-session-looks-like" title="Permanent link">&para;</a></h2>
 <p>A typical exchange runs schema → validate → smoke → load → interpret:</p>
 <blockquote>
 <p><strong>Write me a workflow for the account enquiry on <code>mvs.test.example.com:992</code>.</strong>
@@ -1733,7 +1733,7 @@ step, which is what separates a slow run from a stuck one.</p>
 and reports p50, p95 and p99 with the sample size, keeping connect failures
 separate from transaction failures.</p>
 </blockquote>
-<h2 id="reading-the-numbers">Reading the numbers<a class="headerlink" href="#reading-the-numbers" title="Permanent link">¶</a></h2>
+<h2 id="reading-the-numbers">Reading the numbers<a class="headerlink" href="#reading-the-numbers" title="Permanent link">&para;</a></h2>
 <p>Two things the tools state and that are worth knowing yourself:</p>
 <p><strong>Percentiles come from a rolling window.</strong> A run publishes the durations of
 its most recent few hundred completed workflows, not all of them. Every
@@ -1744,14 +1744,14 @@ metrics file; which <em>step</em> took the time is not. Start the run with
 <code>prometheus_listen</code> (the <code>-promListen</code> flag) and <code>get_step_latencies</code> can read
 them. Without it, a workflow that took four seconds cannot be broken down.</p>
 <p>See <a href="../metrics/">Metrics &amp; Monitoring</a> for the collectors themselves.</p>
-<h2 id="skills">Skills<a class="headerlink" href="#skills" title="Permanent link">¶</a></h2>
+<h2 id="skills">Skills<a class="headerlink" href="#skills" title="Permanent link">&para;</a></h2>
 <p>The procedures the assistant follows are files, not prose baked into a prompt.
 <code>list_skills</code> shows what is available; <code>load_skill</code> fetches one. The built-in
 set covers ramping a load test, finding a host's concurrency knee, soak
 testing, interpreting results, and writing a workflow.</p>
 <p>You can add your own, or replace a built-in with one that knows your hosts.
 See <a href="../skills/">Skills and Extensions</a>.</p>
-<h2 id="running-a-load-test-safely">Running a load test safely<a class="headerlink" href="#running-a-load-test-safely" title="Permanent link">¶</a></h2>
+<h2 id="running-a-load-test-safely">Running a load test safely<a class="headerlink" href="#running-a-load-test-safely" title="Permanent link">&para;</a></h2>
 <p>The assistant is told to do these, and they are worth knowing so you can tell
 when it has not:</p>
 <ul>
@@ -1765,7 +1765,7 @@ when it has not:</p>
   whether or not anyone is reading it.</li>
 </ul>
 <p>Also consider what the workflow <em>does</em>. A read-only enquiry is safe to run ten
-thousand times; one that creates a record will create ten thousand of them.</p></div>
+thousand times; one that creates a record will create ten thousand of them.</p>
 
 
 

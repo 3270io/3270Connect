@@ -1517,7 +1517,7 @@
   
 
 
-<div><h1 id="host-compatibility-profiler">Host Compatibility Profiler<a class="headerlink" href="#host-compatibility-profiler" title="Permanent link">¶</a></h1>
+<h1 id="host-compatibility-profiler">Host Compatibility Profiler<a class="headerlink" href="#host-compatibility-profiler" title="Permanent link">&para;</a></h1>
 <p>The <code>-profile</code> mode connects once to a TN3270 host, probes its
 negotiated terminal model, protocol options, and discovered
 capabilities, and writes a <code>CompatibilityProfile</code> JSON document. The
@@ -1527,7 +1527,7 @@ divergence between an IBM z/OS image and a stripped-down Rocket
 Enterprise Server stand-in).</p>
 <p>See <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a> for
 the full field reference.</p>
-<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">¶</a></h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-profile<span class="w"> </span>-profileHost<span class="w"> </span>mvs01.example.com<span class="w"> </span>-profilePort<span class="w"> </span><span class="m">992</span><span class="w"> </span>-profileTLS<span class="w"> </span><span class="se">\</span>
 <span class="w">            </span>-profileOut<span class="w"> </span>mvs01.profile.json
 </code></pre></div>
@@ -1535,7 +1535,7 @@ the full field reference.</p>
 captures the first screen's banner signature, records timing, and writes
 the JSON to <code>-profileOut</code> (or stdout when omitted). The process exits
 non-zero on failure so CI can fail fast.</p>
-<h2 id="flags">Flags<a class="headerlink" href="#flags" title="Permanent link">¶</a></h2>
+<h2 id="flags">Flags<a class="headerlink" href="#flags" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1572,40 +1572,40 @@ non-zero on failure so CI can fail fast.</p>
 </table>
 <p>The probe uses a 30-second total timeout for capability discovery and
 the standard 5-second TCP dial timeout for the initial connection.</p>
-<h2 id="reusing-a-workflow-config">Reusing a workflow config<a class="headerlink" href="#reusing-a-workflow-config" title="Permanent link">¶</a></h2>
+<h2 id="reusing-a-workflow-config">Reusing a workflow config<a class="headerlink" href="#reusing-a-workflow-config" title="Permanent link">&para;</a></h2>
 <p>You can omit <code>-profileHost</code>/<code>-profilePort</code> and let the profiler pull
 them from <code>-config</code>:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-profile<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-profileOut<span class="w"> </span>current.profile.json
 </code></pre></div>
 <p>This makes it easy to drop <code>-profile</code> into an existing pipeline without
 duplicating connection metadata.</p>
-<h2 id="example-output">Example output<a class="headerlink" href="#example-output" title="Permanent link">¶</a></h2>
+<h2 id="example-output">Example output<a class="headerlink" href="#example-output" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"schema_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"run_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8f3b2c1a..."</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-05-18T10:11:12Z"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"profiler"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"tool"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270Connect"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.8.6"</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs01.example.com"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"tls"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"banner_signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9b6f..."</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"banner_preview"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WELCOME TO MVS01 ..."</span>
+<span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;8f3b2c1a...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-18T10:11:12Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;profiler&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tool&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270Connect&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.8.6&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mvs01.example.com&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;tls&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;banner_signature&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9b6f...&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;banner_preview&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WELCOME TO MVS01 ...&quot;</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"device"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"terminal_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"rows"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"cols"</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"extended_attributes"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"alt_screen"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="nt">&quot;device&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;terminal_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IBM-3279-2-E&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;rows&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;cols&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;extended_attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;alt_screen&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"tn3270e"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"bind_image_present"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"structured_fields"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"capabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"ind_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w"> </span><span class="nt">"query_reply_ids"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"..."</span><span class="p">],</span><span class="w"> </span><span class="nt">"unknown"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"timing"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"connect_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="nt">"first_screen_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span><span class="w"> </span><span class="nt">"keyboard_unlock_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">&quot;protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tn3270e&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;bind_image_present&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;structured_fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;ind_file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;unknown&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;query_reply_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;...&quot;</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;unknown&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;timing&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;connect_ms&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_screen_ms&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;keyboard_unlock_ms&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<h2 id="cross-environment-comparison">Cross-environment comparison<a class="headerlink" href="#cross-environment-comparison" title="Permanent link">¶</a></h2>
+<h2 id="cross-environment-comparison">Cross-environment comparison<a class="headerlink" href="#cross-environment-comparison" title="Permanent link">&para;</a></h2>
 <p>Two profiles whose
 <code>(device.terminal_type, host.banner_signature, protocol.tn3270e, protocol.structured_fields)</code>
 tuples match are compatible at the wire level. Differences in
@@ -1615,7 +1615,7 @@ IND$FILE on z/OS but not on a Rocket Enterprise Server image).</p>
 <strong>Chaos Mind-Map Compare</strong> endpoint that visualises these differences
 across hosts — feed both profiles to its <code>POST /chaos/mindmap/compare</code>
 to get a divergence report.</p>
-<h2 id="when-to-use-which">When to use which<a class="headerlink" href="#when-to-use-which" title="Permanent link">¶</a></h2>
+<h2 id="when-to-use-which">When to use which<a class="headerlink" href="#when-to-use-which" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong><code>3270Connect -profile</code></strong> — CI/CD or shell-friendly one-shot probe.
   No web UI needed; perfect for nightly fleet sweeps.</li>
@@ -1623,7 +1623,7 @@ to get a divergence report.</p>
   programmatic use from automation that already talks to 3270Web.</li>
 </ul>
 <p>Both produce identical JSON; pick whichever fits the surrounding
-pipeline.</p></div>
+pipeline.</p>
 
 
 

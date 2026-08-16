@@ -927,6 +927,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-it-looks-like" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it looks like
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#first-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1661,7 +1672,7 @@
   
 
 
-<div><h1 id="accounts-and-sign-in">Accounts and Sign-In<a class="headerlink" href="#accounts-and-sign-in" title="Permanent link">¶</a></h1>
+<h1 id="accounts-and-sign-in">Accounts and Sign-In<a class="headerlink" href="#accounts-and-sign-in" title="Permanent link">&para;</a></h1>
 <p>By default the operations console has no sign-in. It assumes one operator on a
 machine they control, which is right for a laptop, for <code>go run</code>, and for the
 double-clicked executable — and it is why every install method publishes on
@@ -1682,8 +1693,8 @@ things an account boundary is protecting — not a page of graphs.</p>
 deliberately the same as <a href="https://3270Web.3270.io">3270Web</a>'s. The two are
 frequently run side by side, and nobody should have to learn this twice.</p>
 </div>
-<hr>
-<h2 id="turning-it-on">Turning it on<a class="headerlink" href="#turning-it-on" title="Permanent link">¶</a></h2>
+<hr />
+<h2 id="turning-it-on">Turning it on<a class="headerlink" href="#turning-it-on" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="nv">AUTH_MODE</span><span class="o">=</span><span class="nb">local</span>
 </code></pre></div>
 <p>Or in <code>docker-compose.yml</code>:</p>
@@ -1691,7 +1702,7 @@ frequently run side by side, and nobody should have to learn this twice.</p>
 <span class="w">  </span><span class="nt">3270connect</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/3270io/3270connect:latest</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:9200:9200"</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;127.0.0.1:9200:9200&quot;</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AUTH_MODE=local</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -1707,7 +1718,20 @@ like protection but is not would be worse than none at all.</p>
 </code></pre></div>
 <p>Real environment variables win over that file, so a container can still
 override it without editing anything.</p>
-<h2 id="first-start">First start<a class="headerlink" href="#first-start" title="Permanent link">¶</a></h2>
+<h2 id="what-it-looks-like">What it looks like<a class="headerlink" href="#what-it-looks-like" title="Permanent link">&para;</a></h2>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-sign-in.jpg">
+    <source src="/assets/video/console-sign-in.mp4" type="video/mp4">
+    <a href="/assets/video/console-sign-in.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Signing in to a console running with <code>AUTH_MODE=local</code>, then the
+    administration pages behind it — accounts, API tokens and the audit trail.
+  </figcaption>
+</figure>
+
+<h2 id="first-start">First start<a class="headerlink" href="#first-start" title="Permanent link">&para;</a></h2>
 <p>Start with <code>AUTH_MODE=local</code> and no accounts, and 3270Connect waits in setup
 mode: every page redirects to a one-time setup screen where you create the
 first administrator.</p>
@@ -1739,7 +1763,7 @@ command before starting the server. Setup does not arm when an account already
 exists:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin
 </code></pre></div>
-<h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">¶</a></h2>
+<h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1773,7 +1797,7 @@ buy:</p>
 </ul>
 <p>Every start and every stop is written to the <a href="../administration/#audit-trail">audit
 trail</a>, with whose run it was.</p>
-<h2 id="passwords">Passwords<a class="headerlink" href="#passwords" title="Permanent link">¶</a></h2>
+<h2 id="passwords">Passwords<a class="headerlink" href="#passwords" title="Permanent link">&para;</a></h2>
 <p>At least 12 characters. There are no composition rules — required digits and
 symbols shrink the search space more than they enlarge it, while a length floor
 does not. Passwords are stored as Argon2id hashes; the plaintext is never
@@ -1785,7 +1809,7 @@ attempts, then a lockout that doubles up to fifteen minutes. Username alone
 would let an attacker lock out an account they know the name of; address alone
 would let a distributed attacker spread guesses across one account. Requiring
 both to be clear covers each gap with the other.</p>
-<h2 id="from-the-command-line">From the command line<a class="headerlink" href="#from-the-command-line" title="Permanent link">¶</a></h2>
+<h2 id="from-the-command-line">From the command line<a class="headerlink" href="#from-the-command-line" title="Permanent link">&para;</a></h2>
 <p>Account management is also a console command. It edits the same file the server
 reads, so it works whether or not the server is running — a new account can
 sign in immediately, without a restart.</p>
@@ -1797,7 +1821,7 @@ sign in immediately, without a restart.</p>
 3270Connect<span class="w"> </span>user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>alice
 </code></pre></div>
 <p>Passwords are prompted for on a terminal, or read from stdin when piped:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NEW_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
+<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NEW_PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
 </code></pre></div>
 <p>They are never taken as a command-line argument, where they would be visible to
 every other process on the machine and recorded in shell history.</p>
@@ -1809,11 +1833,11 @@ change immediately. Disabling an account from the console command stops its API
 tokens at once — the owner is looked up on every call — but a browser already
 signed in is ended by a periodic sweep instead, so allow up to five minutes.
 Disabling from the Accounts page ends those logins on the spot.</p>
-<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">¶</a></h2>
+<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">&para;</a></h2>
 <p>An automated client — a CI job, a scheduled soak test, a script — presents a
 token instead of signing in.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
-3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">"pipeline"</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">&quot;nightly soak&quot;</span>
+3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
 3270Connect<span class="w"> </span>token<span class="w"> </span>list
 3270Connect<span class="w"> </span>token<span class="w"> </span>revoke<span class="w"> </span>&lt;id&gt;
 3270Connect<span class="w"> </span>token<span class="w"> </span>revoke-all<span class="w"> </span>alice
@@ -1821,7 +1845,7 @@ token instead of signing in.</p>
 <p>The token is shown once, when it is issued. It is stored as a SHA-256 hash, so
 a lost token is replaced rather than recovered. Present it as an ordinary
 bearer credential:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span>http://localhost:9200/dashboard/data
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span>http://localhost:9200/dashboard/data
 </code></pre></div>
 <p>A token <strong>belongs to an account and reaches exactly what that account
 reaches</strong> — their runs, and nothing belonging to anybody else. It carries the
@@ -1850,7 +1874,7 @@ later does not default to whatever somebody remembered:</p>
 <p><code>--read-only</code> issues a token with <code>read</code> alone.</p>
 <p>A token stops working the moment its account is disabled or deleted; the owner
 is looked up on every call rather than trusted from the token.</p>
-<h3 id="the-single-shared-token">The single shared token<a class="headerlink" href="#the-single-shared-token" title="Permanent link">¶</a></h3>
+<h3 id="the-single-shared-token">The single shared token<a class="headerlink" href="#the-single-shared-token" title="Permanent link">&para;</a></h3>
 <p>Where there is one operator there is nothing to tell apart, so per-account
 tokens do not exist. Instead:</p>
 <table>
@@ -1898,7 +1922,7 @@ to a client that launched the process. There is no listener and no
 credential: whoever can start the process is already the operator. See
 <a href="../mcp/">MCP Server</a>.</p>
 </div>
-<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">¶</a></h2>
+<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">&para;</a></h2>
 <p>A group is a team. It can carry a role, so a console is administered by
 "whoever is on the ops rota" rather than by a list of names that goes out of
 date.</p>
@@ -1910,7 +1934,7 @@ adding somebody to a team can never quietly demote them.</p>
 <p>A group may be empty. That is deliberate: a console is usually set up
 teams-first, and a group that only existed while somebody was in it could not
 be prepared in advance.</p>
-<h2 id="single-sign-on-oidc">Single sign-on (OIDC)<a class="headerlink" href="#single-sign-on-oidc" title="Permanent link">¶</a></h2>
+<h2 id="single-sign-on-oidc">Single sign-on (OIDC)<a class="headerlink" href="#single-sign-on-oidc" title="Permanent link">&para;</a></h2>
 <p><code>AUTH_MODE=oidc</code> signs people in through an OpenID Connect identity provider —
 the directory an organisation already runs — instead of asking them to invent
 another password. Accounts appear the first time somebody signs in; nobody has
@@ -1920,7 +1944,7 @@ matters: a console whose only door depends on a service it does not run can be
 locked out of itself by somebody else's outage or a mistyped setting. First-run
 setup still asks for a local administrator, and that account is the way back
 in.</p>
-<h3 id="configuring-it">Configuring it<a class="headerlink" href="#configuring-it" title="Permanent link">¶</a></h3>
+<h3 id="configuring-it">Configuring it<a class="headerlink" href="#configuring-it" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nv">AUTH_MODE</span><span class="o">=</span>oidc
 <span class="nv">OIDC_ISSUER</span><span class="o">=</span>https://login.example.com/realms/staff
 <span class="nv">OIDC_CLIENT_ID</span><span class="o">=</span>3270connect
@@ -1937,7 +1961,7 @@ tried without a certificate.</p>
 <p>3270Connect asks for the authorization code flow with PKCE. There is no
 implicit or hybrid flow: the browser only ever carries a one-time code, and the
 token exchange happens server to server.</p>
-<h3 id="roles-from-the-directory">Roles from the directory<a class="headerlink" href="#roles-from-the-directory" title="Permanent link">¶</a></h3>
+<h3 id="roles-from-the-directory">Roles from the directory<a class="headerlink" href="#roles-from-the-directory" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1985,7 +2009,7 @@ here, but whether they belong here at all. One directory usually serves many
 services, and everybody in it being able to start a load test is rarely what
 was meant. Somebody outside every listed group is refused, and no account is
 created for them.</p>
-<h3 id="what-an-account-looks-like">What an account looks like<a class="headerlink" href="#what-an-account-looks-like" title="Permanent link">¶</a></h3>
+<h3 id="what-an-account-looks-like">What an account looks like<a class="headerlink" href="#what-an-account-looks-like" title="Permanent link">&para;</a></h3>
 <p>An account is found by the provider's <strong>issuer and subject</strong>, never by name. A
 directory renames people, and the subject is the one claim a provider promises
 not to recycle. So a rename follows through to the username here and changes
@@ -2006,12 +2030,12 @@ store does not accept become dashes, so <code>alice@corp.example</code> appears 
 <p>A name a local account already holds is refused rather than linked. Otherwise
 anybody who can be named in the directory could take over the break-glass
 administrator by being called <code>root</code>.</p>
-<h3 id="if-the-provider-is-unreachable">If the provider is unreachable<a class="headerlink" href="#if-the-provider-is-unreachable" title="Permanent link">¶</a></h3>
+<h3 id="if-the-provider-is-unreachable">If the provider is unreachable<a class="headerlink" href="#if-the-provider-is-unreachable" title="Permanent link">&para;</a></h3>
 <p>The sign-in page says so and offers the password form. Discovery is deferred
 until somebody presses the button, so a provider that is down does not stop
 3270Connect from starting — which is exactly when the local administrator is
 needed.</p>
-<h2 id="session-lifetime">Session lifetime<a class="headerlink" href="#session-lifetime" title="Permanent link">¶</a></h2>
+<h2 id="session-lifetime">Session lifetime<a class="headerlink" href="#session-lifetime" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2050,7 +2074,7 @@ come from the same address is most of what stands between a passive
 eavesdropper and a usable session. Set it to <code>false</code> if people reach the
 console through a NAT or VPN whose address changes mid-session, and <code>true</code> to
 enforce it regardless.</p>
-<h2 id="behind-a-reverse-proxy">Behind a reverse proxy<a class="headerlink" href="#behind-a-reverse-proxy" title="Permanent link">¶</a></h2>
+<h2 id="behind-a-reverse-proxy">Behind a reverse proxy<a class="headerlink" href="#behind-a-reverse-proxy" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2077,7 +2101,7 @@ cookie flag is supposed to guarantee.</p>
 its <code>Secure</code> flag and every rate-limit bucket collapses onto the proxy's
 address. The sign-in page notices the common case and says which variable to
 set rather than only warning that the connection is not encrypted.</p>
-<h2 id="where-the-state-lives">Where the state lives<a class="headerlink" href="#where-the-state-lives" title="Permanent link">¶</a></h2>
+<h2 id="where-the-state-lives">Where the state lives<a class="headerlink" href="#where-the-state-lives" title="Permanent link">&para;</a></h2>
 <p>Three files, under the same directory the metrics files use — which under
 Docker is <code>/data</code>, because the image sets <code>XDG_CONFIG_HOME</code>:</p>
 <table>
@@ -2114,7 +2138,7 @@ replaced atomically — a torn write there would lock every account out at once.
 deploy discards. The symptom is an instance that reopens first-run setup
 after an upgrade, with every account gone.</p>
 </div>
-<h2 id="what-a-sign-in-does-not-do">What a sign-in does not do<a class="headerlink" href="#what-a-sign-in-does-not-do" title="Permanent link">¶</a></h2>
+<h2 id="what-a-sign-in-does-not-do">What a sign-in does not do<a class="headerlink" href="#what-a-sign-in-does-not-do" title="Permanent link">&para;</a></h2>
 <p>An account boundary decides <em>who</em> may use the console. It is one of several
 things a shared instance needs, and it is worth being explicit about what it
 leaves alone:</p>
@@ -2126,10 +2150,10 @@ leaves alone:</p>
 <li><strong>It does not bind the listener for you.</strong> <code>DASHBOARD_BIND</code> and <code>API_BIND</code>
   still decide what can reach the port, and <code>localhost</code> is still the default.</li>
 </ul>
-<hr>
-<h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">¶</a></h2>
+<hr />
+<h2 id="next">Next<a class="headerlink" href="#next" title="Permanent link">&para;</a></h2>
 <p><strong>→ <a href="../administration/">The administration area</a></strong> — accounts, groups, tokens,
-runs and the audit trail, from the browser.</p></div>
+runs and the audit trail, from the browser.</p>
 
 
 

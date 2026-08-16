@@ -1398,24 +1398,24 @@
   
 
 
-<div><h1 id="x3270-binary-build-system">X3270 Binary Build System<a class="headerlink" href="#x3270-binary-build-system" title="Permanent link">¶</a></h1>
+<h1 id="x3270-binary-build-system">X3270 Binary Build System<a class="headerlink" href="#x3270-binary-build-system" title="Permanent link">&para;</a></h1>
 <p>This Makefile automates the process of building x3270 suite binaries (s3270, x3270if, etc.) for Linux and Windows platforms.</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">¶</a></h2>
-<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h3>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
 <ul>
 <li>GCC and build tools</li>
 <li>Git</li>
 <li>Make</li>
 </ul>
-<h3 id="windows-cross-compilation">Windows Cross-Compilation<a class="headerlink" href="#windows-cross-compilation" title="Permanent link">¶</a></h3>
+<h3 id="windows-cross-compilation">Windows Cross-Compilation<a class="headerlink" href="#windows-cross-compilation" title="Permanent link">&para;</a></h3>
 <ul>
 <li>MinGW-w64 cross-compiler (automatically installed if missing)</li>
 <li>The Makefile will install MinGW if needed using: <code>sudo apt-get install mingw-w64</code></li>
 </ul>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">¶</a></h2>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <p>Build all binaries for both platforms:
-</p><div class="highlight"><pre><span></span><code>make
-</code></pre></div>
+<div class="highlight"><pre><span></span><code>make
+</code></pre></div></p>
 <p>This will:
 1. Clone the x3270 repository from https://github.com/pmattes/x3270
 2. Checkout version 4.4ga6 (configurable)
@@ -1424,39 +1424,39 @@
 5. Strip binaries to reduce size
 6. Test all binaries
 7. Save version info to <code>.x3270_version</code></p>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">¶</a></h2>
-<h3 id="build-specific-platforms">Build Specific Platforms<a class="headerlink" href="#build-specific-platforms" title="Permanent link">¶</a></h3>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<h3 id="build-specific-platforms">Build Specific Platforms<a class="headerlink" href="#build-specific-platforms" title="Permanent link">&para;</a></h3>
 <p>Build Linux binaries only:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>linux
-</code></pre></div>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>linux
+</code></pre></div></p>
 <p>Build Windows binaries only:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>windows
-</code></pre></div>
-<h3 id="version-management">Version Management<a class="headerlink" href="#version-management" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>windows
+</code></pre></div></p>
+<h3 id="version-management">Version Management<a class="headerlink" href="#version-management" title="Permanent link">&para;</a></h3>
 <p>Specify a different x3270 version:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.3ga10<span class="w"> </span>all
-</code></pre></div>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.3ga10<span class="w"> </span>all
+</code></pre></div></p>
 <p>The Makefile tracks the last built version in <code>.x3270_version</code>. If you try to build the same version again, it will skip the build unless you run <code>make deepclean</code> first.</p>
-<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">¶</a></h3>
+<h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
 <p>Test that all binaries are present and working:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>test-binaries
-</code></pre></div>
-<h3 id="cleaning">Cleaning<a class="headerlink" href="#cleaning" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>test-binaries
+</code></pre></div></p>
+<h3 id="cleaning">Cleaning<a class="headerlink" href="#cleaning" title="Permanent link">&para;</a></h3>
 <p>Safe clean (removes built binaries, keeps source):
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>clean
-</code></pre></div>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>clean
+</code></pre></div></p>
 <p>Deep clean (removes everything including cloned source):
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
-</code></pre></div>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+</code></pre></div></p>
 <p>Force rebuild of the same version:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
 make
-</code></pre></div>
-<h3 id="help">Help<a class="headerlink" href="#help" title="Permanent link">¶</a></h3>
+</code></pre></div></p>
+<h3 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h3>
 <p>Show all available targets and current configuration:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
-</code></pre></div>
-<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
+</code></pre></div></p>
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>binaries/
 ├── linux/          # Linux binaries
 │   ├── s3270       # Scripting version
@@ -1468,8 +1468,8 @@ make
     ├── ws3270.exe  # Windows scripting version
     └── wc3270.exe  # Windows console version
 </code></pre></div>
-<h2 id="build-process-details">Build Process Details<a class="headerlink" href="#build-process-details" title="Permanent link">¶</a></h2>
-<h3 id="linux-build">Linux Build<a class="headerlink" href="#linux-build" title="Permanent link">¶</a></h3>
+<h2 id="build-process-details">Build Process Details<a class="headerlink" href="#build-process-details" title="Permanent link">&para;</a></h2>
+<h3 id="linux-build">Linux Build<a class="headerlink" href="#linux-build" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Clones x3270 repository to <code>/tmp/x3270-build</code></li>
 <li>Runs <code>./configure --prefix=/usr/local --enable-s3270 --enable-x3270if</code></li>
@@ -1478,7 +1478,7 @@ make
 <li>Strips binaries to reduce size</li>
 <li>Sets executable permissions</li>
 </ol>
-<h3 id="windows-build">Windows Build<a class="headerlink" href="#windows-build" title="Permanent link">¶</a></h3>
+<h3 id="windows-build">Windows Build<a class="headerlink" href="#windows-build" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Checks for MinGW cross-compiler, installs if missing</li>
 <li>Runs <code>./configure --host=x86_64-w64-mingw32 --prefix=/usr/local --enable-s3270 --enable-x3270if</code></li>
@@ -1490,12 +1490,12 @@ make
 - Use the existing pre-built Windows binaries already in the repository
 - Build natively on Windows using Visual Studio or MinGW
 - Use the VisualStudio project files included in the x3270 repository</p>
-<h2 id="version-tracking">Version Tracking<a class="headerlink" href="#version-tracking" title="Permanent link">¶</a></h2>
+<h2 id="version-tracking">Version Tracking<a class="headerlink" href="#version-tracking" title="Permanent link">&para;</a></h2>
 <p>The Makefile maintains a <code>.x3270_version</code> file that records the last successfully built version. This prevents redundant rebuilds when you run <code>make</code> multiple times with the same version.</p>
 <p>To check the current version:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
-</code></pre></div>
-<h2 id="configuration-variables">Configuration Variables<a class="headerlink" href="#configuration-variables" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">help</span>
+</code></pre></div></p>
+<h2 id="configuration-variables">Configuration Variables<a class="headerlink" href="#configuration-variables" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>X3270_VERSION</code>: x3270 version to build (default: 4.4ga6)</li>
 <li><code>X3270_REPO</code>: Repository URL (default: https://github.com/pmattes/x3270)</li>
@@ -1503,20 +1503,20 @@ make
 <li><code>BINARIES_LINUX</code>: Linux binaries output directory (default: binaries/linux)</li>
 <li><code>BINARIES_WINDOWS</code>: Windows binaries output directory (default: binaries/windows)</li>
 </ul>
-<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
-<h3 id="build-failures">Build Failures<a class="headerlink" href="#build-failures" title="Permanent link">¶</a></h3>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="build-failures">Build Failures<a class="headerlink" href="#build-failures" title="Permanent link">&para;</a></h3>
 <p>If the build fails, check:
 1. All prerequisites are installed
 2. Internet connection is available for cloning
 3. Disk space is sufficient in <code>/tmp</code></p>
 <p>Clean and retry:
-</p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>deepclean
 make
-</code></pre></div>
-<h3 id="windows-cross-compilation-issues">Windows Cross-Compilation Issues<a class="headerlink" href="#windows-cross-compilation-issues" title="Permanent link">¶</a></h3>
+</code></pre></div></p>
+<h3 id="windows-cross-compilation-issues">Windows Cross-Compilation Issues<a class="headerlink" href="#windows-cross-compilation-issues" title="Permanent link">&para;</a></h3>
 <p>Windows builds may fail on Linux due to missing MinGW dependencies:
 - <code>libiconv</code> for MinGW
-- <code>OpenSSL</code> for MinGW<br>
+- <code>OpenSSL</code> for MinGW<br />
 - Other Windows-specific libraries</p>
 <p><strong>Solutions:</strong>
 1. Use the pre-built Windows binaries already in the repository
@@ -1526,30 +1526,30 @@ make
 - Visual Studio project files in the x3270 repository's <code>VisualStudio/</code> directory
 - MinGW-w64 with MSYS2 on Windows
 - Windows Subsystem for Linux (WSL) with native Windows toolchain</p>
-<h3 id="missing-binaries">Missing Binaries<a class="headerlink" href="#missing-binaries" title="Permanent link">¶</a></h3>
+<h3 id="missing-binaries">Missing Binaries<a class="headerlink" href="#missing-binaries" title="Permanent link">&para;</a></h3>
 <p>If some binaries are missing after build, the x3270 version might not include all components. Check the x3270 release notes for the version you're building.</p>
-<h3 id="permission-issues">Permission Issues<a class="headerlink" href="#permission-issues" title="Permanent link">¶</a></h3>
+<h3 id="permission-issues">Permission Issues<a class="headerlink" href="#permission-issues" title="Permanent link">&para;</a></h3>
 <p>If binaries aren't executable:
-</p><div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>binaries/linux/*
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>binaries/linux/*
 chmod<span class="w"> </span>+x<span class="w"> </span>binaries/windows/*
-</code></pre></div>
-<h2 id="integration-with-3270connect">Integration with 3270Connect<a class="headerlink" href="#integration-with-3270connect" title="Permanent link">¶</a></h2>
+</code></pre></div></p>
+<h2 id="integration-with-3270connect">Integration with 3270Connect<a class="headerlink" href="#integration-with-3270connect" title="Permanent link">&para;</a></h2>
 <p>After building binaries, regenerate the embedded assets:
-</p><div class="highlight"><pre><span></span><code>go<span class="w"> </span>install<span class="w"> </span>github.com/go-bindata/go-bindata/...@latest
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>install<span class="w"> </span>github.com/go-bindata/go-bindata/...@latest
 go-bindata<span class="w"> </span>-o<span class="w"> </span>binaries/bindata.go<span class="w"> </span>-pkg<span class="w"> </span>binaries<span class="w"> </span>./binaries/...
-</code></pre></div>
+</code></pre></div></p>
 <p>Or use the PowerShell script:
-</p><div class="highlight"><pre><span></span><code><span class="p">.\</span><span class="nb">update-binaries</span><span class="p">.</span><span class="n">ps1</span>
-</code></pre></div>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
-<h3 id="building-a-specific-version">Building a Specific Version<a class="headerlink" href="#building-a-specific-version" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">.\</span><span class="nb">update-binaries</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre></div></p>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<h3 id="building-a-specific-version">Building a Specific Version<a class="headerlink" href="#building-a-specific-version" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Build version 4.3ga10</span>
 make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.3ga10<span class="w"> </span>deepclean<span class="w"> </span>all
 
 <span class="c1"># Verify the version</span>
 ./binaries/linux/s3270<span class="w"> </span>-v
 </code></pre></div>
-<h3 id="cross-platform-build">Cross-Platform Build<a class="headerlink" href="#cross-platform-build" title="Permanent link">¶</a></h3>
+<h3 id="cross-platform-build">Cross-Platform Build<a class="headerlink" href="#cross-platform-build" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># On Linux, build for both platforms</span>
 make<span class="w"> </span>all
 
@@ -1559,12 +1559,12 @@ ls<span class="w"> </span>-lh<span class="w"> </span>binaries/linux/
 <span class="c1"># Verify Windows binaries</span>
 ls<span class="w"> </span>-lh<span class="w"> </span>binaries/windows/
 </code></pre></div>
-<h3 id="continuous-integration">Continuous Integration<a class="headerlink" href="#continuous-integration" title="Permanent link">¶</a></h3>
+<h3 id="continuous-integration">Continuous Integration<a class="headerlink" href="#continuous-integration" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># In CI pipeline</span>
 make<span class="w"> </span><span class="nv">X3270_VERSION</span><span class="o">=</span><span class="m">4</span>.4ga6<span class="w"> </span>all
 make<span class="w"> </span>test-binaries
 </code></pre></div>
-<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">¶</a></h2>
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The build directory (<code>/tmp/x3270-build</code>) is preserved between builds for faster subsequent builds</li>
 <li>Use <code>make clean</code> to remove binaries without removing the source</li>
@@ -1572,8 +1572,8 @@ make<span class="w"> </span>test-binaries
 <li>The Makefile uses color output for better visibility of build steps</li>
 <li>Parallel compilation is enabled by default using all available CPU cores</li>
 </ul>
-<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">¶</a></h2>
-<p>This Makefile is part of the 3270Connect project and follows the same license (MIT).</p></div>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
+<p>This Makefile is part of the 3270Connect project and follows the same license (MIT).</p>
 
 
 

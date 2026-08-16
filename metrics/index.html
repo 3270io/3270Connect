@@ -1517,12 +1517,12 @@
   
 
 
-<div><h1 id="metrics-monitoring">Metrics &amp; Monitoring<a class="headerlink" href="#metrics-monitoring" title="Permanent link">¶</a></h1>
+<h1 id="metrics-monitoring">Metrics &amp; Monitoring<a class="headerlink" href="#metrics-monitoring" title="Permanent link">&para;</a></h1>
 <p>3270Connect exposes Prometheus metrics for fleet-scale monitoring of
 workflow performance, concurrency, and outcome distribution. The metrics
 endpoint is opt-in and runs on a dedicated HTTP listener so it does not
 collide with the dashboard or API ports.</p>
-<h2 id="enabling-the-metrics-endpoint">Enabling the <code>/metrics</code> endpoint<a class="headerlink" href="#enabling-the-metrics-endpoint" title="Permanent link">¶</a></h2>
+<h2 id="enabling-the-metrics-endpoint">Enabling the <code>/metrics</code> endpoint<a class="headerlink" href="#enabling-the-metrics-endpoint" title="Permanent link">&para;</a></h2>
 <p>Use the <code>-promListen</code> flag with any <code>host:port</code> address. Disabled when
 empty (the default).</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">10</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">300</span><span class="w"> </span>-promListen<span class="w"> </span>:9091
@@ -1532,7 +1532,7 @@ empty (the default).</p>
 </code></pre></div>
 <p>The listener uses a 5-second read-header timeout and runs in its own
 goroutine — failures are logged but never abort the workflow runner.</p>
-<h2 id="collectors">Collectors<a class="headerlink" href="#collectors" title="Permanent link">¶</a></h2>
+<h2 id="collectors">Collectors<a class="headerlink" href="#collectors" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1570,15 +1570,15 @@ goroutine — failures are logged but never abort the workflow runner.</p>
 </tbody>
 </table>
 <p>Source: <a href="https://github.com/3270io/3270Connect/blob/main/internal/metrics/metrics.go"><code>internal/metrics/metrics.go</code></a>.</p>
-<h2 id="sample-scrape-config">Sample scrape config<a class="headerlink" href="#sample-scrape-config" title="Permanent link">¶</a></h2>
+<h2 id="sample-scrape-config">Sample scrape config<a class="headerlink" href="#sample-scrape-config" title="Permanent link">&para;</a></h2>
 <p>Add a scrape job to <code>prometheus.yml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">'3270connect'</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3270connect&#39;</span>
 <span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15s</span>
 <span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">'runner-01:9091'</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">'runner-02:9091'</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;runner-01:9091&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;runner-02:9091&#39;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
-<h2 id="useful-queries">Useful queries<a class="headerlink" href="#useful-queries" title="Permanent link">¶</a></h2>
+<h2 id="useful-queries">Useful queries<a class="headerlink" href="#useful-queries" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># p95 connect time over the last 5 minutes</span>
 <span class="kr">histogram_quantile</span><span class="o">(</span><span class="mf">0.95</span><span class="p">,</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">tn3270_connect_seconds_bucket</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">le</span><span class="o">))</span>
 
@@ -1593,12 +1593,12 @@ goroutine — failures are logged but never abort the workflow runner.</p>
 <span class="c1"># Live worker count vs. configured concurrency</span>
 <span class="nv">tn3270_concurrent_workers</span>
 </code></pre></div>
-<h2 id="pairing-with-the-host-compatibility-profiler">Pairing with the host compatibility profiler<a class="headerlink" href="#pairing-with-the-host-compatibility-profiler" title="Permanent link">¶</a></h2>
+<h2 id="pairing-with-the-host-compatibility-profiler">Pairing with the host compatibility profiler<a class="headerlink" href="#pairing-with-the-host-compatibility-profiler" title="Permanent link">&para;</a></h2>
 <p>For one-shot host fingerprinting (rather than continuous timing), use
 the <a href="../host-profiler/">Host Compatibility Profiler</a> — the resulting
 <code>CompatibilityProfile</code> JSON is comparable to the one produced by
 3270Web and can be diffed across environments.</p>
-<h2 id="reading-these-from-an-ai-client">Reading these from an AI client<a class="headerlink" href="#reading-these-from-an-ai-client" title="Permanent link">¶</a></h2>
+<h2 id="reading-these-from-an-ai-client">Reading these from an AI client<a class="headerlink" href="#reading-these-from-an-ai-client" title="Permanent link">&para;</a></h2>
 <p>The <a href="../mcp/">MCP Server</a> exposes these metrics as tools, so an assistant can
 report on a run in conversation. Two things it adds beyond the raw
 collectors:</p>
@@ -1614,7 +1614,7 @@ collectors:</p>
 </ul>
 <p>Per-step timings still come only from the histograms above, so a run has to
 be started with <code>-promListen</code> for <code>get_step_latencies</code> to have anything to
-read.</p></div>
+read.</p>
 
 
 

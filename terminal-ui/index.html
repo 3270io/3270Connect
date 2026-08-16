@@ -1534,17 +1534,17 @@
   
 
 
-<div><h1 id="terminal-ui">Terminal UI<a class="headerlink" href="#terminal-ui" title="Permanent link">¶</a></h1>
+<h1 id="terminal-ui">Terminal UI<a class="headerlink" href="#terminal-ui" title="Permanent link">&para;</a></h1>
 <p>Most 3270Connect runs are watched from a terminal rather than a browser. This
 page walks through what a run prints, from the header that opens it to the
 report that closes it, so you know where to look when something is wrong.</p>
 <p>The terminal UI shares its palette with the <a href="../dashboard/">web dashboard</a> and
 with these docs: phosphor green for the accent, muted green for labels, amber
 and red reserved for readings that need attention.</p>
-<h2 id="the-startup-header">The startup header<a class="headerlink" href="#the-startup-header" title="Permanent link">¶</a></h2>
+<h2 id="the-startup-header">The startup header<a class="headerlink" href="#the-startup-header" title="Permanent link">&para;</a></h2>
 <p>Every run opens with the wordmark, a single line of run identity, and the
 configuration the run will use.</p>
-<p><img alt="The 3270Connect startup header and workflow configuration" class="shot" src="../assets/tui/start.webp"></p>
+<p><img alt="The 3270Connect startup header and workflow configuration" class="shot" src="../assets/tui/start.webp" /></p>
 <p>The identity line carries the version, the project site, the author, the
 platform the binary was built for, and the process id. The pid is the one to
 note: it names the summary file written at the end
@@ -1602,33 +1602,33 @@ was not what you thought it was.</p>
 <p>The same settings are written to <code>logs/summary_&lt;pid&gt;.txt</code> alongside the
 results, so a run can be reconstructed after the terminal has scrolled away.</p>
 </div>
-<h2 id="watching-a-run">Watching a run<a class="headerlink" href="#watching-a-run" title="Permanent link">¶</a></h2>
-<h3 id="single-workflow">Single workflow<a class="headerlink" href="#single-workflow" title="Permanent link">¶</a></h3>
+<h2 id="watching-a-run">Watching a run<a class="headerlink" href="#watching-a-run" title="Permanent link">&para;</a></h2>
+<h3 id="single-workflow">Single workflow<a class="headerlink" href="#single-workflow" title="Permanent link">&para;</a></h3>
 <p>A single workflow prints nothing between the header and the summary unless you
 ask it to. Add <code>-verbose</code> to see each emulator command as it is issued:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
 </code></pre></div>
-<p><img alt="Verbose step-by-step output from a single workflow" class="shot" src="../assets/tui/running-single.webp"></p>
+<p><img alt="Verbose step-by-step output from a single workflow" class="shot" src="../assets/tui/running-single.webp" /></p>
 <p>This is the view to reach for when a step is failing and you need to know
 exactly which command the emulator sent and what came back. For failures only,
 <code>-verboseFailures</code> is quieter — see <a href="../basic-usage/">Basic Usage</a>.</p>
-<h3 id="concurrent-runs">Concurrent runs<a class="headerlink" href="#concurrent-runs" title="Permanent link">¶</a></h3>
+<h3 id="concurrent-runs">Concurrent runs<a class="headerlink" href="#concurrent-runs" title="Permanent link">&para;</a></h3>
 <p>Give the run more than one worker and it switches to a live stats row, printed
 every five seconds:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">4</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">12</span>
 </code></pre></div>
-<p><img alt="The live stats rows printed during a concurrent run" class="shot" src="../assets/tui/running-concurrent.webp"></p>
+<p><img alt="The live stats rows printed during a concurrent run" class="shot" src="../assets/tui/running-concurrent.webp" /></p>
 <p>Each row is one sample: the time, active vUsers against the worker count,
 workflows started, completed and failed, elapsed and remaining seconds, and
 host CPU and memory. A trailing <code>⚡ +n</code> marks workers added by ramp-up in that
 interval.</p>
 <p>Concurrent runs also start the dashboard automatically, and print its address
 in the line above — useful when you want charts rather than rows.</p>
-<h3 id="progress-gauges">Progress gauges<a class="headerlink" href="#progress-gauges" title="Permanent link">¶</a></h3>
+<h3 id="progress-gauges">Progress gauges<a class="headerlink" href="#progress-gauges" title="Permanent link">&para;</a></h3>
 <p><code>-bar</code> replaces the stats rows with gauges and hides the INFO lines:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">4</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">12</span><span class="w"> </span>-bar
 </code></pre></div>
-<p><img alt="Progress gauges shown with the -bar flag" class="shot" src="../assets/tui/running-gauges.webp"></p>
+<p><img alt="Progress gauges shown with the -bar flag" class="shot" src="../assets/tui/running-gauges.webp" /></p>
 <p>The gauges redraw in place, so this stays readable on a long run where the
 stats rows would scroll away. Totals for started, completed and failed sit
 below them. Use the rows when you want history and the gauges when you want
@@ -1639,9 +1639,9 @@ current state.</p>
 change what is printed, so the header, the live view and the summary all
 still appear in the build log.</p>
 </div>
-<h2 id="the-end-of-run-report">The end-of-run report<a class="headerlink" href="#the-end-of-run-report" title="Permanent link">¶</a></h2>
+<h2 id="the-end-of-run-report">The end-of-run report<a class="headerlink" href="#the-end-of-run-report" title="Permanent link">&para;</a></h2>
 <p>When the run finishes, the summary reports what happened.</p>
-<p><img alt="The run summary after a single workflow" class="shot" src="../assets/tui/summary-single.webp"></p>
+<p><img alt="The run summary after a single workflow" class="shot" src="../assets/tui/summary-single.webp" /></p>
 <p>The outcome line at the top is the quick read — a green tick means no workflow
 failed. Below the rule:</p>
 <ul>
@@ -1654,7 +1654,7 @@ failed. Below the rule:</p>
 <li><strong>run duration</strong> — how long the whole run took.</li>
 </ul>
 <p>A concurrent run adds one row, and reports totals across all workers:</p>
-<p><img alt="The run summary after a concurrent run" class="shot" src="../assets/tui/summary-concurrent.webp"></p>
+<p><img alt="The run summary after a concurrent run" class="shot" src="../assets/tui/summary-concurrent.webp" /></p>
 <p><strong>final active vUsers</strong> shows workers still busy against the worker count when
 the run ended. <code>all zen</code> means everything drained cleanly; a non-zero count is
 drawn in amber and means workflows were still in flight when the grace period
@@ -1663,13 +1663,13 @@ ran out.</p>
 text, and it holds the workflow configuration as well as the results:</p>
 <div class="highlight"><pre><span></span><code>cat<span class="w"> </span>logs/summary_31077.txt
 </code></pre></div>
-<h2 id="width-and-colour">Width and colour<a class="headerlink" href="#width-and-colour" title="Permanent link">¶</a></h2>
+<h2 id="width-and-colour">Width and colour<a class="headerlink" href="#width-and-colour" title="Permanent link">&para;</a></h2>
 <p>The header and summary draw at 80 columns — the width of the 3270 screens the
 tool drives — and adapt to narrower terminals, dropping the configuration grid
 to a single column when it has to.</p>
 <p>Colour degrades gracefully. On a terminal without truecolour the palette maps
 to the nearest available; with no colour at all the layout still holds, because
-it is built from rules and box-drawing characters rather than colour alone.</p></div>
+it is built from rules and box-drawing characters rather than colour alone.</p>
 
 
 

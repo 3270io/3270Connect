@@ -1123,11 +1123,39 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#3270connect-basic-usage" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#watch-it-end-to-end" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3270Connect Basic Usage
+        Watch it end to end
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Watch it end to end">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#your-first-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Your first workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-it-at-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running it at scale
       
     </span>
   </a>
@@ -1767,8 +1795,8 @@
   
 
 
-<div><h1 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">¶</a></h1>
-<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">¶</a></h2>
+<h1 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h1>
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
 <p>The basic usage of <code>3270Connect</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens.</p>
 <p>To run a workflow, use the following command:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
@@ -1796,79 +1824,79 @@
 <li><code>-profileOut &lt;path&gt;</code>: Write the profile JSON to this path instead of stdout.</li>
 <li><code>-profileCollectRaw</code>: Include raw s3270 <code>Query</code> responses in the profile output.</li>
 </ul>
-<h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">¶</a></h3>
+<h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">&para;</a></h3>
 <p>Workflows can reference a transient RSA token by placing <code>{{token}}</code> in any <code>Text</code> field. Supply the token when launching 3270Connect:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-token<span class="w"> </span><span class="m">123456</span>
 </code></pre></div>
 <p>The placeholder will be substituted immediately before each step runs, ensuring the token is never stored in the workflow file.</p>
-<h2 id="running-workflows">Running Workflows<a class="headerlink" href="#running-workflows" title="Permanent link">¶</a></h2>
-<h3 id="single-workflow">Single Workflow<a class="headerlink" href="#single-workflow" title="Permanent link">¶</a></h3>
+<h2 id="running-workflows">Running Workflows<a class="headerlink" href="#running-workflows" title="Permanent link">&para;</a></h2>
+<h3 id="single-workflow">Single Workflow<a class="headerlink" href="#single-workflow" title="Permanent link">&para;</a></h3>
 <p>To run a single workflow, create a JSON configuration file that describes the workflow steps. Here's an example configuration file:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
-<span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
-<span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
-<span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
-<span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
-<span class="w">  </span><span class="nt">"EndOfTaskDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.27.27.62&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;CodePage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cp037&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
+<span class="w">  </span><span class="nt">&quot;EveryStepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
+<span class="w">  </span><span class="nt">&quot;OutputFilePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;output.html&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
+<span class="w">  </span><span class="nt">&quot;RampUpBatchSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
+<span class="w">  </span><span class="nt">&quot;RampUpDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
+<span class="w">  </span><span class="nt">&quot;EndOfTaskDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CheckValue&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270 Example Application&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-firstname"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-firstname&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-lastname"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-lastname&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"StepDelay"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"StepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StepDelay&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;StepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PressEnter&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CheckValue&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270 Example Application&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>In this example, an <code>EveryStepDelay</code> range keeps the steps paced, the <code>StepDelay</code> step adds a longer pause before pressing Enter, and an <code>EndOfTaskDelay</code> holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, <code>WaitForField</code> will wait before all steps once connected. </p>
 <p>You can customize the WaitForField behavior using the object format:</p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Retries&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>This example uses a 2-second delay per retry and allows up to 5 retries. If you disable the global setting (<code>"WaitForField": false</code>), you can still add an explicit step where you need it:</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WaitForField"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WaitForField&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>Place it after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render the next screen.</p>
-<h3 id="concurrent-workflows">Concurrent Workflows<a class="headerlink" href="#concurrent-workflows" title="Permanent link">¶</a></h3>
+<h3 id="concurrent-workflows">Concurrent Workflows<a class="headerlink" href="#concurrent-workflows" title="Permanent link">&para;</a></h3>
 <p>You can run multiple workflows concurrently by specifying the <code>-concurrent</code> and <code>-runtime</code> flags:</p>
 <ul>
 <li><code>-concurrent</code>: Sets the number of concurrent workflows to run (default is 1).</li>
@@ -1881,20 +1909,20 @@
 </code></pre></div>
 <p>When <code>-injectionConfig</code> is also used, injection entries are locked per active workflow so the same entry is not reused by another active workflow at the same time. If all entries are in use, that workflow start attempt is skipped for the current scheduling cycle and processing continues. A <code>WARNING</code> terminal message is emitted for this condition.</p>
 <p><code>3270Connect</code> also emits a startup <code>WARNING</code> when the number of loaded injection entries is lower than requested concurrency, indicating potential scheduling contention.</p>
-<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h2>
-<h3 id="headless-mode">Headless Mode<a class="headerlink" href="#headless-mode" title="Permanent link">¶</a></h3>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<h3 id="headless-mode">Headless Mode<a class="headerlink" href="#headless-mode" title="Permanent link">&para;</a></h3>
 <p>You can run <code>3270Connect</code> in headless mode using the <code>-headless</code> flag. Headless mode is useful for running workflows without a graphical user interface.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
-<h3 id="verbose-mode">Verbose Mode<a class="headerlink" href="#verbose-mode" title="Permanent link">¶</a></h3>
+<h3 id="verbose-mode">Verbose Mode<a class="headerlink" href="#verbose-mode" title="Permanent link">&para;</a></h3>
 <p>To enable verbose mode for detailed output, use the <code>-verbose</code> flag.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
 </code></pre></div>
-<h3 id="failure-only-verbose-logging">Failure-only verbose logging<a class="headerlink" href="#failure-only-verbose-logging" title="Permanent link">¶</a></h3>
+<h3 id="failure-only-verbose-logging">Failure-only verbose logging<a class="headerlink" href="#failure-only-verbose-logging" title="Permanent link">&para;</a></h3>
 <p>To log only failing steps (without the volume of full verbose output), use the <code>-verboseFailures</code> flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
 </code></pre></div>
-<h3 id="screen-capture-on-failures">Screen capture on failures<a class="headerlink" href="#screen-capture-on-failures" title="Permanent link">¶</a></h3>
+<h3 id="screen-capture-on-failures">Screen capture on failures<a class="headerlink" href="#screen-capture-on-failures" title="Permanent link">&para;</a></h3>
 <p>When troubleshooting intermittent automation failures in high-concurrency environments, you can enable automatic screen captures using the <code>-verboseScreenCaptureFailures</code> flag. This flag works in conjunction with <code>-verboseFailures</code> to capture the terminal screen whenever a workflow step fails or a WaitForField timeout occurs.</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures<span class="w"> </span>-verboseScreenCaptureFailures
 </code></pre></div>
@@ -1904,9 +1932,9 @@
 - Limited to 5 total captures across all concurrent workflows to prevent disk exhaustion
 - The capture file path is automatically included in the failure log message</p>
 <p>Example failure log with screen capture:
-</p><div class="highlight"><pre><span></span><code>Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1234567890.txt
-</code></pre></div>
-<h3 id="screen-readiness-waitforfield">Screen readiness (WaitForField)<a class="headerlink" href="#screen-readiness-waitforfield" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>Workflow failure on scriptPort 5001 at step 4 (CheckValue): CheckValue failed. Expected: LOGIN, Found: ERROR | Screen captured to: failure_5001_step4_1234567890.txt
+</code></pre></div></p>
+<h3 id="screen-readiness-waitforfield">Screen readiness (WaitForField)<a class="headerlink" href="#screen-readiness-waitforfield" title="Permanent link">&para;</a></h3>
 <p>The <code>WaitForField</code> configuration controls whether the workflow waits for the terminal to unlock an input field before each step once connected. It applies to all steps in the workflow (not just after the Connect step).</p>
 <p><strong>Configuration formats:</strong></p>
 <ul>
@@ -1924,20 +1952,20 @@
 </ul>
 <p><strong>Usage examples:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Use defaults</span>
-<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 
 <span class="c1">// Custom delay and retries</span>
-<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
+<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Retries&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Disable automatic waiting</span>
-<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p><strong>Per-step override:</strong> You can also add an explicit <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use the <code>Delay</code> parameter in the step to override the timeout for that specific wait.</p>
-<h3 id="workflow-timeout">Workflow timeout<a class="headerlink" href="#workflow-timeout" title="Permanent link">¶</a></h3>
+<h3 id="workflow-timeout">Workflow timeout<a class="headerlink" href="#workflow-timeout" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>-workflowTimeout</code>: Hard timeout (seconds) applied to each workflow run. Default 120; set to <code>0</code> to disable. When the timeout is hit, the workflow stops without counting as a connect failure.</li>
 </ul>
-<h3 id="grace-period-and-auto-shutdown">Grace period and auto-shutdown<a class="headerlink" href="#grace-period-and-auto-shutdown" title="Permanent link">¶</a></h3>
+<h3 id="grace-period-and-auto-shutdown">Grace period and auto-shutdown<a class="headerlink" href="#grace-period-and-auto-shutdown" title="Permanent link">&para;</a></h3>
 <p>When a concurrent run reaches its <code>-runtime</code> deadline, any workflows that are still in progress are given additional time to finish cleanly. Two settings control this behaviour:</p>
 <ul>
 <li><code>-gracePeriod &lt;seconds&gt;</code>: How long to wait for in-flight workflows after the runtime deadline. Default is <strong>30 seconds</strong>. Set a higher value if your workflows are long-running and you want to give them more time to complete naturally.</li>
@@ -1947,22 +1975,22 @@
 <div class="highlight"><pre><span></span><code><span class="c1"># Wait up to 60s for in-flight workflows, with a 20s prompt countdown</span>
 3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">10</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">120</span><span class="w"> </span>-gracePeriod<span class="w"> </span><span class="m">60</span><span class="w"> </span>-autoShutdown<span class="w"> </span><span class="m">20</span>
 </code></pre></div>
-<h3 id="startport-flag">startPort Flag<a class="headerlink" href="#startport-flag" title="Permanent link">¶</a></h3>
+<h3 id="startport-flag">startPort Flag<a class="headerlink" href="#startport-flag" title="Permanent link">&para;</a></h3>
 <p>The -startPort flag allows you to specify the starting port for the sample application. This help to prevent port usage conflicts when running 3270Connect multiple times on the same machine.</p>
 <p>Use it as follows:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-startPort<span class="w"> </span><span class="m">5000</span>
 </code></pre></div>
-<h3 id="host-code-page-and-character-set">Host Code Page and Character Set<a class="headerlink" href="#host-code-page-and-character-set" title="Permanent link">¶</a></h3>
+<h3 id="host-code-page-and-character-set">Host Code Page and Character Set<a class="headerlink" href="#host-code-page-and-character-set" title="Permanent link">&para;</a></h3>
 <p>Mainframe sessions exchange data in EBCDIC, and the correct national code page (also called the host character set) must be selected so that accented and language-specific characters render correctly. For example, Finnish/Swedish hosts commonly use code page <strong>cp278</strong>.</p>
 <p>You can set the code page in two ways:</p>
 <ul>
 <li><strong>In the workflow JSON</strong> with the top-level <code>CodePage</code> property:</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp278"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mvs.example.com&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;CodePage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cp278&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
@@ -2034,26 +2062,26 @@
 </tbody>
 </table>
 <p>You can supply the canonical name (<code>cp278</code>), an alias (<code>finnish</code>), or the bare number (<code>278</code>). Run <code>s3270 -v</code> to print the full list of code pages compiled into the emulator. If an unrecognized code page is supplied, the emulator logs a warning and falls back to its default, so connectivity is not interrupted.</p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Let's explore some common use cases with examples:</p>
-<h3 id="1-running-a-basic-workflow">1. Running a Basic Workflow<a class="headerlink" href="#1-running-a-basic-workflow" title="Permanent link">¶</a></h3>
+<h3 id="1-running-a-basic-workflow">1. Running a Basic Workflow<a class="headerlink" href="#1-running-a-basic-workflow" title="Permanent link">&para;</a></h3>
 <p>Run a basic workflow defined in "workflow.json":</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
-<h3 id="2-running-multiple-workflows-concurrently">2. Running Multiple Workflows Concurrently<a class="headerlink" href="#2-running-multiple-workflows-concurrently" title="Permanent link">¶</a></h3>
+<h3 id="2-running-multiple-workflows-concurrently">2. Running Multiple Workflows Concurrently<a class="headerlink" href="#2-running-multiple-workflows-concurrently" title="Permanent link">&para;</a></h3>
 <p>Run two workflows concurrently for 60 seconds:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
-<h3 id="3-running-in-headless-mode">3. Running in Headless Mode<a class="headerlink" href="#3-running-in-headless-mode" title="Permanent link">¶</a></h3>
+<h3 id="3-running-in-headless-mode">3. Running in Headless Mode<a class="headerlink" href="#3-running-in-headless-mode" title="Permanent link">&para;</a></h3>
 <p>Run a workflow in headless mode:</p>
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
-<h3 id="4-using-the-api-mode">4. Using the API Mode<a class="headerlink" href="#4-using-the-api-mode" title="Permanent link">¶</a></h3>
+<h3 id="4-using-the-api-mode">4. Using the API Mode<a class="headerlink" href="#4-using-the-api-mode" title="Permanent link">&para;</a></h3>
 <p>Run <code>3270Connect</code> in API mode and interact with it using HTTP requests.</p>
 <ul>
 <li><a href="../advanced-features/">API Mode</a>: Discover how to run 3270Connect as an API server for advanced automation.</li>
 </ul>
-<h3 id="5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features">5. Running a 3270 sample application to help with testing the workflow features<a class="headerlink" href="#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features" title="Permanent link">¶</a></h3>
+<h3 id="5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features">5. Running a 3270 sample application to help with testing the workflow features<a class="headerlink" href="#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features" title="Permanent link">&para;</a></h3>
 <p>As well as performing workflows on a 3270 running instance, 3270Connect can emulate a 3270 sample application using the <a href="https://github.com/racingmars/go3270">github.com/racingmars/go3270</a> framework. Full credit go to <code>racingmars</code> for this great open source repo.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2071,14 +2099,14 @@
 </li>
 </ul>
 </details>
-<p></p><div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp
+<p><div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp
 </code></pre></div>
 or
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
-</code></pre></div>
+</code></pre></div></p>
 <p>Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.</p>
-<h2 id="docker-usage">Docker Usage<a class="headerlink" href="#docker-usage" title="Permanent link">¶</a></h2>
-<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h3>
+<h2 id="docker-usage">Docker Usage<a class="headerlink" href="#docker-usage" title="Permanent link">&para;</a></h2>
+<h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
 <p>Pull the latest image:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-linux:latest
 </code></pre></div>
@@ -2100,7 +2128,7 @@ or
 <p>Run a specific test 3270 sample application:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
 </code></pre></div>
-<h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">¶</a></h3>
+<h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h3>
 <p>Pull the latest image:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>3270io/3270connect-windows:latest
 </code></pre></div>
@@ -2122,11 +2150,37 @@ or
 <p>Run a specific test 3270 sample application and listening port:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">3270</span>:3270<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="o">[</span>portNumber<span class="o">]</span>
 </code></pre></div>
-<h3 id="3270connect-basic-usage">3270Connect Basic Usage<a class="headerlink" href="#3270connect-basic-usage" title="Permanent link">¶</a></h3>
-<p><div class="video-container"><video style controls alt="type:video"><source src="../3270Connect_1_0_3_9.mp4" type="video/mp4"></source></video></div></p>
-<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">¶</a></h2>
+<h2 id="watch-it-end-to-end">Watch it end to end<a class="headerlink" href="#watch-it-end-to-end" title="Permanent link">&para;</a></h2>
+<h3 id="your-first-workflow">Your first workflow<a class="headerlink" href="#your-first-workflow" title="Permanent link">&para;</a></h3>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-first-workflow.jpg">
+    <source src="/assets/video/terminal-first-workflow.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-first-workflow.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The workflow file, the run, and the two things it leaves behind — a summary
+    under <code>logs/</code> and the screens captured by
+    <code>AsciiScreenGrab</code>.
+  </figcaption>
+</figure>
+
+<h3 id="running-it-at-scale">Running it at scale<a class="headerlink" href="#running-it-at-scale" title="Permanent link">&para;</a></h3>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-load-test.jpg">
+    <source src="/assets/video/terminal-load-test.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-load-test.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The same workflow with <code>-concurrent 8 -runtime 30</code>: workers ramping
+    up in batches, the live stats row, and what happens at the deadline.
+  </figcaption>
+</figure>
+
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
 <p>The <code>3270Connect</code> command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, <code>3270Connect</code> has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.</p>
-<p>That's it! You're now ready to use <code>3270Connect</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p></div>
+<p>That's it! You're now ready to use <code>3270Connect</code> for your terminal automation needs, including the API mode for more advanced automation scenarios.</p>
 
 
 

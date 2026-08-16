@@ -1146,10 +1146,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3270connect-api-usage" class="md-nav__link">
+  <a href="#api-mode-in-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3270Connect API Usage
+        API mode in practice
       
     </span>
   </a>
@@ -1532,11 +1532,11 @@
 
   <h1>Advanced Features</h1>
 
-<div><h2 id="advanced-features">Advanced Features<a class="headerlink" href="#advanced-features" title="Permanent link">¶</a></h2>
-<h3 id="3270web-ai-chat-mode">3270Web AI Chat Mode<a class="headerlink" href="#3270web-ai-chat-mode" title="Permanent link">¶</a></h3>
+<h2 id="advanced-features">Advanced Features<a class="headerlink" href="#advanced-features" title="Permanent link">&para;</a></h2>
+<h3 id="3270web-ai-chat-mode">3270Web AI Chat Mode<a class="headerlink" href="#3270web-ai-chat-mode" title="Permanent link">&para;</a></h3>
 <p>3270Web now includes an <strong>AI Chat</strong> side panel for conversational control of a live 3270 session. The assistant reads the current screen, proposes one action at a time, and waits for approval before it writes fields, presses keys, or starts chaos exploration unless <strong>Auto Mode</strong> is enabled.</p>
 <p>See <a href="../ai-chat-mode/">AI Chat Mode</a> for sign-in, approvals, model selection, and chaos integration details.</p>
-<h3 id="api-mode">API Mode<a class="headerlink" href="#api-mode" title="Permanent link">¶</a></h3>
+<h3 id="api-mode">API Mode<a class="headerlink" href="#api-mode" title="Permanent link">&para;</a></h3>
 <p><code>3270Connect</code> can also run as an API server using the <code>-api</code> and <code>-api-port</code> flags:</p>
 <ul>
 <li><code>-api</code>: Run <code>3270Connect</code> as an API.</li>
@@ -1550,54 +1550,54 @@
 <div class="highlight"><pre><span></span><code>http://localhost:8080/api/execute
 </code></pre></div>
 <p>Body:
-</p><div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.27"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"Token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123456"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"EndOfTaskDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.27.27.27&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;CodePage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cp037&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Token&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123456&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;EveryStepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;EndOfTaskDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some: VALUE"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CheckValue&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Some: VALUE&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mypass"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">44</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mypass&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"StepDelay"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"StepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StepDelay&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;StepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PressEnter&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span>
+<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
-</code></pre></div>
+</code></pre></div></p>
 <p>The API responds with the rendered output in the JSON response body (it does not require an <code>OutputFilePath</code>).</p>
 <ul>
 <li><code>Token</code> (optional): provide a one-time RSA token that will be injected wherever the workflow text contains <code>{{token}}</code>.</li>
@@ -1607,25 +1607,25 @@
 <p class="admonition-title">Note</p>
 </div>
 <p>The Start Process modal on the dashboard now includes a dedicated <strong>RSA Token</strong> field. Values supplied through the modal are forwarded to the API as the <code>Token</code> property, matching the <code>-token</code> flag used on the command line.</p>
-<h4 id="requiring-a-credential">Requiring a credential<a class="headerlink" href="#requiring-a-credential" title="Permanent link">¶</a></h4>
+<h4 id="requiring-a-credential">Requiring a credential<a class="headerlink" href="#requiring-a-credential" title="Permanent link">&para;</a></h4>
 <p>The API listener binds <code>localhost</code> and, by default, asks for nothing: one
 operator on their own machine is already the person the request would be
 attributed to. There are two ways to close it, and which one applies follows
 from the deployment:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">One operator</label><label for="__tabbed_1_2">Several people</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">One operator</label><label for="__tabbed_1_2">Several people</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Set <code>API_TOKEN</code>, and every request must present it:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">API_TOKEN</span><span class="o">=</span><span class="k">$(</span>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span><span class="k">)</span><span class="w"> </span>3270Connect<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
-curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="nv">$API_TOKEN</span><span class="s2">"</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8080/api/execute<span class="w"> </span>-d<span class="w"> </span>@workflow.json
+curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer </span><span class="nv">$API_TOKEN</span><span class="s2">&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8080/api/execute<span class="w"> </span>-d<span class="w"> </span>@workflow.json
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Set <code>AUTH_MODE=local</code> and issue a token per account. Each one reaches
 exactly what its owner reaches, is revocable on its own, and appears in the
 audit trail by name:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"ci pipeline"</span>
-3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>watcher<span class="w"> </span><span class="s2">"grafana"</span><span class="w"> </span>--read-only
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">&quot;ci pipeline&quot;</span>
+3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>watcher<span class="w"> </span><span class="s2">&quot;grafana&quot;</span><span class="w"> </span>--read-only
 </code></pre></div>
 <p><code>API_TOKEN</code> is refused alongside accounts — one credential held by
 everybody would be a hole straight through the separation the mode was
@@ -1635,34 +1635,45 @@ turned on for — so unset it.</p>
 </div>
 <p>Either way, a request without a usable credential is answered <code>401</code> and
 recorded. See <a href="../authentication/#api-tokens">Accounts and Sign-In</a>.</p>
-<h3 id="api-mode-with-docker">API Mode with Docker<a class="headerlink" href="#api-mode-with-docker" title="Permanent link">¶</a></h3>
+<h3 id="api-mode-with-docker">API Mode with Docker<a class="headerlink" href="#api-mode-with-docker" title="Permanent link">&para;</a></h3>
 <p><code>3270Connect</code> can also run as an API server using the <code>-api</code> and <code>-api-port</code> flags:</p>
 <ul>
 <li><code>-api</code>: Run <code>3270Connect</code> as an API.</li>
 <li><code>-api-port</code>: Specifies the port for the API (default is 8080).</li>
 </ul>
 <p>To run <code>3270Connect</code> in API mode, use the following command:</p>
-<h4 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">¶</a></h4>
+<h4 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>3270io/3270connect-linux:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
 </code></pre></div>
-<h4 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">¶</a></h4>
+<h4 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>3270io/3270connect-windows:latest<span class="w"> </span>-api<span class="w"> </span>-api-port<span class="w"> </span><span class="m">8080</span>
 </code></pre></div>
-<h3 id="3270connect-api-usage">3270Connect API Usage<a class="headerlink" href="#3270connect-api-usage" title="Permanent link">¶</a></h3>
-<p><div class="video-container"><video style controls alt="type:video"><source src="../3270Connect_API_1_0_4_0.mp4" type="video/mp4"></source></video></div></p>
-<h3 id="metrics-monitoring">Metrics &amp; Monitoring<a class="headerlink" href="#metrics-monitoring" title="Permanent link">¶</a></h3>
+<h3 id="api-mode-in-practice">API mode in practice<a class="headerlink" href="#api-mode-in-practice" title="Permanent link">&para;</a></h3>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-api-mode.jpg">
+    <source src="/assets/video/terminal-api-mode.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-api-mode.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Starting the API server, posting a workflow to <code>/api/execute</code>, and
+    reading the captured 3270 screen back out of the response.
+  </figcaption>
+</figure>
+
+<h3 id="metrics-monitoring">Metrics &amp; Monitoring<a class="headerlink" href="#metrics-monitoring" title="Permanent link">&para;</a></h3>
 <p>3270Connect can expose a Prometheus <code>/metrics</code> endpoint with histograms
 for connect and step timing, a counter partitioned by workflow outcome,
 and a live gauge of active workers. Enable it with <code>-promListen :9091</code>
 and scrape with the sample config in
 <a href="../metrics/">Metrics &amp; Monitoring</a>.</p>
-<h3 id="host-compatibility-profiler">Host Compatibility Profiler<a class="headerlink" href="#host-compatibility-profiler" title="Permanent link">¶</a></h3>
+<h3 id="host-compatibility-profiler">Host Compatibility Profiler<a class="headerlink" href="#host-compatibility-profiler" title="Permanent link">&para;</a></h3>
 <p>Run <code>3270Connect -profile -profileHost &lt;host&gt; -profilePort &lt;port&gt;</code> for a
 one-shot probe that writes a <code>CompatibilityProfile</code> JSON document. The
 document shares its schema with 3270Web's <code>POST /profile</code> endpoint, so
 the same JSON drops into 3270Web's chaos mind-map compare workflow for
 cross-environment diffing. See <a href="../host-profiler/">Host Compatibility Profiler</a>
-and <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a>.</p></div>
+and <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a>.</p>
 
 
 

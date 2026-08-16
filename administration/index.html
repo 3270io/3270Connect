@@ -1556,7 +1556,7 @@
   
 
 
-<div><h1 id="the-administration-area">The Administration Area<a class="headerlink" href="#the-administration-area" title="Permanent link">¶</a></h1>
+<h1 id="the-administration-area">The Administration Area<a class="headerlink" href="#the-administration-area" title="Permanent link">&para;</a></h1>
 <p>Administrators get an <strong>Administration</strong> area at <code>/admin</code>. Six pages, each
 answering one question:</p>
 <table>
@@ -1603,8 +1603,8 @@ area opens and the Load runs and Audit trail pages are useful immediately.
 The Accounts, Groups and Tokens pages say what to set to make them
 meaningful. See <a href="../authentication/">Accounts and Sign-In</a>.</p>
 </div>
-<hr>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The front page is the state of the instance: how many accounts exist, who holds
 a live sign-in, how many load runs are going, how many tokens are active, and
 how many requests were refused in the last 24 hours — followed by the most
@@ -1612,7 +1612,7 @@ recent audit entries. The numbers refresh themselves every half minute while
 the page is open.</p>
 <p>The <strong>Refused (24h)</strong> tile is the one to look at. A handful is somebody
 mistyping a password; a run of them is the shape of something else.</p>
-<h2 id="accounts">Accounts<a class="headerlink" href="#accounts" title="Permanent link">¶</a></h2>
+<h2 id="accounts">Accounts<a class="headerlink" href="#accounts" title="Permanent link">&para;</a></h2>
 <p><code>/admin/users</code> is where you add accounts, change roles, reset passwords,
 disable and re-enable people, and delete accounts. The list can be filtered by
 name or group, or narrowed to administrators, disabled accounts, accounts that
@@ -1648,13 +1648,13 @@ already has open.</strong> It does not wait for them to sign in again, and it do
 sign them out. Demotion is the direction that matters: a demoted administrator
 who kept the role until their session expired could restore it from the page
 they were still standing on.</p>
-<h3 id="roles-from-groups">Roles from groups<a class="headerlink" href="#roles-from-groups" title="Permanent link">¶</a></h3>
+<h3 id="roles-from-groups">Roles from groups<a class="headerlink" href="#roles-from-groups" title="Permanent link">&para;</a></h3>
 <p>Below the account list, <strong>Roles from groups</strong> shows which teams grant
 administration and lets you grant or revoke it in one click. The account list
 above reports the result honestly: somebody who administers because of a group
 wears the same Administrator badge with <em>via ‹group›</em> under it, and the
 administrator count on the overview counts them.</p>
-<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">¶</a></h2>
+<h2 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">&para;</a></h2>
 <p><code>/admin/groups</code> is where a group is made and maintained. One row per team, and
 one dialog that does the whole job:</p>
 <table>
@@ -1703,7 +1703,7 @@ ticked here, because the next sign-in would overwrite the change. Change them
 in the directory.</p>
 <p>Creating, changing and deleting a group is written to the audit trail as
 <code>group.created</code>, <code>group.updated</code> and <code>group.deleted</code>.</p>
-<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">¶</a></h2>
+<h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">&para;</a></h2>
 <p><code>/admin/tokens</code> lists every token issued on this console — who owns it, what it
 was issued for, its scopes, whether it is still active and when it was last
 used — and issues new ones.</p>
@@ -1713,11 +1713,11 @@ from the page rather than leaving it in the DOM of a tab somebody may leave
 open on a shared screen.</p>
 <p>Everything on this page is also a console command, which is usually easier
 inside a container:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">&quot;nightly soak&quot;</span>
 </code></pre></div>
 <p>See <a href="../authentication/#api-tokens">API tokens</a> for what a token reaches and how
 scopes work.</p>
-<h2 id="load-runs">Load runs<a class="headerlink" href="#load-runs" title="Permanent link">¶</a></h2>
+<h2 id="load-runs">Load runs<a class="headerlink" href="#load-runs" title="Permanent link">&para;</a></h2>
 <p><code>/admin/runs</code> lists every load run this machine is publishing metrics for,
 whoever started it: the process id, the owner, how many virtual users are
 active, how many workflows have finished and failed, when it started and the
@@ -1735,7 +1735,7 @@ saturated.</p>
 </ul>
 <p>Every stop is written to the audit trail with whose run it was, so "who stopped
 my soak test" is answerable from both ends.</p>
-<h2 id="audit-trail">Audit trail<a class="headerlink" href="#audit-trail" title="Permanent link">¶</a></h2>
+<h2 id="audit-trail">Audit trail<a class="headerlink" href="#audit-trail" title="Permanent link">&para;</a></h2>
 <p><code>/admin/audit</code> is the security record, kept apart from the debug log because it
 is read for a different reason and for far longer. One JSON object per line,
 append-only, holding only what an administrator would be asked about months
@@ -1789,7 +1789,7 @@ anything in it is disclosed to every administrator for as long as it exists.</p>
 <p>The page shows the newest 500 entries and filters them by text or by outcome.
 <strong>Download all of it</strong> streams the whole file as newline-delimited JSON, for
 keeping or for shipping somewhere that keeps it:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>http://localhost:9200/admin/api/audit.jsonl<span class="w"> </span>&gt;<span class="w"> </span>audit.jsonl
 </code></pre></div>
 <p>The file rolls over at 8 MiB and one previous generation is kept. Beyond that,
@@ -1803,7 +1803,7 @@ The trail is allowed the distinction the caller is not: <code>login.failed</code
 carries a <code>reason</code> of <code>bad credentials</code>, <code>account disabled</code> or
 <code>store error</code>.</p>
 </div>
-<h2 id="the-json-behind-the-pages">The JSON behind the pages<a class="headerlink" href="#the-json-behind-the-pages" title="Permanent link">¶</a></h2>
+<h2 id="the-json-behind-the-pages">The JSON behind the pages<a class="headerlink" href="#the-json-behind-the-pages" title="Permanent link">&para;</a></h2>
 <p>The tables are painted from endpoints under <code>/admin/api</code>, all of them
 administrator-only and all of them usable from a script with a token:</p>
 <table>
@@ -1872,12 +1872,12 @@ administrator-only and all of them usable from a script with a token:</p>
 </tr>
 </tbody>
 </table>
-<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">¶</a></h2>
+<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../authentication/">Accounts and Sign-In</a> — turning authentication on, roles, tokens and SSO</li>
 <li><a href="../dashboard/">Web Dashboard</a> — the console these pages sit beside</li>
 <li><a href="../installation/">Installation</a> — where the state directory lives</li>
-</ul></div>
+</ul>
 
 
 

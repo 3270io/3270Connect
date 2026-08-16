@@ -1528,11 +1528,11 @@
   
 
 
-<div><h1 id="skills-and-extensions">Skills and Extensions<a class="headerlink" href="#skills-and-extensions" title="Permanent link">¶</a></h1>
+<h1 id="skills-and-extensions">Skills and Extensions<a class="headerlink" href="#skills-and-extensions" title="Permanent link">&para;</a></h1>
 <p>The procedures the AI assistant follows are files, not prose compiled into the
 binary. That means two things: the always-on prompt stays small, and you can
 teach it about your own hosts without waiting for a release.</p>
-<h2 id="how-it-fits-together">How it fits together<a class="headerlink" href="#how-it-fits-together" title="Permanent link">¶</a></h2>
+<h2 id="how-it-fits-together">How it fits together<a class="headerlink" href="#how-it-fits-together" title="Permanent link">&para;</a></h2>
 <p>A <strong>skill</strong> is a playbook — how to ramp a load test, how to read a set of
 percentiles. An <strong>instruction</strong> is a policy fragment several skills share.
 An <strong>extension</strong> is a folder bundling both, plus saved workflows.</p>
@@ -1540,7 +1540,7 @@ An <strong>extension</strong> is a folder bundling both, plus saved workflows.</
 calls <code>load_skill</code> when it decides it needs one, and <code>load_instruction</code> for
 the fragments that skill cites. Loading a playbook for work nobody asked for
 would cost the same as loading one that was needed.</p>
-<h2 id="what-ships">What ships<a class="headerlink" href="#what-ships" title="Permanent link">¶</a></h2>
+<h2 id="what-ships">What ships<a class="headerlink" href="#what-ships" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1599,7 +1599,7 @@ would cost the same as loading one that was needed.</p>
 </table>
 <p><code>list_skills</code> and <code>list_instructions</code> show what an installation actually has,
 including anything you added.</p>
-<h2 id="adding-a-skill">Adding a skill<a class="headerlink" href="#adding-a-skill" title="Permanent link">¶</a></h2>
+<h2 id="adding-a-skill">Adding a skill<a class="headerlink" href="#adding-a-skill" title="Permanent link">&para;</a></h2>
 <p>Drop a folder beside the binary:</p>
 <div class="highlight"><pre><span></span><code>3270Connect
 skills/
@@ -1638,7 +1638,7 @@ Everything else is optional. Restart 3270Connect and it appears in
 <p>Instructions go in <code>instructions/</code> beside <code>skills/</code>, named
 <code>&lt;something&gt;.instructions.md</code>. A skill cites one by mentioning it in
 backticks or listing it in frontmatter.</p>
-<h2 id="replacing-a-built-in">Replacing a built-in<a class="headerlink" href="#replacing-a-built-in" title="Permanent link">¶</a></h2>
+<h2 id="replacing-a-built-in">Replacing a built-in<a class="headerlink" href="#replacing-a-built-in" title="Permanent link">&para;</a></h2>
 <p>A skill with the same name as a built-in does <strong>not</strong> replace it by default —
 it is refused and reported, and <code>list_extensions</code> says why. To replace one
 deliberately, name it:</p>
@@ -1651,7 +1651,7 @@ deliberately, name it:</p>
 <p>Tuning the ramp playbook for your site should be possible; doing it by
 accident should not, because the built-ins carry the safety rules.
 <code>list_skills</code> reports the replacement.</p>
-<h2 id="extensions">Extensions<a class="headerlink" href="#extensions" title="Permanent link">¶</a></h2>
+<h2 id="extensions">Extensions<a class="headerlink" href="#extensions" title="Permanent link">&para;</a></h2>
 <p>An extension bundles skills, instructions and workflows so a team can share
 one folder:</p>
 <div class="highlight"><pre><span></span><code>extensions/
@@ -1665,16 +1665,16 @@ one folder:</p>
       billing.json
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"schemaVersion"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-billing"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"displayName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACME billing load pack"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Load profiles and conventions for the ACME billing region."</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"product"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270Connect"</span><span class="p">,</span><span class="w"> </span><span class="nt">"minVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.9.0"</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"contributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"skills"</span><span class="p">:</span><span class="w">       </span><span class="p">[{</span><span class="w"> </span><span class="nt">"dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"skills/acme-billing-load"</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-billing-load"</span><span class="w"> </span><span class="p">}],</span>
-<span class="w">    </span><span class="nt">"instructions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"instructions/acme-conventions.instructions.md"</span><span class="w"> </span><span class="p">}],</span>
-<span class="w">    </span><span class="nt">"workflows"</span><span class="p">:</span><span class="w">    </span><span class="p">[{</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"workflows/billing.json"</span><span class="w"> </span><span class="p">}]</span>
+<span class="w">  </span><span class="nt">&quot;schemaVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;acme-billing&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;displayName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ACME billing load pack&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Load profiles and conventions for the ACME billing region.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;requires&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;product&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270Connect&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;minVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.9.0&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;contributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;skills&quot;</span><span class="p">:</span><span class="w">       </span><span class="p">[{</span><span class="w"> </span><span class="nt">&quot;dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;skills/acme-billing-load&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;acme-billing-load&quot;</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="nt">&quot;instructions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;instructions/acme-conventions.instructions.md&quot;</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="nt">&quot;workflows&quot;</span><span class="p">:</span><span class="w">    </span><span class="p">[{</span><span class="w"> </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;workflows/billing.json&quot;</span><span class="w"> </span><span class="p">}]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -1683,7 +1683,7 @@ deleting it by listing its name in <code>extensions/.disabled</code>, one per li
 <p><code>list_extensions</code> shows every pack found, whether it is enabled, and <strong>why
 one failed to load</strong> — which is the answer when a skill someone expects is
 missing from <code>list_skills</code>.</p>
-<h2 id="what-an-extension-may-contribute">What an extension may contribute<a class="headerlink" href="#what-an-extension-may-contribute" title="Permanent link">¶</a></h2>
+<h2 id="what-an-extension-may-contribute">What an extension may contribute<a class="headerlink" href="#what-an-extension-may-contribute" title="Permanent link">&para;</a></h2>
 <p>Content only: skills, instructions and workflow documents.</p>
 <p>A contributed workflow appears in <code>list_workflows</code> alongside the files in the
 working directory, with its source named, and goes through the same
@@ -1696,7 +1696,7 @@ reason about. Everything an extension needs is already a built-in tool it can
 direct the assistant to use.</p>
 <p>Treat an extension as you would any other trusted local content: there is no
 signing, so install ones you or your team wrote.</p>
-<h2 id="rules-the-loader-applies">Rules the loader applies<a class="headerlink" href="#rules-the-loader-applies" title="Permanent link">¶</a></h2>
+<h2 id="rules-the-loader-applies">Rules the loader applies<a class="headerlink" href="#rules-the-loader-applies" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Every contributed path must resolve <strong>inside</strong> the extension folder.</li>
 <li>A skill's frontmatter <code>name</code> must match what the manifest declares.</li>
@@ -1704,7 +1704,7 @@ signing, so install ones you or your team wrote.</p>
   the running version.</li>
 <li>A pack that fails any of these is <strong>skipped and reported</strong>, never
   half-loaded. One malformed manifest does not stop 3270Connect starting.</li>
-</ul></div>
+</ul>
 
 
 

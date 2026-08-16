@@ -889,6 +889,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#a-tour-of-the-console" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A tour of the console
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#starting-the-dashboard" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1817,12 +1828,26 @@
   
 
 
-<div><h1 id="web-dashboard">Web Dashboard<a class="headerlink" href="#web-dashboard" title="Permanent link">¶</a></h1>
+<h1 id="web-dashboard">Web Dashboard<a class="headerlink" href="#web-dashboard" title="Permanent link">&para;</a></h1>
 <p>The dashboard is 3270Connect's browser-based operations console. It shows what
 your runs are doing right now — live workflow counts, durations, latency
 percentiles, host CPU and memory — and lets you launch runs, inspect
 configuration, tail logs and terminate processes without leaving the page.</p>
-<p><img alt="The 3270Connect operations console" class="shot" src="../assets/dashboard/console-overview.webp"></p>
+<p><img alt="The 3270Connect operations console" class="shot" src="../assets/dashboard/console-overview.webp" /></p>
+<h2 id="a-tour-of-the-console">A tour of the console<a class="headerlink" href="#a-tour-of-the-console" title="Permanent link">&para;</a></h2>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-tour.jpg">
+    <source src="/assets/video/console-tour.mp4" type="video/mp4">
+    <a href="/assets/video/console-tour.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Uploading a workflow and setting a load profile, then the process table, the
+    live screen flow, the charts, the log stream and the four palettes. Recorded
+    against the bundled sample host — every number on screen is from that run.
+  </figcaption>
+</figure>
+
 <div class="admonition info">
 <p class="admonition-title">Runs entirely offline</p>
 <p>Every asset the console needs — styles, scripts, charting library and icons —
@@ -1831,8 +1856,8 @@ fetched from a CDN, so the dashboard behaves identically on an air-gapped
 build server and on a laptop. Web fonts are the single optional extra; when
 they cannot be reached the console falls back to your local monospace stack.</p>
 </div>
-<h2 id="starting-the-dashboard">Starting the dashboard<a class="headerlink" href="#starting-the-dashboard" title="Permanent link">¶</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Dashboard only</label><label for="__tabbed_1_2">Custom port</label><label for="__tabbed_1_3">Alongside a load test</label></div>
+<h2 id="starting-the-dashboard">Starting the dashboard<a class="headerlink" href="#starting-the-dashboard" title="Permanent link">&para;</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Dashboard only</label><label for="__tabbed_1_2">Custom port</label><label for="__tabbed_1_3">Alongside a load test</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-dashboard
@@ -1904,16 +1929,16 @@ exposed to is then decided by the port mapping, which the supplied stacks
 keep on <code>127.0.0.1</code>.</p>
 <p>The same setting exists for the REST API as <code>-api-bind</code> / <code>API_BIND</code>.</p>
 </div>
-<h2 id="layout-at-a-glance">Layout at a glance<a class="headerlink" href="#layout-at-a-glance" title="Permanent link">¶</a></h2>
+<h2 id="layout-at-a-glance">Layout at a glance<a class="headerlink" href="#layout-at-a-glance" title="Permanent link">&para;</a></h2>
 <p>The console is a single page in three bands: a <strong>command bar</strong> and <strong>status
 bar</strong> pinned to the top, a <strong>metrics area</strong> (KPI tiles, charts and the
 <a href="#live-screen-flow">live screen flow</a>), and the <strong>process table</strong>.</p>
-<h3 id="command-bar">Command bar<a class="headerlink" href="#command-bar" title="Permanent link">¶</a></h3>
+<h3 id="command-bar">Command bar<a class="headerlink" href="#command-bar" title="Permanent link">&para;</a></h3>
 <p>Holds the primary actions — <em>Start Process</em>, <em>Start App</em>, <em>Console Logs</em>,
 <em>Refresh</em> and the shortcut sheet — alongside a live readout of running
 processes, in-flight workflows and console uptime. The search field opens the
 <a href="#command-palette">command palette</a>.</p>
-<h3 id="status-bar">Status bar<a class="headerlink" href="#status-bar" title="Permanent link">¶</a></h3>
+<h3 id="status-bar">Status bar<a class="headerlink" href="#status-bar" title="Permanent link">&para;</a></h3>
 <p>Controls how the page stays current, and how it looks.</p>
 <ul>
 <li><strong>Live</strong> switch — pauses and resumes polling. The ring to its left counts down
@@ -1924,8 +1949,8 @@ processes, in-flight workflows and console uptime. The search field opens the
 <p>Polling pauses automatically while any dialog is open, so nothing shifts under
 the cursor while you are reading a log or filling in a form, and resumes when
 the dialog closes.</p>
-<h2 id="key-metrics">Key metrics<a class="headerlink" href="#key-metrics" title="Permanent link">¶</a></h2>
-<p><img alt="KPI tiles: active, started, completed, failed, success rate and throughput" class="shot" src="../assets/dashboard/kpi-strip.webp"></p>
+<h2 id="key-metrics">Key metrics<a class="headerlink" href="#key-metrics" title="Permanent link">&para;</a></h2>
+<p><img alt="KPI tiles: active, started, completed, failed, success rate and throughput" class="shot" src="../assets/dashboard/kpi-strip.webp" /></p>
 <p>Six tiles summarise the whole fleet. The counters carry a sparkline built from
 the samples this browser session has collected, so you can see the shape of the
 last few minutes rather than just the current number.</p>
@@ -1966,8 +1991,8 @@ last few minutes rather than just the current number.</p>
 <p>The chip under each counter shows the change since the previous poll, so a
 stalled run is obvious at a glance: started keeps climbing while completed does
 not.</p>
-<h2 id="charts">Charts<a class="headerlink" href="#charts" title="Permanent link">¶</a></h2>
-<p><img alt="Duration, outcome, resource and latency charts" class="shot" src="../assets/dashboard/charts.webp"></p>
+<h2 id="charts">Charts<a class="headerlink" href="#charts" title="Permanent link">&para;</a></h2>
+<p><img alt="Duration, outcome, resource and latency charts" class="shot" src="../assets/dashboard/charts.webp" /></p>
 <p><strong>Workflow Duration</strong> plots one series per process, newest run on the right.
 Use the legend chips below the chart to isolate a single PID.</p>
 <p><strong>Outcomes</strong> breaks finished work into completed, failed and in-flight, with the
@@ -1979,7 +2004,7 @@ bars, a distribution histogram beneath them, and sample count, mean, min and
 standard deviation below that. This is the panel to check when average duration
 looks acceptable but users are reporting slow sessions — a healthy mean with a
 p99 several times larger points at a tail problem rather than a general one.</p>
-<h3 id="chart-controls">Chart controls<a class="headerlink" href="#chart-controls" title="Permanent link">¶</a></h3>
+<h3 id="chart-controls">Chart controls<a class="headerlink" href="#chart-controls" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Window presets</strong> (<code>30</code> / <code>60</code> / <code>120</code> / <code>ALL</code>) limit how many data points the
   duration and resource charts show.</li>
@@ -1987,15 +2012,15 @@ p99 several times larger points at a tail problem rather than a general one.</p>
   range.</li>
 <li><strong>Export</strong> each chart as a <strong>PNG</strong> image or its underlying series as <strong>CSV</strong>.</li>
 </ul>
-<h2 id="live-screen-flow">Live screen flow<a class="headerlink" href="#live-screen-flow" title="Permanent link">¶</a></h2>
-<p><img alt="The live screen flow panel" class="shot" src="../assets/dashboard/screen-flow.webp"></p>
+<h2 id="live-screen-flow">Live screen flow<a class="headerlink" href="#live-screen-flow" title="Permanent link">&para;</a></h2>
+<p><img alt="The live screen flow panel" class="shot" src="../assets/dashboard/screen-flow.webp" /></p>
 <p>Every other panel counts workflows. This one shows the virtual users
 themselves: which step of the screen flow each is executing right now, and how
 long it has been sitting there. It appears as soon as a run has workers in
 flight and disappears when the last one finishes.</p>
 <p>The panel answers the question the counters cannot: <em>what is the run doing at
 this second, and is it still moving?</em></p>
-<h3 id="where-the-fleet-is">Where the fleet is<a class="headerlink" href="#where-the-fleet-is" title="Permanent link">¶</a></h3>
+<h3 id="where-the-fleet-is">Where the fleet is<a class="headerlink" href="#where-the-fleet-is" title="Permanent link">&para;</a></h3>
 <p>The left column groups every worker by the step it is on, busiest first. Each
 row shows the step's position in the workflow (<code>6/11</code>), its type, the screen
 position it works on, and how many workers are there.</p>
@@ -2007,7 +2032,7 @@ which screen to investigate rather than which server.</p>
 workers standing on that step, and a line above both columns says what is
 being hidden and offers to show everything again. Click the same step a second
 time to clear it.</p>
-<h3 id="workers">Workers<a class="headerlink" href="#workers" title="Permanent link">¶</a></h3>
+<h3 id="workers">Workers<a class="headerlink" href="#workers" title="Permanent link">&para;</a></h3>
 <p>The right column is one row per virtual user: its script port, the host it is
 talking to, the step it is executing with the screen position or expected
 value, its progress through the workflow, and two times.</p>
@@ -2044,7 +2069,7 @@ stalling worker keeps counting even at 60 s polling.</p>
 user and following it, so the answer to "what is on the screen of the worker
 that has been on <code>CheckValue</code> for forty seconds" is one click away. Rows only
 lead somewhere when the run's workflow declares an <code>OutputFilePath</code>.</p>
-<h3 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">¶</a></h3>
+<h3 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Search</strong> narrows the worker list by script port, pid, host, step type or
   the step's screen position.</li>
@@ -2070,14 +2095,14 @@ console, the REST API and any <a href="../mcp/">MCP client</a> can read.</p>
 publish it shows <code>--</code> rather than <code>0s</code>, which would read as "it just moved
 on".</p>
 </div>
-<h2 id="reading-the-same-data-from-an-ai-client">Reading the same data from an AI client<a class="headerlink" href="#reading-the-same-data-from-an-ai-client" title="Permanent link">¶</a></h2>
+<h2 id="reading-the-same-data-from-an-ai-client">Reading the same data from an AI client<a class="headerlink" href="#reading-the-same-data-from-an-ai-client" title="Permanent link">&para;</a></h2>
 <p>The process table and the KPI tiles read the per-process metrics files every
 running 3270Connect writes. The <a href="../mcp/">MCP Server</a> reads the same files, so
 an assistant can list runs, report percentiles and stop a run in conversation
 — <code>list_load_tests</code>, <code>get_load_test_metrics</code>, <code>stop_load_test</code>. Starting a run
 that way is the same primitive the <strong>Start process</strong> button uses.</p>
-<h2 id="process-table">Process table<a class="headerlink" href="#process-table" title="Permanent link">¶</a></h2>
-<p><img alt="The process intelligence table" class="shot" src="../assets/dashboard/process-table.webp"></p>
+<h2 id="process-table">Process table<a class="headerlink" href="#process-table" title="Permanent link">&para;</a></h2>
+<p><img alt="The process intelligence table" class="shot" src="../assets/dashboard/process-table.webp" /></p>
 <p>One row per 3270Connect process, refreshed on every poll.</p>
 <table>
 <thead>
@@ -2130,7 +2155,7 @@ visible.</p>
 <p class="admonition-title">Tip</p>
 <p>Press <span class="keys"><kbd class="key-slash">/</kbd></span> anywhere on the page to jump straight to the filter field.</p>
 </div>
-<h3 id="row-actions">Row actions<a class="headerlink" href="#row-actions" title="Permanent link">¶</a></h3>
+<h3 id="row-actions">Row actions<a class="headerlink" href="#row-actions" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2141,27 +2166,27 @@ visible.</p>
 </thead>
 <tbody>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m.12 13.5 3.74 3.74 1.42-1.41-2.33-2.33 2.33-2.33-1.42-1.41zm11.16 0-3.74-3.74-1.42 1.41 2.33 2.33-2.33 2.33 1.42 1.41z"></path></svg></span> <strong>Workflow JSON</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m.12 13.5 3.74 3.74 1.42-1.41-2.33-2.33 2.33-2.33-1.42-1.41zm11.16 0-3.74-3.74-1.42 1.41 2.33 2.33-2.33 2.33 1.42 1.41z"/></svg></span> <strong>Workflow JSON</strong></td>
 <td>The process was started with a config file</td>
 <td>The workflow definition, syntax highlighted with line numbers, with copy and download</td>
 </tr>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M18 9h-2V7h2m0 6h-2v-2h2m0 6h-2v-2h2M8 9H6V7h2m0 6H6v-2h2m0 6H6v-2h2M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3z"></path></svg></span> <strong>Screen captures</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 9h-2V7h2m0 6h-2v-2h2m0 6h-2v-2h2M8 9H6V7h2m0 6H6v-2h2m0 6H6v-2h2M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3z"/></svg></span> <strong>Screen captures</strong></td>
 <td>The workflow declares <code>OutputFilePath</code></td>
 <td>Every screen the run captured, <a href="#screen-captures">one at a time</a></td>
 </tr>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m9 16v-2H6v2zm3-4v-2H6v2z"></path></svg></span> <strong>Performance summary</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m9 16v-2H6v2zm3-4v-2H6v2z"/></svg></span> <strong>Performance summary</strong></td>
 <td>The run has ended</td>
 <td>The <code>summary_&lt;pid&gt;.txt</code> report</td>
 </tr>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"></path></svg></span> <strong>Logs</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"/></svg></span> <strong>Logs</strong></td>
 <td>Always</td>
 <td>The console stream, pre-filtered to that PID</td>
 </tr>
 <tr>
-<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9 8.99 8.99 0 0 0 4 7.47V22h2v-3h2v3h2v-3h2v3h2v-3.54c2.47-1.65 4-4.46 4-7.46a9 9 0 0 0-9-9m-4 9a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m8 0a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m-4 3 1.5 3h-3z"></path></svg></span> <strong>Terminate</strong></td>
+<td><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9 8.99 8.99 0 0 0 4 7.47V22h2v-3h2v3h2v-3h2v3h2v-3.54c2.47-1.65 4-4.46 4-7.46a9 9 0 0 0-9-9m-4 9a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m8 0a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m-4 3 1.5 3h-3z"/></svg></span> <strong>Terminate</strong></td>
 <td>Always</td>
 <td>A confirmation dialog, then sends a kill signal</td>
 </tr>
@@ -2169,8 +2194,8 @@ visible.</p>
 </table>
 <p>The dashboard refuses to terminate its own process, so you cannot accidentally
 shut down the console you are using.</p>
-<h2 id="launching-a-run">Launching a run<a class="headerlink" href="#launching-a-run" title="Permanent link">¶</a></h2>
-<p><img alt="The start-process dialog with a parsed workflow" class="shot" src="../assets/dashboard/start-process.webp"></p>
+<h2 id="launching-a-run">Launching a run<a class="headerlink" href="#launching-a-run" title="Permanent link">&para;</a></h2>
+<p><img alt="The start-process dialog with a parsed workflow" class="shot" src="../assets/dashboard/start-process.webp" /></p>
 <p><strong>Start Process</strong> opens a two-column dialog that mirrors the command-line
 options.</p>
 <ol>
@@ -2193,8 +2218,8 @@ options.</p>
 <a href="../basic-usage/#5-running-a-3270-sample-application-to-help-with-testing-the-workflow-features">sample 3270 applications</a>
 on a port of your choosing, which is the quickest way to exercise a workflow
 without a real host.</p>
-<h2 id="console-logs">Console logs<a class="headerlink" href="#console-logs" title="Permanent link">¶</a></h2>
-<p><img alt="The console log stream with filters" class="shot" src="../assets/dashboard/console-logs.webp"></p>
+<h2 id="console-logs">Console logs<a class="headerlink" href="#console-logs" title="Permanent link">&para;</a></h2>
+<p><img alt="The console log stream with filters" class="shot" src="../assets/dashboard/console-logs.webp" /></p>
 <p>The log viewer aggregates <code>logs/logs_&lt;pid&gt;.json</code> across every process.</p>
 <ul>
 <li>Filter by <strong>PID</strong>, by <strong>severity</strong> (errors, warnings, success) and by <strong>free
@@ -2210,7 +2235,7 @@ without a real host.</p>
 <p>Severity is inferred from the message text, so lines mentioning failure,
 timeouts or refusals are marked as errors even though the underlying log format
 has no explicit level field.</p>
-<h2 id="screen-captures">Screen captures<a class="headerlink" href="#screen-captures" title="Permanent link">¶</a></h2>
+<h2 id="screen-captures">Screen captures<a class="headerlink" href="#screen-captures" title="Permanent link">&para;</a></h2>
 <p>Every <code>AsciiScreenGrab</code> step appends the terminal to the workflow's
 <code>OutputFilePath</code>. In a concurrent run that is one file holding every screen of
 every virtual user, in the order they were captured — which is why the console
@@ -2218,7 +2243,7 @@ does not show it to you as a file. It shows it as a list of screens.</p>
 <p>Open it from a process row's <strong>screen captures</strong> action, by clicking a worker
 in the <a href="#live-screen-flow">live screen flow</a>, from the command palette, or
 with <span class="keys"><kbd class="key-v">V</kbd></span>.</p>
-<h3 id="the-strip">The strip<a class="headerlink" href="#the-strip" title="Permanent link">¶</a></h3>
+<h3 id="the-strip">The strip<a class="headerlink" href="#the-strip" title="Permanent link">&para;</a></h3>
 <p>The left rail is one entry per screen, newest at the bottom, each showing its
 sequence number, the time it was taken, the worker that took it, the step it
 came from, and the line of the screen that <strong>changed</strong> — not the application's
@@ -2236,7 +2261,7 @@ title, which is identical on every screen it paints.</p>
 <p>Consecutive identical screens from the same worker are folded into one entry
 with a <code>×n</code> badge. A long run keeps its most recent 2,000 screens in the
 browser and says how many aged out.</p>
-<h3 id="the-screen">The screen<a class="headerlink" href="#the-screen" title="Permanent link">¶</a></h3>
+<h3 id="the-screen">The screen<a class="headerlink" href="#the-screen" title="Permanent link">&para;</a></h3>
 <p>The screen is drawn as a screen: 24 rows, 80 columns, a column ruler, row
 numbers, and an underline where the host left the cursor.</p>
 <p><strong>Hover for the row and column. Drag across a field for its length.</strong> The
@@ -2247,7 +2272,7 @@ ready to paste into a workflow. Double-click or press <span class="keys"><kbd cl
 selection.</p>
 <p><strong>Changes</strong> tints every character that differs from <em>that worker's</em> previous
 screen, which is what makes "the host repainted nothing" legible at a glance.</p>
-<h3 id="following-a-live-run">Following a live run<a class="headerlink" href="#following-a-live-run" title="Permanent link">¶</a></h3>
+<h3 id="following-a-live-run">Following a live run<a class="headerlink" href="#following-a-live-run" title="Permanent link">&para;</a></h3>
 <p><strong>Follow</strong> selects each new screen as the run captures it; picking a screen by
 hand turns it off so the view stops moving while you read, and pressing <span class="keys"><kbd class="key-f">F</kbd></span>
 turns it back on. With a worker filter applied, following follows that worker.</p>
@@ -2258,21 +2283,21 @@ screen's worth of transfer per poll.</p>
 first and last, and the toolbar copies or downloads the current screen. The
 download button in the header saves every screen the filter currently shows as
 one plain-text file.</p>
-<h2 id="inspecting-a-workflow">Inspecting a workflow<a class="headerlink" href="#inspecting-a-workflow" title="Permanent link">¶</a></h2>
-<p><img alt="The workflow JSON viewer" class="shot" src="../assets/dashboard/workflow-viewer.webp"></p>
+<h2 id="inspecting-a-workflow">Inspecting a workflow<a class="headerlink" href="#inspecting-a-workflow" title="Permanent link">&para;</a></h2>
+<p><img alt="The workflow JSON viewer" class="shot" src="../assets/dashboard/workflow-viewer.webp" /></p>
 <p>The workflow viewer reads the configuration file recorded for a process, pretty
 prints it, and highlights keys, strings, numbers and literals with line numbers
 down the side. It is the fastest way to confirm which revision of a workflow a
 given PID is actually running.</p>
-<h2 id="command-palette">Command palette<a class="headerlink" href="#command-palette" title="Permanent link">¶</a></h2>
-<p><img alt="The command palette" class="shot" src="../assets/dashboard/command-palette.webp"></p>
+<h2 id="command-palette">Command palette<a class="headerlink" href="#command-palette" title="Permanent link">&para;</a></h2>
+<p><img alt="The command palette" class="shot" src="../assets/dashboard/command-palette.webp" /></p>
 <p>Press <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-k">K</kbd></span> (<span class="keys"><kbd class="key-command">Cmd</kbd><span>+</span><kbd class="key-k">K</kbd></span> on macOS) to open the palette. It searches every
 action, view setting and per-process operation — including "PID <em>n</em> · logs" and
 "PID <em>n</em> · terminate" for each running process — and matches on subsequences, so
 <code>exp</code> finds <em>Export process table</em>. Navigate with the arrow keys, run with
 <span class="keys"><kbd class="key-enter">Enter</kbd></span>, dismiss with <span class="keys"><kbd class="key-escape">Esc</kbd></span>.</p>
-<h2 id="keyboard-shortcuts">Keyboard shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">¶</a></h2>
-<p><img alt="The keyboard shortcut sheet" class="shot" src="../assets/dashboard/shortcuts.webp"></p>
+<h2 id="keyboard-shortcuts">Keyboard shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h2>
+<p><img alt="The keyboard shortcut sheet" class="shot" src="../assets/dashboard/shortcuts.webp" /></p>
 <table>
 <thead>
 <tr>
@@ -2333,17 +2358,17 @@ action, view setting and per-process operation — including "PID <em>n</em> · 
 </table>
 <p>Single-key shortcuts are ignored while you are typing in a field or while a
 dialog is open.</p>
-<h2 id="appearance">Appearance<a class="headerlink" href="#appearance" title="Permanent link">¶</a></h2>
+<h2 id="appearance">Appearance<a class="headerlink" href="#appearance" title="Permanent link">&para;</a></h2>
 <p>Four themes ship with the console. Every colour is a CSS custom property, so
 charts, gauges and sparklines all re-skin together when you switch.</p>
 <div class="shot-grid">
-<p><img alt="Phosphor green" class="shot" src="../assets/dashboard/theme-phosphor.webp">
+<p><img alt="Phosphor green" class="shot" src="../assets/dashboard/theme-phosphor.webp" />
 <strong>Phosphor</strong> — the default terminal palette.</p>
-<p><img alt="Amber CRT" class="shot" src="../assets/dashboard/theme-amber.webp">
+<p><img alt="Amber CRT" class="shot" src="../assets/dashboard/theme-amber.webp" />
 <strong>Amber</strong> — warm vintage CRT.</p>
-<p><img alt="Ice blue" class="shot" src="../assets/dashboard/theme-ice.webp">
+<p><img alt="Ice blue" class="shot" src="../assets/dashboard/theme-ice.webp" />
 <strong>Ice</strong> — cool, high contrast.</p>
-<p><img alt="Daylight" class="shot" src="../assets/dashboard/theme-daylight.webp">
+<p><img alt="Daylight" class="shot" src="../assets/dashboard/theme-daylight.webp" />
 <strong>Daylight</strong> — light mode for bright rooms and projectors.</p>
 </div>
 <p>Two further controls sit beside the theme picker:</p>
@@ -2355,20 +2380,20 @@ charts, gauges and sparklines all re-skin together when you switch.</p>
   flatter, quieter surface. The console also honours your operating system's
   <em>reduce motion</em> setting automatically.</li>
 </ul>
-<p><img alt="Compact density" class="shot" src="../assets/dashboard/density-compact.webp"></p>
+<p><img alt="Compact density" class="shot" src="../assets/dashboard/density-compact.webp" /></p>
 <p>Your theme, density, effects, layout, refresh interval and status filter are
 remembered in the browser's local storage, so the console comes back the way you
 left it.</p>
-<h2 id="small-screens">Small screens<a class="headerlink" href="#small-screens" title="Permanent link">¶</a></h2>
+<h2 id="small-screens">Small screens<a class="headerlink" href="#small-screens" title="Permanent link">&para;</a></h2>
 <p>Below roughly 780 px the process table becomes a card list and the panels stack
 into a single column, so the console stays usable from a phone or a narrow
 split-screen window. You can also force the card layout at any width from the
 layout switch in the panel header.</p>
 <div class="shot-grid">
-<p><img alt="Metrics on a narrow viewport" class="shot" src="../assets/dashboard/responsive-cards.webp"></p>
-<p><img alt="Process cards on a narrow viewport" class="shot" src="../assets/dashboard/responsive-processes.webp"></p>
+<p><img alt="Metrics on a narrow viewport" class="shot" src="../assets/dashboard/responsive-cards.webp" /></p>
+<p><img alt="Process cards on a narrow viewport" class="shot" src="../assets/dashboard/responsive-processes.webp" /></p>
 </div>
-<h2 id="where-the-data-comes-from">Where the data comes from<a class="headerlink" href="#where-the-data-comes-from" title="Permanent link">¶</a></h2>
+<h2 id="where-the-data-comes-from">Where the data comes from<a class="headerlink" href="#where-the-data-comes-from" title="Permanent link">&para;</a></h2>
 <p>The console is a thin layer over files that 3270Connect already writes.</p>
 <table>
 <thead>
@@ -2400,7 +2425,7 @@ layout switch in the panel header.</p>
 Support</code> on macOS and <code>%AppData%</code> on Windows. Each process rewrites its own
 metrics file every two seconds; stale entries for processes that are long gone
 are cleaned up automatically.</p>
-<h3 id="http-endpoints">HTTP endpoints<a class="headerlink" href="#http-endpoints" title="Permanent link">¶</a></h3>
+<h3 id="http-endpoints">HTTP endpoints<a class="headerlink" href="#http-endpoints" title="Permanent link">&para;</a></h3>
 <p>The same endpoints the page uses are available to any HTTP client, which makes
 them convenient for scripting or for a health check.</p>
 <table>
@@ -2475,18 +2500,18 @@ them convenient for scripting or for a health check.</p>
 </tbody>
 </table>
 <div class="highlight"><pre><span></span><code><span class="c1"># Current totals across every live process</span>
-curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.aggregated'</span>
+curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.aggregated&#39;</span>
 
 <span class="c1"># Tail a specific process from the terminal</span>
-curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">"http://localhost:9200/terminal-console?pid=12345"</span>
+curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;http://localhost:9200/terminal-console?pid=12345&quot;</span>
 </code></pre></div>
 <p>Where the console has <a href="../authentication/">accounts</a>, the same endpoints take a
 bearer token, and <code>/healthz</code> stays reachable without one so a probe does not
 need a credential:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.aggregated'</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.aggregated&#39;</span>
 </code></pre></div>
-<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <details class="question">
 <summary>The table is empty</summary>
 <p>The console lists processes that have written a metrics file, and each
@@ -2514,7 +2539,7 @@ setting is remembered between visits.</p>
 bypass (<span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-shift">Shift</kbd><span>+</span><kbd class="key-r">R</kbd></span>); the tiles, latency percentiles and table remain
 fully functional in the meantime.</p>
 </details>
-<h2 id="sharing-the-console">Sharing the console<a class="headerlink" href="#sharing-the-console" title="Permanent link">¶</a></h2>
+<h2 id="sharing-the-console">Sharing the console<a class="headerlink" href="#sharing-the-console" title="Permanent link">&para;</a></h2>
 <p>The console binds <code>localhost</code> and has no sign-in until you ask for one, which
 is right for one operator on their own machine and wrong the moment somebody
 else needs the page. <code>AUTH_MODE=local</code> adds accounts, and with them:</p>
@@ -2527,7 +2552,7 @@ else needs the page. <code>AUTH_MODE=local</code> adds accounts, and with them:<
 <li>an audit trail of who aimed what at which host.</li>
 </ul>
 <p><strong>→ <a href="../authentication/">Accounts and Sign-In</a></strong></p>
-<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">¶</a></h2>
+<h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../basic-usage/">Basic Usage</a> — the flags the dashboard's start dialog mirrors</li>
 <li><a href="../authentication/">Accounts and Sign-In</a> — putting a sign-in on the console</li>
@@ -2535,7 +2560,7 @@ else needs the page. <code>AUTH_MODE=local</code> adds accounts, and with them:<
 <li><a href="../injection-config/">Dynamic Field Injection</a> — the optional injection config</li>
 <li><a href="../metrics/">Metrics &amp; Monitoring</a> — Prometheus metrics for fleet-scale monitoring</li>
 <li><a href="../advanced-features/">API Mode</a> — driving 3270Connect over HTTP instead</li>
-</ul></div>
+</ul>
 
 
 
