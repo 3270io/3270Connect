@@ -511,14 +511,29 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	return "", fmt.Errorf("maximum GetValue retries reached")
 }
 
-// NormalizeQueryResponse reduces a raw Query reply to the value it carries.
+// NormalizeDataLines reduces a raw s3270 reply to the data it carries.
 //
-// s3270 answers on the scripting protocol with the value on a "data:" line
-// followed by a status line and "ok". Callers that want to parse the value —
-// the host compatibility profiler is one — need the value alone, and Query
-// deliberately hands back the reply untouched.
-func NormalizeQueryResponse(raw string) string {
-	return normalizeAsciiData(raw)
+// s3270 answers on the scripting protocol with the payload on one or more
+// "data:" lines followed by a status line. This keeps the data lines, strips
+// the prefix from each and joins them, leaving the rest of the spacing alone
+// because a screen's indentation is part of the screen.
+//
+// It is deliberately the same transform 3270Web applies in its own host
+// package, which is what lets a CompatibilityProfile from one tool be compared
+// with the other's. A reply carrying no data lines yields "", which the
+// profiler reads as "the terminal did not say" rather than as a value.
+func NormalizeDataLines(raw string) string {
+	const prefix = "data:"
+	var kept []string
+	for _, line := range strings.Split(raw, "\n") {
+		line = strings.TrimRight(line, "\r")
+		if !strings.HasPrefix(strings.TrimSpace(line), prefix) {
+			continue
+		}
+		value := strings.TrimPrefix(strings.TrimLeft(line, " \t"), prefix)
+		kept = append(kept, strings.TrimPrefix(value, " "))
+	}
+	return strings.Join(kept, "\n")
 }
 
 // normalizeAsciiData trims the s3270/x3270 "data:" prefix and drops status lines.

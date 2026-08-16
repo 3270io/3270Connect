@@ -43,18 +43,19 @@ func startPrometheusListener(addr string) {
 // the process exits with a non-zero status so CI can fail fast.
 // profilerHost adapts the emulator to profiler.ProberHost.
 //
-// The probe's parsers want the value a Query answered with; the emulator hands
-// back s3270's reply as it arrived, "data: " prefix and status line included.
+// The probe's parsers want what a Query answered with; the emulator hands back
+// s3270's reply as it arrived, "data: " prefixes and status line included.
 // Stripping happens here rather than in internal/profiler because that package
-// is kept in step with 3270Web's parser so profiles from the two tools diff
-// cleanly — the prefix is this side's transport detail, not a parsing rule.
+// is kept in step with 3270Web's copy so profiles from the two tools can be
+// compared — the prefix is this side's transport detail, not a parsing rule.
+// 3270Web strips it in its own host package for the same reason.
 //
-// Without it the document came out describing the prefix instead of the host:
-// host "data", terminal type "data:", 24 columns, and s3270's status line
-// recorded as the LU name.
+// Without it the document described the transport instead of the host: host
+// "data", terminal type "data:", 24 columns, and s3270's status line recorded
+// as the LU name.
 //
-// Embedding the emulator keeps the optional interfaces Probe looks for —
-// AsciiScreen and LastConnectDuration — promoted and satisfied.
+// Embedding the emulator keeps the optional interface Probe looks for —
+// LastConnectDuration — promoted and satisfied.
 type profilerHost struct {
 	*connect3270.Emulator
 }
@@ -64,7 +65,21 @@ func (h profilerHost) Query(arg string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return connect3270.NormalizeQueryResponse(resp), nil
+	return connect3270.NormalizeDataLines(resp), nil
+}
+
+// AsciiScreen is normalised for the same reason, and it matters for a
+// different one: the banner preview is published as a preview of the host's
+// screen, and its hash is meant to be comparable. 3270Web fingerprints a
+// decoded screen buffer, so the two signatures cannot be identical without a
+// larger change — but its text carries no "data:" on every line, and neither
+// should this one.
+func (h profilerHost) AsciiScreen() (string, error) {
+	screen, err := h.Emulator.AsciiScreen()
+	if err != nil {
+		return "", err
+	}
+	return connect3270.NormalizeDataLines(screen), nil
 }
 
 func runProfileMode() {
