@@ -201,15 +201,29 @@ Once you've mastered the basics, you can dive into more advanced features:
 - [Host Compatibility Profiler](host-profiler.md): Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that compares cleanly against 3270Web output.
 - [Compatibility Profile Schema](compatibility-profile-schema.md): Field-by-field reference for the shared `CompatibilityProfile` document (v1.0.0).
 
-## Video example
+## See it work
 
-### 3270Connect Basic Usage
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-tour.jpg">
+    <source src="/assets/video/console-tour.mp4" type="video/mp4">
+    <a href="/assets/video/console-tour.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The operations console: launching an eight-worker load run from the browser,
+    then watching the process table, the live screen flow and the charts fill in.
+  </figcaption>
+</figure>
 
-![type:video](3270Connect_1_0_3_9.mp4){: style=''}
+Shorter walk-throughs of one thing at a time:
 
-### 3270Connect API Usage
-
-![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
+| Video | Where |
+|---|---|
+| Your first workflow — describe a session in JSON and replay it | [Basic Usage](basic-usage.md#your-first-workflow) |
+| Run it at scale — `-concurrent` and `-runtime` | [Basic Usage](basic-usage.md#running-it-at-scale) |
+| Call it over HTTP — one POST returns the screen | [Advanced Features](advanced-features.md#api-mode-in-practice) |
+| The operations console, end to end | [Web Dashboard](dashboard.md#a-tour-of-the-console) |
+| Sign-in and administration with `AUTH_MODE=local` | [Accounts and Sign-In](authentication.md#what-it-looks-like) |
 
 ## Conclusion
 

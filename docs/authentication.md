@@ -65,6 +65,20 @@ AUTH_MODE=local
 Real environment variables win over that file, so a container can still
 override it without editing anything.
 
+## What it looks like
+
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-sign-in.jpg">
+    <source src="/assets/video/console-sign-in.mp4" type="video/mp4">
+    <a href="/assets/video/console-sign-in.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Signing in to a console running with <code>AUTH_MODE=local</code>, then the
+    administration pages behind it — accounts, API tokens and the audit trail.
+  </figcaption>
+</figure>
+
 ## First start
 
 Start with `AUTH_MODE=local` and no accounts, and 3270Connect waits in setup

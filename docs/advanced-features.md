@@ -149,9 +149,19 @@ docker run --rm -p 8080:8080 3270io/3270connect-linux:latest -api -api-port 8080
 docker run --rm -p 8080:8080 3270io/3270connect-windows:latest -api -api-port 8080
 ```
 
-### 3270Connect API Usage
+### API mode in practice
 
-![type:video](3270Connect_API_1_0_4_0.mp4){: style=''}
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/terminal-api-mode.jpg">
+    <source src="/assets/video/terminal-api-mode.mp4" type="video/mp4">
+    <a href="/assets/video/terminal-api-mode.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    Starting the API server, posting a workflow to <code>/api/execute</code>, and
+    reading the captured 3270 screen back out of the response.
+  </figcaption>
+</figure>
 
 ### Metrics & Monitoring
 

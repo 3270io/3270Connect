@@ -95,9 +95,10 @@ nav:
 
 plugins:
   - search
-  - mkdocs-video:
-      is_video: true
-      video_autoplay: false
+  # No mkdocs-video. The demonstration videos are written as plain <figure
+  # class="demo-video"> blocks with a poster frame and preload="metadata", so a
+  # page carrying one does not pull several megabytes of h264 before the reader
+  # has pressed play. docs/stylesheets/extra.css styles them.
   - tags:
       enabled: true
 

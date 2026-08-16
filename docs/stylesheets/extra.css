@@ -5,6 +5,39 @@
    Material for MkDocs; no theme internals are overridden.
    ========================================================================== */
 
+/* --- Demonstration videos ---------------------------------------------------
+   Recorded by scripts/demos — see that folder's README for how to re-record
+   one. They are plain <video> elements rather than an embed plugin so they can
+   carry a poster and `preload="metadata"`: the front page would otherwise pull
+   several megabytes of h264 before the reader has decided to press play. */
+
+.md-typeset figure.demo-video {
+  margin: 1.4em 0;
+  width: 100%;
+}
+
+.md-typeset figure.demo-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 10px;
+  box-shadow: 0 14px 38px -20px rgba(0, 0, 0, 0.6);
+  background: #03110d;
+}
+
+[data-md-color-scheme='slate'] .md-typeset figure.demo-video video {
+  box-shadow: 0 16px 40px -18px rgba(0, 0, 0, 0.9);
+}
+
+.md-typeset figure.demo-video figcaption {
+  margin-top: 0.6em;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+  text-align: left;
+}
+
 /* --- Screenshots -----------------------------------------------------------
    The console screenshots are dark UI captures. A hairline border and a soft
    shadow stop them from bleeding into the page in dark mode, and give them a

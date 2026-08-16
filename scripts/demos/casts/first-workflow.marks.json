@@ -1,0 +1,18 @@
+{
+  "duration": 27.200178,
+  "marks": {
+    "artifacts.done": 21.700178,
+    "artifacts.prompt": 19.210246,
+    "artifacts.start": 21.698514,
+    "artifacts.typed": 21.348514,
+    "end": 27.200178,
+    "run.done": 13.210246,
+    "run.prompt": 8.568067,
+    "run.start": 11.988167,
+    "run.typed": 11.638167,
+    "show.done": 2.068067,
+    "show.prompt": 0.0,
+    "show.start": 2.066724,
+    "show.typed": 1.716724
+  }
+}

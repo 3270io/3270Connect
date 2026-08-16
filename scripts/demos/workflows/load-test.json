@@ -1,0 +1,18 @@
+{
+  "Host": "127.0.0.1",
+  "Port": 3270,
+  "OutputFilePath": "screens.html",
+  "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
+  "EndOfTaskDelay": { "Min": 0.5, "Max": 1.5 },
+  "RampUpBatchSize": 4,
+  "RampUpDelay": 0.8,
+  "Steps": [
+    { "Type": "Connect" },
+    { "Type": "CheckValue", "Coordinates": { "Row": 1, "Column": 29, "Length": 12 },
+      "Text": "3270 Example" },
+    { "Type": "FillString", "Coordinates": { "Row": 5, "Column": 21 }, "Text": "ada" },
+    { "Type": "FillString", "Coordinates": { "Row": 6, "Column": 21 }, "Text": "lovelace" },
+    { "Type": "PressEnter" },
+    { "Type": "Disconnect" }
+  ]
+}
