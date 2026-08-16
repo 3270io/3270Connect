@@ -28,6 +28,11 @@ To run `3270Connect` in API mode, use the following command:
 3270Connect -api -api-port 8080
 ```
 
+Every request to `/api/execute` carries the workflow it wants run, so `-config`
+is optional here — pass one only if you want a file on disk as the starting
+point. A run started from the command line has nothing else to execute, so
+there it is still required.
+
 Once the API is running, you can send HTTP requests to it to trigger workflows and retrieve information.
 
 POST:

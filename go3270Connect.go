@@ -647,7 +647,8 @@ func init() {
 	flag.BoolVar(&runAPI, "api", false, "Run as API")
 	flag.IntVar(&apiPort, "api-port", 8080, "API port")
 	flag.IntVar(&concurrent, "concurrent", 1, "Number of concurrent workflows")
-	flag.BoolVar(&headless, "headless", false, "Run go3270 in headless mode")
+	flag.BoolVar(&headless, "headless", false,
+		"Drive the session with s3270 instead of opening an x3270 window (the terminal UI still prints)")
 	flag.BoolVar(&verbose, "verbose", false, "Run go3270 in verbose mode")
 	flag.BoolVar(&verboseFailures, "verboseFailures", false, "Log failures even when verbose is off")
 	flag.BoolVar(&verboseScreenCaptureFailures, "verboseScreenCaptureFailures", false, "Capture screen on failures (max 5)")
@@ -760,6 +761,34 @@ func getExecutablePath() string {
 func fileExists(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && !info.IsDir()
+}
+
+// startupConfiguration resolves the -config file into the settings a run starts
+// from.
+//
+// API mode is the exception. Every request to /api/execute carries its own
+// workflow and is executed from that alone, so the file is a source of defaults
+// rather than the thing being run, and a missing one is not the dead end it is
+// for a CLI run with nothing else to execute. The image's working directory is
+// /data with no workflow.json in it, which left the documented
+// `docker run … -api -api-port 8080` exiting before it ever listened.
+//
+// A file that is present is still loaded and still validated, in API mode as
+// anywhere else: a typo in a config someone deliberately passed should be
+// reported, not silently replaced with defaults.
+func startupConfiguration(filePath string, apiMode bool) *Configuration {
+	if apiMode && !fileExists(filePath) {
+		if connect3270.Verbose {
+			pterm.Info.Printf(
+				"No configuration at %s; API requests carry their own workflow.\n", filePath)
+		}
+		return &Configuration{
+			WaitForField:    WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10},
+			RampUpBatchSize: 10,
+			RampUpDelay:     1.0,
+		}
+	}
+	return loadConfiguration(filePath)
 }
 
 func loadConfiguration(filePath string) *Configuration {
@@ -1720,7 +1749,7 @@ func main() {
 		select {} // Keep the program running for the dashboard
 	}
 
-	config := loadConfiguration(configFile)
+	config := startupConfiguration(configFile, runAPI)
 	metricsOutputFilePath = config.OutputFilePath
 	if rsaToken != "" {
 		config.Token = rsaToken

@@ -153,11 +153,17 @@ When `-injectionConfig` is also used, injection entries are locked per active wo
 
 ### Headless Mode
 
-You can run `3270Connect` in headless mode using the `-headless` flag. Headless mode is useful for running workflows without a graphical user interface.
+`-headless` drives the session with `s3270` instead of opening an `x3270`
+window. Without it a run needs an X display, so this is the flag for a CI
+runner, a container, or any server you reach over SSH.
 
 ```bash
 3270Connect -config workflow.json -headless
 ```
+
+It does not quiet the terminal: the header, the live stats and the run report
+all still print, which is what ends up in a CI log. There is no flag that turns
+that output off — `-verbose` and `-verboseFailures` below only add to it.
 
 ### Verbose Mode
 
