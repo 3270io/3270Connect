@@ -1700,7 +1700,7 @@ The lab answers it: a TN3270 host, a browser terminal to explore it by hand,
 and the console to replay what you did there.</p>
 <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://3270connect.3270.io/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span>--<span class="w"> </span>--method<span class="w"> </span>lab
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>http://localhost:3270    the terminal. Connect to host &quot;sampleapps&quot;, port 3271
+<div class="highlight"><pre><span></span><code>http://localhost:3270    the terminal. Connect to host "sampleapps", port 3271
 http://localhost:9200    the console
 </code></pre></div>
 <p>The applications are <a href="https://3270Web.3270.io">3270Web</a>'s bundled samples —
@@ -1725,21 +1725,21 @@ flags as its command, so one image covers both.</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>3270connect<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:9200:9200<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-e<span class="w"> </span><span class="nv">DASHBOARD_BIND</span><span class="o">=</span><span class="m">0</span>.0.0.0<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/data&quot;</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest
 </code></pre></div>
 <p>Then open <a href="http://localhost:9200/dashboard">http://localhost:9200/dashboard</a>.</p>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/data&quot;</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/data&quot;</span>:/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">25</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">600</span>
 </code></pre></div>
@@ -1803,11 +1803,11 @@ temporary directory the first time a workflow connects. Run history goes to
 </code></pre></div>
 <h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h2>
 <h3 id="direct-download_1">Direct download<a class="headerlink" href="#direct-download_1" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nv">$latest</span> <span class="p">=</span> <span class="s2">&quot;https://github.com/3270io/3270Connect/releases/latest/download/3270Connect.exe&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">$latest</span> <span class="p">=</span> <span class="s2">"https://github.com/3270io/3270Connect/releases/latest/download/3270Connect.exe"</span>
 <span class="nb">Invoke-WebRequest</span> <span class="n">-Uri</span> <span class="nv">$latest</span> <span class="n">-OutFile</span> <span class="n">3270Connect</span><span class="p">.</span><span class="n">exe</span>
 
 <span class="c"># Optionally, move it somewhere on PATH (requires admin)</span>
-<span class="c"># Move-Item -Path 3270Connect.exe -Destination &quot;C:\Program Files\3270Connect.exe&quot;</span>
+<span class="c"># Move-Item -Path 3270Connect.exe -Destination "C:\Program Files\3270Connect.exe"</span>
 </code></pre></div>
 <p>Double-clicking <code>3270Connect.exe</code> with no arguments starts the console and
 opens it in a window.</p>

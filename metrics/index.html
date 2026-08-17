@@ -1573,10 +1573,10 @@ goroutine — failures are logged but never abort the workflow runner.</p>
 <h2 id="sample-scrape-config">Sample scrape config<a class="headerlink" href="#sample-scrape-config" title="Permanent link">&para;</a></h2>
 <p>Add a scrape job to <code>prometheus.yml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3270connect&#39;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">'3270connect'</span>
 <span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15s</span>
 <span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;runner-01:9091&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;runner-02:9091&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">'runner-01:9091'</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">'runner-02:9091'</span><span class="p p-Indicator">]</span>
 </code></pre></div>
 <h2 id="useful-queries">Useful queries<a class="headerlink" href="#useful-queries" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># p95 connect time over the last 5 minutes</span>

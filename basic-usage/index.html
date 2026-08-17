@@ -1855,67 +1855,67 @@
 <h3 id="single-workflow">Single Workflow<a class="headerlink" href="#single-workflow" title="Permanent link">&para;</a></h3>
 <p>To run a single workflow, create a JSON configuration file that describes the workflow steps. Here's an example configuration file:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.27.27.62&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;CodePage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cp037&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
-<span class="w">  </span><span class="nt">&quot;EveryStepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
-<span class="w">  </span><span class="nt">&quot;OutputFilePath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;output.html&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
-<span class="w">  </span><span class="nt">&quot;RampUpBatchSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
-<span class="w">  </span><span class="nt">&quot;RampUpDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
-<span class="w">  </span><span class="nt">&quot;EndOfTaskDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
+<span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
+<span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
+<span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
+<span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
+<span class="w">  </span><span class="nt">"EndOfTaskDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CheckValue&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270 Example Application&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-firstname&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-firstname"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FillString&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user1-lastname&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FillString"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">21</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user1-lastname"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StepDelay&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;StepDelay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"StepDelay"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"StepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PressEnter&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PressEnter"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CheckValue&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;Row&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Column&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;Text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3270 Example Application&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CheckValue"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"Coordinates"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Row"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Column"</span><span class="p">:</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span><span class="w"> </span><span class="nt">"Length"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"Text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3270 Example Application"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AsciiScreenGrab&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AsciiScreenGrab"</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span>
+<span class="w">      </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>In this example, an <code>EveryStepDelay</code> range keeps the steps paced, the <code>StepDelay</code> step adds a longer pause before pressing Enter, and an <code>EndOfTaskDelay</code> holds the virtual user after completion to mirror real think-time. The workflow connects to a host, captures the screen, fills both fields, presses Enter, captures the screen again, and then disconnects. By default, <code>WaitForField</code> will wait before all steps once connected. </p>
 <p>You can customize the WaitForField behavior using the object format:</p>
-<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Retries&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>This example uses a 2-second delay per retry and allows up to 5 retries. If you disable the global setting (<code>"WaitForField": false</code>), you can still add an explicit step where you need it:</p>
-<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WaitForField&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WaitForField"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <p>Place it after <code>Connect</code> or after navigation steps (e.g., <code>PressEnter</code>) when the host is slow to render the next screen.</p>
 <h3 id="concurrent-workflows">Concurrent Workflows<a class="headerlink" href="#concurrent-workflows" title="Permanent link">&para;</a></h3>
@@ -1979,13 +1979,13 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 </ul>
 <p><strong>Usage examples:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Use defaults</span>
-<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 
 <span class="c1">// Custom delay and retries</span>
-<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Delay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Retries&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Disable automatic waiting</span>
-<span class="nt">&quot;WaitForField&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p><strong>Per-step override:</strong> You can also add an explicit <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use the <code>Delay</code> parameter in the step to override the timeout for that specific wait.</p>
 <h3 id="workflow-timeout">Workflow timeout<a class="headerlink" href="#workflow-timeout" title="Permanent link">&para;</a></h3>
@@ -2014,10 +2014,10 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 <li><strong>In the workflow JSON</strong> with the top-level <code>CodePage</code> property:</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;Host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mvs.example.com&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;CodePage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cp278&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Connect&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Disconnect&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp278"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
@@ -2150,14 +2150,14 @@ Earlier versions of this page named them. Use the GHCR image above.</p>
 <p>The image's working directory is <code>/data</code>, it runs as a non-root user, and
 <code>XDG_CONFIG_HOME</code> points at <code>/data</code> so the console keeps its metrics there.
 Mount your workflow into <code>/data</code> and give paths relative to it:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 <p>Mount a <strong>directory</strong> rather than a file when you want the output back —
 bind-mounting a file that does not exist yet makes Docker create a directory
 with that name:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>out
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/out&quot;</span>:/data/out<span class="w"> </span><span class="se">\</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/out"</span>:/data/out<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 <p>with <code>"OutputFilePath": "out/screens.html"</code> in the workflow.</p>
@@ -2173,11 +2173,11 @@ on 9200:</p>
 <p>Verbose, concurrent, API and sample-app runs are the same flags as everywhere
 else — anything after the image name replaces the default command:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># verbose</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-verbose
 
 <span class="c1"># two workers for sixty seconds</span>
-docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/workflow.json&quot;</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/workflow.json"</span>:/data/workflow.json<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 
 <span class="c1"># the API listener</span>

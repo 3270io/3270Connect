@@ -2500,16 +2500,16 @@ them convenient for scripting or for a health check.</p>
 </tbody>
 </table>
 <div class="highlight"><pre><span></span><code><span class="c1"># Current totals across every live process</span>
-curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.aggregated&#39;</span>
+curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.aggregated'</span>
 
 <span class="c1"># Tail a specific process from the terminal</span>
-curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;http://localhost:9200/terminal-console?pid=12345&quot;</span>
+curl<span class="w"> </span>-s<span class="w"> </span><span class="s2">"http://localhost:9200/terminal-console?pid=12345"</span>
 </code></pre></div>
 <p>Where the console has <a href="../authentication/">accounts</a>, the same endpoints take a
 bearer token, and <code>/healthz</code> stays reachable without one so a probe does not
 need a credential:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.aggregated&#39;</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://localhost:9200/dashboard/data<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.aggregated'</span>
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <details class="question">

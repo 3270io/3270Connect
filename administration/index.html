@@ -1713,7 +1713,7 @@ from the page rather than leaving it in the DOM of a tab somebody may leave
 open on a shared screen.</p>
 <p>Everything on this page is also a console command, which is usually easier
 inside a container:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">&quot;nightly soak&quot;</span>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>3270connect<span class="w"> </span>/app/3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
 </code></pre></div>
 <p>See <a href="../authentication/#api-tokens">API tokens</a> for what a token reaches and how
 scopes work.</p>
@@ -1789,7 +1789,7 @@ anything in it is disclosed to every administrator for as long as it exists.</p>
 <p>The page shows the newest 500 entries and filters them by text or by outcome.
 <strong>Download all of it</strong> streams the whole file as newline-delimited JSON, for
 keeping or for shipping somewhere that keeps it:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>http://localhost:9200/admin/api/audit.jsonl<span class="w"> </span>&gt;<span class="w"> </span>audit.jsonl
 </code></pre></div>
 <p>The file rolls over at 8 MiB and one previous generation is kept. Beyond that,

@@ -1702,7 +1702,7 @@ frequently run side by side, and nobody should have to learn this twice.</p>
 <span class="w">  </span><span class="nt">3270connect</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/3270io/3270connect:latest</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;127.0.0.1:9200:9200&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:9200:9200"</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AUTH_MODE=local</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -1821,7 +1821,7 @@ sign in immediately, without a restart.</p>
 3270Connect<span class="w"> </span>user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>alice
 </code></pre></div>
 <p>Passwords are prompted for on a terminal, or read from stdin when piped:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NEW_PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
+<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NEW_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
 </code></pre></div>
 <p>They are never taken as a command-line argument, where they would be visible to
 every other process on the machine and recorded in shell history.</p>
@@ -1836,8 +1836,8 @@ Disabling from the Accounts page ends those logins on the spot.</p>
 <h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">&para;</a></h2>
 <p>An automated client — a CI job, a scheduled soak test, a script — presents a
 token instead of signing in.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">&quot;nightly soak&quot;</span>
-3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
+3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">"pipeline"</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
 3270Connect<span class="w"> </span>token<span class="w"> </span>list
 3270Connect<span class="w"> </span>token<span class="w"> </span>revoke<span class="w"> </span>&lt;id&gt;
 3270Connect<span class="w"> </span>token<span class="w"> </span>revoke-all<span class="w"> </span>alice
@@ -1845,7 +1845,7 @@ token instead of signing in.</p>
 <p>The token is shown once, when it is issued. It is stored as a SHA-256 hash, so
 a lost token is replaced rather than recovered. Present it as an ordinary
 bearer credential:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer 3270c_…&quot;</span><span class="w"> </span>http://localhost:9200/dashboard/data
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer 3270c_…"</span><span class="w"> </span>http://localhost:9200/dashboard/data
 </code></pre></div>
 <p>A token <strong>belongs to an account and reaches exactly what that account
 reaches</strong> — their runs, and nothing belonging to anybody else. It carries the
