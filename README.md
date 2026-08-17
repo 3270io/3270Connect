@@ -7,7 +7,13 @@ Scripted 3270 workflows that replay human online integration at unlimited scale 
 a command-line utility, an API server, and a live operations console served
 straight from the binary, with no external dependencies at runtime.
 
-![3270Connect operations console](https://raw.githubusercontent.com/3270io/3270Connect/main/docs/assets/dashboard/console-overview.webp)
+[![3270Connect operations console — click to watch the video tour](https://raw.githubusercontent.com/3270io/3270Connect/main/docs/assets/dashboard/console-overview.webp)](https://3270connect.3270.io/assets/video/console-tour.mp4)
+
+**[▶ Watch the operations console at work](https://3270connect.3270.io/assets/video/console-tour.mp4)** —
+an eight-worker load run launched from the browser, then the process table, the
+live screen flow and the charts filling in. Shorter walk-throughs — your first
+workflow, running at scale, the API, sign-in, the host profiler and MCP — are on
+the [documentation home page](https://3270connect.3270.io/#see-it-work).
 
 3270Connect bridges modern computing environments and traditional mainframe
 terminals, providing a suite of tools that automate tasks and workflows in a
