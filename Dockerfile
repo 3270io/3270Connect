@@ -49,6 +49,12 @@ RUN apt-get update \
 
 COPY --from=build /out/3270Connect /usr/local/bin/3270Connect
 
+# The licences travel with the program. MIT asks that its notice go with every
+# copy, and the embedded s3270's BSD 3-Clause asks the same of a binary
+# redistribution — which an image containing that binary is. Someone who only
+# ever pulls the image would otherwise never see either.
+COPY LICENSE THIRD-PARTY-LICENSES.md /usr/share/doc/3270Connect/
+
 # State goes somewhere the image does not, because the image is replaced on
 # every deploy. The metrics files every run publishes, the console's logs and
 # whatever a workflow writes all land here; the image holds only the program.
