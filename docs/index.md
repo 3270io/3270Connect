@@ -27,8 +27,8 @@ on a live operations console and a Prometheus endpoint.
 
 <div class="hero-actions" markdown>
 [Install it](installation.md){ .md-button .md-button--primary }
+[See it work](#see-it-work){ .md-button }
 [Basic usage](basic-usage.md){ .md-button }
-[Workflow reference](workflow.md){ .md-button }
 </div>
 
 </div>
@@ -60,6 +60,32 @@ on a live operations console and a Prometheus endpoint.
 </div>
 
 </div>
+
+## See it work
+
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-tour.jpg">
+    <source src="/assets/video/console-tour.mp4" type="video/mp4">
+    <a href="/assets/video/console-tour.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The operations console: launching an eight-worker load run from the browser,
+    then watching the process table, the live screen flow and the charts fill in.
+  </figcaption>
+</figure>
+
+Shorter walk-throughs of one thing at a time:
+
+| Video | Where |
+|---|---|
+| Your first workflow — describe a session in JSON and replay it | [Basic Usage](basic-usage.md#your-first-workflow) |
+| Run it at scale — `-concurrent` and `-runtime` | [Basic Usage](basic-usage.md#running-it-at-scale) |
+| Call it over HTTP — one POST returns the screen | [Advanced Features](advanced-features.md#api-mode-in-practice) |
+| The operations console, end to end | [Web Dashboard](dashboard.md#a-tour-of-the-console) |
+| Sign-in and administration with `AUTH_MODE=local` | [Accounts and Sign-In](authentication.md#what-it-looks-like) |
+| Profile a host before you trust a workflow against it | [Host Compatibility Profiler](host-profiler.md#quick-start) |
+| Drive it from an AI client over MCP | [MCP Server](mcp.md#check-it-works-first) |
 
 ## What it does
 
@@ -200,32 +226,6 @@ Once you've mastered the basics, you can dive into more advanced features:
 - [Metrics & Monitoring](metrics.md): Scrape `tn3270_connect_seconds`, `tn3270_step_seconds`, workflow outcomes, and live worker counts from `-promListen`.
 - [Host Compatibility Profiler](host-profiler.md): Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that compares cleanly against 3270Web output.
 - [Compatibility Profile Schema](compatibility-profile-schema.md): Field-by-field reference for the shared `CompatibilityProfile` document (v1.0.0).
-
-## See it work
-
-<figure class="demo-video">
-  <video controls preload="metadata" playsinline
-         poster="/assets/video/console-tour.jpg">
-    <source src="/assets/video/console-tour.mp4" type="video/mp4">
-    <a href="/assets/video/console-tour.mp4">Download the video</a>.
-  </video>
-  <figcaption>
-    The operations console: launching an eight-worker load run from the browser,
-    then watching the process table, the live screen flow and the charts fill in.
-  </figcaption>
-</figure>
-
-Shorter walk-throughs of one thing at a time:
-
-| Video | Where |
-|---|---|
-| Your first workflow — describe a session in JSON and replay it | [Basic Usage](basic-usage.md#your-first-workflow) |
-| Run it at scale — `-concurrent` and `-runtime` | [Basic Usage](basic-usage.md#running-it-at-scale) |
-| Call it over HTTP — one POST returns the screen | [Advanced Features](advanced-features.md#api-mode-in-practice) |
-| The operations console, end to end | [Web Dashboard](dashboard.md#a-tour-of-the-console) |
-| Sign-in and administration with `AUTH_MODE=local` | [Accounts and Sign-In](authentication.md#what-it-looks-like) |
-| Profile a host before you trust a workflow against it | [Host Compatibility Profiler](host-profiler.md#quick-start) |
-| Drive it from an AI client over MCP | [MCP Server](mcp.md#check-it-works-first) |
 
 ## Conclusion
 
