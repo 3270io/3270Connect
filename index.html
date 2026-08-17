@@ -784,6 +784,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#see-it-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See it work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-it-does" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -843,17 +854,6 @@
     <span class="md-ellipsis">
       
         Advanced Features
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-it-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See it work
       
     </span>
   </a>
@@ -1559,8 +1559,8 @@ on a live operations console and a Prometheus endpoint.
 </p>
 <div class="hero-actions">
 <p><a class="md-button md-button--primary" href="installation/">Install it</a>
-<a class="md-button" href="basic-usage/">Basic usage</a>
-<a class="md-button" href="workflow/">Workflow reference</a></p>
+<a class="md-button" href="#see-it-work">See it work</a>
+<a class="md-button" href="basic-usage/">Basic usage</a></p>
 </div>
 </div>
 <div>
@@ -1587,6 +1587,58 @@ on a live operations console and a Prometheus endpoint.
 <div class="kpi"><span class="k">Dependencies</span><span class="v">0</span><span class="n">single static binary</span></div>
 </div>
 </div>
+<h2 id="see-it-work">See it work<a class="headerlink" href="#see-it-work" title="Permanent link">&para;</a></h2>
+<figure class="demo-video">
+  <video controls preload="metadata" playsinline
+         poster="/assets/video/console-tour.jpg">
+    <source src="/assets/video/console-tour.mp4" type="video/mp4">
+    <a href="/assets/video/console-tour.mp4">Download the video</a>.
+  </video>
+  <figcaption>
+    The operations console: launching an eight-worker load run from the browser,
+    then watching the process table, the live screen flow and the charts fill in.
+  </figcaption>
+</figure>
+
+<p>Shorter walk-throughs of one thing at a time:</p>
+<table>
+<thead>
+<tr>
+<th>Video</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Your first workflow — describe a session in JSON and replay it</td>
+<td><a href="basic-usage/#your-first-workflow">Basic Usage</a></td>
+</tr>
+<tr>
+<td>Run it at scale — <code>-concurrent</code> and <code>-runtime</code></td>
+<td><a href="basic-usage/#running-it-at-scale">Basic Usage</a></td>
+</tr>
+<tr>
+<td>Call it over HTTP — one POST returns the screen</td>
+<td><a href="advanced-features/#api-mode-in-practice">Advanced Features</a></td>
+</tr>
+<tr>
+<td>The operations console, end to end</td>
+<td><a href="dashboard/#a-tour-of-the-console">Web Dashboard</a></td>
+</tr>
+<tr>
+<td>Sign-in and administration with <code>AUTH_MODE=local</code></td>
+<td><a href="authentication/#what-it-looks-like">Accounts and Sign-In</a></td>
+</tr>
+<tr>
+<td>Profile a host before you trust a workflow against it</td>
+<td><a href="host-profiler/#quick-start">Host Compatibility Profiler</a></td>
+</tr>
+<tr>
+<td>Drive it from an AI client over MCP</td>
+<td><a href="mcp/#check-it-works-first">MCP Server</a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="what-it-does">What it does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h2>
 <div class="grid cards">
 <ul>
@@ -1702,58 +1754,6 @@ per-process controls and log streaming, served straight from the binary.
 <li><a href="host-profiler/">Host Compatibility Profiler</a>: Probe a host once with <code>-profile</code> and write a <code>CompatibilityProfile</code> JSON document that compares cleanly against 3270Web output.</li>
 <li><a href="compatibility-profile-schema/">Compatibility Profile Schema</a>: Field-by-field reference for the shared <code>CompatibilityProfile</code> document (v1.0.0).</li>
 </ul>
-<h2 id="see-it-work">See it work<a class="headerlink" href="#see-it-work" title="Permanent link">&para;</a></h2>
-<figure class="demo-video">
-  <video controls preload="metadata" playsinline
-         poster="/assets/video/console-tour.jpg">
-    <source src="/assets/video/console-tour.mp4" type="video/mp4">
-    <a href="/assets/video/console-tour.mp4">Download the video</a>.
-  </video>
-  <figcaption>
-    The operations console: launching an eight-worker load run from the browser,
-    then watching the process table, the live screen flow and the charts fill in.
-  </figcaption>
-</figure>
-
-<p>Shorter walk-throughs of one thing at a time:</p>
-<table>
-<thead>
-<tr>
-<th>Video</th>
-<th>Where</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Your first workflow — describe a session in JSON and replay it</td>
-<td><a href="basic-usage/#your-first-workflow">Basic Usage</a></td>
-</tr>
-<tr>
-<td>Run it at scale — <code>-concurrent</code> and <code>-runtime</code></td>
-<td><a href="basic-usage/#running-it-at-scale">Basic Usage</a></td>
-</tr>
-<tr>
-<td>Call it over HTTP — one POST returns the screen</td>
-<td><a href="advanced-features/#api-mode-in-practice">Advanced Features</a></td>
-</tr>
-<tr>
-<td>The operations console, end to end</td>
-<td><a href="dashboard/#a-tour-of-the-console">Web Dashboard</a></td>
-</tr>
-<tr>
-<td>Sign-in and administration with <code>AUTH_MODE=local</code></td>
-<td><a href="authentication/#what-it-looks-like">Accounts and Sign-In</a></td>
-</tr>
-<tr>
-<td>Profile a host before you trust a workflow against it</td>
-<td><a href="host-profiler/#quick-start">Host Compatibility Profiler</a></td>
-</tr>
-<tr>
-<td>Drive it from an AI client over MCP</td>
-<td><a href="mcp/#check-it-works-first">MCP Server</a></td>
-</tr>
-</tbody>
-</table>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
 <p>The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the <a href="https://github.com/3270io/3270Connect">GitHub repository</a> for more details.</p>
 <p>Let's get started with 3270Connect!</p>
