@@ -118,6 +118,11 @@ The variable names, roles, group model and token format are deliberately
 identical to 3270Web's, and `internal/{authz,authsession,users,apitoken,audit,oidc,reqsec}`
 are the same packages — keep them in step rather than letting them drift.
 
+**The copying is one-way now.** This repository is MIT; 3270Web is
+AGPL-3.0-or-later. Code may go from here into 3270Web, never the reverse
+unless the copyright holder wrote it. Write shared changes here first, then
+copy across. See "Shared packages" in `README.md`.
+
 | File | Holds |
 |------|-------|
 | `auth.go` | `authState`, the request gate, principals, run ownership, the sweep |

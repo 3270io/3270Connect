@@ -197,9 +197,46 @@ Recent releases tightened input handling across the dashboard and API surfaces. 
 - [Metrics & Monitoring](https://3270connect.3270.io/metrics/)
 - [Host Compatibility Profiler](https://3270connect.3270.io/host-profiler/)
 
-## License
+## Licence
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/3270io/3270Connect/blob/main/LICENSE) file for details.
+3270Connect is licensed under the **MIT Licence** — see
+[`LICENSE`](https://github.com/3270io/3270Connect/blob/main/LICENSE).
+
+It stays MIT deliberately. This is a toolkit meant to be imported, wrapped and
+embedded — dropped into a CI pipeline, called from someone else's test harness,
+or used as a Go package — and a copyleft licence would defeat that. Take it,
+build on it, ship what you build under whatever terms you like.
+
+[3270Web](https://github.com/3270io/3270Web), the browser terminal alongside
+it, is AGPL-3.0-or-later: a network application, where the trade is a different
+one. The two repositories share several `internal/` packages, which now means
+code may be copied **from here into 3270Web, but not the other way** unless the
+copyright holder owns it. See [Shared packages](#shared-packages) below.
+
+The s3270 binaries redistributed in every release keep their own BSD 3-Clause
+terms; those are recorded in
+[`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md).
+
+### Shared packages
+
+`internal/{authz,authsession,users,apitoken,audit,oidc,reqsec,agent,profiler}`
+are kept deliberately identical to their counterparts in 3270Web — same
+variable names, same roles, same group model, same token format — by copying
+between the two repositories rather than by a module dependency.
+
+That copying now crosses a licence boundary, and it only runs one way:
+
+- **MIT → AGPL is fine.** Anything here may be copied into 3270Web.
+- **AGPL → MIT is not**, unless the copyright holder wrote it or the
+  contributor granted the additional permission set out in 3270Web's
+  `CONTRIBUTING.md`.
+
+Today every line in those packages is the maintainer's own, so both copies are
+lawful — a copyright holder may license their own work under any number of
+licences at once. The rule matters for what comes next: an outside contribution
+landing in 3270Web must not be copied back here without checking. When a change
+belongs in both, **write it here first** and copy it across in the permitted
+direction.
 
 ## Notes
 
