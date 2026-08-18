@@ -1790,10 +1790,13 @@ in the message — before it has.</p>
 <ul>
 <li><strong>Description</strong>: Checks a value at specified coordinates on the terminal screen.</li>
 <li><strong>Parameters</strong>: </li>
-<li><code>Coordinates</code> (connect3270.Coordinates) - The row and column to check the value.</li>
+<li><code>Coordinates</code> (connect3270.Coordinates) - The row, column and <code>Length</code> to read. <code>Length</code> is required: a check that reads no characters can only ever fail.</li>
 <li><code>Text</code> (string) - The expected text value at the coordinates.</li>
 <li><strong>Usage</strong>: Utilized to verify if the terminal displays expected data at specified locations.</li>
 </ul>
+<p>Leading and trailing spaces are ignored on both sides of the comparison. A
+  read that runs past the end of a row continues on the next one, so <code>Length</code>
+  can span the row boundary and still returns the characters that follow.</p>
 <h3 id="fillstring">FillString<a class="headerlink" href="#fillstring" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Description</strong>: Fills a string at specified coordinates on the terminal screen.</li>
@@ -1804,7 +1807,20 @@ in the message — before it has.</p>
 </ul>
 <p>If <code>Coordinates</code> is omitted (or <code>Row</code>/<code>Column</code> are both <code>0</code>), the text is typed at the current cursor position.</p>
 <p><code>Text</code> is typed literally. Commas, brackets, quotes and backslashes go to the
-  host as written — a value like <code>SMITH,JOHN</code> arrives whole.</p>
+  host as written — a value like <code>SMITH,JOHN</code> arrives whole. A tab or newline
+  in the text still moves to the next field, which is how one step can fill
+  several fields in order.</p>
+<p>Two things are refused rather than done, because the emulator does them
+  silently and the damage shows up somewhere else:</p>
+<ul>
+<li><strong>A value longer than the field.</strong> Typing does not stop at the end of a
+    field; the tail runs on into the next one, and on a logon screen the field
+    below the user name is usually the password. The step fails naming both
+    lengths instead.</li>
+<li><strong>A protected position.</strong> The host locks the keyboard with an operator
+    error and leaves it locked, so every later step fails too. The step fails
+    naming the position instead, and the session stays usable.</li>
+</ul>
 <h3 id="asciiscreengrab">AsciiScreenGrab<a class="headerlink" href="#asciiscreengrab" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Description</strong>: Captures and appends the ASCII representation of the current screen to the output file.</li>
