@@ -92,9 +92,13 @@ Legacy `Delay` and `HumanDelay` settings are no longer used.
 ### CheckValue
 - **Description**: Checks a value at specified coordinates on the terminal screen.
 - **Parameters**: 
-  - `Coordinates` (connect3270.Coordinates) - The row and column to check the value.
+  - `Coordinates` (connect3270.Coordinates) - The row, column and `Length` to read. `Length` is required: a check that reads no characters can only ever fail.
   - `Text` (string) - The expected text value at the coordinates.
 - **Usage**: Utilized to verify if the terminal displays expected data at specified locations.
+
+  Leading and trailing spaces are ignored on both sides of the comparison. A
+  read that runs past the end of a row continues on the next one, so `Length`
+  can span the row boundary and still returns the characters that follow.
 
 ### FillString
 - **Description**: Fills a string at specified coordinates on the terminal screen.
@@ -106,7 +110,20 @@ Legacy `Delay` and `HumanDelay` settings are no longer used.
   If `Coordinates` is omitted (or `Row`/`Column` are both `0`), the text is typed at the current cursor position.
 
   `Text` is typed literally. Commas, brackets, quotes and backslashes go to the
-  host as written — a value like `SMITH,JOHN` arrives whole.
+  host as written — a value like `SMITH,JOHN` arrives whole. A tab or newline
+  in the text still moves to the next field, which is how one step can fill
+  several fields in order.
+
+  Two things are refused rather than done, because the emulator does them
+  silently and the damage shows up somewhere else:
+
+  - **A value longer than the field.** Typing does not stop at the end of a
+    field; the tail runs on into the next one, and on a logon screen the field
+    below the user name is usually the password. The step fails naming both
+    lengths instead.
+  - **A protected position.** The host locks the keyboard with an operator
+    error and leaves it locked, so every later step fails too. The step fails
+    naming the position instead, and the session stays usable.
 
 ### AsciiScreenGrab
 - **Description**: Captures and appends the ASCII representation of the current screen to the output file.

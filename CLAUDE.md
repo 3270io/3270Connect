@@ -45,7 +45,28 @@ dist/                     # Build output — committed to repo by CI
 
 # Tests
 go test -v ./...
+
+# Unit tests only — skips the compatibility suite, which launches emulators
+go test -short ./...
+
+# The compatibility suite alone
+go test -run TestCompat -v ./connect3270/
 ```
+
+### Compatibility tests
+
+`connect3270/compat_test.go` starts a TN3270 host in process, launches the
+real embedded s3270 against it, and checks both what the emulator reports and
+what the host actually received. Every bug the sweep found was invisible to
+unit tests because the assumption was wrong in the code *and* in the test, so
+this suite exists to check the assumptions against the emulator itself.
+
+Add to it when you add a key, a step, a `Query`, or anything else that names
+something in the emulator's vocabulary — `TestCompatEveryKeyNamesARealAction`
+and `TestCompatProfilerQueriesAreAnswered` check those names against the
+emulator's own lists, which is what catches a renamed action in a newer
+x3270 or a binary built without a feature. The suite skips under `-short`,
+and skips with a reason if the embedded emulator will not unpack here.
 
 ## Key Flags
 
@@ -131,6 +152,19 @@ Things that are load-bearing here:
 - **Coordinates are checked against the screen in use.** The emulator clamps
   an out-of-range `MoveCursor` and answers `ok`, so an unchecked coordinate
   is a silent write to the wrong field.
+- **A value longer than its field is refused, not typed.** The emulator does
+  not stop at the end of a field: the tail runs into the next one, which on a
+  logon screen is the password. `checkFieldFits` measures with `AsciiField()`
+  and skips values carrying a tab or newline, because those move between
+  fields on purpose.
+- **A protected target is refused before typing.** Typing there locks the
+  keyboard with an operator error and leaves it locked, so the step that
+  fails is the next one, not the one at fault. The status line from the
+  `MoveCursor` already says whether the cursor landed on protected ground.
+- **A read that runs past the end of a row comes back as one line per row.**
+  Keeping only the first silently shortens the value a `CheckValue` compares.
+- **Host and port go through `net.JoinHostPort`.** An IPv6 literal has colons
+  of its own, and `"%s:%d"` produced `::1:23`, which the emulator rejects.
 - **The embedded emulator is unpacked to `os.UserCacheDir()/3270Connect`**
   under a name derived from its contents, 0700. Not a fixed path in the
   shared temp directory, and not reused across versions.

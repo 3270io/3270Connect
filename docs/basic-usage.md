@@ -321,6 +321,9 @@ workflow or on the command line:
 - **LUName** asks the host to bind the session to a named logical unit, which
   hosts that route by LU require.
 
+IPv6 hosts are written as the address alone — `"Host": "2001:db8::5"` — with
+no brackets; they are added where the emulator needs them.
+
 Common SBCS code pages (with aliases) supported by the bundled emulator:
 
 | Code page | Aliases | Region / language |
