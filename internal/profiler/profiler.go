@@ -243,3 +243,18 @@ func normaliseScreenText(text string) string {
 	}
 	return strings.TrimSpace(b.String())
 }
+
+// ProbeQueries returns the Query keywords the probe sends, so a test can
+// check them against an emulator's own list of what it answers.
+//
+// It exists because the sequence has already shipped naming two queries no
+// emulator has: in a profile that is indistinguishable from a host declining
+// to answer, so it went unnoticed. Against a live emulator it is not.
+func ProbeQueries() []string {
+	steps := probeSequence()
+	names := make([]string, 0, len(steps))
+	for _, s := range steps {
+		names = append(names, s.name)
+	}
+	return names
+}

@@ -170,6 +170,30 @@ func TestHostTargetCarriesTLSAndLU(t *testing.T) {
 	}
 }
 
+// TestHostTargetBracketsIPv6 covers a host this tool could never reach: an
+// IPv6 literal has colons of its own, so "%s:%d" produced "::1:23", which
+// the emulator rejects as a syntax error before it tries to connect.
+func TestHostTargetBracketsIPv6(t *testing.T) {
+	cases := []struct {
+		host, want string
+		lu         string
+		tls        bool
+	}{
+		{host: "::1", want: "[::1]:992"},
+		{host: "2001:db8::5", want: "[2001:db8::5]:992"},
+		{host: "2001:db8::5", lu: "LU01", want: "LU01@[2001:db8::5]:992"},
+		{host: "2001:db8::5", tls: true, want: "L:[2001:db8::5]:992"},
+		{host: "mvs.example.com", want: "mvs.example.com:992"},
+		{host: "10.0.0.1", want: "10.0.0.1:992"},
+	}
+	for _, tc := range cases {
+		e := &Emulator{Host: tc.host, Port: 992, LUName: tc.lu, TLS: tc.tls}
+		if got := e.hostTarget(); got != tc.want {
+			t.Errorf("hostTarget for %q = %q, want %q", tc.host, got, tc.want)
+		}
+	}
+}
+
 func TestBuildEmulatorArgsCarriesModelAndTLS(t *testing.T) {
 	prevHeadless := Headless
 	Headless = true
@@ -411,13 +435,35 @@ func TestDeterministicFailuresAreNotRetried(t *testing.T) {
 func TestTransientFailuresAreStillRetried(t *testing.T) {
 	f := newFakeEmulator(t)
 	e := f.emulator()
-	f.failCommand("string", "Keyboard locked")
+	f.failCommand("string", "Host disconnected")
 
 	if err := e.SetString("anything"); err == nil {
 		t.Fatalf("expected an error")
 	}
 	if n := len(f.sent()); n != 3 {
 		t.Errorf("a transient failure should be retried, sent %d times", n)
+	}
+}
+
+// TestKeyboardLockIsResetBeforeRetrying covers the failure that cascades: an
+// operator error locks the keyboard, and the lock does not clear itself, so
+// every step after the one that caused it fails too.
+func TestKeyboardLockIsResetBeforeRetrying(t *testing.T) {
+	f := newFakeEmulator(t)
+	e := f.emulator()
+	f.failCommand("string", "Keyboard locked", "Operator error")
+
+	if err := e.SetString("anything"); err == nil {
+		t.Fatalf("expected an error")
+	}
+	resets := 0
+	for _, c := range f.sent() {
+		if c == Reset {
+			resets++
+		}
+	}
+	if resets == 0 {
+		t.Errorf("a locked keyboard should be reset before retrying, sent %v", f.sent())
 	}
 }
 

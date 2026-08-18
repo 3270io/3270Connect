@@ -168,6 +168,13 @@ func Validate(config *Configuration) error {
 			if step.Text == "" {
 				return fmt.Errorf("step %d: %s needs Text", i+1, step.Type)
 			}
+			// A CheckValue without a Length reads zero characters, so it
+			// compares the expected text against an empty string and fails
+			// every time, reporting "Found: " with nothing after it. No
+			// workflow written that way has ever passed.
+			if step.Type == "CheckValue" && step.Coordinates.Length <= 0 {
+				return fmt.Errorf("step %d: CheckValue needs Coordinates.Length, the number of characters to read", i+1)
+			}
 
 		default:
 			return fmt.Errorf("step %d: unknown step type %q. Valid types: %s",

@@ -371,6 +371,18 @@ func (e *ActionError) deterministic() bool {
 	return false
 }
 
+// isKeyboardLock reports whether the emulator refused because the host has
+// locked the keyboard after an operator error — typing into a protected
+// field, or past the end of one.
+func isKeyboardLock(err error) bool {
+	var actionErr *ActionError
+	if !errors.As(err, &actionErr) {
+		return false
+	}
+	msg := strings.ToLower(actionErr.Message)
+	return strings.Contains(msg, "keyboard locked") || strings.Contains(msg, "operator error")
+}
+
 // isDeterministicFailure reports whether err is an emulator complaint that
 // will not change on a retry.
 func isDeterministicFailure(err error) bool {
@@ -506,28 +518,43 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 		time.Sleep(retryDelay)
 	}
 
-	// Smart WaitForField: Check if screen has any modifiable fields
-	// If no modifiable fields exist, treat as success (read-only screen)
-	// Note: We intentionally ignore queryErr here. If the query fails, we proceed
-	// with the original "maximum retries reached" error, which is the expected behavior.
-	if fields, queryErr := e.query("Fields"); queryErr == nil {
-		// The x3270 Fields query returns field attributes including "unprotected" for modifiable fields.
-		// A simple case-insensitive search is sufficient as "unprotected" is a standard x3270 field attribute.
-		if !strings.Contains(strings.ToLower(fields), "unprotected") {
-			// No modifiable fields found; treat as success for read-only screens
-			return nil
+	// A screen with no fields on it has no input field to wait for, and
+	// waiting for one until the retries run out is not a useful way to
+	// discover that. An unformatted screen is the read-only case.
+	//
+	// This used to ask Query(Fields) and Query(KeyboardLockDetail), neither
+	// of which x3270 has: both answered "Query: Unknown parameter", so the
+	// read-only case never triggered and every failure carried a diagnostic
+	// reading "(unable to query: Query: Unknown parameter)". Formatted is a
+	// real query, and it is on the status line of every reply besides.
+	status := e.Status()
+	if !status.Valid {
+		if formatted, err := e.query("Formatted"); err == nil {
+			if !strings.Contains(strings.ToLower(NormalizeDataLines(formatted)), "unformatted") {
+				status = e.Status()
+			} else {
+				return nil
+			}
 		}
 	}
-
-	// On failure, query KeyboardLockDetail for diagnostic information
-	var kbLockDetail string
-	if detail, detailErr := e.query("KeyboardLockDetail"); detailErr == nil {
-		kbLockDetail = detail
-	} else {
-		kbLockDetail = fmt.Sprintf("(unable to query: %v)", detailErr)
+	if status.Valid && !status.Formatted {
+		return nil
 	}
 
-	return fmt.Errorf("maximum WaitForField retries reached | KeyboardLockDetail: %s", kbLockDetail)
+	state := "locked, waiting for the host"
+	switch {
+	case !status.Valid:
+		state = "the emulator did not answer"
+	case status.KeyboardError:
+		state = "locked by an operator error, which a Reset clears"
+	case !status.KeyboardLocked:
+		state = "unlocked, but no input field appeared"
+	}
+	if status.Raw != "" {
+		return fmt.Errorf("the keyboard did not become ready after %d attempts: %s | status: %s",
+			maxRetries, state, status.Raw)
+	}
+	return fmt.Errorf("the keyboard did not become ready after %d attempts: %s", maxRetries, state)
 }
 
 // moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.
@@ -581,6 +608,12 @@ func (e *Emulator) SetString(value string) error {
 		lastErr = err
 		if isDeterministicFailure(err) {
 			return fmt.Errorf("String: %w", err)
+		}
+		if isKeyboardLock(err) {
+			// The lock does not clear itself, so retrying into it fails the
+			// same way three times and then leaves the session locked for
+			// every step that follows. Reset is what an operator presses.
+			_ = e.Press(Reset)
 		}
 		time.Sleep(retryDelay)
 	}
@@ -643,19 +676,72 @@ func (e *Emulator) FillString(x, y int, value string) error {
 		if err := e.moveCursor(x, y); err != nil {
 			return fmt.Errorf("error moving cursor: %v", err)
 		}
+		// The reply to that MoveCursor said whether the cursor landed on a
+		// protected field. Typing there locks the keyboard with an operator
+		// error and leaves it locked, so every step after this one fails
+		// too — and the report names whichever of them ran into the lock
+		// rather than the step that caused it.
+		if s := e.Status(); s.Valid && s.Formatted && s.Protected {
+			return fmt.Errorf("row %d column %d is a protected field on this screen; the host does not accept input there", x, y)
+		}
+	}
+
+	if err := e.checkFieldFits(value); err != nil {
+		return err
 	}
 
 	// Retry the SetString operation with a delay in case of failure
+	var lastErr error
 	for retries := 0; retries < maxRetries; retries++ {
 		err := e.SetString(value) // Declare and define err here
 		if err == nil {
 			return nil // Successful operation, exit the retry loop
 		}
-		//log.Printf("Error filling string (Retry %d) at row %d, column %d: %v\n", retries+1, x, y, err)
+		lastErr = err
+		if isDeterministicFailure(err) {
+			return fmt.Errorf("filling row %d column %d: %w", x, y, err)
+		}
 		time.Sleep(retryDelay)
 	}
 
-	return fmt.Errorf("maximum FillString retries reached")
+	return fmt.Errorf("maximum FillString retries reached: %w", lastErr)
+}
+
+// checkFieldFits rejects a value longer than the field it is aimed at.
+//
+// The emulator does not stop typing at the end of a field: the tail runs on
+// into whichever field comes next. An over-long name goes into the name
+// field and then into the one below it, with no error anywhere — and on a
+// logon screen the field below the user name is usually the password.
+//
+// The check is skipped for a value carrying a tab or a newline, because
+// those move between fields deliberately and "how long is the field" is then
+// the wrong question.
+func (e *Emulator) checkFieldFits(value string) error {
+	if value == "" || strings.ContainsAny(value, "\t\n\r") {
+		return nil
+	}
+	if s := e.Status(); s.Valid && !s.Formatted {
+		// Nothing to overflow into on an unformatted screen.
+		return nil
+	}
+
+	field, err := e.execCommandOutput("AsciiField()")
+	if err != nil {
+		// The emulator would not say. Better to type than to refuse on the
+		// strength of a failed measurement.
+		return nil
+	}
+	// One data line per row the field spans; the field is their total
+	// length, so the newlines are not part of it.
+	length := len([]rune(strings.ReplaceAll(NormalizeDataLines(field), "\n", "")))
+	if length == 0 {
+		return nil
+	}
+	if n := len([]rune(value)); n > length {
+		return fmt.Errorf("the value is %d characters and the field holds %d; typing it would overflow into the next field", n, length)
+	}
+	return nil
 }
 
 // Press press a keyboard key
@@ -773,16 +859,31 @@ func NormalizeDataLines(raw string) string {
 	return strings.Join(kept, "\n")
 }
 
-// normalizeAsciiData trims the s3270/x3270 "data:" prefix and drops status lines.
+// normalizeAsciiData reduces an Ascii(row, col, length) reply to the
+// characters it read.
+//
+// A read that runs past the end of a row continues on the next one, and the
+// emulator answers with one data line per row. Keeping only the first, as
+// this used to, silently shortened the value: a CheckValue for twenty
+// characters from column 70 compared against the eleven before the row ended
+// and reported a match. The lines are joined without a separator because the
+// 3270 buffer is one continuous run of characters — the row break is a
+// property of the screen, not of the value.
+//
+// The result is trimmed as a whole, so a single-row read is unchanged and a
+// wrapped one keeps the spacing between its halves.
 func normalizeAsciiData(raw string) string {
-	lines := strings.Split(raw, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "data:") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+	hasData := false
+	for _, line := range strings.Split(raw, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "data:") {
+			hasData = true
+			break
 		}
 	}
-	return strings.TrimSpace(raw)
+	if !hasData {
+		return strings.TrimSpace(raw)
+	}
+	return strings.TrimSpace(strings.ReplaceAll(NormalizeDataLines(raw), "\n", ""))
 }
 
 // CursorPosition return actual position by cursor
@@ -1258,8 +1359,16 @@ func isTCPPortAvailable(port int) bool {
 }
 
 // hostname return hostname formatted
+// hostname renders the host and port the way the emulator's command line
+// expects them.
+//
+// net.JoinHostPort rather than "%s:%d" because of IPv6: a literal address
+// has colons of its own, and "::1:3271" is not a host and a port, it is a
+// syntax error the emulator refuses before it tries to connect. Bracketed,
+// "[::1]:3271", it is accepted — including in front of an LU name and behind
+// a TLS prefix. A name or an IPv4 address is unchanged by this.
 func (e *Emulator) hostname() string {
-	return fmt.Sprintf("%s:%d", e.Host, e.Port)
+	return net.JoinHostPort(e.Host, strconv.Itoa(e.Port))
 }
 
 // execCommand executes a command on the connected x3270 or s3270 instance based on Headless flag

@@ -145,37 +145,30 @@ func TestBuildEmulatorArgsHeadlessIncludesCodePage(t *testing.T) {
 	}
 }
 
-// TestWaitForFieldErrorIncludesKeyboardLockDetail tests that WaitForField error
-// messages include KeyboardLockDetail information when retries are exhausted
-func TestWaitForFieldErrorIncludesKeyboardLockDetail(t *testing.T) {
-	// We can't fully test WaitForField without a real connection,
-	// but we can verify that when it would fail, the error format includes
-	// the KeyboardLockDetail message.
-
-	// This test verifies the error message structure by checking that the
-	// failure path includes the expected "KeyboardLockDetail:" text
-	// The actual implementation will add this detail when query succeeds
-	expectedSubstring := "KeyboardLockDetail:"
-
-	// Create an emulator (won't be connected)
+// TestWaitForFieldErrorNamesTheKeyboardState checks that a WaitForField
+// failure says what state the keyboard was left in.
+//
+// It used to report "KeyboardLockDetail: (unable to query: Query: Unknown
+// parameter)" on every host, because neither Query(Fields) nor
+// Query(KeyboardLockDetail) is a query x3270 has. The state is on the status
+// line of every reply instead.
+func TestWaitForFieldErrorNamesTheKeyboardState(t *testing.T) {
+	// Not connected, so nothing answers and the retries run out.
 	e := &Emulator{
 		Host:       "test.host",
 		Port:       23,
 		ScriptPort: "5000",
 	}
 
-	// Call WaitForField with minimal retries (will fail without connection)
-	// This should timeout and include KeyboardLockDetail in the error
 	err := e.WaitForField(1, 1)
-
-	// Verify error occurred (expected since there's no connection)
 	if err == nil {
 		t.Fatal("Expected WaitForField to fail without connection")
 	}
-
-	// Verify the error message contains the KeyboardLockDetail marker
-	if !strings.Contains(err.Error(), expectedSubstring) {
-		t.Errorf("WaitForField error should contain '%s', got: %v", expectedSubstring, err)
+	if strings.Contains(err.Error(), "Unknown parameter") {
+		t.Errorf("the error should not carry a failed query as a diagnostic: %v", err)
+	}
+	if !strings.Contains(err.Error(), "keyboard did not become ready") {
+		t.Errorf("WaitForField error should say what it was waiting for, got: %v", err)
 	}
 }
 
