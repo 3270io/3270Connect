@@ -1686,7 +1686,7 @@ as <code>POST /profile</code> and <code>POST /api/v1/sessions/:id/profile</code>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"ind_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"yes"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"no"</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"query_reply_ids"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"..."</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"unknown"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BindPluName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tn3270eFunctions"</span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"unknown"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"BindPluName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tn3270eOptions"</span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
@@ -1704,7 +1704,7 @@ as <code>POST /profile</code> and <code>POST /api/v1/sessions/:id/profile</code>
 <p>Zero indicates the value was not measured (e.g. the host does not expose
 connect timing).</p>
 <h3 id="raw-optional"><code>raw</code> (optional)<a class="headerlink" href="#raw-optional" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"Bind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rows 24 cols 80 ..."</span><span class="p">,</span><span class="w"> </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"ScreenSizeMax"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rows 43 columns 80"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IBM-3279-2-E"</span><span class="p">}</span>
 </code></pre></div>
 <p>Only emitted when the caller passes <code>collect_raw: true</code> (3270Web) or
 <code>-profileCollectRaw</code> (3270Connect). Useful for debugging parser drift

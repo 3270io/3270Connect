@@ -1018,6 +1018,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#screen-size-tls-and-lu-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen size, TLS and LU names
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1827,6 +1838,11 @@
 <li><code>-config</code>: Specifies the path to the configuration file (default is "workflow.json").</li>
 <li><code>-token</code>: Provides a one-time RSA token that replaces any <code>{{token}}</code> placeholder in workflow step text during execution.</li>
 <li><code>-codePage</code>: Sets the host EBCDIC code page / character set for the 3270 session (for example <code>cp037</code>, <code>cp285</code>, or <code>cp278</code>/<code>finnish</code>). Overrides the workflow's <code>CodePage</code> value when supplied and is passed straight through to the embedded x3270/s3270 emulator's <code>-codepage</code> option. See <a href="#host-code-page-and-character-set">Host Code Page and Character Set</a>.</li>
+<li><code>-model</code>: The 3270 device type to negotiate — <code>2</code> (24x80), <code>3</code> (32x80), <code>4</code> (43x80), <code>5</code> (27x132), or the full form <code>3278-4</code> / <code>3279-4</code>. Defaults to <code>3279-2</code>. A workflow that addresses rows past 24 needs a model that has them. Overrides the workflow's <code>Model</code> value.</li>
+<li><code>-oversize</code>: A screen larger than the model defines, as <code>&lt;cols&gt;x&lt;rows&gt;</code> (e.g. <code>132x50</code>). Only hosts that support the geometry will use it. Overrides the workflow's <code>Oversize</code> value.</li>
+<li><code>-luName</code>: The logical unit to request at connect time, for hosts that route sessions by LU. Overrides the workflow's <code>LUName</code> value.</li>
+<li><code>-tls</code>: Connect to the host over TLS. Overrides the workflow's <code>TLS</code> value.</li>
+<li><code>-tlsSkipVerify</code>: Skip host certificate validation when using <code>-tls</code>. For an internal host with a private CA or a self-signed certificate; leave it off otherwise.</li>
 <li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
 <li><code>WaitForField</code> (config, default <code>true</code>): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful <code>Connect</code>. Supports both simple boolean and detailed configuration:</li>
 <li>Boolean format: <code>"WaitForField": true</code> or <code>"WaitForField": false</code> (uses defaults: 1s delay, 10 retries)</li>
@@ -2026,6 +2042,34 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 <div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-codePage<span class="w"> </span>cp278
 </code></pre></div>
 <p>The value is passed directly to the embedded x3270/s3270 emulator's <code>-codepage</code> option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave <code>CodePage</code> unset (and omit <code>-codePage</code>) to use the emulator's built-in default code page.</p>
+<h2 id="screen-size-tls-and-lu-names">Screen size, TLS and LU names<a class="headerlink" href="#screen-size-tls-and-lu-names" title="Permanent link">&para;</a></h2>
+<p>The session is a 24x80 colour model 2 unless you ask for something else. Three
+settings describe the terminal rather than the run, and each can be set in the
+workflow or on the command line:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># a 43x80 model 4 session, over TLS, bound to a named LU</span>
+3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-model<span class="w"> </span><span class="m">4</span><span class="w"> </span>-tls<span class="w"> </span>-luName<span class="w"> </span>LU01
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"TLS"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LUName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"LU01"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong>Model</strong> decides how large the screen can be. A model 4 session still starts
+  on the 24-row primary screen and moves to 43 rows when the host writes to the
+  alternate size. Steps are checked against the size in use at the time, so a
+  step aimed at row 30 is rejected — naming the screen size — rather than
+  applied to the bottom row of a 24-row screen.</li>
+<li><strong>TLS</strong> wraps the connection (the emulator's <code>L:</code> host prefix). Certificate
+  validation is on; <code>-tlsSkipVerify</code> turns it off for an internal host with a
+  private CA.</li>
+<li><strong>LUName</strong> asks the host to bind the session to a named logical unit, which
+  hosts that route by LU require.</li>
+</ul>
 <p>Common SBCS code pages (with aliases) supported by the bundled emulator:</p>
 <table>
 <thead>

@@ -1059,6 +1059,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Connection Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#screen-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen size
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1199,6 +1216,72 @@
     <span class="md-ellipsis">
       
         PressPF1 ... PressPF24
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presspa1-presspa2-presspa3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressPA1, PressPA2, PressPA3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressclear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressClear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressreset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressReset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presshome-pressbacktab-pressnewline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressHome, PressBackTab, PressNewline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presseraseeof-presseraseinput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressEraseEOF, PressEraseInput
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presssysreq-pressattn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PressSysReq, PressAttn
       
     </span>
   </a>
@@ -1645,14 +1728,29 @@ before running it.</p>
 <li><strong>Host</strong> (string): Hostname or IP address of the TN3270 host.</li>
 <li><strong>Port</strong> (int): TCP port of the TN3270 host.</li>
 <li><strong>CodePage</strong> (string, optional): Host EBCDIC code page / character set for the session, for example <code>cp037</code>, <code>cp285</code>, or <code>cp278</code>/<code>finnish</code>. When set, it is passed to the embedded x3270/s3270 emulator via its <code>-codepage</code> option so that national and language-specific characters render correctly. The <code>-codePage</code> CLI flag overrides this value. Leave it unset to use the emulator default. See <a href="../basic-usage/#host-code-page-and-character-set">Host Code Page and Character Set</a> for the list of supported code pages.</li>
+<li><strong>Model</strong> (string, optional): The device type to negotiate. <code>2</code> (24x80), <code>3</code> (32x80), <code>4</code> (43x80) or <code>5</code> (27x132), or written in full as <code>3278-4</code> for a monochrome device and <code>3279-4</code> for colour. Defaults to <code>3279-2</code>. <strong>A workflow that addresses rows past 24 needs a model that has them</strong> — on a model 2 session the host will never send more than 24 rows, and a step aimed at row 30 is rejected rather than quietly applied to the bottom of the screen. Overridden by <code>-model</code>.</li>
+<li><strong>Oversize</strong> (string, optional): A screen larger than the model defines, written <code>&lt;cols&gt;x&lt;rows&gt;</code>, e.g. <code>132x50</code>. Only hosts that support the larger geometry will use it. Overridden by <code>-oversize</code>.</li>
+<li><strong>LUName</strong> (string, optional): The logical unit to request at connect time, for hosts that route sessions by LU. Overridden by <code>-luName</code>.</li>
+<li><strong>TLS</strong> (bool, optional): Connect over TLS. Overridden by <code>-tls</code>.</li>
+<li><strong>TLSSkipVerify</strong> (bool, optional): Skip host certificate validation. Requires <code>TLS</code>. For an internal host with a private CA or a self-signed certificate; leave it off otherwise. Overridden by <code>-tlsSkipVerify</code>.</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">992</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp278"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"TLS"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LUName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"LU01"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Connect"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Disconnect"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
+<h3 id="screen-size">Screen size<a class="headerlink" href="#screen-size" title="Permanent link">&para;</a></h3>
+<p>The negotiated screen is what the model allows and what the host chooses to
+use. A model 4 session can show 43 rows, but starts on the 24-row primary
+screen and moves to the alternate size only when the host writes to it. Steps
+are checked against the size in use at the time, so a workflow that addresses
+row 30 works once the host has switched and is rejected — with the screen size
+in the message — before it has.</p>
 <h2 id="grace-period-settings">Grace Period Settings<a class="headerlink" href="#grace-period-settings" title="Permanent link">&para;</a></h2>
 <p>These top-level properties control what happens when a concurrent run reaches its runtime deadline and workflows are still in progress:</p>
 <ul>
@@ -1705,6 +1803,8 @@ before running it.</p>
 <li><strong>Usage</strong>: This step is used to input text at a specific position on the terminal.</li>
 </ul>
 <p>If <code>Coordinates</code> is omitted (or <code>Row</code>/<code>Column</code> are both <code>0</code>), the text is typed at the current cursor position.</p>
+<p><code>Text</code> is typed literally. Commas, brackets, quotes and backslashes go to the
+  host as written — a value like <code>SMITH,JOHN</code> arrives whole.</p>
 <h3 id="asciiscreengrab">AsciiScreenGrab<a class="headerlink" href="#asciiscreengrab" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Description</strong>: Captures and appends the ASCII representation of the current screen to the output file.</li>
@@ -1740,6 +1840,36 @@ before running it.</p>
 <ul>
 <li><strong>Description</strong>: Simulates pressing a Program Function key (PF1 through PF24).</li>
 <li><strong>Usage</strong>: Use the PF key that matches your host application navigation.</li>
+</ul>
+<h3 id="presspa1-presspa2-presspa3">PressPA1, PressPA2, PressPA3<a class="headerlink" href="#presspa1-presspa2-presspa3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Sends a Program Attention key.</li>
+<li><strong>Usage</strong>: PA1 is the interrupt an operator uses to stop a running transaction and PA2 usually cancels. Unlike a PF key, a PA key carries no screen data back to the host, which is why applications use them for control rather than for input.</li>
+</ul>
+<h3 id="pressclear">PressClear<a class="headerlink" href="#pressclear" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Clears the screen and sends the Clear AID.</li>
+<li><strong>Usage</strong>: The usual way to get from one CICS transaction to a blank screen ready for the next.</li>
+</ul>
+<h3 id="pressreset">PressReset<a class="headerlink" href="#pressreset" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Resets an error-locked keyboard (the <code>X</code> in a real terminal's status line).</li>
+<li><strong>Usage</strong>: After a step the host rejected, to make the session usable again rather than failing every step that follows.</li>
+</ul>
+<h3 id="presshome-pressbacktab-pressnewline">PressHome, PressBackTab, PressNewline<a class="headerlink" href="#presshome-pressbacktab-pressnewline" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Cursor movement between fields: to the first unprotected field, to the previous field, and to the first field on the next line.</li>
+<li><strong>Usage</strong>: For screens whose field order is easier to walk than to address by coordinates.</li>
+</ul>
+<h3 id="presseraseeof-presseraseinput">PressEraseEOF, PressEraseInput<a class="headerlink" href="#presseraseeof-presseraseinput" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Erases from the cursor to the end of the field, or every unprotected field on the screen.</li>
+<li><strong>Usage</strong>: <code>PressEraseEOF</code> before a <code>FillString</code> is how a shorter value is written over a longer one; without it the tail of the old value is left behind.</li>
+</ul>
+<h3 id="presssysreq-pressattn">PressSysReq, PressAttn<a class="headerlink" href="#presssysreq-pressattn" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Description</strong>: Sends SysReq, which reaches the SSCP rather than the application, or Attn, the TN3270E interrupt.</li>
+<li><strong>Usage</strong>: For dropping a hung LU session or interrupting an application that has stopped responding.</li>
 </ul>
 <h3 id="disconnect">Disconnect<a class="headerlink" href="#disconnect" title="Permanent link">&para;</a></h3>
 <ul>
