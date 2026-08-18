@@ -884,3 +884,52 @@ func TestStartupConfigurationAPIModeStillReadsAPresentFile(t *testing.T) {
 		t.Errorf("Port = %d, want 992 from the file", config.Port)
 	}
 }
+
+// TestControlKeyStepTypeCoversTheKeyboard checks the input-file DSL reaches
+// the same keys a workflow can. It used to understand Tab, Enter and the PF
+// keys, and turned everything else into a FillString that typed the name of
+// the key onto the host screen.
+func TestControlKeyStepTypeCoversTheKeyboard(t *testing.T) {
+	cases := map[string]string{
+		"ControlKey.TAB":      "PressTab",
+		"ControlKey.ENTER":    "PressEnter",
+		"ControlKey.F3":       "PressPF3",
+		"ControlKey.PF3":      "PressPF3",
+		"ControlKey.F24":      "PressPF24",
+		"ControlKey.PA1":      "PressPA1",
+		"ControlKey.CLEAR":    "PressClear",
+		"ControlKey.ERASEEOF": "PressEraseEOF",
+		"ControlKey.SYSREQ":   "PressSysReq",
+	}
+	for in, want := range cases {
+		got, ok := controlKeyStepType(in)
+		if !ok || got != want {
+			t.Errorf("controlKeyStepType(%q) = %q, %v; want %q", in, got, ok, want)
+		}
+	}
+	for _, in := range []string{"ControlKey.NOPE", "ControlKey.", "ControlKey.F99"} {
+		if got, ok := controlKeyStepType(in); ok {
+			t.Errorf("controlKeyStepType(%q) = %q; expected no match", in, got)
+		}
+	}
+}
+
+// TestApplyTerminalSettingsCarriesEverything guards the wiring between a
+// workflow and the session it opens: a setting that is read from the file and
+// then not handed to the emulator is indistinguishable from one that is not
+// supported at all.
+func TestApplyTerminalSettingsCarriesEverything(t *testing.T) {
+	config := &Configuration{
+		CodePage: "cp285", Model: "4", Oversize: "132x50",
+		LUName: "LU01", TLS: true, TLSSkipVerify: true,
+	}
+	e := connect3270.NewEmulator("mvs.example.com", 992, "5000")
+	applyTerminalSettings(e, config)
+
+	if e.CodePage != "cp285" || e.Model != "4" || e.Oversize != "132x50" {
+		t.Errorf("terminal settings not carried: %+v", e)
+	}
+	if e.LUName != "LU01" || !e.TLS || !e.InsecureSkipVerify {
+		t.Errorf("connection settings not carried: %+v", e)
+	}
+}

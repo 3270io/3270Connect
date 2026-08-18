@@ -68,19 +68,10 @@ func (h profilerHost) Query(arg string) (string, error) {
 	return connect3270.NormalizeDataLines(resp), nil
 }
 
-// AsciiScreen is normalised for the same reason, and it matters for a
-// different one: the banner preview is published as a preview of the host's
-// screen, and its hash is meant to be comparable. 3270Web fingerprints a
-// decoded screen buffer, so the two signatures cannot be identical without a
-// larger change — but its text carries no "data:" on every line, and neither
-// should this one.
-func (h profilerHost) AsciiScreen() (string, error) {
-	screen, err := h.Emulator.AsciiScreen()
-	if err != nil {
-		return "", err
-	}
-	return connect3270.NormalizeDataLines(screen), nil
-}
+// AsciiScreen needs no wrapper: the emulator normalises captured screens
+// itself, because a screen with "data: " down its left edge was wrong
+// everywhere it was used, not only here. It is promoted from the embedded
+// emulator and satisfies profiler.AsciiScreenSource as it stands.
 
 func runProfileMode() {
 	host := strings.TrimSpace(profileHost)
@@ -122,6 +113,14 @@ func runProfileMode() {
 
 	e := connect3270.NewEmulator(host, port, scriptPort)
 	e.CodePage = codePage
+	e.Model = strings.TrimSpace(hostModel)
+	e.Oversize = strings.TrimSpace(hostOversize)
+	e.LUName = strings.TrimSpace(hostLUName)
+	// -profileTLS used to do nothing but stamp tls:true on the document,
+	// while the probe connected in the clear. It now makes the connection it
+	// describes.
+	e.TLS = profileTLS
+	e.InsecureSkipVerify = hostTLSSkipVerify
 	defer func() { _ = e.Disconnect() }()
 
 	if err := e.Connect(); err != nil {

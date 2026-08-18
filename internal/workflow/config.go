@@ -107,7 +107,26 @@ type Configuration struct {
 	// passed to the underlying x3270/s3270 emulator via its -codepage option.
 	// Leave empty to use the emulator default. The -codePage CLI flag overrides
 	// this value when set.
-	CodePage       string             `json:"CodePage,omitempty"`
+	CodePage string `json:"CodePage,omitempty"`
+	// Model is the 3270 device type to negotiate: "2" (24x80), "3" (32x80),
+	// "4" (43x80) or "5" (27x132), optionally written in full as "3278-4"
+	// for a monochrome device or "3279-4" for colour. Empty negotiates
+	// 3279-2, which is what this tool has always used. A workflow that
+	// addresses rows below 24 needs a model that has them.
+	Model string `json:"Model,omitempty"`
+	// Oversize asks for a screen larger than the model defines, written as
+	// "<cols>x<rows>" (e.g. "132x50"). Only hosts that support the larger
+	// geometry will use it.
+	Oversize string `json:"Oversize,omitempty"`
+	// LUName requests a specific logical unit at connect time, for hosts
+	// that route sessions by LU.
+	LUName string `json:"LUName,omitempty"`
+	// TLS wraps the host connection in TLS.
+	TLS bool `json:"TLS,omitempty"`
+	// TLSSkipVerify turns off host certificate validation. For an internal
+	// host with a private CA or a self-signed certificate; leave it off
+	// otherwise.
+	TLSSkipVerify  bool               `json:"TLSSkipVerify,omitempty"`
 	OutputFilePath string             `json:"OutputFilePath"`
 	WaitForField   WaitForFieldConfig `json:"WaitForField,omitempty"`
 	Steps          []Step

@@ -230,6 +230,11 @@ var (
 	injectionConfig              string
 	rsaToken                     string
 	hostCodePage                 string
+	hostModel                    string
+	hostOversize                 string
+	hostLUName                   string
+	hostTLS                      bool
+	hostTLSSkipVerify            bool
 	showHelp                     bool
 	runAPI                       bool
 	apiPort                      int
@@ -260,6 +265,12 @@ var dashboardStarted bool
 var totalWorkflowsStarted int64
 var totalWorkflowsCompleted int64
 var totalWorkflowsFailed int64
+
+// totalWorkflowsConnectFailed counts workflows that never reached the host.
+// Kept apart from the failure count, which is about workflows that ran and
+// went wrong, but reported all the same: a run where nothing connected is
+// not a run that succeeded.
+var totalWorkflowsConnectFailed int64
 var screenCaptureCount int64 // Atomic counter for screen captures (max 5)
 
 var dashboardPort int
@@ -643,6 +654,11 @@ func init() {
 	flag.StringVar(&injectionConfig, "injectionConfig", "", "Path to the injection configuration file")
 	flag.StringVar(&rsaToken, "token", "", "RSA token value to substitute for {{token}} placeholders")
 	flag.StringVar(&hostCodePage, "codePage", "", "Host EBCDIC code page / character set for the 3270 session (e.g. cp037, cp285, cp278 or 'finnish'). Overrides the workflow 'CodePage' value and is passed to the x3270/s3270 -codepage option.")
+	flag.StringVar(&hostModel, "model", "", "3270 device model to negotiate: 2 (24x80), 3 (32x80), 4 (43x80) or 5 (27x132), or the full form 3278-4 / 3279-4. Overrides the workflow 'Model' value. Default 3279-2.")
+	flag.StringVar(&hostOversize, "oversize", "", "Screen larger than the model defines, as <cols>x<rows> (e.g. 132x50). Only used by hosts that support it. Overrides the workflow 'Oversize' value.")
+	flag.StringVar(&hostLUName, "luName", "", "Logical unit to request at connect time, for hosts that route sessions by LU. Overrides the workflow 'LUName' value.")
+	flag.BoolVar(&hostTLS, "tls", false, "Connect to the host over TLS. Overrides the workflow 'TLS' value.")
+	flag.BoolVar(&hostTLSSkipVerify, "tlsSkipVerify", false, "Skip host certificate validation when using -tls. For an internal host with a private CA; leave off otherwise.")
 	flag.BoolVar(&showHelp, "help", false, "Show usage information")
 	flag.BoolVar(&runAPI, "api", false, "Run as API")
 	flag.IntVar(&apiPort, "api-port", 8080, "API port")
@@ -816,6 +832,10 @@ func loadConfiguration(filePath string) *Configuration {
 	if config.RampUpDelay <= 0 {
 		config.RampUpDelay = 1.0
 	}
+	// Before validating, not after: a terminal setting given on the command
+	// line is part of the configuration being checked, and -model 7 should
+	// be reported here rather than ten connect attempts later.
+	applyTerminalFlags(&config)
 	err = validateConfiguration(&config)
 	if err != nil {
 		pterm.Error.Printf("Invalid configuration: %v", err)
@@ -855,62 +875,18 @@ func loadInputFile(filePath string) ([]Step, error) {
 			key := strings.TrimPrefix(line, "yield ps.sendKeys(")
 			key = strings.TrimSuffix(key, ");")
 			key = strings.Trim(key, "'")
-			stepType := ""
-			switch key {
-			case "ControlKey.TAB":
-				stepType = "PressTab"
-			case "ControlKey.ENTER":
-				stepType = "PressEnter"
-			case "ControlKey.F1":
-				stepType = "PressPF1"
-			case "ControlKey.F2":
-				stepType = "PressPF2"
-			case "ControlKey.F3":
-				stepType = "PressPF3"
-			case "ControlKey.F4":
-				stepType = "PressPF4"
-			case "ControlKey.F5":
-				stepType = "PressPF5"
-			case "ControlKey.F6":
-				stepType = "PressPF6"
-			case "ControlKey.F7":
-				stepType = "PressPF7"
-			case "ControlKey.F8":
-				stepType = "PressPF8"
-			case "ControlKey.F9":
-				stepType = "PressPF9"
-			case "ControlKey.F10":
-				stepType = "PressPF10"
-			case "ControlKey.F11":
-				stepType = "PressPF11"
-			case "ControlKey.F12":
-				stepType = "PressPF12"
-			case "ControlKey.F13":
-				stepType = "PressPF13"
-			case "ControlKey.F14":
-				stepType = "PressPF14"
-			case "ControlKey.F15":
-				stepType = "PressPF15"
-			case "ControlKey.F16":
-				stepType = "PressPF16"
-			case "ControlKey.F17":
-				stepType = "PressPF17"
-			case "ControlKey.F18":
-				stepType = "PressPF18"
-			case "ControlKey.F19":
-				stepType = "PressPF19"
-			case "ControlKey.F20":
-				stepType = "PressPF20"
-			case "ControlKey.F21":
-				stepType = "PressPF21"
-			case "ControlKey.F22":
-				stepType = "PressPF22"
-			case "ControlKey.F23":
-				stepType = "PressPF23"
-			case "ControlKey.F24":
-				stepType = "PressPF24"
-			default:
-				stepType = "FillString"
+			// A plain string is text to type; only a ControlKey names a key.
+			stepType := "FillString"
+			if strings.HasPrefix(key, "ControlKey.") {
+				resolved, ok := controlKeyStepType(key)
+				if !ok {
+					// Typing the name of a key into the screen is not a
+					// reasonable reading of "send this key", and is what
+					// used to happen to every key outside Tab, Enter and
+					// the PF keys.
+					return nil, fmt.Errorf("input file line %d: unknown key %q", idx+1, key)
+				}
+				stepType = resolved
 			}
 			step := Step{Type: stepType, Text: key}
 			steps = append(steps, step)
@@ -1080,7 +1056,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 	}()
 	e.Host = config.Host
 	e.Port = config.Port
-	e.CodePage = config.CodePage
+	applyTerminalSettings(e, config)
 
 	// Always start from a clean session to avoid reusing stale emulator state between pooled runs.
 	_ = e.Disconnect()
@@ -1177,6 +1153,11 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 			}
 			if step.Type == "Connect" {
 				connectFailed = true
+				// Recorded either way. -showConnectionErrors decides whether
+				// a refused connection counts as an error worth stopping the
+				// run over, not whether anyone is allowed to know why the
+				// session never opened.
+				storeLog(fmt.Sprintf("Workflow for scriptPort %s could not connect: %v", scriptPortLabel, err))
 				if showConnectionErrors {
 					addError(err)
 				}
@@ -1238,6 +1219,7 @@ func runWorkflowWithEmulator(e *connect3270.Emulator, config *Configuration, ove
 				pterm.Warning.Println(msg)
 			}
 		}
+		atomic.AddInt64(&totalWorkflowsConnectFailed, 1)
 		metricsPkg.IncWorkflow("connect_failed")
 	} else {
 		if connect3270.Verbose {
@@ -1410,10 +1392,8 @@ func executeWorkflowOnce(workflowConfig *Configuration) (string, error) {
 	if workflowConfig.Token == "" && rsaToken != "" {
 		workflowConfig.Token = rsaToken
 	}
-	// A per-request CodePage wins; otherwise fall back to the -codePage flag.
-	if strings.TrimSpace(workflowConfig.CodePage) == "" && strings.TrimSpace(hostCodePage) != "" {
-		workflowConfig.CodePage = strings.TrimSpace(hostCodePage)
-	}
+	// A per-request terminal setting wins; otherwise fall back to the flags.
+	applyTerminalFlagDefaults(workflowConfig)
 	if err := validateConfiguration(workflowConfig); err != nil {
 		return "", wfErr(http.StatusBadRequest, "invalid workflow configuration: %w", err)
 	}
@@ -1432,7 +1412,7 @@ func executeWorkflowOnce(workflowConfig *Configuration) (string, error) {
 	}
 
 	e := connect3270.NewEmulator(workflowConfig.Host, workflowConfig.Port, strconv.Itoa(scriptPort))
-	e.CodePage = workflowConfig.CodePage
+	applyTerminalSettings(e, workflowConfig)
 	if err := e.InitializeOutput(tmpFileName, true); err != nil {
 		return "", wfErr(http.StatusInternalServerError, "could not initialise the output file: %w", err)
 	}
@@ -1506,10 +1486,6 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 		return e.FillString(step.Coordinates.Row, step.Coordinates.Column, text)
 	case "AsciiScreenGrab":
 		return e.AsciiScreenGrab(tmpFileName, runAPI)
-	case "PressEnter":
-		return e.Press(connect3270.Enter)
-	case "PressTab":
-		return e.Press(connect3270.Tab)
 	case "WaitForField":
 		timeout := time.Second
 		retries := 10
@@ -1529,54 +1505,6 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 			return nil
 		}
 		return nil
-	case "PressPF1":
-		return e.Press(connect3270.F1)
-	case "PressPF2":
-		return e.Press(connect3270.F2)
-	case "PressPF3":
-		return e.Press(connect3270.F3)
-	case "PressPF4":
-		return e.Press(connect3270.F4)
-	case "PressPF5":
-		return e.Press(connect3270.F5)
-	case "PressPF6":
-		return e.Press(connect3270.F6)
-	case "PressPF7":
-		return e.Press(connect3270.F7)
-	case "PressPF8":
-		return e.Press(connect3270.F8)
-	case "PressPF9":
-		return e.Press(connect3270.F9)
-	case "PressPF10":
-		return e.Press(connect3270.F10)
-	case "PressPF11":
-		return e.Press(connect3270.F11)
-	case "PressPF12":
-		return e.Press(connect3270.F12)
-	case "PressPF13":
-		return e.Press(connect3270.F13)
-	case "PressPF14":
-		return e.Press(connect3270.F14)
-	case "PressPF15":
-		return e.Press(connect3270.F15)
-	case "PressPF16":
-		return e.Press(connect3270.F16)
-	case "PressPF17":
-		return e.Press(connect3270.F17)
-	case "PressPF18":
-		return e.Press(connect3270.F18)
-	case "PressPF19":
-		return e.Press(connect3270.F19)
-	case "PressPF20":
-		return e.Press(connect3270.F20)
-	case "PressPF21":
-		return e.Press(connect3270.F21)
-	case "PressPF22":
-		return e.Press(connect3270.F22)
-	case "PressPF23":
-		return e.Press(connect3270.F23)
-	case "PressPF24":
-		return e.Press(connect3270.F24)
 	case "StepDelay":
 		stepDelay, err := randomDuration(step.StepDelay, false)
 		if err != nil {
@@ -1588,6 +1516,11 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 		time.Sleep(stepDelay)
 		return nil
 	default:
+		// Every Press* step: one map shared with the validator, so a key
+		// cannot be accepted by one and unknown to the other.
+		if key, ok := workflow.PressKeys[step.Type]; ok {
+			return e.Press(key)
+		}
 		return fmt.Errorf("unknown step type: %s", step.Type)
 	}
 }
@@ -1759,10 +1692,8 @@ func main() {
 	if rsaToken != "" {
 		config.Token = rsaToken
 	}
-	// The -codePage CLI flag overrides the workflow's CodePage when provided.
-	if strings.TrimSpace(hostCodePage) != "" {
-		config.CodePage = strings.TrimSpace(hostCodePage)
-	}
+	// The terminal CLI flags override the workflow's own values when given.
+	applyTerminalFlags(config)
 	if !runAPI {
 		printWorkflowMetadata(configFile, config)
 	}
@@ -2347,6 +2278,7 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 		started:         adjustedStarted,
 		completed:       adjustedCompleted,
 		failed:          finalFailed,
+		connectFailed:   atomic.LoadInt64(&totalWorkflowsConnectFailed),
 		active:          adjustedActive,
 		workers:         workerCount,
 		showActive:      true,
@@ -2389,6 +2321,7 @@ type runSummary struct {
 	started         int64
 	completed       int64
 	failed          int64
+	connectFailed   int64
 	active          int
 	workers         int
 	showActive      bool
@@ -2406,6 +2339,12 @@ func printRunSummary(s runSummary) {
 	if s.failed > 0 {
 		outcomeTone = ToneBad
 		outcomeNote = fmt.Sprintf("%d workflow(s) hit gremlins", s.failed)
+	} else if s.connectFailed > 0 {
+		// A run that never reached the host has not succeeded, whatever the
+		// failure count says. It used to print a victory lap for a workflow
+		// that got no further than the connect.
+		outcomeTone = ToneBad
+		outcomeNote = fmt.Sprintf("%d workflow(s) never reached the host", s.connectFailed)
 	}
 	pterm.Println()
 	pterm.RenderOutcome(s.headline, outcomeNote, outcomeTone)
@@ -2427,6 +2366,10 @@ func printRunSummary(s runSummary) {
 		failedTone, failedNote = ToneBad, "gremlins"
 	}
 	pterm.RenderStatRow("workflows failed", fmt.Sprintf("%d", s.failed), "●", failedNote, failedTone)
+
+	if s.connectFailed > 0 {
+		pterm.RenderStatRow("could not connect", fmt.Sprintf("%d", s.connectFailed), "●", "host unreachable", ToneBad)
+	}
 
 	if s.showActive {
 		activeTone, activeNote := ToneNeutral, "all zen"
@@ -2694,6 +2637,7 @@ func printSingleWorkflowSummary(configPath string, config *Configuration) {
 		started:         finalStarted,
 		completed:       finalCompleted,
 		failed:          finalFailed,
+		connectFailed:   atomic.LoadInt64(&totalWorkflowsConnectFailed),
 		avgCPU:          avgCPU,
 		avgMem:          avgMem,
 		avgWorkflowTime: avgWorkflowTime,
@@ -4237,4 +4181,85 @@ func injectDynamicValues(config *Configuration, injection map[string]string) *Co
 	}
 
 	return &newConfig
+}
+
+// controlKeyStepType maps a key name from the input-file DSL — "ControlKey.PA1",
+// "ControlKey.F3", "TAB" — onto the workflow step that sends it.
+//
+// It is derived from workflow.PressKeys rather than written out again, so a
+// key added to the workflow vocabulary is reachable from an input file on the
+// same commit. The "F3" spelling is accepted alongside "PF3" because that is
+// what the DSL has always used for the PF keys.
+func controlKeyStepType(key string) (string, bool) {
+	want := strings.ToUpper(strings.TrimSpace(strings.TrimPrefix(key, "ControlKey.")))
+	if want == "" {
+		return "", false
+	}
+	for step := range workflow.PressKeys {
+		alias := strings.ToUpper(strings.TrimPrefix(step, "Press"))
+		if alias == want {
+			return step, true
+		}
+		if strings.HasPrefix(alias, "PF") && "F"+alias[2:] == want {
+			return step, true
+		}
+	}
+	return "", false
+}
+
+// applyTerminalSettings copies the workflow's terminal settings onto the
+// emulator. One place, so the CLI runner and the API handler cannot drift
+// into negotiating different sessions from the same workflow.
+func applyTerminalSettings(e *connect3270.Emulator, config *Configuration) {
+	e.CodePage = config.CodePage
+	e.Model = config.Model
+	e.Oversize = config.Oversize
+	e.LUName = config.LUName
+	e.TLS = config.TLS
+	e.InsecureSkipVerify = config.TLSSkipVerify
+}
+
+// applyTerminalFlags lets the terminal CLI flags override what the workflow
+// file asks for, which is how the same workflow is pointed at a TLS host or
+// a wider screen without editing it.
+func applyTerminalFlags(config *Configuration) {
+	if v := strings.TrimSpace(hostCodePage); v != "" {
+		config.CodePage = v
+	}
+	if v := strings.TrimSpace(hostModel); v != "" {
+		config.Model = v
+	}
+	if v := strings.TrimSpace(hostOversize); v != "" {
+		config.Oversize = v
+	}
+	if v := strings.TrimSpace(hostLUName); v != "" {
+		config.LUName = v
+	}
+	if hostTLS {
+		config.TLS = true
+	}
+	if hostTLSSkipVerify {
+		config.TLSSkipVerify = true
+	}
+}
+
+// applyTerminalFlagDefaults is the same for a workflow that arrived over the
+// API: what the request asked for wins, and the flags only fill in the gaps.
+func applyTerminalFlagDefaults(config *Configuration) {
+	if strings.TrimSpace(config.CodePage) == "" {
+		config.CodePage = strings.TrimSpace(hostCodePage)
+	}
+	if strings.TrimSpace(config.Model) == "" {
+		config.Model = strings.TrimSpace(hostModel)
+	}
+	if strings.TrimSpace(config.Oversize) == "" {
+		config.Oversize = strings.TrimSpace(hostOversize)
+	}
+	if strings.TrimSpace(config.LUName) == "" {
+		config.LUName = strings.TrimSpace(hostLUName)
+	}
+	if !config.TLS && hostTLS {
+		config.TLS = true
+		config.TLSSkipVerify = config.TLSSkipVerify || hostTLSSkipVerify
+	}
 }

@@ -140,16 +140,30 @@ type queryStep struct {
 	apply func(p *CompatibilityProfile, response string)
 }
 
+// probeSequence is the read-only Query sequence the probe runs.
+//
+// The names are the emulator's own. Two of them were not: Tn3270eFunctions
+// and Bind are not queries x3270 has ever answered, so every profile ever
+// taken listed them under capabilities.unknown — the field callers read as
+// "this host did not answer" and use to spot one host stack behaving
+// differently from another. Two permanent entries in it made that signal
+// worth less than it looks, and left the negotiated TN3270E functions blank
+// on hosts that were perfectly willing to report them.
+//
+// Tn3270eOptions is the query that answers, and BindPluName is the one that
+// reports the bound LU, so Bind is dropped rather than renamed: it was only
+// ever matching BindPluName by abbreviation, which is why it answered with
+// an empty string instead of an error.
 func probeSequence() []queryStep {
 	return []queryStep{
 		{"Host", applyQueryHost},
 		{"ConnectionState", applyQueryConnectionState},
-		{"Bind", applyQueryBind},
 		{"Cursor", applyQueryCursor},
 		{"Model", applyQueryModel},
 		{"BindPluName", applyQueryBindPluName},
-		{"Tn3270eFunctions", applyQueryTn3270eFunctions},
+		{"Tn3270eOptions", applyQueryTn3270eFunctions},
 		{"ScreenCurSize", applyQueryScreenCurSize},
+		{"ScreenSizeMax", applyQueryScreenSizeMax},
 	}
 }
 

@@ -22,15 +22,32 @@ These top-level properties configure the terminal connection for the whole workf
 - **Host** (string): Hostname or IP address of the TN3270 host.
 - **Port** (int): TCP port of the TN3270 host.
 - **CodePage** (string, optional): Host EBCDIC code page / character set for the session, for example `cp037`, `cp285`, or `cp278`/`finnish`. When set, it is passed to the embedded x3270/s3270 emulator via its `-codepage` option so that national and language-specific characters render correctly. The `-codePage` CLI flag overrides this value. Leave it unset to use the emulator default. See [Host Code Page and Character Set](basic-usage.md#host-code-page-and-character-set) for the list of supported code pages.
+- **Model** (string, optional): The device type to negotiate. `2` (24x80), `3` (32x80), `4` (43x80) or `5` (27x132), or written in full as `3278-4` for a monochrome device and `3279-4` for colour. Defaults to `3279-2`. **A workflow that addresses rows past 24 needs a model that has them** — on a model 2 session the host will never send more than 24 rows, and a step aimed at row 30 is rejected rather than quietly applied to the bottom of the screen. Overridden by `-model`.
+- **Oversize** (string, optional): A screen larger than the model defines, written `<cols>x<rows>`, e.g. `132x50`. Only hosts that support the larger geometry will use it. Overridden by `-oversize`.
+- **LUName** (string, optional): The logical unit to request at connect time, for hosts that route sessions by LU. Overridden by `-luName`.
+- **TLS** (bool, optional): Connect over TLS. Overridden by `-tls`.
+- **TLSSkipVerify** (bool, optional): Skip host certificate validation. Requires `TLS`. For an internal host with a private CA or a self-signed certificate; leave it off otherwise. Overridden by `-tlsSkipVerify`.
 
 ```json
 {
   "Host": "mvs.example.com",
   "Port": 992,
   "CodePage": "cp278",
+  "Model": "4",
+  "TLS": true,
+  "LUName": "LU01",
   "Steps": [ { "Type": "Connect" }, { "Type": "Disconnect" } ]
 }
 ```
+
+### Screen size
+
+The negotiated screen is what the model allows and what the host chooses to
+use. A model 4 session can show 43 rows, but starts on the 24-row primary
+screen and moves to the alternate size only when the host writes to it. Steps
+are checked against the size in use at the time, so a workflow that addresses
+row 30 works once the host has switched and is rejected — with the screen size
+in the message — before it has.
 
 ## Grace Period Settings
 
@@ -88,6 +105,9 @@ Legacy `Delay` and `HumanDelay` settings are no longer used.
   
   If `Coordinates` is omitted (or `Row`/`Column` are both `0`), the text is typed at the current cursor position.
 
+  `Text` is typed literally. Commas, brackets, quotes and backslashes go to the
+  host as written — a value like `SMITH,JOHN` arrives whole.
+
 ### AsciiScreenGrab
 - **Description**: Captures and appends the ASCII representation of the current screen to the output file.
 - **Parameters**: None.
@@ -117,6 +137,30 @@ Legacy `Delay` and `HumanDelay` settings are no longer used.
 ### PressPF1 ... PressPF24
 - **Description**: Simulates pressing a Program Function key (PF1 through PF24).
 - **Usage**: Use the PF key that matches your host application navigation.
+
+### PressPA1, PressPA2, PressPA3
+- **Description**: Sends a Program Attention key.
+- **Usage**: PA1 is the interrupt an operator uses to stop a running transaction and PA2 usually cancels. Unlike a PF key, a PA key carries no screen data back to the host, which is why applications use them for control rather than for input.
+
+### PressClear
+- **Description**: Clears the screen and sends the Clear AID.
+- **Usage**: The usual way to get from one CICS transaction to a blank screen ready for the next.
+
+### PressReset
+- **Description**: Resets an error-locked keyboard (the `X` in a real terminal's status line).
+- **Usage**: After a step the host rejected, to make the session usable again rather than failing every step that follows.
+
+### PressHome, PressBackTab, PressNewline
+- **Description**: Cursor movement between fields: to the first unprotected field, to the previous field, and to the first field on the next line.
+- **Usage**: For screens whose field order is easier to walk than to address by coordinates.
+
+### PressEraseEOF, PressEraseInput
+- **Description**: Erases from the cursor to the end of the field, or every unprotected field on the screen.
+- **Usage**: `PressEraseEOF` before a `FillString` is how a shorter value is written over a longer one; without it the tail of the old value is left behind.
+
+### PressSysReq, PressAttn
+- **Description**: Sends SysReq, which reaches the SSCP rather than the application, or Attn, the TN3270E interrupt.
+- **Usage**: For dropping a hung LU session or interrupting an application that has stopped responding.
 
 ### Disconnect
 - **Description**: Disconnects from the terminal.

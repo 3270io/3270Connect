@@ -93,7 +93,7 @@ as `POST /profile` and `POST /api/v1/sessions/:id/profile`) and
 {
   "ind_file": "yes" | "no" | "unknown",
   "query_reply_ids": ["..."],
-  "unknown": ["BindPluName", "Tn3270eFunctions"]
+  "unknown": ["BindPluName", "Tn3270eOptions"]
 }
 ```
 
@@ -117,7 +117,7 @@ connect timing).
 ### `raw` (optional)
 
 ```json
-{"Bind": "rows 24 cols 80 ...", "Model": "IBM-3279-2-E"}
+{"ScreenSizeMax": "rows 43 columns 80", "Model": "IBM-3279-2-E"}
 ```
 
 Only emitted when the caller passes `collect_raw: true` (3270Web) or
