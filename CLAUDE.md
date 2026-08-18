@@ -55,6 +55,10 @@ go test -v ./...
 | `-injectionConfig` | Dynamic field injection JSON |
 | `-token` | RSA token substitution |
 | `-codePage` | Host EBCDIC code page / charset (e.g. `cp037`, `cp278`/`finnish`); overrides workflow `CodePage`, passed to s3270 `-codepage` |
+| `-model` | Device type to negotiate: `2`/`3`/`4`/`5` or `3278-4`/`3279-4`. Default `3279-2` (24x80). Overrides workflow `Model` |
+| `-oversize` | Screen larger than the model defines, `<cols>x<rows>` (e.g. `132x50`). Overrides workflow `Oversize` |
+| `-luName` | Logical unit to request at connect time. Overrides workflow `LUName` |
+| `-tls` / `-tlsSkipVerify` | Connect over TLS (the `L:` host prefix); skip certificate validation. Override workflow `TLS` / `TLSSkipVerify` |
 | `-concurrent` | Number of parallel workflows (default: 1) |
 | `-runtime` | Max run duration in seconds |
 | `-api` / `-api-port` | REST API mode |
@@ -81,6 +85,8 @@ than editing it by hand.
   "Host": "mainframe.host",
   "Port": 3270,
   "CodePage": "cp037",
+  "Model": "2",
+  "TLS": false,
   "OutputFilePath": "output.html",
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
   "WaitForField": true,
@@ -97,6 +103,37 @@ than editing it by hand.
 
 `AsciiScreenGrab` writes to the workflow's top-level `OutputFilePath`, which is
 required whenever any step uses it.
+
+The keyboard is the whole 3270 one: `PressEnter`, `PressTab`, `PressPF1`..`24`,
+`PressPA1`..`3`, `PressClear`, `PressReset`, `PressHome`, `PressBackTab`,
+`PressNewline`, `PressEraseEOF`, `PressEraseInput`, `PressSysReq`, `PressAttn`.
+`internal/workflow.PressKeys` maps each to its emulator action; add a key
+there and to `StepTypes` together, which a test enforces.
+
+## The terminal session
+
+`connect3270` drives x3270/s3270 over its scripting protocol, one TCP
+connection per worker on a script port the emulator binds to loopback.
+
+Things that are load-bearing here:
+
+- **Every reply carries a status line** — twelve fields, ending `ok` or
+  `error`. `connect3270/status.go` parses it into `Emulator.Status()`, which
+  is where the negotiated screen size, the keyboard lock and the connection
+  state come from. It costs nothing, so nothing should go asking for those
+  with a `Query`. It is also kept out of the reply payload: it used to be
+  captured as part of every screen.
+- **Action arguments are quoted** (`quoteActionArg`). Unquoted, a comma in a
+  value is an argument separator and disappears, and a bracket is a syntax
+  error. This is not optional for anything carrying host data.
+- **`Query(ConnectionState)` answers `not-connected`.** Any check for a live
+  session has to read the answer, not just notice that one arrived.
+- **Coordinates are checked against the screen in use.** The emulator clamps
+  an out-of-range `MoveCursor` and answers `ok`, so an unchecked coordinate
+  is a silent write to the wrong field.
+- **The embedded emulator is unpacked to `os.UserCacheDir()/3270Connect`**
+  under a name derived from its contents, 0700. Not a fixed path in the
+  shared temp directory, and not reused across versions.
 
 ## REST API Endpoints
 

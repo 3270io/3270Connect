@@ -21,6 +21,11 @@ To run a workflow, use the following command:
 - `-config`: Specifies the path to the configuration file (default is "workflow.json").
 - `-token`: Provides a one-time RSA token that replaces any `{{token}}` placeholder in workflow step text during execution.
 - `-codePage`: Sets the host EBCDIC code page / character set for the 3270 session (for example `cp037`, `cp285`, or `cp278`/`finnish`). Overrides the workflow's `CodePage` value when supplied and is passed straight through to the embedded x3270/s3270 emulator's `-codepage` option. See [Host Code Page and Character Set](#host-code-page-and-character-set).
+- `-model`: The 3270 device type to negotiate — `2` (24x80), `3` (32x80), `4` (43x80), `5` (27x132), or the full form `3278-4` / `3279-4`. Defaults to `3279-2`. A workflow that addresses rows past 24 needs a model that has them. Overrides the workflow's `Model` value.
+- `-oversize`: A screen larger than the model defines, as `<cols>x<rows>` (e.g. `132x50`). Only hosts that support the geometry will use it. Overrides the workflow's `Oversize` value.
+- `-luName`: The logical unit to request at connect time, for hosts that route sessions by LU. Overrides the workflow's `LUName` value.
+- `-tls`: Connect to the host over TLS. Overrides the workflow's `TLS` value.
+- `-tlsSkipVerify`: Skip host certificate validation when using `-tls`. For an internal host with a private CA or a self-signed certificate; leave it off otherwise.
 - `-showConnectionErrors`: By default, connection failures for the `Connect` step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.
 - `WaitForField` (config, default `true`): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful `Connect`. Supports both simple boolean and detailed configuration:
   - Boolean format: `"WaitForField": true` or `"WaitForField": false` (uses defaults: 1s delay, 10 retries)
@@ -282,6 +287,39 @@ You can set the code page in two ways:
   ```
 
 The value is passed directly to the embedded x3270/s3270 emulator's `-codepage` option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave `CodePage` unset (and omit `-codePage`) to use the emulator's built-in default code page.
+
+## Screen size, TLS and LU names
+
+The session is a 24x80 colour model 2 unless you ask for something else. Three
+settings describe the terminal rather than the run, and each can be set in the
+workflow or on the command line:
+
+```bash
+# a 43x80 model 4 session, over TLS, bound to a named LU
+3270Connect -config workflow.json -model 4 -tls -luName LU01
+```
+
+```json
+{
+  "Host": "mvs.example.com",
+  "Port": 992,
+  "Model": "4",
+  "TLS": true,
+  "LUName": "LU01",
+  "Steps": [ { "Type": "Connect" }, { "Type": "Disconnect" } ]
+}
+```
+
+- **Model** decides how large the screen can be. A model 4 session still starts
+  on the 24-row primary screen and moves to 43 rows when the host writes to the
+  alternate size. Steps are checked against the size in use at the time, so a
+  step aimed at row 30 is rejected — naming the screen size — rather than
+  applied to the bottom row of a 24-row screen.
+- **TLS** wraps the connection (the emulator's `L:` host prefix). Certificate
+  validation is on; `-tlsSkipVerify` turns it off for an internal host with a
+  private CA.
+- **LUName** asks the host to bind the session to a named logical unit, which
+  hosts that route by LU require.
 
 Common SBCS code pages (with aliases) supported by the bundled emulator:
 

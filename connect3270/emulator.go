@@ -2,6 +2,8 @@ package connect3270
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -18,8 +20,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pterm/pterm"
-
 	"github.com/3270io/3270Connect/binaries"
 )
 
@@ -34,35 +34,80 @@ var (
 	shutdownRequested atomic.Bool
 )
 
+// DefaultModel is the device type negotiated when a workflow does not ask
+// for one: the 24x80 colour model 2, which is what this tool has always
+// used and what the overwhelming majority of green-screen applications are
+// written for.
+const DefaultModel = "3279-2"
+
 // These constants represent the keyboard keys
 const (
 	Enter = "Enter"
 	Tab   = "Tab"
 	Reset = "Reset"
-	F1    = "PF(1)"
-	F2    = "PF(2)"
-	F3    = "PF(3)"
-	F4    = "PF(4)"
-	F5    = "PF(5)"
-	F6    = "PF(6)"
-	F7    = "PF(7)"
-	F8    = "PF(8)"
-	F9    = "PF(9)"
-	F10   = "PF(10)"
-	F11   = "PF(11)"
-	F12   = "PF(12)"
-	F13   = "PF(13)"
-	F14   = "PF(14)"
-	F15   = "PF(15)"
-	F16   = "PF(16)"
-	F17   = "PF(17)"
-	F18   = "PF(18)"
-	F19   = "PF(19)"
-	F20   = "PF(20)"
-	F21   = "PF(21)"
-	F22   = "PF(22)"
-	F23   = "PF(23)"
-	F24   = "PF(24)"
+
+	// The attention keys. PA1 is the one an operator reaches for to
+	// interrupt a running transaction and PA2 typically cancels; neither
+	// carries the screen's contents back to the host the way a PF key does,
+	// which is exactly why applications use them. There was previously no
+	// way to send any of them.
+	PA1 = "PA(1)"
+	PA2 = "PA(2)"
+	PA3 = "PA(3)"
+
+	// Clear erases the screen and sends an AID, and is how a CICS user gets
+	// from a transaction back to a blank screen to type the next one.
+	Clear = "Clear"
+
+	// Field and cursor movement. BackTab walks to the previous field,
+	// Home goes to the first unprotected one, and EraseEOF clears from the
+	// cursor to the end of the field — the standard way to overwrite a
+	// field that already holds a longer value.
+	BackTab    = "BackTab"
+	Home       = "Home"
+	EraseEOF   = "EraseEOF"
+	EraseInput = "EraseInput"
+	Newline    = "Newline"
+	Up         = "Up"
+	Down       = "Down"
+	Left       = "Left"
+	Right      = "Right"
+	BackSpace  = "BackSpace"
+	Delete     = "Delete"
+	Insert     = "Insert"
+	Dup        = "Dup"
+	FieldMark  = "FieldMark"
+
+	// SysReq reaches the SSCP rather than the application, which is how a
+	// hung LU session is dropped on VTAM hosts. Attn is its TN3270E
+	// equivalent for interrupting the application.
+	SysReq = "SysReq"
+	Attn   = "Attn"
+
+	F1  = "PF(1)"
+	F2  = "PF(2)"
+	F3  = "PF(3)"
+	F4  = "PF(4)"
+	F5  = "PF(5)"
+	F6  = "PF(6)"
+	F7  = "PF(7)"
+	F8  = "PF(8)"
+	F9  = "PF(9)"
+	F10 = "PF(10)"
+	F11 = "PF(11)"
+	F12 = "PF(12)"
+	F13 = "PF(13)"
+	F14 = "PF(14)"
+	F15 = "PF(15)"
+	F16 = "PF(16)"
+	F17 = "PF(17)"
+	F18 = "PF(18)"
+	F19 = "PF(19)"
+	F20 = "PF(20)"
+	F21 = "PF(21)"
+	F22 = "PF(22)"
+	F23 = "PF(23)"
+	F24 = "PF(24)"
 )
 
 const (
@@ -72,9 +117,28 @@ const (
 	scriptIOTimeout       = 30 * time.Second
 	startupPollInterval   = 200 * time.Millisecond
 	startupConnectTimeout = 20 * time.Second
+	// processExitGrace is how long an emulator gets to exit on its own after
+	// being told to quit, before it is killed and its script port reclaimed.
+	processExitGrace = 5 * time.Second
+	// firstScreenTimeout bounds the wait for the host's first screen after
+	// the session comes up. See waitForHostReady.
+	firstScreenTimeout = 3 * time.Second
 )
 
+// procHandle is a launched emulator process and a channel closed once it has
+// been waited on.
+type procHandle struct {
+	proc *os.Process
+	done chan struct{}
+}
+
 var errScriptTransport = errors.New("script transport error")
+
+// ErrInvalidConfiguration marks a session that is misconfigured rather than
+// unlucky — an unknown model, an unreadable oversize. Connect reports it once
+// instead of retrying ten times, because the eleventh attempt would be wrong
+// in exactly the same way.
+var ErrInvalidConfiguration = errors.New("invalid terminal configuration")
 
 // Emulator base struct to x3270 terminal emulator
 type Emulator struct {
@@ -87,9 +151,47 @@ type Emulator struct {
 	// the alias "finnish"). Empty leaves the emulator default in place.
 	CodePage string
 
+	// Model is the 3270 device type to negotiate: "2".."5", or the full
+	// form "3278-4" / "3279-5". Empty means DefaultModel, the 24x80 colour
+	// model 2 the tool has always used. The model decides the alternate
+	// screen size, so a workflow written against a 43x80 or 27x132 host
+	// needs this set or the host will only ever offer it 24 rows.
+	Model string
+
+	// Oversize asks for a screen larger than the model defines, as
+	// "<cols>x<rows>" (e.g. "132x50"). Only hosts that support the larger
+	// geometry will use it. Empty leaves the model's own size.
+	Oversize string
+
+	// LUName requests a specific logical unit at connect time. Hosts that
+	// route by LU — most CICS and TSO installations do — need it, and there
+	// was previously no way to ask for one.
+	LUName string
+
+	// TLS wraps the host connection in TLS (the "L:" host prefix). Modern
+	// z/OS installations increasingly accept nothing else.
+	TLS bool
+
+	// InsecureSkipVerify disables host certificate validation. It exists
+	// for the internal host with a private CA and a self-signed
+	// certificate; it is off by default and stays that way.
+	InsecureSkipVerify bool
+
 	scriptConn   net.Conn
 	scriptReader *bufio.Reader
 	scriptMu     sync.Mutex
+
+	// Last status line seen on the scripting connection. Every command
+	// carries one, so this is current as of the previous command rather
+	// than something that has to be asked for.
+	statusMu sync.RWMutex
+	status   Status
+
+	// The launched emulator process, so a session that will not shut down
+	// cleanly can still be stopped rather than left holding its script port
+	// for the rest of a load test.
+	procMu sync.Mutex
+	proc   *procHandle
 
 	// Where in the workflow this emulator is, as SetCaptureContext was last
 	// told. Read by AsciiScreenGrab so a captured screen records the step it
@@ -198,6 +300,7 @@ func (e *Emulator) sendScriptCommand(command string) (string, error) {
 	}
 	_ = conn.SetReadDeadline(deadline)
 	var lines []string
+	var failure string
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -209,15 +312,125 @@ func (e *Emulator) sendScriptCommand(command string) (string, error) {
 		case trimmed == "ok":
 			return strings.Join(lines, "\n"), nil
 		case strings.HasPrefix(trimmed, "error"):
+			// The emulator explains the failure on a data line and then
+			// says "error". Carry the explanation into the error rather
+			// than replacing it with a generic one: "Ascii: Invalid
+			// argument" says the coordinates are off the screen, where
+			// "x3270 reported an error" says nothing at all.
 			msg := strings.TrimSpace(strings.TrimPrefix(trimmed, "error"))
+			if detail := strings.TrimSpace(NormalizeDataLines(strings.Join(lines, "\n"))); detail != "" {
+				msg = detail
+			}
 			if msg == "" {
 				msg = "x3270 reported an error"
 			}
-			return "", errors.New(msg)
+			failure = msg
+			return "", &ActionError{Message: failure}
+		case isStatusLine(trimmed):
+			// Every reply carries one of these. Record it and keep it out
+			// of the payload: it is protocol state, and a caller capturing
+			// a screen wants the screen, not a line of emulator status
+			// pasted onto the bottom of it.
+			e.setStatus(ParseStatus(trimmed))
 		default:
 			lines = append(lines, trimmed)
 		}
 	}
+}
+
+// ActionError is an error the emulator itself reported, as opposed to a
+// transport failure. It carries the emulator's own message, which is the
+// only thing that says whether a command failed because the host was busy —
+// worth retrying — or because the command could never have worked.
+type ActionError struct {
+	Message string
+}
+
+func (e *ActionError) Error() string { return e.Message }
+
+// deterministic reports whether retrying the action could ever produce a
+// different answer. A syntax error or an out-of-range coordinate will fail
+// identically every time, so retrying it three times a second apart only
+// delays the report and then replaces the emulator's explanation with
+// "maximum retries reached".
+func (e *ActionError) deterministic() bool {
+	msg := strings.ToLower(e.Message)
+	for _, marker := range []string{
+		"syntax error",
+		"invalid argument",
+		"unknown action",
+		"unknown parameter",
+		"too few arguments",
+		"too many arguments",
+		"invalid model",
+	} {
+		if strings.Contains(msg, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// isDeterministicFailure reports whether err is an emulator complaint that
+// will not change on a retry.
+func isDeterministicFailure(err error) bool {
+	var actionErr *ActionError
+	if errors.As(err, &actionErr) {
+		return actionErr.deterministic()
+	}
+	return false
+}
+
+// setStatus records the status line from the most recent reply.
+func (e *Emulator) setStatus(s Status) {
+	if !s.Valid {
+		return
+	}
+	e.statusMu.Lock()
+	e.status = s
+	e.statusMu.Unlock()
+}
+
+// Status returns the emulator state as of the last command. The zero value,
+// with Valid false, means no command has run yet.
+func (e *Emulator) Status() Status {
+	e.statusMu.RLock()
+	defer e.statusMu.RUnlock()
+	return e.status
+}
+
+// ScreenSize returns the rows and columns the host is currently using, as
+// last reported. Zeroes mean the size is not yet known.
+//
+// It is read from the status line rather than cached at connect time on
+// purpose: a host that issues an erase/write-alternate switches a model 4
+// session from 24 rows to 43 mid-run, and a workflow addressing row 30 is
+// then perfectly valid where a moment earlier it was not.
+func (e *Emulator) ScreenSize() (rows, cols int) {
+	s := e.Status()
+	return s.Rows, s.Cols
+}
+
+// checkCoordinates rejects a position that is off the current screen.
+//
+// The emulator does not: MoveCursor to row 30 of a 24-row screen is answered
+// with "ok" and the cursor clamped to the last row, so a workflow written
+// for a model 4 host, run against a model 2 session, quietly types its input
+// into whatever field happens to be at the bottom of the screen. That is the
+// failure mode worth spending an error message on.
+func (e *Emulator) checkCoordinates(row, col int) error {
+	if row < 1 || col < 1 {
+		return fmt.Errorf("coordinates are 1-based; row %d column %d is not a screen position", row, col)
+	}
+	rows, cols := e.ScreenSize()
+	if rows <= 0 || cols <= 0 {
+		// Geometry not known yet — let the emulator have its say.
+		return nil
+	}
+	if row > rows || col > cols {
+		return fmt.Errorf("row %d column %d is outside the %dx%d screen this host negotiated (set Model for a larger screen)", row, col, rows, cols)
+	}
+	return nil
 }
 
 func (e *Emulator) scriptRequest(command string) (string, error) {
@@ -234,73 +447,60 @@ func (e *Emulator) scriptRequest(command string) (string, error) {
 // WaitForField waits until the screen is ready, the cursor has been positioned
 // on a modifiable field, and the keyboard is unlocked.
 func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
+	// The emulator's Wait takes whole seconds, so a sub-second timeout would
+	// truncate to Wait(0, ...). Round up instead of asking for zero.
+	waitSeconds := int(timeout.Seconds())
+	if timeout > 0 && waitSeconds < 1 {
+		waitSeconds = 1
+	}
+
 	// First, try to wait for the screen to unlock
-	unlockCommand := fmt.Sprintf("Wait(%d, Unlock)", int(timeout.Seconds()))
-	unlockOutput, unlockErr := e.execCommand(unlockCommand)
+	unlockCommand := fmt.Sprintf("Wait(%d, Unlock)", waitSeconds)
+	_, unlockErr := e.execCommand(unlockCommand)
 
-	// Query keyboard lock state after Wait(timeout, Unlock)
-	if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-		if Verbose {
-			log.Printf("Keyboard lock state after Unlock wait: %s", kbLockState)
-		}
+	// The keyboard state arrives on the status line of every reply, so it
+	// costs nothing to read and needs no separate Query round trip.
+	if Verbose {
+		log.Printf("Keyboard state after Unlock wait: %s", e.Status().Raw)
 	}
 
-	// Check if unlock failed or status is not "U"
-	needsReset := false
-	if unlockErr != nil {
-		needsReset = true
-	} else if unlockOutput != "" {
-		statusParts := strings.Fields(unlockOutput)
-		if len(statusParts) > 0 && statusParts[0] != "U" {
-			needsReset = true
-		}
-	}
+	// Check if unlock failed or the keyboard is still locked
+	needsReset := unlockErr != nil || e.Status().KeyboardLocked
 
 	// If we need to reset, send Reset command and retry unlock
 	if needsReset {
 		if err := e.Press(Reset); err == nil {
 			// Retry unlock after reset
 			time.Sleep(retryDelay)
-			unlockOutput, unlockErr = e.execCommand(unlockCommand)
-
-			// Query keyboard lock state again after reset
-			if kbLockState, kbErr := e.query("KeyboardLock"); kbErr == nil {
-				if Verbose {
-					log.Printf("Keyboard lock state after Reset and Unlock: %s", kbLockState)
-				}
+			_, unlockErr = e.execCommand(unlockCommand)
+			if Verbose {
+				log.Printf("Keyboard state after Reset and Unlock: %s", e.Status().Raw)
 			}
 		}
 	}
 
 	// Send the command to wait for a field with the specified timeout
-	command := fmt.Sprintf("Wait(%d, InputField)", int(timeout.Seconds()))
+	command := fmt.Sprintf("Wait(%d, InputField)", waitSeconds)
 
 	// Retry the InputField wait operation with a delay in case of failure
 	for retries := 0; retries < maxRetries; retries++ {
-		output, err := e.execCommand(command)
+		_, err := e.execCommand(command)
 		if err == nil {
-			if output == "" {
-				if Verbose {
-					log.Println("Wait command executed successfully (no output)")
-				}
-				return nil
+			if !e.Status().KeyboardLocked {
+				return nil // Successful operation, exit the retry loop
 			}
-
-			// Extract the keyboard status from the command output
-			statusParts := strings.Fields(output)
-			if len(statusParts) > 0 && statusParts[0] != "U" {
-				// If InputField wait reports locked state, try sending Reset
-				if retries == 0 {
-					if resetErr := e.Press(Reset); resetErr == nil {
-						time.Sleep(retryDelay)
-						continue // Retry after reset
-					}
+			// If InputField wait reports locked state, try sending Reset
+			if retries == 0 {
+				if resetErr := e.Press(Reset); resetErr == nil {
+					time.Sleep(retryDelay)
+					continue // Retry after reset
 				}
-				return fmt.Errorf("keyboard not unlocked, state was: %s", statusParts[0])
 			}
-			//fmt.Printf("Wait command executed successfully %s", statusParts[0])
-			//fmt.Printf("Wait command executed successfully\n")
-			return nil // Successful operation, exit the retry loop
+			state := "locked"
+			if e.Status().KeyboardError {
+				state = "locked with an error condition"
+			}
+			return fmt.Errorf("keyboard not unlocked, state was: %s", state)
 		}
 
 		time.Sleep(retryDelay)
@@ -336,22 +536,30 @@ func (e *Emulator) moveCursor(x, y int) error {
 	maxRetries := 3
 	retryDelay := 1 * time.Second
 
+	if err := e.checkCoordinates(x, y); err != nil {
+		return err
+	}
+
 	// Adjust the values to start at 0 internally
 	xAdjusted := x - 1
 	yAdjusted := y - 1
 	command := fmt.Sprintf("MoveCursor(%d,%d)", xAdjusted, yAdjusted)
 
 	// Retry the MoveCursor operation with a delay in case of failure
+	var lastErr error
 	for retries := 0; retries < maxRetries; retries++ {
-		if _, err := e.execCommand(command); err == nil {
+		_, err := e.execCommand(command)
+		if err == nil {
 			return nil // Successful operation, exit the retry loop
 		}
-		//log.Printf("Error moving cursor (Retry %d) to row %d, column %d\n", retries+1, x, y)
-
+		lastErr = err
+		if isDeterministicFailure(err) {
+			return fmt.Errorf("MoveCursor to row %d column %d: %w", x, y, err)
+		}
 		time.Sleep(retryDelay)
 	}
 
-	return fmt.Errorf("maximum MoveCursor retries reached")
+	return fmt.Errorf("maximum MoveCursor retries reached: %w", lastErr)
 }
 
 // SetString fills the field at the current cursor position with the given value and retries in case of failure.
@@ -360,18 +568,24 @@ func (e *Emulator) SetString(value string) error {
 	maxRetries := 3
 	retryDelay := 1 * time.Second
 
-	command := fmt.Sprintf("String(%s)", value)
+	// Quoted, so the value is typed as written. See quoteActionArg.
+	command := fmt.Sprintf("String(%s)", quoteActionArg(value))
 
 	// Retry the SetString operation with a delay in case of failure
+	var lastErr error
 	for retries := 0; retries < maxRetries; retries++ {
-		if _, err := e.execCommand(command); err == nil {
+		_, err := e.execCommand(command)
+		if err == nil {
 			return nil // Successful operation, exit the retry loop
 		}
-		//log.Printf("Error executing String command (Retry %d)\n", retries+1)
+		lastErr = err
+		if isDeterministicFailure(err) {
+			return fmt.Errorf("String: %w", err)
+		}
 		time.Sleep(retryDelay)
 	}
 
-	return fmt.Errorf("maximum SetString retries reached")
+	return fmt.Errorf("maximum SetString retries reached: %w", lastErr)
 }
 
 // GetRows returns the number of rows in the saved screen image with retry logic.
@@ -467,6 +681,14 @@ func (e *Emulator) validateKeyboard(key string) bool {
 		return true
 	case Reset:
 		return true
+	case PA1, PA2, PA3:
+		return true
+	case Clear, SysReq, Attn:
+		return true
+	case BackTab, Home, EraseEOF, EraseInput, Newline:
+		return true
+	case Up, Down, Left, Right, BackSpace, Delete, Insert, Dup, FieldMark:
+		return true
 	case F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12:
 		return true
 	case F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24:
@@ -476,15 +698,22 @@ func (e *Emulator) validateKeyboard(key string) bool {
 	}
 }
 
-// IsConnected check if a connection with host exist
+// IsConnected reports whether the emulator has a live session with the host.
+//
+// It asks the emulator and reads the answer. The previous version treated any
+// reply as "connected" — including the emulator plainly answering
+// "not-connected" — and slept a second first, which put two seconds on every
+// connect and meant an unreachable host was reported as connected.
 func (e *Emulator) IsConnected() bool {
-
-	time.Sleep(1 * time.Second) // Optional: Add a delay between steps
 	s, err := e.query("ConnectionState")
-	if err != nil || len(strings.TrimSpace(s)) == 0 {
+	if err != nil {
 		return false
 	}
-	return true
+	if state := strings.TrimSpace(NormalizeDataLines(s)); state != "" {
+		return connectionStateIsConnected(state)
+	}
+	// No answer to parse: fall back to the status line the reply carried.
+	return e.Status().Connected
 }
 
 // GetValue returns content of a specified length at the specified row (x) and column (y) with retry logic.
@@ -493,22 +722,30 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 	maxRetries := 3
 	retryDelay := 1 * time.Second
 
+	if err := e.checkCoordinates(x, y); err != nil {
+		return "", err
+	}
+
 	// Adjust the row and column values to start at 1 internally
 	xAdjusted := x - 1
 	yAdjusted := y - 1
 	command := fmt.Sprintf("Ascii(%d,%d,%d)", xAdjusted, yAdjusted, length)
 
 	// Retry the Ascii command with a delay in case of failure
+	var lastErr error
 	for retries := 0; retries < maxRetries; retries++ {
 		output, err := e.execCommandOutput(command)
 		if err == nil {
 			return normalizeAsciiData(output), nil // Successful operation, exit the retry loop
 		}
-		//log.Printf("Error executing Ascii command (Retry %d): %v\n", retries+1, err)
+		lastErr = err
+		if isDeterministicFailure(err) {
+			return "", fmt.Errorf("reading row %d column %d for %d characters: %w", x, y, length, err)
+		}
 		time.Sleep(retryDelay)
 	}
 
-	return "", fmt.Errorf("maximum GetValue retries reached")
+	return "", fmt.Errorf("maximum GetValue retries reached: %w", lastErr)
 }
 
 // NormalizeDataLines reduces a raw s3270 reply to the data it carries.
@@ -563,6 +800,7 @@ func (e *Emulator) Connect() error {
 	}
 
 	start := time.Now()
+	var lastConnectErr error
 
 	// Retry logic for connecting
 	for retries := 0; retries < maxRetries; retries++ {
@@ -583,11 +821,18 @@ func (e *Emulator) Connect() error {
 		e.closeScriptConn()
 
 		if err := e.createApp(); err != nil {
+			if errors.Is(err, ErrInvalidConfiguration) {
+				return err
+			}
 			// Don't log shutdown errors as errors - they are expected during graceful shutdown
 			if err.Error() != "shutdown requested" {
 				if retries+1 == maxRetries {
-					msg := fmt.Sprintf("ERROR createApp failed (attempt %d/%d): %v", retries+1, maxRetries, err)
-					pterm.Error.Println(msg)
+					// Plain text through the standard logger rather than a
+					// coloured banner. This is a library, and its one piece
+					// of terminal output was the one thing in a CI log that
+					// arrived wrapped in escape sequences.
+					log.Printf("connect failed after %d attempts: %v", maxRetries, err)
+					lastConnectErr = err
 				}
 			}
 			e.rotateScriptPort() // Avoid retrying on a potentially poisoned script port.
@@ -596,6 +841,7 @@ func (e *Emulator) Connect() error {
 		}
 
 		if e.IsConnected() {
+			e.waitForHostReady()
 			d := time.Since(start)
 			e.connectMu.Lock()
 			e.connectDuration = d
@@ -610,7 +856,29 @@ func (e *Emulator) Connect() error {
 		time.Sleep(retryDelay)
 	}
 
-	return fmt.Errorf("maximum connect retries reached")
+	if lastConnectErr != nil {
+		// The reason, not just the count: "Connection failed" or a rejected
+		// certificate is what the operator needs, and it used to be printed
+		// and then dropped rather than returned.
+		return fmt.Errorf("could not connect to %s after %d attempts: %w", e.hostTarget(), maxRetries, lastConnectErr)
+	}
+	return fmt.Errorf("could not connect to %s after %d attempts", e.hostTarget(), maxRetries)
+}
+
+// waitForHostReady gives the host a bounded moment to paint its first screen
+// before Connect reports success.
+//
+// A session is "connected" as soon as the telnet negotiation finishes, which
+// is before the host has written anything: a capture taken immediately after
+// Connect could come back blank. This waits for the keyboard to be handed
+// back, which is the host saying it has finished writing — for a formatted
+// screen and an unformatted one alike.
+//
+// Best effort by design. A host that never unlocks the keyboard is a problem
+// for the steps that follow to report, not a reason to fail the connect, so
+// the outcome is deliberately ignored.
+func (e *Emulator) waitForHostReady() {
+	_, _ = e.execCommand(fmt.Sprintf("Wait(%d, Unlock)", int(firstScreenTimeout.Seconds())))
 }
 
 // LastConnectDuration returns the elapsed time of the most recent successful
@@ -633,21 +901,56 @@ func (e *Emulator) Query(arg string) (string, error) {
 	return e.query(arg)
 }
 
-// Disconnect closes the connection with x3270.
+// Disconnect shuts the emulator down and releases its script port.
+//
+// The quit is unconditional. It used to be sent only when IsConnected said
+// yes, which was harmless while that always said yes — but an emulator whose
+// host has dropped the session still has a process and still holds its script
+// port, and during a concurrent run those accumulate until the port range
+// runs out. If quit does not land, the process is killed rather than left.
 func (e *Emulator) Disconnect() error {
 	if Verbose {
 		log.Println("Disconnecting from x3270")
 	}
 
-	if e.IsConnected() {
-		if _, err := e.execCommand("quit"); err != nil {
-			return fmt.Errorf("error executing quit command: %v", err)
-		}
-
-	}
+	_, err := e.execCommand("quit")
 	e.closeScriptConn()
 
+	// "quit" makes the emulator exit, so it frequently closes the
+	// connection before answering. That is success, not a failure.
+	if err != nil && errors.Is(err, errScriptTransport) {
+		err = nil
+	}
+
+	e.stopProcess()
+
+	if err != nil {
+		return fmt.Errorf("error executing quit command: %v", err)
+	}
 	return nil
+}
+
+// stopProcess makes sure the launched emulator is gone.
+//
+// It waits for the exit in the background rather than making the caller wait
+// for it, and only kills a process that is still running — createApp closes
+// the handle's done channel once it has been reaped, so this cannot signal a
+// pid that has since been given to something else.
+func (e *Emulator) stopProcess() {
+	e.procMu.Lock()
+	h := e.proc
+	e.proc = nil
+	e.procMu.Unlock()
+	if h == nil {
+		return
+	}
+	go func() {
+		select {
+		case <-h.done:
+		case <-time.After(processExitGrace):
+			_ = h.proc.Kill()
+		}
+	}()
 }
 
 // query returns state information from x3270
@@ -656,11 +959,91 @@ func (e *Emulator) query(keyword string) (string, error) {
 	return e.execCommandOutput(command)
 }
 
+// NormalizeModel turns a model as a workflow may write it into the form the
+// emulator's -model option takes, and rejects one it does not.
+//
+// Rejecting matters more than normalising. The emulator answers an unknown
+// model number by printing "Invalid model number" to stderr — which this tool
+// only shows in verbose mode — and then carrying on with a different model
+// entirely, so a typo becomes a session quietly negotiated as something other
+// than what the workflow asked for.
+//
+// Accepted: "2".."5", "3278-<n>", "3279-<n>", and either with a trailing
+// "-E". A bare "3278"/"3279" is not accepted: the emulator reads it as no
+// model number at all and falls back to its own default.
+func NormalizeModel(model string) (string, error) {
+	model = strings.TrimSpace(model)
+	if model == "" {
+		return DefaultModel, nil
+	}
+
+	family := "3279"
+	number := model
+	if idx := strings.Index(model, "-"); idx > 0 {
+		family = model[:idx]
+		number = model[idx+1:]
+		// "3279-4-E": the extended suffix is the emulator's own doing and
+		// is not part of what -model accepts.
+		if cut := strings.Index(number, "-"); cut >= 0 {
+			number = number[:cut]
+		}
+	}
+	if family != "3278" && family != "3279" {
+		return "", fmt.Errorf("unknown terminal model %q: the family must be 3278 (monochrome) or 3279 (colour)", model)
+	}
+
+	n, err := strconv.Atoi(strings.TrimSpace(number))
+	if err != nil || n < 2 || n > 5 {
+		return "", fmt.Errorf("unknown terminal model %q: model numbers are 2 (24x80), 3 (32x80), 4 (43x80) and 5 (27x132)", model)
+	}
+
+	return fmt.Sprintf("%s-%d", family, n), nil
+}
+
+// NormalizeOversize checks an oversize geometry, which the emulator takes as
+// "<cols>x<rows>".
+func NormalizeOversize(oversize string) (string, error) {
+	oversize = strings.TrimSpace(oversize)
+	if oversize == "" {
+		return "", nil
+	}
+	lower := strings.ToLower(oversize)
+	parts := strings.SplitN(lower, "x", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("oversize %q must be written as <cols>x<rows>, e.g. 132x50", oversize)
+	}
+	cols, errC := strconv.Atoi(strings.TrimSpace(parts[0]))
+	rows, errR := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if errC != nil || errR != nil || cols <= 0 || rows <= 0 {
+		return "", fmt.Errorf("oversize %q must be written as <cols>x<rows>, e.g. 132x50", oversize)
+	}
+	return fmt.Sprintf("%dx%d", cols, rows), nil
+}
+
+// hostTarget renders the positional host argument, which carries rather more
+// than a host and a port:
+//
+//	[L:][LUname@]host:port
+//
+// "L:" asks for TLS, and an LU name in front of the host asks the host to
+// bind the session to that logical unit. Neither was reachable before, which
+// ruled out every host that requires TLS and every one that routes by LU.
+func (e *Emulator) hostTarget() string {
+	target := e.hostname()
+	if lu := strings.TrimSpace(e.LUName); lu != "" {
+		target = lu + "@" + target
+	}
+	if e.TLS {
+		target = "L:" + target
+	}
+	return target
+}
+
 // buildEmulatorArgs assembles the command-line arguments for launching the
 // embedded x3270/s3270/wc3270 process. The argument order mirrors the
 // historical invocation so existing behavior is unchanged; the host EBCDIC
 // code page (-codepage) is inserted only when Emulator.CodePage is set, and
-// the host:port target is always the final positional argument.
+// the host target is always the final positional argument.
 func (e *Emulator) buildEmulatorArgs(modelType string) []string {
 	resourceString := "x3270.unlockDelay: False"
 	if Headless {
@@ -685,7 +1068,18 @@ func (e *Emulator) buildEmulatorArgs(modelType string) []string {
 		}
 	}
 
-	args = append(args, e.hostname())
+	// A screen larger than the model defines. Only used by hosts that
+	// support the geometry; the rest carry on at the model's own size.
+	if oversize, err := NormalizeOversize(e.Oversize); err == nil && oversize != "" {
+		args = append(args, "-oversize", oversize)
+	}
+
+	// Certificate validation is on unless the caller turns it off.
+	if e.TLS && e.InsecureSkipVerify {
+		args = append(args, "-noverifycert")
+	}
+
+	args = append(args, e.hostTarget())
 	return args
 }
 
@@ -705,8 +1099,17 @@ func (e *Emulator) createApp() error {
 		log.Printf("createApp binaryFilePath: %s", binaryFilePath)
 	}
 
-	// Choose the correct model type
-	modelType := "3279-2" // Adjust this based on your application's requirements
+	// The device type to negotiate. Rejected here rather than left to the
+	// emulator, which would substitute a different model and connect anyway.
+	modelType, err := NormalizeModel(e.Model)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrInvalidConfiguration, err)
+	}
+	if oversize := strings.TrimSpace(e.Oversize); oversize != "" {
+		if _, err := NormalizeOversize(oversize); err != nil {
+			return fmt.Errorf("%w: %w", ErrInvalidConfiguration, err)
+		}
+	}
 
 	cmd := exec.Command(binaryFilePath, e.buildEmulatorArgs(modelType)...)
 
@@ -726,11 +1129,22 @@ func (e *Emulator) createApp() error {
 		return err
 	}
 
+	handle := &procHandle{proc: cmd.Process, done: make(chan struct{})}
+	e.procMu.Lock()
+	e.proc = handle
+	e.procMu.Unlock()
+
+	var startupErr atomic.Pointer[string]
 	go func() {
+		defer close(handle.done)
 		defer stderr.Close()
 		errMsg, _ := ioutil.ReadAll(stderr)
-		if Verbose && len(errMsg) > 0 {
-			log.Printf("3270 stderr: %s", string(errMsg))
+		if len(errMsg) > 0 {
+			text := strings.TrimSpace(string(errMsg))
+			startupErr.Store(&text)
+			if Verbose {
+				log.Printf("3270 stderr: %s", text)
+			}
 		}
 		if err := cmd.Wait(); err != nil && Verbose {
 			log.Printf("Error waiting for 3270 instance: %v", err)
@@ -739,10 +1153,25 @@ func (e *Emulator) createApp() error {
 
 	deadline := time.Now().Add(startupConnectTimeout)
 	connected := false
+	exited := false
 	attempt := 0
 	for time.Now().Before(deadline) {
 		if ShutdownRequested() {
 			return fmt.Errorf("shutdown requested")
+		}
+		// A refused connection, a name that does not resolve or a
+		// certificate the emulator will not accept all end the same way:
+		// it prints the reason and exits. Waiting out the full startup
+		// timeout for a process that is already gone turns a one-second
+		// answer into twenty, and ten connect attempts into two hundred
+		// seconds of nothing happening.
+		select {
+		case <-handle.done:
+			exited = true
+		default:
+		}
+		if exited {
+			break
 		}
 		if e.IsConnected() {
 			connected = true
@@ -761,10 +1190,39 @@ func (e *Emulator) createApp() error {
 			_ = cmd.Process.Kill()
 		}
 		e.closeScriptConn()
-		return fmt.Errorf("timed out waiting for emulator to connect to %s after %.1fs", e.hostname(), startupConnectTimeout.Seconds())
+		e.procMu.Lock()
+		e.proc = nil
+		e.procMu.Unlock()
+		// Whatever the emulator complained about is the useful half of this
+		// error — a refused connection, a certificate it would not accept, a
+		// name that does not resolve. It used to be visible only in verbose
+		// mode, so the reported failure was a bare timeout.
+		if detail := startupErr.Load(); detail != nil && *detail != "" {
+			return fmt.Errorf("could not connect to %s: %s", e.hostTarget(), firstLine(*detail))
+		}
+		if exited {
+			return fmt.Errorf("could not connect to %s: the emulator exited without reporting a reason", e.hostTarget())
+		}
+		return fmt.Errorf("timed out waiting for emulator to connect to %s after %.1fs", e.hostTarget(), startupConnectTimeout.Seconds())
 	}
 
 	return nil
+}
+
+// firstLine keeps an error report to the line that says what happened, and
+// to characters that can safely be printed: the emulator's own diagnostics
+// have been seen to carry raw bytes after the message.
+func firstLine(s string) string {
+	if idx := strings.IndexByte(s, '\n'); idx >= 0 {
+		s = s[:idx]
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if r == '\t' || (r >= 0x20 && r != 0x7f) {
+			b.WriteRune(r)
+		}
+	}
+	return strings.TrimSpace(b.String())
 }
 
 // rotateScriptPort selects the next available script port to reduce collisions and stuck sessions.
@@ -891,7 +1349,11 @@ pre {
 // AsciiScreen returns the current screen as plain ASCII text without
 // touching the filesystem. Used by the profiler for banner fingerprinting.
 func (e *Emulator) AsciiScreen() (string, error) {
-	return e.execCommandOutput("Ascii()")
+	out, err := e.execCommandOutput("Ascii()")
+	if err != nil {
+		return "", err
+	}
+	return NormalizeDataLines(out), nil
 }
 
 // SetCaptureContext records the step the emulator is working on, so screens
@@ -958,20 +1420,32 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 	}
 
 	// Retry logic for capturing ASCII screen
+	var lastErr error
 	for retries := 0; retries < maxRetries; retries++ {
 		output, err := e.execCommandOutput("Ascii()")
 		if err == nil {
+			// The screen, and only the screen. What the emulator sends is
+			// the screen behind a "data: " prefix on every line with its
+			// status line on the end, and every capture this tool has ever
+			// written carried both — an 80-column screen shifted six
+			// columns right, with a line of protocol state below it.
+			screen := NormalizeDataLines(output)
+
 			var content string
 			if apiMode {
 				// In API mode, just use plain ASCII output
-				content = output
+				content = screen
 			} else {
 				// In non-API mode, format the output as output.
 				// Written in one call: concurrent workers append to the same
 				// file, and a screen split across two writes would interleave
 				// with another worker's.
-				content = fmt.Sprintf("<pre%s>%s</pre>\n", e.captureAttrs(time.Now()), output)
-				content += "</body></html>"
+				//
+				// Escaped, because a host screen is not HTML: a screen
+				// holding "<" or "&" used to be rendered as markup, and a
+				// capture served by the console is not a place to be
+				// pasting a host's characters in unescaped.
+				content = fmt.Sprintf("<pre%s>%s</pre>\n", e.captureAttrs(time.Now()), escapeText(screen))
 			}
 
 			if err := writeScreenGrab(filePath, content); err != nil {
@@ -979,10 +1453,20 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 			}
 			return nil
 		}
+		lastErr = err
+		if isDeterministicFailure(err) {
+			return fmt.Errorf("capturing screen: %w", err)
+		}
 		time.Sleep(retryDelay)
 	}
 
-	return fmt.Errorf("maximum capture retries reached")
+	return fmt.Errorf("maximum capture retries reached: %w", lastErr)
+}
+
+// escapeText makes host screen text safe to sit inside an HTML element.
+func escapeText(value string) string {
+	replacer := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+	return replacer.Replace(value)
 }
 
 func writeScreenGrab(filePath, content string) (err error) {
@@ -1020,30 +1504,91 @@ func (e *Emulator) ReadOutputFile(tempFilePath string) (string, error) {
 	return string(content), nil
 }
 
-// getOrCreateBinaryFile checks if a binary file exists for the given binary name, and creates it if it doesn't
+// getOrCreateBinaryFile unpacks the embedded emulator and returns its path.
+//
+// Two things about where it goes and what it is called are deliberate.
+//
+// It goes in a directory of this user's own, created 0700, rather than
+// straight into the shared temporary directory. The old path was a fixed
+// /tmp/s3270: on any machine with more than one user, whoever created that
+// name first decided what this tool executed.
+//
+// It is named after a hash of the contents, and an existing file is only
+// reused if its contents still hash to that name. Upgrading 3270Connect used
+// to leave the previous emulator in place for as long as the file survived,
+// so a new release kept driving sessions with the old binary.
 func getOrCreateBinaryFile(binaryName string) (string, error) {
-	var filePath string
 	switch binaryName {
 	case "x3270", "s3270", "wc3270":
-		filePath = filepath.Join(os.TempDir(), binaryName+getExecutableExtension())
 	default:
 		return "", fmt.Errorf("unknown binary name: %s", binaryName)
 	}
 
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		// File does not exist, create it
-		assetPath := filepath.Join("binaries", getOSDirectory(), binaryName+getExecutableExtension())
-		binaryData, err := binaries.Asset(assetPath)
-		if err != nil {
-			return "", fmt.Errorf("error reading embedded binary data: %v", err)
-		}
+	assetPath := filepath.Join("binaries", getOSDirectory(), binaryName+getExecutableExtension())
+	binaryData, err := binaries.Asset(assetPath)
+	if err != nil {
+		return "", fmt.Errorf("error reading embedded binary data: %v", err)
+	}
+	sum := sha256.Sum256(binaryData)
+	digest := hex.EncodeToString(sum[:8])
 
-		if err := ioutil.WriteFile(filePath, binaryData, 0755); err != nil {
-			return "", fmt.Errorf("error writing binary data to a file: %v", err)
+	dir, err := emulatorCacheDir()
+	if err != nil {
+		return "", err
+	}
+	filePath := filepath.Join(dir, fmt.Sprintf("%s-%s%s", binaryName, digest, getExecutableExtension()))
+
+	if existing, err := os.ReadFile(filePath); err == nil {
+		if sha256.Sum256(existing) == sum {
+			return filePath, nil
 		}
 	}
 
+	// Written under a unique name and moved into place, so a second process
+	// unpacking the same emulator at the same time cannot be executing a
+	// half-written file.
+	tmp, err := os.CreateTemp(dir, binaryName+"-*.partial")
+	if err != nil {
+		return "", fmt.Errorf("error creating emulator file: %v", err)
+	}
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName)
+	if _, err := tmp.Write(binaryData); err != nil {
+		tmp.Close()
+		return "", fmt.Errorf("error writing binary data to a file: %v", err)
+	}
+	if err := tmp.Chmod(0o700); err != nil {
+		tmp.Close()
+		return "", fmt.Errorf("error making the emulator executable: %v", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return "", fmt.Errorf("error writing binary data to a file: %v", err)
+	}
+	if err := os.Rename(tmpName, filePath); err != nil {
+		// Another process may have won the race; if what is there now is
+		// the right binary, that is exactly as good.
+		if existing, readErr := os.ReadFile(filePath); readErr == nil && sha256.Sum256(existing) == sum {
+			return filePath, nil
+		}
+		return "", fmt.Errorf("error installing the emulator: %v", err)
+	}
+
 	return filePath, nil
+}
+
+// emulatorCacheDir is where the unpacked emulator lives: this user's cache
+// directory, or a private directory under the temporary one if there is no
+// cache directory to be had.
+func emulatorCacheDir() (string, error) {
+	base, err := os.UserCacheDir()
+	if err != nil || strings.TrimSpace(base) == "" {
+		base = os.TempDir()
+	}
+	dir := filepath.Join(base, "3270Connect", "emulator")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("error preparing the emulator directory: %v", err)
+	}
+	return dir, nil
 }
 
 // getOSDirectory returns the appropriate directory name based on the OS

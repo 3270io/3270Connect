@@ -34,6 +34,26 @@ func Schema() map[string]any {
 				"type":        "string",
 				"description": "Host EBCDIC code page, e.g. \"cp037\", \"cp285\", \"cp278\" (alias \"finnish\"). Omit for the emulator default.",
 			},
+			"Model": map[string]any{
+				"type":        "string",
+				"description": "Device model to negotiate: \"2\" (24x80), \"3\" (32x80), \"4\" (43x80), \"5\" (27x132), or the full form \"3278-4\" (monochrome) / \"3279-4\" (colour). Omit for 3279-2. A workflow addressing rows past 24 needs a model that has them.",
+			},
+			"Oversize": map[string]any{
+				"type":        "string",
+				"description": "Screen larger than the model defines, as \"<cols>x<rows>\" (e.g. \"132x50\"). Only hosts that support the geometry will use it.",
+			},
+			"LUName": map[string]any{
+				"type":        "string",
+				"description": "Logical unit to request at connect time, for hosts that route sessions by LU.",
+			},
+			"TLS": map[string]any{
+				"type":        "boolean",
+				"description": "Connect to the host over TLS.",
+			},
+			"TLSSkipVerify": map[string]any{
+				"type":        "boolean",
+				"description": "Skip host certificate validation. Requires TLS. For an internal host with a private CA; leave off otherwise.",
+			},
 			"OutputFilePath": map[string]any{
 				"type":        "string",
 				"description": "Where captured screens are written. Required if any step uses AsciiScreenGrab.",
@@ -133,7 +153,11 @@ or top-level "Row"/"Column" — that shape appears in some older notes and no
 workflow written that way has ever run. Coordinates are 1-based.
 
 The same document drives a single run and a concurrent load test; the
-difference is on the command line (-concurrent and -runtime), not in the file.`
+difference is on the command line (-concurrent and -runtime), not in the file.
+
+The session is a 24x80 colour model 2 unless Model says otherwise, which is
+what a workflow addressing rows 25 and beyond needs to set. TLS, LUName and
+CodePage describe the connection; everything else describes the run.`
 
 const stepTypeDescription = `The action to perform.
 
@@ -144,6 +168,16 @@ const stepTypeDescription = `The action to perform.
   PressEnter        Send Enter.
   PressTab          Send Tab.
   PressPF1..PF24    Send a PF key.
+  PressPA1..PA3     Send an attention key. PA1 interrupts a running transaction.
+  PressClear        Clear the screen and send the Clear AID.
+  PressReset        Reset an error-locked keyboard.
+  PressHome         Move to the first unprotected field.
+  PressBackTab      Move to the previous field.
+  PressNewline      Move to the first field of the next line.
+  PressEraseEOF     Erase from the cursor to the end of the field.
+  PressEraseInput   Erase every unprotected field on the screen.
+  PressSysReq       Send SysReq, which reaches the SSCP rather than the application.
+  PressAttn         Send Attn, the TN3270E interrupt.
   WaitForField      Wait for the keyboard to unlock, up to Delay seconds.
   StepDelay         Pause for a random time inside StepDelay's Min/Max.
   AsciiScreenGrab   Append the current screen to OutputFilePath.
