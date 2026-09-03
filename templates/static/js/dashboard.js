@@ -2803,7 +2803,10 @@
       on('#consoleMaximize', 'click', function () {
         var dialog = $('#consoleModalDialog');
         var maximized = dialog.classList.toggle('maximized');
+        var label = maximized ? 'Restore console' : 'Maximise console';
         this.setAttribute('aria-pressed', String(maximized));
+        this.setAttribute('aria-label', label);
+        this.setAttribute('data-tip', label);
         this.innerHTML = icon(maximized ? 'compress' : 'expand');
       });
 
