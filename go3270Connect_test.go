@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -812,6 +813,32 @@ func TestOutputPreviewHandlerRejectsBadOffset(t *testing.T) {
 		if recorder.Code != http.StatusBadRequest {
 			t.Errorf("from=%s: status %d, want 400", from, recorder.Code)
 		}
+	}
+}
+
+// A pid arrives from the URL and is bookended into a filesystem path
+// ("logs/summary_" + pid + ".txt", "metrics_" + pid + ".json"). Anything but
+// a positive integer lets a caller escape that directory once filepath.Clean
+// has resolved the ".." segments the literal filename embeds, so every read
+// path that takes a pid string refuses one that is not numeric.
+func TestPIDBearingHandlersRefuseNonNumericPIDs(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	for _, pid := range []string{"../../etc/passwd", "1;2", "abc", "", "-1", " "} {
+		if _, err := loadExtendedMetricByPID(pid); err == nil {
+			t.Errorf("loadExtendedMetricByPID(%q) accepted a non-numeric pid", pid)
+		}
+
+		recorder := httptest.NewRecorder()
+		outputPreviewHandler(recorder, httptest.NewRequest(http.MethodGet,
+			"/dashboard/output?pid="+url.QueryEscape(pid), nil))
+		if recorder.Code == http.StatusOK {
+			t.Errorf("outputPreviewHandler served pid=%q", pid)
+		}
+	}
+
+	if !validNumericPID("42") {
+		t.Errorf("validNumericPID(%q) = false, want true", "42")
 	}
 }
 
