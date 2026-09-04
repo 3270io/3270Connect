@@ -111,7 +111,14 @@ const (
 )
 
 const (
-	maxRetries            = 10          // Maximum number of retries
+	maxRetries = 10 // Maximum number of retries for the Connect sequence itself
+	// actionRetries bounds the retry loop of a single scripted action
+	// (MoveCursor, String, Snap, Ascii, ...) that failed for a reason that
+	// might clear on its own. It used to be a local named maxRetries in six
+	// different functions, silently shadowing the package constant above
+	// with a different value — a reader grepping for "maxRetries" to find
+	// the connect-retry budget would land on one of these instead.
+	actionRetries         = 3
 	retryDelay            = time.Second // Delay between retries (e.g., 1 second)
 	scriptDialTimeout     = 5 * time.Second
 	scriptIOTimeout       = 30 * time.Second
@@ -559,10 +566,6 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 
 // moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.
 func (e *Emulator) moveCursor(x, y int) error {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	if err := e.checkCoordinates(x, y); err != nil {
 		return err
 	}
@@ -574,7 +577,7 @@ func (e *Emulator) moveCursor(x, y int) error {
 
 	// Retry the MoveCursor operation with a delay in case of failure
 	var lastErr error
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		_, err := e.execCommand(command)
 		if err == nil {
 			return nil // Successful operation, exit the retry loop
@@ -591,16 +594,12 @@ func (e *Emulator) moveCursor(x, y int) error {
 
 // SetString fills the field at the current cursor position with the given value and retries in case of failure.
 func (e *Emulator) SetString(value string) error {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	// Quoted, so the value is typed as written. See quoteActionArg.
 	command := fmt.Sprintf("String(%s)", quoteActionArg(value))
 
 	// Retry the SetString operation with a delay in case of failure
 	var lastErr error
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		_, err := e.execCommand(command)
 		if err == nil {
 			return nil // Successful operation, exit the retry loop
@@ -623,12 +622,8 @@ func (e *Emulator) SetString(value string) error {
 
 // GetRows returns the number of rows in the saved screen image with retry logic.
 func (e *Emulator) GetRows() (int, error) {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	// Retry the Snap(Rows) operation with a delay in case of failure
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		s, err := e.execCommandOutput("Snap(Rows)")
 		if err == nil {
 			i, err := strconv.Atoi(s)
@@ -645,12 +640,8 @@ func (e *Emulator) GetRows() (int, error) {
 
 // GetColumns returns the number of columns in the saved screen image with retry logic.
 func (e *Emulator) GetColumns() (int, error) {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	// Retry the Snap(Cols) operation with a delay in case of failure
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		s, err := e.execCommandOutput("Snap(Cols)")
 		if err == nil {
 			i, err := strconv.Atoi(s)
@@ -667,10 +658,6 @@ func (e *Emulator) GetColumns() (int, error) {
 
 // FillString fills the field at the specified row (x) and column (y) with the given value
 func (e *Emulator) FillString(x, y int, value string) error {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	// If coordinates are provided, move the cursor
 	if x > 0 && y > 0 {
 		if err := e.moveCursor(x, y); err != nil {
@@ -692,7 +679,7 @@ func (e *Emulator) FillString(x, y int, value string) error {
 
 	// Retry the SetString operation with a delay in case of failure
 	var lastErr error
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		err := e.SetString(value) // Declare and define err here
 		if err == nil {
 			return nil // Successful operation, exit the retry loop
@@ -804,10 +791,6 @@ func (e *Emulator) IsConnected() bool {
 
 // GetValue returns content of a specified length at the specified row (x) and column (y) with retry logic.
 func (e *Emulator) GetValue(x, y, length int) (string, error) {
-	// Retry logic parameters
-	maxRetries := 3
-	retryDelay := 1 * time.Second
-
 	if err := e.checkCoordinates(x, y); err != nil {
 		return "", err
 	}
@@ -819,7 +802,7 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 
 	// Retry the Ascii command with a delay in case of failure
 	var lastErr error
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < actionRetries; retries++ {
 		output, err := e.execCommandOutput(command)
 		if err == nil {
 			return normalizeAsciiData(output), nil // Successful operation, exit the retry loop
