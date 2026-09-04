@@ -3370,6 +3370,10 @@ func setupConsoleHandler() {
 		pidFilter := r.URL.Query().Get("pid")
 		var filtered []LogEntry
 		if pidFilter != "" {
+			if !validNumericPID(pidFilter) {
+				http.Error(w, "pid must be a positive integer", http.StatusBadRequest)
+				return
+			}
 			logFilePath := filepath.Join("logs", fmt.Sprintf("logs_%s.json", pidFilter))
 			file, err := os.Open(logFilePath)
 			if err != nil {
@@ -3438,6 +3442,10 @@ func setupTerminalConsoleHandler() {
 		pidFilter := r.URL.Query().Get("pid")
 		var filtered []LogEntry
 		if pidFilter != "" {
+			if !validNumericPID(pidFilter) {
+				http.Error(w, "pid must be a positive integer", http.StatusBadRequest)
+				return
+			}
 			logFilePath := filepath.Join("logs", fmt.Sprintf("logs_%s.json", pidFilter))
 			file, err := os.Open(logFilePath)
 			if err != nil {
@@ -3628,6 +3636,10 @@ func outputPreviewHandler(w http.ResponseWriter, r *http.Request) {
 func setupSummaryHandler() {
 	http.HandleFunc("/dashboard/summary", func(w http.ResponseWriter, r *http.Request) {
 		pid := r.URL.Query().Get("pid")
+		if !validNumericPID(pid) {
+			http.Error(w, "pid must be a positive integer", http.StatusBadRequest)
+			return
+		}
 		summaryFile := filepath.Join("logs", fmt.Sprintf("summary_%s.txt", pid))
 		file, err := os.Open(summaryFile)
 		if err != nil {
@@ -3640,9 +3652,24 @@ func setupSummaryHandler() {
 	})
 }
 
+// validNumericPID reports whether a URL-supplied pid is safe to interpolate
+// into a filesystem path. Callers build filenames like
+// "logs/summary_" + pid + ".txt", so a pid carrying "/" or ".." would let a
+// caller escape the intended directory once filepath.Clean resolves the
+// bookending literal filename. A pid is always a positive integer, so
+// insisting on that closes the door without narrowing what a legitimate
+// caller can ask for.
+func validNumericPID(s string) bool {
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	return err == nil && n > 0
+}
+
 func loadExtendedMetricByPID(pid string) (*ExtendedMetrics, error) {
 	if pid == "" {
 		return nil, fmt.Errorf("missing pid")
+	}
+	if !validNumericPID(pid) {
+		return nil, fmt.Errorf("pid must be a positive integer")
 	}
 	dir := dashboardMetricsDir()
 	filePath := filepath.Join(dir, fmt.Sprintf("metrics_%s.json", pid))
