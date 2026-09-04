@@ -357,6 +357,13 @@ var dashboardTemplate *template.Template
 
 var programStart time.Time
 
+// processParameters is the CLI arguments this process was started with,
+// joined once at package init rather than on every call. os.Args never
+// changes for the life of the process, so storeLog (called on every logged
+// event across every concurrent worker) and updateMetricsFile were each
+// re-joining the same slice into the same string on every call.
+var processParameters = strings.Join(os.Args[1:], " ")
+
 func appendLimitedFloat(slice *[]float64, value float64, limit int) {
 	*slice = append(*slice, value)
 	if limit <= 0 {
@@ -709,12 +716,10 @@ func storeLog(message string) {
 	logMutex.Lock()
 	defer logMutex.Unlock()
 	pid := os.Getpid()
-	args := os.Args[1:]
-	parameters := strings.Join(args, " ")
 
 	logEntry := LogEntry{
 		PID:        strconv.Itoa(pid),
-		Parameters: parameters,
+		Parameters: processParameters,
 		Log:        message,
 		Timestamp:  time.Now(),
 	}
@@ -3209,8 +3214,7 @@ func updateMetricsFile() {
 	}
 
 	pid := os.Getpid()
-	args := os.Args[1:]
-	parameters := strings.Join(args, " ")
+	parameters := processParameters
 	configPath := metricsConfigFilePath
 	if configPath == "" {
 		configPath = configFile
