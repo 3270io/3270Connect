@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -882,6 +884,59 @@ func TestStartupConfigurationAPIModeStillReadsAPresentFile(t *testing.T) {
 	}
 	if config.Port != 992 {
 		t.Errorf("Port = %d, want 992 from the file", config.Port)
+	}
+}
+
+// TestCLIRefusesAnInvalidWorkflow guards the CLI's half of "Validate is the
+// single gate every caller goes through": the REST handler and the dashboard's
+// upload both refuse an invalid workflow outright (400, nothing run), and the
+// CLI has to refuse it the same way rather than logging the same message and
+// then executing the very steps it just declared invalid. It runs the real
+// binary because the bug was in main()'s control flow after loadConfiguration,
+// which nothing exercising loadConfiguration in-process would ever observe.
+func TestCLIRefusesAnInvalidWorkflow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds and runs the real binary; skipped under -short")
+	}
+
+	dir := t.TempDir()
+	binary := filepath.Join(dir, "3270connect-under-test")
+	build := exec.Command("go", "build", "-o", binary, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("building the CLI under test: %v\n%s", err, out)
+	}
+
+	configPath := filepath.Join(dir, "workflow.json")
+	// Invalid for a reason validate.go catches before anything connects: an
+	// unknown step type. A config that instead omitted Host would prove
+	// nothing new, since Connect already refuses an empty one on its own.
+	body := `{"Host":"127.0.0.1","Port":23,"OutputFilePath":"out.html",
+	          "Steps":[{"Type":"NotARealStepType"}]}`
+	if err := os.WriteFile(configPath, []byte(body), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, binary, "-config", configPath, "-headless")
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+
+	if err == nil {
+		t.Fatalf("expected the CLI to exit with an error status for an invalid workflow; output:\n%s", out)
+	}
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf("the CLI did not exit within the timeout; output:\n%s", out)
+	}
+	if !strings.Contains(string(out), "Invalid configuration") {
+		t.Errorf("expected the refusal to be reported; output:\n%s", out)
+	}
+	// The bug: the message above was printed and the run went ahead anyway,
+	// negotiating a session for the very workflow just declared invalid and
+	// ending in the ordinary run summary rather than a refusal.
+	if strings.Contains(string(out), "Workflow completed") {
+		t.Errorf("the CLI ran the invalid workflow instead of refusing it; output:\n%s", out)
 	}
 }
 

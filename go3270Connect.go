@@ -838,7 +838,15 @@ func loadConfiguration(filePath string) *Configuration {
 	applyTerminalFlags(&config)
 	err = validateConfiguration(&config)
 	if err != nil {
+		// Reported and fatal, not just reported: the API handler and the
+		// startProcessHandler upload both refuse an invalid workflow outright
+		// (400, nothing run). A CLI run that only logged this line then went
+		// on to negotiate a session and execute the very steps just declared
+		// invalid — connecting, typing into fields, and reporting "workflow
+		// completed" with failures baked in — which answers a different
+		// question than the one this error already answered.
 		pterm.Error.Printf("Invalid configuration: %v", err)
+		os.Exit(1)
 	}
 	//spinner.Success("Config loaded - we’re golden!")
 	return &config
