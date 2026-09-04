@@ -15,7 +15,7 @@ require (
 	github.com/jchv/go-webview2 v0.0.0-20221223143126-dc24628cff85
 	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/prometheus/client_golang v1.23.2
-	golang.org/x/term v0.34.0
+	golang.org/x/term v0.43.0
 )
 
 require (
@@ -79,10 +79,10 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.41.0
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/crypto v0.52.0
+	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
