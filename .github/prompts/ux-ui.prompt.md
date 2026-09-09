@@ -1,7 +1,7 @@
 # UX/UI update for dashboard and terminal flows
 
 ## When to use
-- Changing dashboard template behavior in `templates/` or static assets in `app/static/`.
+- Changing dashboard template behavior in `templates/` or static assets in `templates/static/`.
 - Improving clarity of CLI/TUI output (`pterm`, lipgloss, spinner/status messaging).
 - Adjusting API-driven dashboard interactions while preserving existing routes.
 

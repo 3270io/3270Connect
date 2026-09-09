@@ -4,7 +4,7 @@
 - Go automation tool for 3270 workflows: CLI + API server + optional dashboard UI.
 - Main entrypoint is `go3270Connect.go` (CLI flags, API routes, dashboard handlers).
 - TN3270 emulator control/retries live in `connect3270/` (see `emulator.go` for session logic).
-- Dashboard HTML templates are in `templates/`, static assets in `app/static/` and `site/`.
+- Dashboard HTML templates are in `templates/`, static assets in `templates/static/`; the built docs site is `site/`.
 - Embedded x3270/s3270 binaries live under `binaries/` and are bundled via generated `binaries/bindata.go`.
 - Sample workflows/apps are under `sampleapps/` with example configs like `workflow*.json`.
 - Keep platform-specific behavior in existing split files (`open_dashboard_windows.go`, `open_dashboard_other.go`) instead of adding OS checks inline.
