@@ -3,6 +3,8 @@
   <img alt="3270Connect" src="brand/3270connect-lockup-light-600.png" width="300">
 </picture>
 
+[![CI has the Zoomies](https://zoomies.sh/badge.svg)](https://zoomies.sh)
+
 Scripted 3270 workflows that replay human online integration at unlimited scale —
 a command-line utility, an API server, and a live operations console served
 straight from the binary, with no external dependencies at runtime.
