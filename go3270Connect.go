@@ -829,7 +829,13 @@ func loadConfiguration(filePath string) *Configuration {
 	decoder := json.NewDecoder(configFile)
 	err = decoder.Decode(&config)
 	if err != nil {
+		// A caller reading only exit status (a CI job, a shell script) has to
+		// see this as a failure. Printing and carrying on ran the workflow
+		// with whatever the JSON decoded to before the error — the zero
+		// Configuration on a parse failure — which fails again far downstream
+		// with no obvious link back to the bad file.
 		pterm.Error.Printf("Error decoding config JSON: %v", err)
+		os.Exit(1)
 	}
 	if config.RampUpBatchSize <= 0 {
 		config.RampUpBatchSize = 10
@@ -843,7 +849,14 @@ func loadConfiguration(filePath string) *Configuration {
 	applyTerminalFlags(&config)
 	err = validateConfiguration(&config)
 	if err != nil {
+		// Validate is documented as "the single gate every caller goes
+		// through" precisely so an invalid workflow is reported once, here,
+		// with a message that names what is wrong. Printing that message and
+		// then running the workflow anyway defeats the gate: the run proceeds
+		// with an unvalidated configuration and fails again later, less
+		// clearly, or not at all.
 		pterm.Error.Printf("Invalid configuration: %v", err)
+		os.Exit(1)
 	}
 	//spinner.Success("Config loaded - we’re golden!")
 	return &config
