@@ -3864,31 +3864,46 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid configuration filename", http.StatusBadRequest)
 		return
 	}
-	tempFilePath := filepath.Join(os.TempDir(), safeConfigName)
-	if err := os.WriteFile(tempFilePath, updatedJSON, 0644); err != nil {
+	// Written under a randomised path with 0600, rather than at the client's
+	// chosen name with 0644. A workflow and an injection config can carry the
+	// values a run types onto a host - passwords, tokens, RSA seeds - so on a
+	// shared machine, /tmp/<uploader-chosen-name> with world-readable bits was
+	// a way for any local account to read them, and a predictable name was a
+	// way to plant a symlink at the same path before the write landed. os.CreateTemp
+	// gives us a unique name and (on Unix) 0600 in one step.
+	tempConfigFile, err := os.CreateTemp("", "3270connect-config-*.json")
+	if err != nil {
+		http.Error(w, "Failed to save file", http.StatusInternalServerError)
+		return
+	}
+	tempFilePath := tempConfigFile.Name()
+	if _, err := tempConfigFile.Write(updatedJSON); err != nil {
+		tempConfigFile.Close()
+		os.Remove(tempFilePath)
+		http.Error(w, "Failed to save file", http.StatusInternalServerError)
+		return
+	}
+	if err := tempConfigFile.Close(); err != nil {
+		os.Remove(tempFilePath)
 		http.Error(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
 
 	// Retrieve the injection configuration file (optional)
 	var injectionConfigPath string
-	injectionFile, injectionHandler, err := r.FormFile("injectionConfig")
+	injectionFile, _, err := r.FormFile("injectionConfig")
 	if err == nil {
 		defer injectionFile.Close()
-		safeInjectionName := filepath.Base(injectionHandler.Filename)
-		if safeInjectionName == "" || safeInjectionName == "." || safeInjectionName == string(filepath.Separator) {
-			http.Error(w, "Invalid injection configuration filename", http.StatusBadRequest)
-			return
-		}
-		injectionConfigPath = filepath.Join(os.TempDir(), safeInjectionName)
-		injectionTempFile, err := os.Create(injectionConfigPath)
+		injectionTempFile, err := os.CreateTemp("", "3270connect-injection-*.json")
 		if err != nil {
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
 			return
 		}
+		injectionConfigPath = injectionTempFile.Name()
 		defer injectionTempFile.Close()
 
 		if _, err := io.Copy(injectionTempFile, injectionFile); err != nil {
+			os.Remove(injectionConfigPath)
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
 			return
 		}
