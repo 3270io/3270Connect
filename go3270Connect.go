@@ -1492,8 +1492,11 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 	case "AsciiScreenGrab":
 		return e.AsciiScreenGrab(tmpFileName, runAPI)
 	case "WaitForField":
-		timeout := time.Second
-		retries := 10
+		// Same default as the top-level WaitForField config option: named
+		// once in the workflow package so the two "how long to wait" values
+		// cannot drift apart.
+		timeout := secondsToDuration(workflow.DefaultWaitForFieldDelay)
+		retries := workflow.DefaultWaitForFieldRetries
 		if step.Delay > 0 {
 			timeout = time.Duration(step.Delay * float64(time.Second))
 		}
