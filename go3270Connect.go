@@ -4060,6 +4060,16 @@ func killProcessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid PID", http.StatusBadRequest)
 		return
 	}
+	// A non-positive PID reaches syscall.Kill as a special selector rather
+	// than as a process: 0 signals every process in the caller's process
+	// group, and -1 every process the caller has permission to signal.
+	// os.FindProcess on Unix does no lookup, so without this the request
+	// would be handed straight to the kernel as a broadcast.
+	if pid <= 0 {
+		storeLog("Refusing kill request with non-positive PID: " + pidStr)
+		http.Error(w, "Invalid PID", http.StatusBadRequest)
+		return
+	}
 	proc, err := os.FindProcess(pid)
 	if err != nil {
 		storeLog("Process not found: " + pidStr)
