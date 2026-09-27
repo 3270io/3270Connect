@@ -976,3 +976,21 @@ func TestKillProcessHandlerRefusesNonPositivePID(t *testing.T) {
 		}
 	}
 }
+
+// TestRestrictWebOutputPath keeps a workflow uploaded through /start-process
+// writing inside the working directory. AsciiScreenGrab appends screen text
+// there with mode 0644, so a value carrying "/etc/hostname" or
+// "../../secrets.env" would let a caller overwrite files elsewhere on the
+// host.
+func TestRestrictWebOutputPath(t *testing.T) {
+	for _, in := range []string{"output.html", "logs/output.html", "./logs/output.html"} {
+		if _, err := restrictWebOutputPath(in); err != nil {
+			t.Fatalf("refused a relative path %q: %v", in, err)
+		}
+	}
+	for _, in := range []string{"/etc/hostname", "..", "../up.html", "logs/../../etc/passwd"} {
+		if _, err := restrictWebOutputPath(in); err == nil {
+			t.Fatalf("accepted %q, want a path outside the working directory refused", in)
+		}
+	}
+}

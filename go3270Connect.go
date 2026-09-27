@@ -3680,6 +3680,25 @@ func validNumericPID(s string) bool {
 	return err == nil && n > 0
 }
 
+// restrictWebOutputPath keeps a workflow uploaded through /start-process
+// writing inside the working directory. AsciiScreenGrab appends there with
+// mode 0644, so ".."- or absolute-path values would overwrite host files.
+func restrictWebOutputPath(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", nil
+	}
+	cleaned := filepath.Clean(trimmed)
+	if cleaned == "." {
+		return cleaned, nil
+	}
+	if filepath.IsAbs(cleaned) || cleaned == ".." ||
+		strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path must be relative to the working directory")
+	}
+	return cleaned, nil
+}
+
 func loadExtendedMetricByPID(pid string) (*ExtendedMetrics, error) {
 	if pid == "" {
 		return nil, fmt.Errorf("missing pid")
@@ -3824,9 +3843,21 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		config.Port = portValue
 	}
 	if override := strings.TrimSpace(r.FormValue("overrideOutputFilePath")); override != "" {
-		cleaned := filepath.Clean(override)
-		if filepath.IsAbs(cleaned) || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) || cleaned == ".." {
+		cleaned, err := restrictWebOutputPath(override)
+		if err != nil {
 			http.Error(w, "overrideOutputFilePath must be a relative path within the working directory", http.StatusBadRequest)
+			return
+		}
+		config.OutputFilePath = cleaned
+	}
+	// The same restriction the override branch applies, extended to the
+	// value parsed from the uploaded workflow -- a JSON body carrying
+	// "/etc/hostname" or "../../secrets.env" used to slip past into
+	// AsciiScreenGrab's O_APPEND|O_CREATE write.
+	if config.OutputFilePath != "" {
+		cleaned, err := restrictWebOutputPath(config.OutputFilePath)
+		if err != nil {
+			http.Error(w, "OutputFilePath must be a relative path within the working directory", http.StatusBadRequest)
 			return
 		}
 		config.OutputFilePath = cleaned
