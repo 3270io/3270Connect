@@ -1498,10 +1498,17 @@ func (e *Emulator) captureAttrs(now time.Time) string {
 	return attrs
 }
 
+// htmlAttrEscaper is package-level rather than built fresh per call: a
+// *strings.Replacer with fixed pairs never changes, is safe for concurrent
+// use, and escapeAttr runs up to a handful of times per AsciiScreenGrab
+// call — per step, per worker, in a concurrent load test — so rebuilding its
+// lookup table on every call was pure repeated allocation for a constant
+// table.
+var htmlAttrEscaper = strings.NewReplacer("&", "&amp;", `"`, "&quot;", "<", "&lt;", ">", "&gt;")
+
 // escapeAttr makes a value safe to sit inside a double-quoted HTML attribute.
 func escapeAttr(value string) string {
-	replacer := strings.NewReplacer("&", "&amp;", `"`, "&quot;", "<", "&lt;", ">", "&gt;")
-	return replacer.Replace(value)
+	return htmlAttrEscaper.Replace(value)
 }
 
 // AsciiScreenGrab captures an ASCII screen and saves it to a file.
@@ -1555,10 +1562,16 @@ func (e *Emulator) AsciiScreenGrab(filePath string, apiMode bool) error {
 	return fmt.Errorf("maximum capture retries reached: %w", lastErr)
 }
 
+// htmlTextEscaper is the escapeAttr's HTML-attribute table's sibling for
+// element text — hoisted for the same reason: escapeText runs on every
+// non-API AsciiScreenGrab capture, over a whole screen's worth of text, so a
+// fresh *strings.Replacer per call was wasted work on a table that never
+// changes.
+var htmlTextEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+
 // escapeText makes host screen text safe to sit inside an HTML element.
 func escapeText(value string) string {
-	replacer := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
-	return replacer.Replace(value)
+	return htmlTextEscaper.Replace(value)
 }
 
 func writeScreenGrab(filePath, content string) (err error) {
