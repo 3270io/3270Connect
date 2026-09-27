@@ -2744,6 +2744,8 @@
 
       var button = $('#startAppSubmit');
       button.disabled = true;
+      var original = button.innerHTML;
+      button.innerHTML = '<svg class="ic spin" aria-hidden="true"><use href="#i-circle-notch"></use></svg><span class="txt">Starting</span>';
 
       fetch('/start-process', { method: 'POST', body: data })
         .then(function (response) {
@@ -2758,7 +2760,10 @@
           setTimeout(function () { Refresh.now(); }, 1200);
         })
         .catch(function (error) { Toast.push('bad', 'Start failed', error.message); })
-        .finally(function () { button.disabled = false; });
+        .finally(function () {
+          button.disabled = false;
+          button.innerHTML = original;
+        });
     }
 
     /* --- wiring --- */
