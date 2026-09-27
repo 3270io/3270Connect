@@ -2732,20 +2732,6 @@ func isPortAvailable(port int) bool {
 	return true
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // validateConfiguration reports whether a workflow is well-formed.
 // internal/workflow.Validate is the single gate; this wrapper keeps the
 // verbose-mode narration the CLI has always printed.
