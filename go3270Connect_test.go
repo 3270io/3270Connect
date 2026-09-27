@@ -960,3 +960,19 @@ func TestApplyTerminalSettingsCarriesEverything(t *testing.T) {
 		t.Errorf("connection settings not carried: %+v", e)
 	}
 }
+
+// TestKillProcessHandlerRefusesNonPositivePID guards a broadcast-kill hazard:
+// syscall.Kill treats a pid of 0 as "every process in the caller's group" and
+// -1 as "every process the caller may signal". os.FindProcess does no lookup
+// on Unix, so without the guard a POST to /kill?pid=-1 was handed to the
+// kernel as a mass kill against everything the console owns.
+func TestKillProcessHandlerRefusesNonPositivePID(t *testing.T) {
+	for _, pid := range []string{"0", "-1", "-2147483648"} {
+		req := httptest.NewRequest(http.MethodPost, "/kill?pid="+pid, nil)
+		rr := httptest.NewRecorder()
+		killProcessHandler(rr, req)
+		if rr.Code != http.StatusBadRequest {
+			t.Fatalf("pid %s: got status %d, want %d", pid, rr.Code, http.StatusBadRequest)
+		}
+	}
+}
