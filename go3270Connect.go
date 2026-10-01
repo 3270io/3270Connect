@@ -3977,7 +3977,10 @@ func testConnectionHandler(w http.ResponseWriter, r *http.Request) {
 		Port int    `json:"port"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	// Cap the body so an authenticated caller cannot run the console out of
+	// memory by streaming an unbounded JSON blob at an endpoint whose payload
+	// is two short fields. 1 MiB mirrors the limit the admin JSON APIs use.
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&payload); err != nil {
 		storeLog("Failed to decode test connection payload: " + err.Error())
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
