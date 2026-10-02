@@ -829,17 +829,41 @@ func (e *Emulator) GetValue(x, y, length int) (string, error) {
 // with the other's. A reply carrying no data lines yields "", which the
 // profiler reads as "the terminal did not say" rather than as a value.
 func NormalizeDataLines(raw string) string {
+	out, _ := joinDataLines(raw, "\n")
+	return out
+}
+
+// joinDataLines is the one pass behind NormalizeDataLines and
+// normalizeAsciiData: it walks the reply line by line without splitting it,
+// and writes each kept line straight into a presized builder. The reply to
+// every Ascii() is a whole screen, so the per-call []string from
+// strings.Split, the second []string of kept lines and the Join were three
+// allocations and a copy of the screen for what is a filter. hasData reports
+// whether any data line was present, which a caller needs because an empty
+// result alone cannot tell "no data" from "a blank data line".
+func joinDataLines(raw, sep string) (joined string, hasData bool) {
 	const prefix = "data:"
-	var kept []string
-	for _, line := range strings.Split(raw, "\n") {
+	var b strings.Builder
+	b.Grow(len(raw))
+	for len(raw) > 0 {
+		line := raw
+		if i := strings.IndexByte(raw, '\n'); i >= 0 {
+			line, raw = raw[:i], raw[i+1:]
+		} else {
+			raw = ""
+		}
 		line = strings.TrimRight(line, "\r")
 		if !strings.HasPrefix(strings.TrimSpace(line), prefix) {
 			continue
 		}
 		value := strings.TrimPrefix(strings.TrimLeft(line, " \t"), prefix)
-		kept = append(kept, strings.TrimPrefix(value, " "))
+		if hasData {
+			b.WriteString(sep)
+		}
+		b.WriteString(strings.TrimPrefix(value, " "))
+		hasData = true
 	}
-	return strings.Join(kept, "\n")
+	return b.String(), hasData
 }
 
 // normalizeAsciiData reduces an Ascii(row, col, length) reply to the
@@ -856,17 +880,11 @@ func NormalizeDataLines(raw string) string {
 // The result is trimmed as a whole, so a single-row read is unchanged and a
 // wrapped one keeps the spacing between its halves.
 func normalizeAsciiData(raw string) string {
-	hasData := false
-	for _, line := range strings.Split(raw, "\n") {
-		if strings.HasPrefix(strings.TrimSpace(line), "data:") {
-			hasData = true
-			break
-		}
-	}
+	joined, hasData := joinDataLines(raw, "")
 	if !hasData {
 		return strings.TrimSpace(raw)
 	}
-	return strings.TrimSpace(strings.ReplaceAll(NormalizeDataLines(raw), "\n", ""))
+	return strings.TrimSpace(joined)
 }
 
 // CursorPosition return actual position by cursor
