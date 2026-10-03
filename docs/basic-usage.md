@@ -8,49 +8,55 @@ description: >-
 
 # Basic Usage
 
-## Introduction
+## Your first successful replay
 
-The basic usage of `3270Connect` involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens.
-
-To run a workflow, use the following command:
+Generate a valid example (the command refuses to overwrite an existing file):
 
 ```bash
-3270Connect -config workflow.json
+3270connect -sampleWorkflow sample-workflow.json
 ```
 
-- `-config`: Specifies the path to the configuration file (default is "workflow.json").
-- `-token`: Provides a one-time RSA token that replaces any `{{token}}` placeholder in workflow step text during execution.
-- `-codePage`: Sets the host EBCDIC code page / character set for the 3270 session (for example `cp037`, `cp285`, or `cp278`/`finnish`). Overrides the workflow's `CodePage` value when supplied and is passed straight through to the embedded x3270/s3270 emulator's `-codepage` option. See [Host Code Page and Character Set](#host-code-page-and-character-set).
-- `-model`: The 3270 device type to negotiate — `2` (24x80), `3` (32x80), `4` (43x80), `5` (27x132), or the full form `3278-4` / `3279-4`. Defaults to `3279-2`. A workflow that addresses rows past 24 needs a model that has them. Overrides the workflow's `Model` value.
-- `-oversize`: A screen larger than the model defines, as `<cols>x<rows>` (e.g. `132x50`). Only hosts that support the geometry will use it. Overrides the workflow's `Oversize` value.
-- `-luName`: The logical unit to request at connect time, for hosts that route sessions by LU. Overrides the workflow's `LUName` value.
-- `-tls`: Connect to the host over TLS. Overrides the workflow's `TLS` value.
-- `-tlsSkipVerify`: Skip host certificate validation when using `-tls`. For an internal host with a private CA or a self-signed certificate; leave it off otherwise.
-- `-showConnectionErrors`: By default, connection failures for the `Connect` step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.
-- `WaitForField` (config, default `true`): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful `Connect`. Supports both simple boolean and detailed configuration:
-  - Boolean format: `"WaitForField": true` or `"WaitForField": false` (uses defaults: 1s delay, 10 retries)
-  - Object format: `"WaitForField": { "Delay": 2, "Retries": 5 }` (custom delay in seconds and retry count)
-  - Defaults: `Delay` defaults to 1 second if not specified. `Retries` defaults to 10 if not specified.
-  - The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).
-- `-workflowTimeout`: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.
-- `-gracePeriod`: How long (in seconds) to wait for in-flight workflows to finish after the runtime deadline expires (default: 30). Overrides the `GracePeriod` workflow JSON field.
-- `-autoShutdown`: Length of the auto-shutdown countdown prompt in seconds when the grace period elapses (default: 10). If no response is given before the countdown reaches zero, shutdown is selected automatically. Overrides the `AutoShutdownTimeout` workflow JSON field.
-- `-verboseFailures`: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.
-- `-verboseScreenCaptureFailures`: When enabled alongside `-verboseFailures`, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format `failure_[scriptPort]_step[stepIndex]_[timestamp].txt` and saved in the current directory. The capture file path is included in the failure log message.
-- `-bar`: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: `-enableProgressBar`.)
-- `-promListen <addr>`: Expose Prometheus metrics on `/metrics` at the given address (e.g. `:9091`). Disabled when empty. See [Metrics & Monitoring](metrics.md) for the collector list and example queries.
-- `-profile`: Run as a one-shot host compatibility profiler instead of executing the workflow. Connects, probes the host, writes a `CompatibilityProfile` JSON document, and exits. See [Host Compatibility Profiler](host-profiler.md).
-- `-profileHost <host>` / `-profilePort <port>`: Override the profile target. If omitted, the profiler reads `Host`/`Port` from `-config`.
-- `-profileTLS`: Mark the profiled host as TLS-protected in the output.
-- `-profileOut <path>`: Write the profile JSON to this path instead of stdout.
-- `-profileCollectRaw`: Include raw s3270 `Query` responses in the profile output.
+Start the bundled sample host in another terminal:
+
+```bash
+3270connect -runApp 1 -runApp-port 3270
+```
+
+Replay once, without opening an emulator window:
+
+```bash
+3270connect -config sample-workflow.json -headless
+```
+
+The workflow enters a name, checks the confirmation and saves terminal captures to `sample-output-3270.html`. A completed replay exits with status 0. The separate Docker lab ships its own `workflow-sampleapp.json`; use that file with its `sampleapps` host rather than this local example.
+
+For your own host, export a recorded workflow from [3270Web](https://3270web.3270.io/chaos-mode/) and upload it in the console or pass it with `-config`. Recording runs in 3270Web, a separate application; 3270Connect replays the exported JSON.
+
+## CLI outcomes and load tests
+
+```bash
+3270connect -config sample-workflow.json -headless -concurrent 5 -runtime 60
+```
+
+Finite load tests exit after cleanup and the summary. Add `-keepDashboard` only when you want an interactive console to remain open. `-plain` selects plain logs and skips interactive shutdown prompts; redirected output does this automatically. `-headless` selects s3270 and does not mute logging.
+
+| Exit status | Meaning |
+| --- | --- |
+| 0 | Successful replay |
+| 1 | Startup failure |
+| 2 | Configuration or usage error |
+| 3 | Host connection failure |
+| 4 | Workflow assertion/action failure |
+| 130 | Interrupted or forced shutdown |
+
+Use `3270connect -help` for tasks and `3270connect -help-all` for the full flag reference.
 
 ### Injecting a runtime RSA token
 
 Workflows can reference a transient RSA token by placing `{{token}}` in any `Text` field. Supply the token when launching 3270Connect:
 
 ```bash
-3270Connect -config workflow.json -token 123456
+3270connect -config workflow.json -token 123456
 ```
 
 The placeholder will be substituted immediately before each step runs, ensuring the token is never stored in the workflow file.
@@ -63,14 +69,14 @@ To run a single workflow, create a JSON configuration file that describes the wo
 
 ```json
 {
-  "Host": "10.27.27.62",
+  "Host": "127.0.0.1",
   "Port": 3270,
-  "CodePage": "cp037", // optional host code page / charset; omit to use the emulator default
+  "CodePage": "cp037",
   "EveryStepDelay": { "Min": 0.1, "Max": 0.3 },
-  "WaitForField": true, // optional (default true) to wait before all steps once connected
-  "OutputFilePath": "output.html", // optional; if omitted a temp file is used
-  "RampUpBatchSize": 10, //optional for concurrency runs
-  "RampUpDelay": 1, //optional for concurrency runs
+  "WaitForField": true,
+  "OutputFilePath": "output.html",
+  "RampUpBatchSize": 10,
+  "RampUpDelay": 1,
   "EndOfTaskDelay": { "Min": 30, "Max": 90 },
   "Steps": [
     {
@@ -147,7 +153,7 @@ You can run multiple workflows concurrently by specifying the `-concurrent` and 
 For example, to run two workflows concurrently for 60 seconds, use:
 
 ```bash
-3270Connect -config workflow.json -concurrent 2 -runtime 60
+3270connect -config workflow.json -concurrent 2 -runtime 60
 ```
 
 When `-injectionConfig` is also used, injection entries are locked per active workflow so the same entry is not reused by another active workflow at the same time. If all entries are in use, that workflow start attempt is skipped for the current scheduling cycle and processing continues. A `WARNING` terminal message is emitted for this condition.
@@ -163,7 +169,7 @@ window. Without it a run needs an X display, so this is the flag for a CI
 runner, a container, or any server you reach over SSH.
 
 ```bash
-3270Connect -config workflow.json -headless
+3270connect -config workflow.json -headless
 ```
 
 It does not quiet the terminal: the header, the live stats and the run report
@@ -175,7 +181,7 @@ that output off — `-verbose` and `-verboseFailures` below only add to it.
 To enable verbose mode for detailed output, use the `-verbose` flag.
 
 ```bash
-3270Connect -config workflow.json -verbose
+3270connect -config workflow.json -verbose
 ```
 
 ### Failure-only verbose logging
@@ -183,7 +189,7 @@ To enable verbose mode for detailed output, use the `-verbose` flag.
 To log only failing steps (without the volume of full verbose output), use the `-verboseFailures` flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.
 
 ```bash
-3270Connect -config workflow.json -verboseFailures
+3270connect -config workflow.json -verboseFailures
 ```
 
 ### Screen capture on failures
@@ -191,7 +197,7 @@ To log only failing steps (without the volume of full verbose output), use the `
 When troubleshooting intermittent automation failures in high-concurrency environments, you can enable automatic screen captures using the `-verboseScreenCaptureFailures` flag. This flag works in conjunction with `-verboseFailures` to capture the terminal screen whenever a workflow step fails or a WaitForField timeout occurs.
 
 ```bash
-3270Connect -config workflow.json -verboseFailures -verboseScreenCaptureFailures
+3270connect -config workflow.json -verboseFailures -verboseScreenCaptureFailures
 ```
 
 Key features:
@@ -225,11 +231,7 @@ The `WaitForField` configuration controls whether the workflow waits for the ter
 ```json
 // Use defaults
 "WaitForField": true
-
-// Custom delay and retries
 "WaitForField": { "Delay": 2, "Retries": 15 }
-
-// Disable automatic waiting
 "WaitForField": false
 ```
 
@@ -250,7 +252,7 @@ Both values can also be set in the workflow JSON file (see [Workflow Configurati
 
 ```bash
 # Wait up to 60s for in-flight workflows, with a 20s prompt countdown
-3270Connect -config workflow.json -concurrent 10 -runtime 120 -gracePeriod 60 -autoShutdown 20
+3270connect -config workflow.json -concurrent 10 -runtime 120 -gracePeriod 60 -autoShutdown 20
 ```
 
 ### startPort Flag
@@ -260,7 +262,7 @@ The -startPort flag allows you to specify the starting port for the sample appli
 Use it as follows:
 
 ```bash
-3270Connect -config workflow.json -startPort 5000
+3270connect -config workflow.json -startPort 5000
 ```
 
 ### Host Code Page and Character Set
@@ -283,7 +285,7 @@ You can set the code page in two ways:
 - **On the command line** with the `-codePage` flag, which overrides the value in the workflow JSON:
 
   ```bash
-  3270Connect -config workflow.json -codePage cp278
+  3270connect -config workflow.json -codePage cp278
   ```
 
 The value is passed directly to the embedded x3270/s3270 emulator's `-codepage` option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave `CodePage` unset (and omit `-codePage`) to use the emulator's built-in default code page.
@@ -296,7 +298,7 @@ workflow or on the command line:
 
 ```bash
 # a 43x80 model 4 session, over TLS, bound to a named LU
-3270Connect -config workflow.json -model 4 -tls -luName LU01
+3270connect -config workflow.json -model 4 -tls -luName LU01
 ```
 
 ```json
@@ -350,7 +352,7 @@ Let's explore some common use cases with examples:
 Run a basic workflow defined in "workflow.json":
 
 ```bash
-3270Connect -config workflow.json
+3270connect -config workflow.json
 ```
 
 ### 2. Running Multiple Workflows Concurrently
@@ -358,7 +360,7 @@ Run a basic workflow defined in "workflow.json":
 Run two workflows concurrently for 60 seconds:
 
 ```bash
-3270Connect -config workflow.json -concurrent 2 -runtime 60
+3270connect -config workflow.json -concurrent 2 -runtime 60
 ```
 
 ### 3. Running in Headless Mode
@@ -366,7 +368,7 @@ Run two workflows concurrently for 60 seconds:
 Run a workflow in headless mode:
 
 ```bash
-3270Connect -config workflow.json -headless
+3270connect -config workflow.json -headless
 ```
 
 ### 4. Using the API Mode
@@ -392,11 +394,11 @@ Run a test 3270 sample application to assist with testing 3270Connect workflow f
     - [2] Dynamic RSS Reader
 
 ```bash
-3270Connect -runApp
+3270connect -runApp
 ```
 or
 ```bash
-3270Connect -runApp [number]
+3270connect -runApp [number]
 ```
 
 Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.

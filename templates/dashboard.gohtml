@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="phosphor" data-density="comfortable" data-fx="on" data-view="table" data-wrap="on">
+<html lang="en" data-theme="phosphor" data-density="comfortable" data-fx="off" data-view="table" data-wrap="on">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -149,10 +149,10 @@
         </button>
 
         <button class="btn-x primary" id="openStartProcess" type="button" data-tip="Start a 3270Connect run (S)">
-          <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg><span class="txt">Start Process</span>
+          <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg><span class="txt">Run workflow</span>
         </button>
         <button class="btn-x accentline" id="openStartApp" type="button" data-tip="Launch a bundled sample 3270 app (A)">
-          <svg class="ic" aria-hidden="true"><use href="#i-server"></use></svg><span class="txt">Start App</span>
+          <svg class="ic" aria-hidden="true"><use href="#i-server"></use></svg><span class="txt">Sample host</span>
         </button>
         <button class="btn-x icon" id="openConsole" type="button" data-tip="Console logs (C)" aria-label="Console logs">
           <svg class="ic" aria-hidden="true"><use href="#i-terminal"></use></svg>
@@ -248,6 +248,16 @@
 
     <!-- ================= Main ================= -->
     <main class="main">
+      <section class="panel welcome-panel" id="welcomePanel" hidden aria-labelledby="welcomeTitle">
+        <h1 id="welcomeTitle">Replay your first workflow</h1>
+        <p>Try a bundled sample host and workflow, or bring a workflow for your own host. No mainframe is needed for the sample.</p>
+        <div class="welcome-actions">
+          <button class="btn-x primary" id="prepareSample" type="button">Try a sample replay</button>
+          <button class="btn-x" id="useOwnWorkflow" type="button">Use my workflow</button>
+          <a href="https://3270web.3270.io/chaos-mode/" target="_blank" rel="noopener">Create a workflow in 3270Web</a>
+        </div>
+        <p id="sampleError" class="banner bad" hidden role="alert"></p>
+      </section>
 
       <!-- KPI strip -->
       <section class="kpi-strip" aria-label="Key metrics">
@@ -518,16 +528,16 @@
             <thead>
               <tr>
                 <th scope="col">Actions</th>
-                <th scope="col" class="sortable" data-key="pid" aria-sort="ascending">PID <span class="sort-ind">↕</span></th>
-                <th scope="col" class="sortable" data-key="status">Status <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="pid" aria-sort="ascending"><button type="button" class="sort-button">PID <span class="sort-ind">↕</span></button></th>
+                <th scope="col" class="sortable" data-key="status"><button type="button" class="sort-button">Status <span class="sort-ind">↕</span></button></th>
                 <th scope="col">Progress</th>
-                <th scope="col" class="sortable" data-key="activeWorkflows">Active <span class="sort-ind">↕</span></th>
-                <th scope="col" class="sortable" data-key="totalWorkflowsStarted">Started <span class="sort-ind">↕</span></th>
-                <th scope="col" class="sortable" data-key="totalWorkflowsCompleted">Completed <span class="sort-ind">↕</span></th>
-                <th scope="col" class="sortable" data-key="totalWorkflowsFailed">Failed <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="activeWorkflows"><button type="button" class="sort-button">Active <span class="sort-ind">↕</span></button></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsStarted"><button type="button" class="sort-button">Started <span class="sort-ind">↕</span></button></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsCompleted"><button type="button" class="sort-button">Completed <span class="sort-ind">↕</span></button></th>
+                <th scope="col" class="sortable" data-key="totalWorkflowsFailed"><button type="button" class="sort-button">Failed <span class="sort-ind">↕</span></button></th>
                 <th scope="col">Success</th>
-                <th scope="col" class="sortable" data-key="avg">Avg Duration <span class="sort-ind">↕</span></th>
-                <th scope="col" class="sortable" data-key="params">Parameters <span class="sort-ind">↕</span></th>
+                <th scope="col" class="sortable" data-key="avg"><button type="button" class="sort-button">Avg Duration <span class="sort-ind">↕</span></button></th>
+                <th scope="col" class="sortable" data-key="params"><button type="button" class="sort-button">Parameters <span class="sort-ind">↕</span></button></th>
               </tr>
             </thead>
             <tbody id="procBody"></tbody>
@@ -651,27 +661,24 @@
     <div class="modal-card xl">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="startProcessLabel"><svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg> Start 3270Connect Process</h5>
+          <h5 class="modal-title" id="startProcessLabel"><svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg> Run a workflow</h5>
           <div class="head-tools">
-            <div class="steps" id="startSteps">
-              <span class="step"><span class="n">1</span> Config</span>
-              <span class="sep"></span>
-              <span class="step"><span class="n">2</span> Review</span>
-              <span class="sep"></span>
-              <span class="step"><span class="n">3</span> Verify</span>
-            </div>
+            <span id="startSteps" class="hint" aria-live="polite">Choose a workflow</span>
             <button type="button" class="btn-close" data-close aria-label="Close"></button>
           </div>
         </div>
 
         <div class="modal-body">
           <form id="startProcessForm" enctype="multipart/form-data" novalidate>
+            <p id="launchError" class="banner bad" hidden role="alert"></p>
+            <p id="configValidation" class="banner" hidden aria-live="polite"></p>
             <div class="modal-cols">
 
               <!-- Left column: files + parsed config -->
               <div class="modal-col">
                 <div class="field">
                   <label for="configFile">Workflow configuration</label>
+                  <p class="hint">Export a recorded workflow from <a href="https://3270web.3270.io/chaos-mode/" target="_blank" rel="noopener">3270Web</a>, or use the sample replay.</p>
                   <div class="dropzone" id="configDrop">
                     <input type="file" id="configFile" name="configFile" accept=".json" required
                            aria-label="Workflow configuration JSON file">
@@ -718,9 +725,10 @@
                     </div>
                     <div class="full">
                       <button type="button" class="btn-x accentline" id="testConnection">
-                        <svg class="ic" aria-hidden="true"><use href="#i-plug"></use></svg><span class="txt">Test connection</span>
+                        <svg class="ic" aria-hidden="true"><use href="#i-plug"></use></svg><span class="txt">Check TCP reachability</span>
                       </button>
                     </div>
+                    <div class="full"><button type="button" class="btn-x" id="testTerminal">Check terminal negotiation</button><p class="hint">Neither check signs in or executes workflow assertions.</p></div>
                     <div class="full">
                       <div class="banner" id="connectionResult" hidden></div>
                     </div>
@@ -731,15 +739,17 @@
               <!-- Right column: run parameters -->
               <div class="modal-col">
                 <fieldset class="group">
-                  <legend>Load profile</legend>
+                  <legend>Execution</legend>
+                  <div class="field"><label for="runMode">Run mode</label><select class="form-select" id="runMode"><option value="replay">Replay once</option><option value="load">Load test</option></select><span class="hint">Start with one replay to verify your workflow.</span></div>
+                  <div id="loadProfile" hidden>
                   <div class="form-grid">
                     <div class="field">
                       <label for="concurrent">Concurrent workflows</label>
-                      <input type="number" class="form-control" id="concurrent" min="1" value="5" required>
+                      <input type="number" class="form-control" id="concurrent" min="1" value="1" required>
                     </div>
                     <div class="field">
                       <label for="runtime">Runtime (seconds)</label>
-                      <input type="number" class="form-control" id="runtime" min="1" value="180" required>
+                      <input type="number" class="form-control" id="runtime" min="1" value="60" required>
                     </div>
                     <div class="field">
                       <label for="startPort">Starting port</label>
@@ -755,6 +765,7 @@
                         </label>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </fieldset>
 
@@ -784,7 +795,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn-x" data-close>Cancel</button>
-          <button type="button" class="btn-x primary" id="startProcessSubmit">
+          <button type="button" class="btn-x primary" id="startProcessSubmit" disabled>
             <svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg><span class="txt">Launch run</span>
           </button>
         </div>
@@ -807,12 +818,12 @@
               <button type="button" class="app-option" data-app="1" aria-pressed="false">
                 <svg class="ic" aria-hidden="true"><use href="#i-right-to-bracket"></use></svg>
                 <span class="t">Sample App 1</span>
-                <span class="d">Login screen with menu navigation</span>
+                <span class="d">Name entry and confirmation</span>
               </button>
               <button type="button" class="app-option" data-app="2" aria-pressed="false">
                 <svg class="ic" aria-hidden="true"><use href="#i-table-columns"></use></svg>
                 <span class="t">Sample App 2</span>
-                <span class="d">Multi-screen data entry flow</span>
+                <span class="d">RSS newsreader</span>
               </button>
             </div>
           </div>

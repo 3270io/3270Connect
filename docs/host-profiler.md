@@ -22,7 +22,7 @@ the full field reference.
 ## Quick start
 
 ```bash
-3270Connect -profile -profileHost mvs01.example.com -profilePort 992 -profileTLS \
+3270connect -profile -profileHost mvs01.example.com -profilePort 992 -profileTLS \
             -profileOut mvs01.profile.json
 ```
 
@@ -63,7 +63,7 @@ You can omit `-profileHost`/`-profilePort` and let the profiler pull
 them from `-config`:
 
 ```bash
-3270Connect -profile -config workflow.json -profileOut current.profile.json
+3270connect -profile -config workflow.json -profileOut current.profile.json
 ```
 
 This makes it easy to drop `-profile` into an existing pipeline without
@@ -113,7 +113,7 @@ to get a divergence report.
 
 ## When to use which
 
-- **`3270Connect -profile`** — CI/CD or shell-friendly one-shot probe.
+- **`3270connect -profile`** — CI/CD or shell-friendly one-shot probe.
   No web UI needed; perfect for nightly fleet sweeps.
 - **3270Web `POST /profile`** — interactive use from the web UI or
   programmatic use from automation that already talks to 3270Web.
