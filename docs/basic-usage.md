@@ -532,3 +532,8 @@ docker build -f Dockerfile.windows -t 3270connect .
 The `3270Connect` command-line utility offers a flexible way to automate interactions with terminal emulators. Whether you need to connect to hosts, manipulate screens, or run multiple workflows concurrently, `3270Connect` has you covered. Explore its features, experiment with different workflows, and streamline your terminal automation tasks.
 
 That's it! You're now ready to use `3270Connect` for your terminal automation needs, including the API mode for more advanced automation scenarios.
+
+## Put the workflow to work
+
+- [Run regression tests in GitHub Actions](github-actions.md).
+- [Plan a concurrent load test](load-testing.md).
