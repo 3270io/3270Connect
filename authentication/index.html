@@ -1898,7 +1898,7 @@ password is one you chose rather than one printed in a log.</p>
 <p>If you would rather not use the web form, create the account with the console
 command before starting the server. Setup does not arm when an account already
 exists:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin
 </code></pre></div>
 <h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
 <table>
@@ -1950,15 +1950,15 @@ both to be clear covers each gap with the other.</p>
 <p>Account management is also a console command. It edits the same file the server
 reads, so it works whether or not the server is running — a new account can
 sign in immediately, without a restart.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>alice<span class="w">              </span><span class="c1"># create a regular account</span>
-3270Connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin<span class="w">       </span><span class="c1"># create an administrator</span>
-3270Connect<span class="w"> </span>user<span class="w"> </span>list
-3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
-3270Connect<span class="w"> </span>user<span class="w"> </span>disable<span class="w"> </span>alice
-3270Connect<span class="w"> </span>user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>alice
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>alice<span class="w">              </span><span class="c1"># create a regular account</span>
+3270connect<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span>root<span class="w"> </span>--admin<span class="w">       </span><span class="c1"># create an administrator</span>
+3270connect<span class="w"> </span>user<span class="w"> </span>list
+3270connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
+3270connect<span class="w"> </span>user<span class="w"> </span>disable<span class="w"> </span>alice
+3270connect<span class="w"> </span>user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>alice
 </code></pre></div>
 <p>Passwords are prompted for on a terminal, or read from stdin when piped:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NEW_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270Connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
+<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NEW_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>3270connect<span class="w"> </span>user<span class="w"> </span>passwd<span class="w"> </span>alice
 </code></pre></div>
 <p>They are never taken as a command-line argument, where they would be visible to
 every other process on the machine and recorded in shell history.</p>
@@ -1973,11 +1973,11 @@ Disabling from the Accounts page ends those logins on the spot.</p>
 <h2 id="api-tokens">API tokens<a class="headerlink" href="#api-tokens" title="Permanent link">&para;</a></h2>
 <p>An automated client — a CI job, a scheduled soak test, a script — presents a
 token instead of signing in.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
-3270Connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">"pipeline"</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
-3270Connect<span class="w"> </span>token<span class="w"> </span>list
-3270Connect<span class="w"> </span>token<span class="w"> </span>revoke<span class="w"> </span>&lt;id&gt;
-3270Connect<span class="w"> </span>token<span class="w"> </span>revoke-all<span class="w"> </span>alice
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>alice<span class="w"> </span><span class="s2">"nightly soak"</span>
+3270connect<span class="w"> </span>token<span class="w"> </span>add<span class="w"> </span>ci<span class="w"> </span><span class="s2">"pipeline"</span><span class="w"> </span>--read-only<span class="w"> </span>--expires<span class="w"> </span>720h
+3270connect<span class="w"> </span>token<span class="w"> </span>list
+3270connect<span class="w"> </span>token<span class="w"> </span>revoke<span class="w"> </span>&lt;id&gt;
+3270connect<span class="w"> </span>token<span class="w"> </span>revoke-all<span class="w"> </span>alice
 </code></pre></div>
 <p>The token is shown once, when it is issued. It is stored as a SHA-256 hash, so
 a lost token is replaced rather than recovered. Present it as an ordinary

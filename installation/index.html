@@ -1865,7 +1865,7 @@ flags as its command, so one image covers both.</p>
 <span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ghcr.io/3270io/3270connect:latest
 </code></pre></div>
-<p>Then open <a href="http://localhost:9200/dashboard">http://localhost:9200/dashboard</a>.</p>
+<p>Then open <a href="http://localhost:9200/dashboard">http://localhost:9200/dashboard</a> and select <strong>Try a sample replay</strong>.</p>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
@@ -1935,7 +1935,8 @@ sudo<span class="w"> </span>mv<span class="w"> </span>3270Connect_linux<span cla
 temporary directory the first time a workflow connects. Run history goes to
 <code>~/.config/3270Connect/</code>, which is where the console reads it from.</p>
 <div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-dashboard<span class="w">                       </span><span class="c1"># the console on :9200</span>
-3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w">            </span><span class="c1"># one run</span>
+3270connect<span class="w"> </span>-sampleWorkflow<span class="w"> </span>sample-workflow.json<span class="w">  </span><span class="c1"># create the example</span>
+3270connect<span class="w"> </span>-config<span class="w"> </span>sample-workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="c1"># replay after starting the sample host</span>
 3270connect<span class="w"> </span>-runApp<span class="w"> </span><span class="m">1</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="m">3270</span><span class="w">      </span><span class="c1"># a 3270 host to aim at</span>
 </code></pre></div>
 <h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h2>

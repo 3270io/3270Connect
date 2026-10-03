@@ -1646,7 +1646,7 @@ limits.</p>
 <a href="https://3270web.3270.io/workflow/">3270Web</a> or write JSON using
 <a href="../workflow/">Workflow Actions</a>. Add checks after navigation and at the final
 business result. Run one copy first:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-showConnectionErrors<span class="w"> </span>-workflowTimeout<span class="w"> </span><span class="m">60</span><span class="w"> </span>-verboseFailures
 </code></pre></div>
 <p>Read the summary in <code>logs/summary_&lt;pid&gt;.txt</code>. Confirm a completed workflow and
@@ -1694,7 +1694,7 @@ workers can skip starts and generate contention warnings, changing the load
 you actually deliver.</p>
 <h2 id="run-a-controlled-test">Run a controlled test<a class="headerlink" href="#run-a-controlled-test" title="Permanent link">&para;</a></h2>
 <p>For an initial two-worker, sixty-second exercise:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span><span class="w"> </span>-workflowTimeout<span class="w"> </span><span class="m">60</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-gracePeriod<span class="w"> </span><span class="m">30</span><span class="w"> </span>-autoShutdown<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-showConnectionErrors<span class="w"> </span>-verboseFailures<span class="w"> </span><span class="se">\</span>

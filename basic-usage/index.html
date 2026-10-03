@@ -855,15 +855,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#introduction" class="md-nav__link">
+  <a href="#your-first-successful-replay" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Introduction
+        Your first successful replay
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Introduction">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-outcomes-and-load-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI outcomes and load tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLI outcomes and load tests">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1977,56 +1988,74 @@
 
 
 <h1 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h1>
-<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
-<p>The basic usage of <code>3270Connect</code> involves running workflows defined in a configuration file. The configuration file specifies a sequence of actions to perform, such as connecting to a host, filling fields, and capturing screens.</p>
-<p>To run a workflow, use the following command:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
+<h2 id="your-first-successful-replay">Your first successful replay<a class="headerlink" href="#your-first-successful-replay" title="Permanent link">&para;</a></h2>
+<p>Generate a valid example (the command refuses to overwrite an existing file):</p>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-sampleWorkflow<span class="w"> </span>sample-workflow.json
 </code></pre></div>
-<ul>
-<li><code>-config</code>: Specifies the path to the configuration file (default is "workflow.json").</li>
-<li><code>-token</code>: Provides a one-time RSA token that replaces any <code>{{token}}</code> placeholder in workflow step text during execution.</li>
-<li><code>-codePage</code>: Sets the host EBCDIC code page / character set for the 3270 session (for example <code>cp037</code>, <code>cp285</code>, or <code>cp278</code>/<code>finnish</code>). Overrides the workflow's <code>CodePage</code> value when supplied and is passed straight through to the embedded x3270/s3270 emulator's <code>-codepage</code> option. See <a href="#host-code-page-and-character-set">Host Code Page and Character Set</a>.</li>
-<li><code>-model</code>: The 3270 device type to negotiate — <code>2</code> (24x80), <code>3</code> (32x80), <code>4</code> (43x80), <code>5</code> (27x132), or the full form <code>3278-4</code> / <code>3279-4</code>. Defaults to <code>3279-2</code>. A workflow that addresses rows past 24 needs a model that has them. Overrides the workflow's <code>Model</code> value.</li>
-<li><code>-oversize</code>: A screen larger than the model defines, as <code>&lt;cols&gt;x&lt;rows&gt;</code> (e.g. <code>132x50</code>). Only hosts that support the geometry will use it. Overrides the workflow's <code>Oversize</code> value.</li>
-<li><code>-luName</code>: The logical unit to request at connect time, for hosts that route sessions by LU. Overrides the workflow's <code>LUName</code> value.</li>
-<li><code>-tls</code>: Connect to the host over TLS. Overrides the workflow's <code>TLS</code> value.</li>
-<li><code>-tlsSkipVerify</code>: Skip host certificate validation when using <code>-tls</code>. For an internal host with a private CA or a self-signed certificate; leave it off otherwise.</li>
-<li><code>-showConnectionErrors</code>: By default, connection failures for the <code>Connect</code> step are informational and do not increment the failed workflow counter. Set this flag to surface connection failures as errors and include them in the failure tally.</li>
-<li><code>WaitForField</code> (config, default <code>true</code>): When enabled, the workflow waits for the terminal to unlock an input field before each step after a successful <code>Connect</code>. Supports both simple boolean and detailed configuration:</li>
-<li>Boolean format: <code>"WaitForField": true</code> or <code>"WaitForField": false</code> (uses defaults: 1s delay, 10 retries)</li>
-<li>Object format: <code>"WaitForField": { "Delay": 2, "Retries": 5 }</code> (custom delay in seconds and retry count)</li>
-<li>Defaults: <code>Delay</code> defaults to 1 second if not specified. <code>Retries</code> defaults to 10 if not specified.</li>
-<li>The WaitForField setting applies to all steps in the workflow once connected (not just after the Connect step).</li>
-<li><code>-workflowTimeout</code>: Hard timeout (seconds) per workflow. A zero value disables the per-workflow timeout.</li>
-<li><code>-gracePeriod</code>: How long (in seconds) to wait for in-flight workflows to finish after the runtime deadline expires (default: 30). Overrides the <code>GracePeriod</code> workflow JSON field.</li>
-<li><code>-autoShutdown</code>: Length of the auto-shutdown countdown prompt in seconds when the grace period elapses (default: 10). If no response is given before the countdown reaches zero, shutdown is selected automatically. Overrides the <code>AutoShutdownTimeout</code> workflow JSON field.</li>
-<li><code>-verboseFailures</code>: Emit concise failure-only logs (step, script port, error) without enabling full verbose mode-useful for high-concurrency runs where you only want failure diagnostics.</li>
-<li><code>-verboseScreenCaptureFailures</code>: When enabled alongside <code>-verboseFailures</code>, automatically captures the terminal screen as plain text whenever a workflow step fails or a WaitForField timeout occurs. Captures are limited to 5 total across all concurrent workflows to prevent disk exhaustion. Files are named using the format <code>failure_[scriptPort]_step[stepIndex]_[timestamp].txt</code> and saved in the current directory. The capture file path is included in the failure log message.</li>
-<li><code>-bar</code>: Enable compact progress bars and hide the live INFO rows. (Deprecated alias: <code>-enableProgressBar</code>.)</li>
-<li><code>-promListen &lt;addr&gt;</code>: Expose Prometheus metrics on <code>/metrics</code> at the given address (e.g. <code>:9091</code>). Disabled when empty. See <a href="../metrics/">Metrics &amp; Monitoring</a> for the collector list and example queries.</li>
-<li><code>-profile</code>: Run as a one-shot host compatibility profiler instead of executing the workflow. Connects, probes the host, writes a <code>CompatibilityProfile</code> JSON document, and exits. See <a href="../host-profiler/">Host Compatibility Profiler</a>.</li>
-<li><code>-profileHost &lt;host&gt;</code> / <code>-profilePort &lt;port&gt;</code>: Override the profile target. If omitted, the profiler reads <code>Host</code>/<code>Port</code> from <code>-config</code>.</li>
-<li><code>-profileTLS</code>: Mark the profiled host as TLS-protected in the output.</li>
-<li><code>-profileOut &lt;path&gt;</code>: Write the profile JSON to this path instead of stdout.</li>
-<li><code>-profileCollectRaw</code>: Include raw s3270 <code>Query</code> responses in the profile output.</li>
-</ul>
+<p>Start the bundled sample host in another terminal:</p>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-runApp<span class="w"> </span><span class="m">1</span><span class="w"> </span>-runApp-port<span class="w"> </span><span class="m">3270</span>
+</code></pre></div>
+<p>Replay once, without opening an emulator window:</p>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>sample-workflow.json<span class="w"> </span>-headless
+</code></pre></div>
+<p>The workflow enters a name, checks the confirmation and saves terminal captures to <code>sample-output-3270.html</code>. A completed replay exits with status 0. The separate Docker lab ships its own <code>workflow-sampleapp.json</code>; use that file with its <code>sampleapps</code> host rather than this local example.</p>
+<p>For your own host, export a recorded workflow from <a href="https://3270web.3270.io/chaos-mode/">3270Web</a> and upload it in the console or pass it with <code>-config</code>. Recording runs in 3270Web, a separate application; 3270Connect replays the exported JSON.</p>
+<h2 id="cli-outcomes-and-load-tests">CLI outcomes and load tests<a class="headerlink" href="#cli-outcomes-and-load-tests" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>sample-workflow.json<span class="w"> </span>-headless<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">5</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+</code></pre></div>
+<p>Finite load tests exit after cleanup and the summary. Add <code>-keepDashboard</code> only when you want an interactive console to remain open. <code>-plain</code> selects plain logs and skips interactive shutdown prompts; redirected output does this automatically. <code>-headless</code> selects s3270 and does not mute logging.</p>
+<table>
+<thead>
+<tr>
+<th>Exit status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Successful replay</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Startup failure</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Configuration or usage error</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Host connection failure</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Workflow assertion/action failure</td>
+</tr>
+<tr>
+<td>130</td>
+<td>Interrupted or forced shutdown</td>
+</tr>
+</tbody>
+</table>
+<p>Use <code>3270connect -help</code> for tasks and <code>3270connect -help-all</code> for the full flag reference.</p>
 <h3 id="injecting-a-runtime-rsa-token">Injecting a runtime RSA token<a class="headerlink" href="#injecting-a-runtime-rsa-token" title="Permanent link">&para;</a></h3>
 <p>Workflows can reference a transient RSA token by placing <code>{{token}}</code> in any <code>Text</code> field. Supply the token when launching 3270Connect:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-token<span class="w"> </span><span class="m">123456</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-token<span class="w"> </span><span class="m">123456</span>
 </code></pre></div>
 <p>The placeholder will be substituted immediately before each step runs, ensuring the token is never stored in the workflow file.</p>
 <h2 id="running-workflows">Running Workflows<a class="headerlink" href="#running-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="single-workflow">Single Workflow<a class="headerlink" href="#single-workflow" title="Permanent link">&para;</a></h3>
 <p>To run a single workflow, create a JSON configuration file that describes the workflow steps. Here's an example configuration file:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.27.27.62"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"127.0.0.1"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"Port"</span><span class="p">:</span><span class="w"> </span><span class="mi">3270</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional host code page / charset; omit to use the emulator default</span>
+<span class="w">  </span><span class="nt">"CodePage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cp037"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"EveryStepDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional (default true) to wait before all steps once connected</span>
-<span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span><span class="w"> </span><span class="c1">// optional; if omitted a temp file is used</span>
-<span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
-<span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">//optional for concurrency runs</span>
+<span class="w">  </span><span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"OutputFilePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"output.html"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"EndOfTaskDelay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="nt">"Max"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w"> </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"Steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
@@ -2091,7 +2120,7 @@
 <li><code>-autoShutdown</code>: Seconds for the auto-shutdown countdown prompt when the grace period elapses (default: 10).</li>
 </ul>
 <p>For example, to run two workflows concurrently for 60 seconds, use:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
 <p>When <code>-injectionConfig</code> is also used, injection entries are locked per active workflow so the same entry is not reused by another active workflow at the same time. If all entries are in use, that workflow start attempt is skipped for the current scheduling cycle and processing continues. A <code>WARNING</code> terminal message is emitted for this condition.</p>
 <p><code>3270Connect</code> also emits a startup <code>WARNING</code> when the number of loaded injection entries is lower than requested concurrency, indicating potential scheduling contention.</p>
@@ -2100,22 +2129,22 @@
 <p><code>-headless</code> drives the session with <code>s3270</code> instead of opening an <code>x3270</code>
 window. Without it a run needs an X display, so this is the flag for a CI
 runner, a container, or any server you reach over SSH.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 <p>It does not quiet the terminal: the header, the live stats and the run report
 all still print, which is what ends up in a CI log. There is no flag that turns
 that output off — <code>-verbose</code> and <code>-verboseFailures</code> below only add to it.</p>
 <h3 id="verbose-mode">Verbose Mode<a class="headerlink" href="#verbose-mode" title="Permanent link">&para;</a></h3>
 <p>To enable verbose mode for detailed output, use the <code>-verbose</code> flag.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verbose
 </code></pre></div>
 <h3 id="failure-only-verbose-logging">Failure-only verbose logging<a class="headerlink" href="#failure-only-verbose-logging" title="Permanent link">&para;</a></h3>
 <p>To log only failing steps (without the volume of full verbose output), use the <code>-verboseFailures</code> flag. This is helpful when running many concurrent workflows and you just want to capture which steps failed.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures
 </code></pre></div>
 <h3 id="screen-capture-on-failures">Screen capture on failures<a class="headerlink" href="#screen-capture-on-failures" title="Permanent link">&para;</a></h3>
 <p>When troubleshooting intermittent automation failures in high-concurrency environments, you can enable automatic screen captures using the <code>-verboseScreenCaptureFailures</code> flag. This flag works in conjunction with <code>-verboseFailures</code> to capture the terminal screen whenever a workflow step fails or a WaitForField timeout occurs.</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures<span class="w"> </span>-verboseScreenCaptureFailures
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-verboseFailures<span class="w"> </span>-verboseScreenCaptureFailures
 </code></pre></div>
 <p>Key features:
 - Captures are saved as plain text files in the current directory
@@ -2144,11 +2173,7 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 <p><strong>Usage examples:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Use defaults</span>
 <span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-
-<span class="c1">// Custom delay and retries</span>
 <span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"Delay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"Retries"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">}</span>
-
-<span class="c1">// Disable automatic waiting</span>
 <span class="nt">"WaitForField"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p><strong>Per-step override:</strong> You can also add an explicit <code>WaitForField</code> step wherever you need an extra wait (e.g., after <code>PressEnter</code>). Use the <code>Delay</code> parameter in the step to override the timeout for that specific wait.</p>
@@ -2164,12 +2189,12 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 </ul>
 <p>Both values can also be set in the workflow JSON file (see <a href="../workflow/#grace-period-settings">Workflow Configuration</a>) so they travel with the workflow definition rather than being passed on the command line every time. The CLI flags take precedence over the JSON values.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Wait up to 60s for in-flight workflows, with a 20s prompt countdown</span>
-3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">10</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">120</span><span class="w"> </span>-gracePeriod<span class="w"> </span><span class="m">60</span><span class="w"> </span>-autoShutdown<span class="w"> </span><span class="m">20</span>
+3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">10</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">120</span><span class="w"> </span>-gracePeriod<span class="w"> </span><span class="m">60</span><span class="w"> </span>-autoShutdown<span class="w"> </span><span class="m">20</span>
 </code></pre></div>
 <h3 id="startport-flag">startPort Flag<a class="headerlink" href="#startport-flag" title="Permanent link">&para;</a></h3>
 <p>The -startPort flag allows you to specify the starting port for the sample application. This help to prevent port usage conflicts when running 3270Connect multiple times on the same machine.</p>
 <p>Use it as follows:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-startPort<span class="w"> </span><span class="m">5000</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-startPort<span class="w"> </span><span class="m">5000</span>
 </code></pre></div>
 <h3 id="host-code-page-and-character-set">Host Code Page and Character Set<a class="headerlink" href="#host-code-page-and-character-set" title="Permanent link">&para;</a></h3>
 <p>Mainframe sessions exchange data in EBCDIC, and the correct national code page (also called the host character set) must be selected so that accented and language-specific characters render correctly. For example, Finnish/Swedish hosts commonly use code page <strong>cp278</strong>.</p>
@@ -2187,7 +2212,7 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 <ul>
 <li><strong>On the command line</strong> with the <code>-codePage</code> flag, which overrides the value in the workflow JSON:</li>
 </ul>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-codePage<span class="w"> </span>cp278
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-codePage<span class="w"> </span>cp278
 </code></pre></div>
 <p>The value is passed directly to the embedded x3270/s3270 emulator's <code>-codepage</code> option, so any code page name, alias, or number that the emulator recognizes is accepted. Leave <code>CodePage</code> unset (and omit <code>-codePage</code>) to use the emulator's built-in default code page.</p>
 <h2 id="screen-size-tls-and-lu-names">Screen size, TLS and LU names<a class="headerlink" href="#screen-size-tls-and-lu-names" title="Permanent link">&para;</a></h2>
@@ -2195,7 +2220,7 @@ that output off — <code>-verbose</code> and <code>-verboseFailures</code> belo
 settings describe the terminal rather than the run, and each can be set in the
 workflow or on the command line:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># a 43x80 model 4 session, over TLS, bound to a named LU</span>
-3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-model<span class="w"> </span><span class="m">4</span><span class="w"> </span>-tls<span class="w"> </span>-luName<span class="w"> </span>LU01
+3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-model<span class="w"> </span><span class="m">4</span><span class="w"> </span>-tls<span class="w"> </span>-luName<span class="w"> </span>LU01
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"Host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mvs.example.com"</span><span class="p">,</span>
@@ -2287,15 +2312,15 @@ no brackets; they are added where the emulator needs them.</p>
 <p>Let's explore some common use cases with examples:</p>
 <h3 id="1-running-a-basic-workflow">1. Running a Basic Workflow<a class="headerlink" href="#1-running-a-basic-workflow" title="Permanent link">&para;</a></h3>
 <p>Run a basic workflow defined in "workflow.json":</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json
 </code></pre></div>
 <h3 id="2-running-multiple-workflows-concurrently">2. Running Multiple Workflows Concurrently<a class="headerlink" href="#2-running-multiple-workflows-concurrently" title="Permanent link">&para;</a></h3>
 <p>Run two workflows concurrently for 60 seconds:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span>
 </code></pre></div>
 <h3 id="3-running-in-headless-mode">3. Running in Headless Mode<a class="headerlink" href="#3-running-in-headless-mode" title="Permanent link">&para;</a></h3>
 <p>Run a workflow in headless mode:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless
 </code></pre></div>
 <h3 id="4-using-the-api-mode">4. Using the API Mode<a class="headerlink" href="#4-using-the-api-mode" title="Permanent link">&para;</a></h3>
 <p>Run <code>3270Connect</code> in API mode and interact with it using HTTP requests.</p>
@@ -2320,10 +2345,10 @@ no brackets; they are added where the emulator needs them.</p>
 </li>
 </ul>
 </details>
-<p><div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp
+<p><div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-runApp
 </code></pre></div>
 or
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-runApp<span class="w"> </span><span class="o">[</span>number<span class="o">]</span>
 </code></pre></div></p>
 <p>Once running and listening on port 3270, run a separate 3270 Connect to run a workflow against the sample 3270 application. The "workflow.json" provided with the root folder of the repo works with the sample application.</p>
 <h2 id="docker-usage">Docker Usage<a class="headerlink" href="#docker-usage" title="Permanent link">&para;</a></h2>

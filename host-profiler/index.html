@@ -1665,7 +1665,7 @@ Enterprise Server stand-in).</p>
 <p>See <a href="../compatibility-profile-schema/">Compatibility Profile Schema</a> for
 the full field reference.</p>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-profile<span class="w"> </span>-profileHost<span class="w"> </span>mvs01.example.com<span class="w"> </span>-profilePort<span class="w"> </span><span class="m">992</span><span class="w"> </span>-profileTLS<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-profile<span class="w"> </span>-profileHost<span class="w"> </span>mvs01.example.com<span class="w"> </span>-profilePort<span class="w"> </span><span class="m">992</span><span class="w"> </span>-profileTLS<span class="w"> </span><span class="se">\</span>
 <span class="w">            </span>-profileOut<span class="w"> </span>mvs01.profile.json
 </code></pre></div>
 <p>The probe connects, runs through s3270 <code>Query</code> requests against the host,
@@ -1724,7 +1724,7 @@ the standard 5-second TCP dial timeout for the initial connection.</p>
 <h2 id="reusing-a-workflow-config">Reusing a workflow config<a class="headerlink" href="#reusing-a-workflow-config" title="Permanent link">&para;</a></h2>
 <p>You can omit <code>-profileHost</code>/<code>-profilePort</code> and let the profiler pull
 them from <code>-config</code>:</p>
-<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-profile<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-profileOut<span class="w"> </span>current.profile.json
+<div class="highlight"><pre><span></span><code>3270connect<span class="w"> </span>-profile<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-profileOut<span class="w"> </span>current.profile.json
 </code></pre></div>
 <p>This makes it easy to drop <code>-profile</code> into an existing pipeline without
 duplicating connection metadata.</p>
@@ -1766,7 +1766,7 @@ across hosts — feed both profiles to its <code>POST /chaos/mindmap/compare</co
 to get a divergence report.</p>
 <h2 id="when-to-use-which">When to use which<a class="headerlink" href="#when-to-use-which" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong><code>3270Connect -profile</code></strong> — CI/CD or shell-friendly one-shot probe.
+<li><strong><code>3270connect -profile</code></strong> — CI/CD or shell-friendly one-shot probe.
   No web UI needed; perfect for nightly fleet sweeps.</li>
 <li><strong>3270Web <code>POST /profile</code></strong> — interactive use from the web UI or
   programmatic use from automation that already talks to 3270Web.</li>
