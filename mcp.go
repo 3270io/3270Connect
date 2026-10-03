@@ -85,7 +85,7 @@ func runMCP(args []string) {
 	}
 }
 
-const mcpUsage = `3270Connect mcp — performance and volume testing from an AI client.
+const mcpUsage = `3270connect mcp — performance and volume testing from an AI client.
 
 Composes and validates workflows, smoke-tests them against a host, runs them
 at concurrency, and reports throughput and latency percentiles.

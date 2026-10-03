@@ -154,12 +154,27 @@
      2. Preferences
      ====================================================================== */
 
+  function consoleFetch(url, options) {
+    options = Object.assign({}, options || {});
+    options.headers = Object.assign({ 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, options.headers || {});
+    return window.fetch(url, options).then(function (response) {
+      if (response.status === 401) {
+        Refresh.stop();
+        var bar = document.querySelector('.offline-bar');
+        if (bar) { bar.innerHTML = 'Your session expired. <a href="/login?next=%2Fdashboard">Sign in to continue</a>. Your unsent form stays here until you leave.'; }
+        document.body.classList.add('is-offline');
+        throw new Error('Your session expired. Sign in to continue.');
+      }
+      return response;
+    });
+  }
+
   var Prefs = (function () {
     var KEY = '3270connect.console.prefs.v1';
     var defaults = {
       theme: 'phosphor',
       density: 'comfortable',
-      fx: 'on',
+      fx: 'off',
       view: 'table',
       wrap: 'on',
       // A control surface should be live out of the box; ?autoRefresh=true still
@@ -698,6 +713,9 @@
     }
 
     function buildOutcome() {
+      var hasRuns = state.metrics.some(function (metric) { return num(metric.totalWorkflowsStarted) > 0; });
+      document.body.classList.toggle('is-empty-console', !hasRuns);
+      var welcome = $('#welcomePanel'); if (welcome) { welcome.hidden = hasRuns; }
       var agg = aggregate(state.metrics);
       return {
         labels: ['Completed', 'Failed', 'In flight'],
@@ -887,6 +905,9 @@
     function buildOutcomeLegend() {
       var host = $('#outcomeLegend');
       if (!host) { return; }
+      var hasRuns = state.metrics.some(function (metric) { return num(metric.totalWorkflowsStarted) > 0; });
+      document.body.classList.toggle('is-empty-console', !hasRuns);
+      var welcome = $('#welcomePanel'); if (welcome) { welcome.hidden = hasRuns; }
       var agg = aggregate(state.metrics);
       var rows = [
         { label: 'Completed', value: agg.completed, color: themeVar('--ok', '#4effb3') },
@@ -1152,7 +1173,7 @@
       if (filter === 'ended' && m.isRunning) { return false; }
       if (filter === 'failing' && num(m.totalWorkflowsFailed) === 0) { return false; }
       if (!query) { return true; }
-      var haystack = [m.pid, m.status, m.params, m.configFilePath, m.outputFilePath].join(' ').toLowerCase();
+      var haystack = [m.pid, m.status, m.params, m.workflowName, m.host, m.configFilePath, m.outputFilePath].join(' ').toLowerCase();
       return haystack.indexOf(query) !== -1;
     });
 
@@ -1328,7 +1349,7 @@
 
     tbody.innerHTML = '';
     rows.forEach(function (metric) {
-      var tr = el('tr');
+      var tr = el('tr'); tr.setAttribute('data-pid',metric.pid);
       if (!metric.isRunning) { tr.classList.add('is-dead'); }
       if (!state.seenPids[metric.pid] && state.booted) { tr.classList.add('flash-new'); }
       state.seenPids[metric.pid] = true;
@@ -1379,18 +1400,43 @@
     renderCards(rows);
   }
 
+  var runIdentity = {};
+  function loadRunIdentity(pid, identity, target) {
+    if (runIdentity[pid] && runIdentity[pid].host) { target.textContent = runIdentity[pid].host; if (runIdentity[pid].name) { identity.querySelector('strong').textContent = runIdentity[pid].name; } return; }
+    if (runIdentity[pid]) { target.textContent = 'Workflow target'; return; }
+    runIdentity[pid] = { pending: true };
+    consoleFetch('/dashboard/workflow?pid=' + encodeURIComponent(pid)).then(function (response) {
+      if (!response.ok) { throw new Error('Target unavailable'); } return response.json();
+    }).then(function (payload) {
+      var config = payload.workflow || payload;
+      if (typeof config === 'string') { config = JSON.parse(config); }
+      runIdentity[pid] = {host: (config.Host || 'Host unavailable') + ':' + (config.Port || '—')};
+      target.textContent = runIdentity[pid].host;
+    }).catch(function () { delete runIdentity[pid]; target.textContent = 'Target unavailable'; });
+  }
+
   function renderCards(rows) {
     var host = $('#procCards');
     if (!host) { return; }
     host.innerHTML = '';
 
     rows.forEach(function (metric) {
-      var card = el('div', 'proc-card');
+      var card = el('div', 'proc-card'); card.setAttribute('data-pid',metric.pid);
 
       var top = el('div', 'top');
       top.appendChild(el('span', 'pid num', 'PID ' + metric.pid));
       top.appendChild(statusChip(metric));
       card.appendChild(top);
+      var identity = el('div', 'proc-identity');
+      var isSampleHost = /(?:^|\s)-runApp(?:\s|$)/.test(metric.params || '');
+      var configName = isSampleHost ? 'Sample host' : metric.workflowName || (metric.configFilePath || '').split(/[\\/]/).pop();
+      identity.appendChild(el('strong', null, configName || 'Sample host'));
+      var target = el('div', 'proc-target', isSampleHost ? metric.params : metric.configFilePath ? 'Loading target…' : metric.params || 'Bundled sample host');
+      identity.appendChild(target);
+      identity.appendChild(el('div', 'proc-time', metric.startTimestamp ? new Date(metric.startTimestamp * 1000).toLocaleString() : 'Start time unavailable'));
+      identity.appendChild(el('div', 'proc-time', 'Average duration: ' + fmtDuration(avgOf(metric.durations || []))));
+      card.appendChild(identity);
+      if (metric.host) { target.textContent = metric.host + ':' + metric.port; } else if (metric.configFilePath && !isSampleHost) { loadRunIdentity(metric.pid, identity, target); }
 
       var metrics = el('div', 'metrics');
       [
@@ -2094,7 +2140,7 @@
       inFlight = true;
       if (!silent) { pulse(); setStatus('Refreshing…'); }
 
-      return fetch('/dashboard/data', { cache: 'no-store' })
+      return consoleFetch('/dashboard/data', { cache: 'no-store' })
         .then(function (response) {
           if (!response.ok) { throw new Error('HTTP ' + response.status); }
           return response.json();
@@ -2108,6 +2154,7 @@
           setStatus(enabled() ? 'Live · every ' + Prefs.get('refreshPeriod') + 's' : 'Auto-refresh off');
         })
         .catch(function (error) {
+          if (error.message.indexOf('session expired') >= 0) { return; }
           state.failures += 1;
           setStatus('Connection error');
           if (state.failures >= 2) { document.body.classList.add('is-offline'); }
@@ -2119,6 +2166,9 @@
     }
 
     function applySnapshot() {
+      var hasRuns = state.metrics.some(function (metric) { return num(metric.totalWorkflowsStarted) > 0; });
+      document.body.classList.toggle('is-empty-console', !hasRuns);
+      var welcome = $('#welcomePanel'); if (welcome) { welcome.hidden = hasRuns; }
       var agg = aggregate(state.metrics);
       pushHistorySample(agg, resourceSeries(state.metrics));
       renderKPIs();
@@ -2127,6 +2177,10 @@
       renderLatency();
       Charts.update();
       Modals.syncPidOptions(state.metrics);
+      if (state.launchedPid) {
+        var launched = document.querySelector('tr[data-pid="' + state.launchedPid + '"], .proc-card[data-pid="' + state.launchedPid + '"]');
+        if (launched) { launched.classList.add('new-run'); launched.scrollIntoView({block:'nearest'}); state.launchedPid = null; }
+      }
       state.booted = true;
     }
 
@@ -2292,7 +2346,7 @@
         return;
       }
 
-      fetch('/dashboard/workflow?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
+      consoleFetch('/dashboard/workflow?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
         .then(readOrThrow)
         .then(function (text) {
           workflowRaw = text;
@@ -2330,7 +2384,7 @@
       summaryRaw = '';
       show('summaryModal');
 
-      fetch('/dashboard/summary?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
+      consoleFetch('/dashboard/summary?pid=' + encodeURIComponent(pid), { cache: 'no-store' })
         .then(readOrThrow)
         .then(function (text) {
           summaryRaw = text;
@@ -2358,7 +2412,7 @@
       var pid = $('#logPidFilter') ? $('#logPidFilter').value : '';
       var url = '/console' + (pid ? '?pid=' + encodeURIComponent(pid) : '');
 
-      return fetch(url, { cache: 'no-store' })
+      return consoleFetch(url, { cache: 'no-store' })
         .then(function (response) { return response.json(); })
         .then(function (data) {
           logEntries = Array.isArray(data) ? data : [];
@@ -2511,7 +2565,7 @@
       var pid = killPid;
       hide('killModal');
 
-      fetch('/kill?pid=' + encodeURIComponent(pid), { method: 'POST' })
+      consoleFetch('/kill?pid=' + encodeURIComponent(pid), { method: 'POST' })
         .then(function (response) {
           return response.text().then(function (text) {
             if (response.ok) {
@@ -2541,8 +2595,59 @@
       });
     }
 
+    var configValid = false;
+    var configGeneration = 0;
+    function configFeedback(message, valid, kind) {
+      configValid = valid;
+      var feedback = $('#configValidation'); feedback.hidden = !message; feedback.textContent = message; feedback.className = 'banner ' + (kind || '');
+      $('#startProcessSubmit').disabled = !valid;
+    }
+    function effectiveConfig() {
+      var config = Object.assign({}, parsedConfig || {});
+      [['overrideHost','Host'],['overridePort','Port'],['overrideOutputFilePath','OutputFilePath'],['overrideRampUpBatchSize','RampUpBatchSize'],['overrideRampUpDelay','RampUpDelay']].forEach(function (pair) {
+        var value = $('#' + pair[0]).value.trim();
+        if (value) { config[pair[1]] = ['Port','RampUpBatchSize','RampUpDelay'].indexOf(pair[1]) >= 0 ? Number(value) : value; }
+      });
+      return config;
+    }
+    function validateSelectedConfig(generation) {
+      configFeedback('Validating workflow…', false);
+      return consoleFetch('/dashboard/validate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(effectiveConfig())})
+        .then(function (response) { return response.json().then(function (result) { if (!response.ok) { throw new Error(result.error || 'Invalid workflow'); } return result; }); })
+        .then(function (result) { if (generation !== configGeneration) { return; } configFeedback('Workflow valid · ' + result.steps + ' steps. Ready to replay.', true, 'ok'); paintSteps(2); })
+        .catch(function (error) { if (generation === configGeneration) { configFeedback(error.message, false, 'bad'); } });
+    }
+    function invalidateVerification() {
+      $('#connectionResult').hidden = true;
+      if (parsedConfig) { validateSelectedConfig(++configGeneration); }
+    }
+    function terminalPreflight() {
+      var button = $('#testTerminal'); button.disabled = true;
+      var result = $('#connectionResult'); result.hidden = false; result.className = 'banner'; result.textContent = 'Checking terminal negotiation…';
+      var fingerprint = JSON.stringify(effectiveConfig());
+      consoleFetch('/dashboard/preflight', {method:'POST',headers:{'Content-Type':'application/json'},body:fingerprint})
+        .then(function (response) { return response.json().then(function (data) { if (!response.ok) { throw new Error(data.error || 'Terminal check failed'); } return data; }); })
+        .then(function (data) { if (fingerprint !== JSON.stringify(effectiveConfig())) { return; } result.className = 'banner ok'; result.textContent = data.message; })
+        .catch(function (error) { if (fingerprint !== JSON.stringify(effectiveConfig())) { return; } result.className = 'banner bad'; result.textContent = error.message; })
+        .finally(function () { button.disabled = false; });
+    }
+    function prepareSample() {
+      var button = $('#prepareSample'); button.disabled = true; var errorBox = $('#sampleError'); errorBox.hidden = true;
+      consoleFetch('/dashboard/sample', {method:'POST'})
+        .then(function (response) { return response.json().then(function (data) { if (!response.ok) { throw new Error(data.error || 'Could not prepare sample'); } return data; }); })
+        .then(function (data) {
+          var file = new File([JSON.stringify(data.workflow,null,2)], data.name, {type:'application/json'});
+          var transfer = new DataTransfer(); transfer.items.add(file); $('#configFile').files = transfer.files;
+          $('#runMode').value = 'replay'; $('#runMode').dispatchEvent(new Event('change'));
+          handleConfigFile(file); show('startProcessModal');
+          $('#launchError').hidden = true;
+        }).catch(function (error) { errorBox.textContent = error.message; errorBox.hidden = false; })
+        .finally(function () { button.disabled = false; });
+    }
+
     function resetConfigPanel() {
       parsedConfig = null;
+      ++configGeneration; configFeedback('', false);
       $('#configDetails').hidden = true;
       $('#configMeta').innerHTML = '';
       $('#configCode').textContent = '';
@@ -2560,9 +2665,7 @@
     }
 
     function paintSteps(done) {
-      $$('#startSteps .step').forEach(function (step, index) {
-        step.classList.toggle('done', index < done);
-      });
+      $('#startSteps').textContent = done >= 2 ? 'Workflow ready · checks optional' : 'Choose a valid workflow';
     }
 
     function metaRow(list, label, value) {
@@ -2574,7 +2677,9 @@
 
     function handleConfigFile(file) {
       if (!file) { return; }
+      var generation = ++configGeneration; configFeedback('Reading workflow…', false);
       readFileText(file).then(function (text) {
+        if (generation !== configGeneration) { return; }
         $('#configDetails').hidden = false;
         $('#configFileName').hidden = false;
         $('#configFileName').textContent = file.name;
@@ -2583,12 +2688,13 @@
 
         try {
           parsedConfig = JSON.parse(text);
+          if (!parsedConfig || Array.isArray(parsedConfig) || typeof parsedConfig !== 'object') { throw new Error('A workflow must be a JSON object'); }
         } catch (error) {
           parsedConfig = null;
           $('#configMeta').innerHTML = '';
           $('#configCode').textContent = text;
           $('#overrideGroup').hidden = true;
-          Toast.push('warn', 'Invalid JSON', 'The file was uploaded but could not be parsed: ' + error.message);
+          configFeedback('Invalid JSON: ' + error.message + '. Remove comments and check the syntax.', false, 'bad');
           paintSteps(1);
           return;
         }
@@ -2612,9 +2718,9 @@
         setValue('overrideRampUpBatchSize', parsedConfig.RampUpBatchSize);
         setValue('overrideRampUpDelay', parsedConfig.RampUpDelay);
         paintSteps(2);
-        Toast.push('ok', 'Configuration loaded', file.name + ' parsed successfully.');
+        validateSelectedConfig(generation);
       }).catch(function (error) {
-        Toast.push('bad', 'Read failed', error.message);
+        if (generation === configGeneration) { configFeedback('Could not read file: ' + error.message, false, 'bad'); }
       });
     }
 
@@ -2638,6 +2744,7 @@
       var port = Number(portRaw);
       if (!Number.isInteger(port) || port <= 0) { fail('A positive integer port is required.'); return; }
 
+      var fingerprint = JSON.stringify(effectiveConfig());
       var button = $('#testConnection');
       button.disabled = true;
       var original = button.innerHTML;
@@ -2646,7 +2753,7 @@
       result.className = 'banner';
       result.innerHTML = '<svg class="ic spin" aria-hidden="true"><use href="#i-circle-notch"></use></svg><span>Contacting ' + esc(host) + ':' + port + '…</span>';
 
-      fetch('/test-connection', {
+      consoleFetch('/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ host: host, port: port })
@@ -2658,11 +2765,12 @@
           });
         })
         .then(function (data) {
+          if (fingerprint !== JSON.stringify(effectiveConfig())) { return; }
           result.className = 'banner ok';
           result.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-circle-check"></use></svg><span>' + esc(data.message || ('Reached ' + host + ':' + port)) + '</span>';
-          paintSteps(3);
+          result.appendChild(document.createTextNode(' TCP only; terminal negotiation and workflow assertions are untested.'));
         })
-        .catch(function (error) { fail(error.message); })
+        .catch(function (error) { if (fingerprint === JSON.stringify(effectiveConfig())) { fail(error.message); } })
         .finally(function () {
           button.disabled = false;
           button.innerHTML = original;
@@ -2672,6 +2780,8 @@
     function startProcess() {
       var form = $('#startProcessForm');
       var fileInput = $('#configFile');
+      if (!configValid) { $('#configValidation').focus(); return; }
+      $('#launchError').hidden = true;
 
       if (!fileInput.files || !fileInput.files.length) {
         Toast.push('bad', 'Configuration required', 'Choose a workflow JSON file before starting.');
@@ -2688,8 +2798,9 @@
       var injection = $('#injectionFile');
       if (injection.files && injection.files.length) { data.append('injectionConfig', injection.files[0]); }
 
-      data.append('concurrent', $('#concurrent').value);
-      data.append('runtime', $('#runtime').value);
+      data.append('runMode', $('#runMode').value);
+      data.append('concurrent', $('#runMode').value === 'replay' ? '1' : $('#concurrent').value);
+      data.append('runtime', $('#runMode').value === 'replay' ? '0' : $('#runtime').value);
       data.append('startPort', $('#startPort').value);
       data.append('headless', $('#headless').checked ? 'on' : 'off');
 
@@ -2710,24 +2821,25 @@
       var original = button.innerHTML;
       button.innerHTML = '<svg class="ic spin" aria-hidden="true"><use href="#i-circle-notch"></use></svg><span class="txt">Starting</span>';
 
-      fetch('/start-process', { method: 'POST', body: data })
+      consoleFetch('/start-process', { method: 'POST', body: data })
         .then(function (response) {
           return response.text().then(function (text) {
             if (!response.ok) { throw new Error(text || 'The server rejected the request.'); }
-            return text;
+            return JSON.parse(text);
           });
         })
-        .then(function () {
-          Toast.push('ok', 'Process started', 'The run is spinning up — metrics will appear shortly.');
+        .then(function (launch) {
+          state.launchedPid = launch.pid;
+          Toast.push('info', 'Run starting', 'PID ' + launch.pid + ' started. Replay results will follow.');
           hide('startProcessModal');
           setTimeout(function () { Refresh.now(); }, 1200);
           setTimeout(function () { Refresh.now(); }, 4000);
         })
         .catch(function (error) {
-          Toast.push('bad', 'Start failed', error.message);
+          $('#launchError').textContent = error.message; $('#launchError').hidden = false;
         })
         .finally(function () {
-          button.disabled = false;
+          button.disabled = !configValid;
           button.innerHTML = original;
         });
     }
@@ -2747,7 +2859,7 @@
       var original = button.innerHTML;
       button.innerHTML = '<svg class="ic spin" aria-hidden="true"><use href="#i-circle-notch"></use></svg><span class="txt">Starting</span>';
 
-      fetch('/start-process', { method: 'POST', body: data })
+      consoleFetch('/start-process', { method: 'POST', body: data })
         .then(function (response) {
           return response.text().then(function (text) {
             if (!response.ok) { throw new Error(text || 'The server rejected the request.'); }
@@ -2851,10 +2963,16 @@
         });
       }
       on('#testConnection', 'click', testConnection);
+      on('#testTerminal', 'click', terminalPreflight);
+      on('#prepareSample', 'click', prepareSample);
+      on('#useOwnWorkflow', 'click', function () { show('startProcessModal'); });
+      ['overrideHost','overridePort','overrideOutputFilePath','overrideRampUpBatchSize','overrideRampUpDelay'].forEach(function (id) { on('#'+id,'input',invalidateVerification); });
+      on('#runMode','change',function () { var replay = $('#runMode').value === 'replay'; $('#loadProfile').hidden = replay; $$('#loadProfile input').forEach(function (node) { node.disabled = replay; }); });
+      $('#runMode').dispatchEvent(new Event('change'));
       on('#startProcessSubmit', 'click', startProcess);
       var startModal = $('#startProcessModal');
       if (startModal) {
-        startModal.addEventListener('dialog:show', function () { paintSteps(parsedConfig ? 2 : 0); });
+        startModal.addEventListener('dialog:show', function () { paintSteps(configValid ? 2 : 0); });
       }
 
       // Start-app modal
@@ -3072,7 +3190,7 @@
       var url = '/dashboard/output?pid=' + encodeURIComponent(cs.pid);
       if (!fromScratch && cs.offset > 0) { url += '&from=' + cs.offset; }
 
-      fetch(url, { cache: 'no-store' })
+      consoleFetch(url, { cache: 'no-store' })
         .then(function (response) {
           if (!response.ok) {
             return response.text().then(function (body) {

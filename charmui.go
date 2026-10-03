@@ -93,6 +93,10 @@ func (m MessagePrinter) Printf(format string, args ...interface{}) {
 }
 
 func (m MessagePrinter) print(msg string) {
+	if plainTerminal() {
+		fmt.Printf("%s: %s\n", m.Prefix.Text, msg)
+		return
+	}
 	var line string
 	timestamp := ""
 	if m.IncludeTimestamp {
@@ -422,6 +426,10 @@ func (s spinnerBuilder) Start(message string) (*Spinner, error) {
 }
 
 func (s *Spinner) start() {
+	if plainTerminal() {
+		fmt.Println(s.message)
+		return
+	}
 	s.tick()
 	ticker := time.NewTicker(120 * time.Millisecond)
 	go func() {
@@ -449,6 +457,9 @@ func (s *Spinner) tick() {
 }
 
 func (s *Spinner) stop() {
+	if plainTerminal() {
+		return
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	select {
@@ -720,6 +731,10 @@ func themeWordmark(text string) []string {
 
 // RenderBanner draws the wordmark and the tagline that opens every run.
 func (p *charmPterm) RenderBanner(title, subtitle string) {
+	if compactTerminal() {
+		fmt.Println(strings.TrimSpace(title + " " + subtitle))
+		return
+	}
 	text := strings.TrimSpace(strings.ToUpper(strings.Join(filterEmpty([]string{title, subtitle}), " ")))
 	if text == "" {
 		text = "3270CONNECT"
@@ -745,6 +760,10 @@ func (p *charmPterm) RenderBanner(title, subtitle string) {
 // RenderIdentityStrip draws one dot-separated line of run identity, replacing
 // the stack of INFO-prefixed lines the header used to print.
 func (p *charmPterm) RenderIdentityStrip(lead string, leadValue string, rest ...string) {
+	if compactTerminal() {
+		fmt.Printf("%s %s\n%s\n", lead, leadValue, strings.Join(rest, " · "))
+		return
+	}
 	line := styleText3.Render(lead+" ") + styleText.Render(leadValue)
 	for _, item := range rest {
 		if strings.TrimSpace(item) == "" {
@@ -758,6 +777,10 @@ func (p *charmPterm) RenderIdentityStrip(lead string, leadValue string, rest ...
 // RenderSectionRule draws a ruled section heading: a bold eyebrow, an optional
 // note beside it, and an optional right-aligned value.
 func (p *charmPterm) RenderSectionRule(label, note, right string) {
+	if compactTerminal() {
+		fmt.Println(strings.TrimSpace(label + " " + note + " " + right))
+		return
+	}
 	w := themeContentWidth()
 	heading := styleEyebrow.Render(label)
 	if note != "" {
@@ -785,6 +808,12 @@ type ThemeKV struct {
 // RenderKeyValueGrid lays pairs out in two columns, dim keys against bright
 // values. Falls back to a single column when the terminal is too narrow.
 func (p *charmPterm) RenderKeyValueGrid(items []ThemeKV, keyWidth int) {
+	if compactTerminal() {
+		for _, item := range items {
+			fmt.Printf("%s: %s\n", item.Key, item.Value)
+		}
+		return
+	}
 	w := themeContentWidth()
 	columns := 2
 	colWidth := w / 2
@@ -816,6 +845,10 @@ func (p *charmPterm) RenderKeyValueGrid(items []ThemeKV, keyWidth int) {
 // RenderNote draws a dim key with a secondary value, used for the CLI line and
 // the saved-summary path.
 func (p *charmPterm) RenderNote(key, value string) {
+	if compactTerminal() {
+		fmt.Printf("%s: %s\n", key, value)
+		return
+	}
 	line := styleText3.Render(key)
 	if value != "" {
 		line += " " + styleText2.Render(value)
@@ -859,6 +892,10 @@ func (t ThemeTone) style() lipgloss.Style {
 // RenderStatRow draws one summary metric: dim label, bright value, and a
 // glyph-prefixed note in the row's semantic colour.
 func (p *charmPterm) RenderStatRow(label, value, glyph, note string, tone ThemeTone) {
+	if compactTerminal() {
+		fmt.Printf("%s: %s %s\n", label, value, note)
+		return
+	}
 	toneStyle := tone.style()
 	valueStyle := styleText
 	if tone == ToneGood || tone == ToneBad {
@@ -877,6 +914,10 @@ func (p *charmPterm) RenderStatRow(label, value, glyph, note string, tone ThemeT
 // RenderMeterRow draws a metric as a phosphor usage bar. The bar warms through
 // amber to red as the reading climbs, matching the console's meters.
 func (p *charmPterm) RenderMeterRow(label, value string, percent float64, note string) {
+	if compactTerminal() {
+		fmt.Printf("%s: %s %s\n", label, value, note)
+		return
+	}
 	width := themeContentWidth() - themeStatLabelWidth - themeStatValueWidth - lipgloss.Width(note) - 2
 	if width < 8 {
 		width = 8
@@ -914,6 +955,10 @@ func (p *charmPterm) RenderMeterRow(label, value string, percent float64, note s
 
 // RenderOutcome draws the single line that opens the summary.
 func (p *charmPterm) RenderOutcome(headline, note string, tone ThemeTone) {
+	if compactTerminal() {
+		fmt.Printf("%s: %s\n", headline, note)
+		return
+	}
 	glyph := "✓"
 	if tone == ToneBad {
 		glyph = "✕"

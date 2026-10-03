@@ -30,6 +30,9 @@ import (
 
 // Metrics is the snapshot one 3270Connect process publishes.
 type Metrics struct {
+	WorkflowName            string    `json:"workflowName,omitempty"`
+	Host                    string    `json:"host,omitempty"`
+	Port                    int       `json:"port,omitempty"`
 	PID                     int       `json:"pid"`
 	ActiveWorkflows         int       `json:"activeWorkflows"`
 	TotalWorkflowsStarted   int64     `json:"totalWorkflowsStarted"`

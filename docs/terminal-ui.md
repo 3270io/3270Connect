@@ -58,7 +58,7 @@ A single workflow prints nothing between the header and the summary unless you
 ask it to. Add `-verbose` to see each emulator command as it is issued:
 
 ```bash
-3270Connect -config workflow.json -verbose
+3270connect -config workflow.json -verbose
 ```
 
 ![Verbose step-by-step output from a single workflow](assets/tui/running-single.webp){: .shot }
@@ -73,7 +73,7 @@ Give the run more than one worker and it switches to a live stats row, printed
 every five seconds:
 
 ```bash
-3270Connect -config workflow.json -concurrent 4 -runtime 12
+3270connect -config workflow.json -concurrent 4 -runtime 12
 ```
 
 ![The live stats rows printed during a concurrent run](assets/tui/running-concurrent.webp){: .shot }
@@ -83,7 +83,7 @@ workflows started, completed and failed, elapsed and remaining seconds, and
 host CPU and memory. A trailing `⚡ +n` marks workers added by ramp-up in that
 interval.
 
-Concurrent runs also start the dashboard automatically, and print its address
+Concurrent runs start a temporary dashboard and print its address
 in the line above — useful when you want charts rather than rows.
 
 ### Progress gauges
@@ -91,7 +91,7 @@ in the line above — useful when you want charts rather than rows.
 `-bar` replaces the stats rows with gauges and hides the INFO lines:
 
 ```bash
-3270Connect -config workflow.json -concurrent 4 -runtime 12 -bar
+3270connect -config workflow.json -concurrent 4 -runtime 12 -bar
 ```
 
 ![Progress gauges shown with the -bar flag](assets/tui/running-gauges.webp){: .shot }
@@ -105,6 +105,8 @@ current state.
     Add `-headless` to keep the emulator from opening a window. It does not
     change what is printed, so the header, the live view and the summary all
     still appear in the build log.
+
+Finite runs exit after cleanup and the report. Add `-keepDashboard` in an interactive terminal to keep the console open. Redirected output and `-plain` skip screen redraws and interactive shutdown prompts.
 
 ## The end-of-run report
 

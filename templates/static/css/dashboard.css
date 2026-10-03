@@ -2373,9 +2373,8 @@ html[data-density='compact'] .stage-list,
 html[data-density='compact'] .worker-list { max-height: 268px; }
 html[data-density='compact'] .worker-row { padding: 5px 9px; }
 
-@media (max-width: 1440px) {
+@media (max-width: 1080px) {
   .span-8 { grid-column: span 12; }
-  .span-4 { grid-column: span 6; }
 }
 
 @media (max-width: 1080px) {
@@ -2390,7 +2389,7 @@ html[data-density='compact'] .worker-row { padding: 5px 9px; }
   .topbar { flex-wrap: wrap; row-gap: 10px; }
   .topbar-live { display: none; }
   .statusbar { position: static; }
-  .btn-x .txt { display: none; }
+  .topbar-actions .btn-x.icon .txt { display: none; }
   .btn-x { padding: 9px 12px; }
   .card-view { display: grid; }
   .grid-wrap { display: none; }
@@ -2414,4 +2413,35 @@ html[data-density='compact'] .worker-row { padding: 5px 9px; }
   .topbar, .statusbar, .footer, .toast-stack, .palette-overlay, .row-actions { display: none !important; }
   .backdrop { display: none; }
   body { background: #fff; color: #000; }
+}
+
+/* Activation and touch layouts */
+.welcome-panel { padding: clamp(18px, 3vw, 32px); }
+.welcome-panel h1 { margin: 0 0 10px; font-family: var(--font-sans); font-size: clamp(1.35rem, 3vw, 2rem); }
+.welcome-panel p { max-width: 64ch; color: var(--text-2); font-size: 1rem; }
+.welcome-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.is-empty-console .main > .kpi-strip, .is-empty-console .main > .chart-grid { display: none; }
+.sort-button { border: 0; background: none; color: inherit; font: inherit; padding: 0; cursor: pointer; text-align: inherit; }
+.proc-identity { overflow-wrap: anywhere; font-family: var(--font-sans); }
+.proc-target, .proc-time { font-size: 0.82rem; color: var(--text-2); margin-top: 4px; }
+.new-run { outline: 2px solid var(--accent); outline-offset: -2px; }
+.modal-title, .empty .t, .kpi-head .title { font-family: var(--font-sans); letter-spacing: 0; text-transform: none; }
+.modal-header .hint { font-family: var(--font-sans); font-size: 0.82rem; }
+html[data-fx='off'] .brand-mark::after { display: none; }
+@media (max-width: 780px) {
+ .topbar { position: static; gap: 10px; }
+ .topbar-actions { justify-content: flex-start; width: 100%; }
+ .topbar-actions .btn-x.primary, .topbar-actions .btn-x.accentline { flex: 1; }
+ .modal-header { flex-wrap: wrap; gap: 8px; }
+ .modal-title { font-size: 1rem; }
+ .modal-header .head-tools { width: 100%; justify-content: space-between; }
+ .modal-footer .btn-x.primary { flex: 1; }
+ .welcome-actions > button { width: 100%; }
+ .card-view { grid-template-columns: minmax(0,1fr); padding: 12px; }
+ .hint, .field label { font-size: 0.875rem; }
+ .form-control, .form-select { font-size: 16px; }
+}
+@media (pointer: coarse) {
+ .btn-x, .btn-x.sm, .btn-x.icon, .btn-x.sm.icon, .btn-close, .act, .segmented button { min-height: 44px; min-width: 44px; }
+ .row-actions { gap: 8px; flex-wrap: wrap; }
 }

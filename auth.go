@@ -650,7 +650,7 @@ func wantsJSON(r *http.Request) bool {
 	if r == nil {
 		return false
 	}
-	if strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/admin/api/") {
+	if strings.HasPrefix(r.URL.Path, "/dashboard/") || r.URL.Path == "/start-process" || r.URL.Path == "/test-connection" || r.URL.Path == "/kill" || strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/admin/api/") {
 		return true
 	}
 	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {

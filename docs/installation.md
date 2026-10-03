@@ -123,7 +123,7 @@ flags as its command, so one image covers both.
       ghcr.io/3270io/3270connect:latest
     ```
 
-    Then open <http://localhost:9200/dashboard>.
+    Then open <http://localhost:9200/dashboard> and select **Try a sample replay**.
 
 === "A workflow"
 
@@ -209,7 +209,8 @@ temporary directory the first time a workflow connects. Run history goes to
 
 ```shell
 3270connect -dashboard                       # the console on :9200
-3270connect -config workflow.json            # one run
+3270connect -sampleWorkflow sample-workflow.json  # create the example
+3270connect -config sample-workflow.json -headless # replay after starting the sample host
 3270connect -runApp 1 -runApp-port 3270      # a 3270 host to aim at
 ```
 

@@ -20,15 +20,14 @@ hide:
 # Replay the mainframe <span class="grad">at any scale</span>
 
 <p class="lede" markdown>
-3270Connect turns a recorded 3270 session into a repeatable workflow: one JSON file, run
-headless in CI, fanned out across hundreds of concurrent workers, with every step landing
-on a live operations console and a Prometheus endpoint.
+Replay repetitive mainframe tasks, check regression workflows in CI, and measure your host under load. Start with a local sample lab — no mainframe needed. Export recordings from 3270Web or write a JSON workflow, then replay it with 3270Connect.
 </p>
 
 <div class="hero-actions" markdown>
-[Install it](installation.md){ .md-button .md-button--primary }
-[See it work](#see-it-work){ .md-button }
-[Basic usage](basic-usage.md){ .md-button }
+[Try the sample lab](installation.md#the-lab){ .md-button .md-button--primary }
+[Install for my host](installation.md){ .md-button }
+
+Free and open source. Runs locally. Docker is required for the sample lab. [Watch the demo](#see-it-work).
 </div>
 
 </div>
@@ -53,10 +52,10 @@ on a live operations console and a Prometheus endpoint.
 </div>
 
 <div class="kpi-strip" markdown>
-<div class="kpi"><span class="k">Success rate</span><span class="v">97.1%</span><span class="n">2,381 finished workflows</span></div>
-<div class="kpi"><span class="k">p95 step</span><span class="v">0.34s</span><span class="n">measured host-side</span></div>
-<div class="kpi"><span class="k">Completed</span><span class="v">2,313</span><span class="n">this session</span></div>
-<div class="kpi"><span class="k">Dependencies</span><span class="v">0</span><span class="n">single static binary</span></div>
+<div class="kpi"><span class="k">Replay</span><span class="v">JSON</span><span class="n">Workflows you can review</span></div>
+<div class="kpi"><span class="k">Automation</span><span class="v">CI</span><span class="n">Exit status reflects the result</span></div>
+<div class="kpi"><span class="k">Host scale</span><span class="v">Load</span><span class="n">Configurable concurrency</span></div>
+<div class="kpi"><span class="k">Emulator</span><span class="v">Bundled</span><span class="n">No separate emulator install</span></div>
 </div>
 
 </div>
@@ -166,74 +165,12 @@ The <a href="dashboard/">web dashboard</a> — live workflow metrics, latency pe
 per-process controls and log streaming, served straight from the binary.
 </p>
 
-## Introduction
+## Start with one successful replay
 
-3270Connect is a robust automation toolkit that pairs a powerful command-line utility with 3270Web, a browser-based web console for enhancing productivity and efficiency in managing and automating interactions with mainframe 3270 applications. It acts as a bridge between modern computing environments and the traditional mainframe terminals, providing a suite of tools that facilitate automated tasks and workflows in a terminal session.
+1. [Try the Docker lab](installation.md#the-lab) with its bundled host and workflow, or [install the binary](installation.md#linux).
+2. Open the console and choose **Try a sample replay**, or follow [the first CLI replay](basic-usage.md#your-first-successful-replay).
+3. Check the completed result and screen captures before creating a load test for your own host.
 
-The utility is used by system administrators, developers, and testers who frequently interact with mainframe systems, which are still pivotal in various industries such as banking, insurance, and government services. With 3270Connect, users can script complex sequences of tasks, automate data entry, perform complex online operations, and capture terminal screens for logging or debugging purposes.
+[Try the sample lab](installation.md#the-lab){ .md-button .md-button--primary }
 
-One of the main reasons for using 3270Connect is its ability to save time on repetitive tasks by automating them. This can be especially beneficial in testing scenarios where the same set of operations needs to be performed repeatedly. Moreover, the utility provides a way to integrate mainframe operations with modern CI/CD pipelines, thereby modernizing the development and deployment workflows that involve mainframe systems.
-
-With 3270Connect, users can:
-
-- Define and execute automated workflows through a configuration file, enhancing repeatability and reliability in interactions with terminal screens.
-- Capture the state of the 3270 terminal screens at any point during a workflow, which is invaluable for documentation and troubleshooting.
-- Execute multiple workflows in parallel, optimizing time and resources, especially in complex test environments.
-- Operate in a headless mode, allowing the automation to run in the background or in environments without a graphical interface, such as servers or continuous integration systems.
-- Utilize a verbose output mode for an in-depth understanding of workflow execution, which assists in monitoring and debugging.
-- Surface failure-only logging with `-verboseFailures` to capture concise diagnostics during high-volume runs without enabling full verbose output.
-- Run 3270Connect as an API server, enabling advanced automation scenarios and facilitating load and performance testing of mainframe applications.
-- Drive a live 3270 session from 3270Web with AI Chat mode, which reads the screen, proposes actions, and can orchestrate chaos exploration with explicit approval.
-
-Through these features, 3270Connect empowers organizations to integrate their legacy systems into modern automated processes, reducing errors, and increasing efficiency.
-
-## Features
-
-Here are the key features of 3270Connect:
-
-- Running workflows defined in a configuration file.
-- Command-line interface for scripting and running automation from the terminal.
-- Capturing the 3270 screens as the workflow executes.
-- Running workflows concurrently with options for controlling the number of concurrent workflows and runtime duration.
-- Web dashboard for live metrics, latency percentiles, log streaming and per-process control — self-contained, with no external dependencies at runtime.
-- 3270Web to open AI Chat mode for conversational session control.
-- Headless mode for running workflows without a graphical user interface.
-- Verbose mode for detailed output, plus failure-only logging with `-verboseFailures` for high-concurrency test runs.
-- API mode for advanced automation.
-- AI Chat mode in 3270Web for screen reading, field entry, key presses, and chaos exploration with per-action approval or Auto Mode.
-- Prometheus metrics endpoint (`-promListen`) exposing connect/step timing, workflow outcomes, and live concurrency for fleet-scale monitoring.
-- One-shot host compatibility profiler (`-profile`) that produces a `CompatibilityProfile` JSON document shareable with 3270Web for cross-environment comparison.
-- Running a 3270 sample application to assist with testing workflow features.
-
-## Getting Started
-
-If you're new to 3270Connect, you can start by exploring the following sections:
-
-- [Installation](installation.md): Learn how to install 3270Connect on your system.
-- [Basic Usage](basic-usage.md): Get started with basic usage, running workflows and sample 3270 application(s) to aid testing.
-- [Web Dashboard](dashboard.md): Watch runs live, launch them from the browser, and stream logs from the operations console.
-- [Workflow Steps](workflow.md): Overview of the various workflow steps available in the 3270Connect application
-
-## Advanced Features
-
-Once you've mastered the basics, you can dive into more advanced features:
-
-- [API Mode](advanced-features.md): Discover how to run 3270Connect as an API server for advanced automation and load performance testing.
-- [Accounts and Sign-In](authentication.md): Put a sign-in on the console with `AUTH_MODE=local`, issue per-account API tokens, and connect an OIDC identity provider.
-- [Administration](administration.md): Manage accounts, groups and tokens from the browser, see every load run on the machine, and read the audit trail.
-- [AI Chat Mode](ai-chat-mode.md): Use 3270Web to drive a live 3270 session through conversation, approve tool calls, and run chaos exploration.
-- [Chaos Mode](chaos-mode.md): Learn how toolbar controls and AI Chat share the same exploration state and export workflows.
-- [Metrics & Monitoring](metrics.md): Scrape `tn3270_connect_seconds`, `tn3270_step_seconds`, workflow outcomes, and live worker counts from `-promListen`.
-- [Host Compatibility Profiler](host-profiler.md): Probe a host once with `-profile` and write a `CompatibilityProfile` JSON document that compares cleanly against 3270Web output.
-- [Compatibility Profile Schema](compatibility-profile-schema.md): Field-by-field reference for the shared `CompatibilityProfile` document (v1.0.0).
-
-## Conclusion
-
-The 3270Connect command-line utility is a powerful tool for automating terminal emulator interactions. This documentation is here to help you make the most of it. If you have any questions or need assistance, feel free to reach out to the community or refer to the [GitHub repository](https://github.com/3270io/3270Connect) for more details.
-
-Let's get started with 3270Connect!
-
-## Practical guides
-
-- [3270 regression tests in GitHub Actions](github-actions.md)
-- [Concurrent load testing](load-testing.md)
+[Platform support and prerequisites](installation.md) · [Source and licence](https://github.com/3270io/3270Connect)

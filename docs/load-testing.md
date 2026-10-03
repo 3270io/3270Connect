@@ -21,7 +21,7 @@ Record a representative flow in
 business result. Run one copy first:
 
 ```bash
-3270Connect -config workflow.json -headless \
+3270connect -config workflow.json -headless \
   -showConnectionErrors -workflowTimeout 60 -verboseFailures
 ```
 
@@ -51,7 +51,7 @@ you actually deliver.
 For an initial two-worker, sixty-second exercise:
 
 ```bash
-3270Connect -config workflow.json -headless \
+3270connect -config workflow.json -headless \
   -concurrent 2 -runtime 60 -workflowTimeout 60 \
   -gracePeriod 30 -autoShutdown 10 \
   -showConnectionErrors -verboseFailures \
