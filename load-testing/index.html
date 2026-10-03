@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="The 3270 keyboard interaction model as 3270Connect preserves it, plus the toolbar buttons, the AI Chat panel controls and the session shortcuts.">
+        <meta name="description" content="Plan a 3270 load test with replayable JSON, controlled concurrency and per-workflow timeouts. Interpret failures, latency and Prometheus metrics.">
       
       
         <meta name="author" content="3270.io">
       
       
-        <link rel="canonical" href="https://3270connect.3270.io/keyboard-and-controls/">
+        <link rel="canonical" href="https://3270connect.3270.io/load-testing/">
       
       
-        <link rel="prev" href="../chaos-mode/">
+        <link rel="prev" href="../github-actions/">
       
       
-        <link rel="next" href="../workflow/">
+        <link rel="next" href="../terminal-ui/">
       
       
         
@@ -28,7 +28,7 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
-    <title>3270Connect keyboard, toolbar and AI Chat controls</title>
+    <title>Load test IBM 3270 applications with concurrent workflows</title>
 
     
       <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
@@ -87,9 +87,9 @@
 
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="3270Connect">
-    <meta property="og:url" content="https://3270connect.3270.io/keyboard-and-controls/">
-    <meta property="og:title" content="3270Connect keyboard, toolbar and AI Chat controls">
-    <meta property="og:description" content="The 3270 keyboard interaction model as 3270Connect preserves it, plus the toolbar buttons, the AI Chat panel controls and the session shortcuts.">
+    <meta property="og:url" content="https://3270connect.3270.io/load-testing/">
+    <meta property="og:title" content="Load test IBM 3270 applications with concurrent workflows">
+    <meta property="og:description" content="Plan a 3270 load test with replayable JSON, controlled concurrency and per-workflow timeouts. Interpret failures, latency and Prometheus metrics.">
     <meta property="og:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:secure_url" content="https://3270connect.3270.io/assets/og-image.png">
     <meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200">
@@ -99,8 +99,8 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@3270io">
-    <meta name="twitter:title" content="3270Connect keyboard, toolbar and AI Chat controls">
-    <meta name="twitter:description" content="The 3270 keyboard interaction model as 3270Connect preserves it, plus the toolbar buttons, the AI Chat panel controls and the session shortcuts.">
+    <meta name="twitter:title" content="Load test IBM 3270 applications with concurrent workflows">
+    <meta name="twitter:description" content="Plan a 3270 load test with replayable JSON, controlled concurrency and per-workflow timeouts. Interpret failures, latency and Prometheus metrics.">
     <meta name="twitter:image" content="https://3270connect.3270.io/assets/og-image.png">
     <meta name="twitter:image:alt" content="3270Connect — replay the mainframe at any scale"><script type="application/ld+json">
     {
@@ -124,9 +124,9 @@
         },
         {
           "@type": "TechArticle",
-          "headline": "Keyboard and Controls",
-          "description": "The 3270 keyboard interaction model as 3270Connect preserves it, plus the toolbar buttons, the AI Chat panel controls and the session shortcuts.",
-          "url": "https://3270connect.3270.io/keyboard-and-controls/",
+          "headline": "Load Testing",
+          "description": "Plan a 3270 load test with replayable JSON, controlled concurrency and per-workflow timeouts. Interpret failures, latency and Prometheus metrics.",
+          "url": "https://3270connect.3270.io/load-testing/",
           "inLanguage": "en-GB",
           "isPartOf": { "@id": "https://3270connect.3270.io/#website" },
           "publisher": { "@id": "https://3270.io/#organization" }
@@ -152,7 +152,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#keyboard-and-controls" class="md-skip">
+        <a href="#load-test-ibm-3270-applications-with-concurrent-workflows" class="md-skip">
           Skip to content
         </a>
       
@@ -187,7 +187,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Keyboard and Controls
+              Load Testing
             
           </span>
         </div>
@@ -329,10 +329,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../github-actions/" class="md-tabs__link">
           
   
@@ -463,11 +465,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../keyboard-and-controls/" class="md-tabs__link">
         
   
   
@@ -819,28 +819,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -858,7 +861,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -901,10 +904,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../load-testing/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Testing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -920,6 +950,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#establish-a-working-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Establish a working baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-the-workload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design the workload
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-a-controlled-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run a controlled test
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpret-the-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpret the result
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1098,37 +1192,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Keyboard and Controls
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../keyboard-and-controls/" class="md-nav__link">
         
   
   
@@ -1144,59 +1211,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#ai-chat-panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AI Chat Panel
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#approval-and-auto-mode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Approval and Auto Mode
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#session-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Session Control
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1605,7 +1619,7 @@
 
 
   
-    <a href="https://github.com/3270io/3270Connect/edit/main/docs/keyboard-and-controls.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/3270io/3270Connect/edit/main/docs/load-testing.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1614,30 +1628,110 @@
     
       
     
-    <a href="https://github.com/3270io/3270Connect/raw/main/docs/keyboard-and-controls.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/3270io/3270Connect/raw/main/docs/load-testing.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="keyboard-and-controls">Keyboard and Controls<a class="headerlink" href="#keyboard-and-controls" title="Permanent link">&para;</a></h1>
-<p>3270Connect preserves the normal 3270 keyboard interaction model while you work in 3270Web.</p>
-<h2 id="ai-chat-panel">AI Chat Panel<a class="headerlink" href="#ai-chat-panel" title="Permanent link">&para;</a></h2>
-<ul>
-<li>There is no default keyboard shortcut to open AI Chat mode.</li>
-<li>Use the <strong>Open Copilot chat</strong> toolbar button to open the panel.</li>
-<li>While the panel is open, existing 3270 key bindings remain active for the underlying session.</li>
-<li>Press <span class="keys"><kbd class="key-enter">Enter</kbd></span> in the message box to send a chat message.</li>
-</ul>
-<h2 id="approval-and-auto-mode">Approval and Auto Mode<a class="headerlink" href="#approval-and-auto-mode" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Use <strong>Run</strong> to approve the next AI action manually.</li>
-<li>Enable <strong>Auto Mode</strong> in the panel header if you want actions to execute without pausing for approval.</li>
-<li>Use <strong>Clear</strong> to remove the current conversation after confirming the prompt.</li>
-</ul>
-<h2 id="session-control">Session Control<a class="headerlink" href="#session-control" title="Permanent link">&para;</a></h2>
-<p>The AI panel complements the normal terminal controls instead of replacing them. You can continue to use standard 3270 keys, toolbar actions, and chaos controls while the chat panel is open.</p>
+<h1 id="load-test-ibm-3270-applications-with-concurrent-workflows">Load test IBM 3270 applications with concurrent workflows<a class="headerlink" href="#load-test-ibm-3270-applications-with-concurrent-workflows" title="Permanent link">&para;</a></h1>
+<p>3270Connect replays the same terminal workflow across concurrent workers. Use
+it to exercise an approved test system and measure successful transactions,
+failures and response times. A concurrency setting is a workload choice, not
+a promise of unlimited throughput: the host, runner and test data all impose
+limits.</p>
+<h2 id="establish-a-working-baseline">Establish a working baseline<a class="headerlink" href="#establish-a-working-baseline" title="Permanent link">&para;</a></h2>
+<p>Record a representative flow in
+<a href="https://3270web.3270.io/workflow/">3270Web</a> or write JSON using
+<a href="../workflow/">Workflow Actions</a>. Add checks after navigation and at the final
+business result. Run one copy first:</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-showConnectionErrors<span class="w"> </span>-workflowTimeout<span class="w"> </span><span class="m">60</span><span class="w"> </span>-verboseFailures
+</code></pre></div>
+<p>Read the summary in <code>logs/summary_&lt;pid&gt;.txt</code>. Confirm a completed workflow and
+zero failures, and inspect the final screen. The shell exit status alone is
+not a sufficient success assertion in the current CLI; the
+<a href="../github-actions/">GitHub Actions guide</a> shows a saved-summary gate.</p>
+<h2 id="design-the-workload">Design the workload<a class="headerlink" href="#design-the-workload" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>What to decide before increasing load</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transaction</td>
+<td>A real business operation, including assertions and cleanup</td>
+</tr>
+<tr>
+<td>Test records</td>
+<td>Separate accounts/records for active workers to avoid contention</td>
+</tr>
+<tr>
+<td>Think time</td>
+<td>Delays that represent users, rather than only the fastest possible loop</td>
+</tr>
+<tr>
+<td>Concurrency</td>
+<td>Start small, then increase only within the agreed host capacity</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td>Long enough to distinguish startup effects from sustained behaviour</td>
+</tr>
+<tr>
+<td>Stop conditions</td>
+<td>Failure rate, host impact, response-time budget and runner saturation</td>
+</tr>
+</tbody>
+</table>
+<p>Use <a href="../injection-config/">Dynamic Field Injection</a> to provide distinct data.
+An injection entry is locked while its workflow runs. Fewer entries than
+workers can skip starts and generate contention warnings, changing the load
+you actually deliver.</p>
+<h2 id="run-a-controlled-test">Run a controlled test<a class="headerlink" href="#run-a-controlled-test" title="Permanent link">&para;</a></h2>
+<p>For an initial two-worker, sixty-second exercise:</p>
+<div class="highlight"><pre><span></span><code>3270Connect<span class="w"> </span>-config<span class="w"> </span>workflow.json<span class="w"> </span>-headless<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-concurrent<span class="w"> </span><span class="m">2</span><span class="w"> </span>-runtime<span class="w"> </span><span class="m">60</span><span class="w"> </span>-workflowTimeout<span class="w"> </span><span class="m">60</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-gracePeriod<span class="w"> </span><span class="m">30</span><span class="w"> </span>-autoShutdown<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-showConnectionErrors<span class="w"> </span>-verboseFailures<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-promListen<span class="w"> </span><span class="m">127</span>.0.0.1:9091
+</code></pre></div>
+<p>The runtime controls when to stop scheduling; grace and workflow timeouts
+control in-flight work. Inspect the saved report after the run deadline. The
+operations dashboard may keep the process alive after concurrent work ends;
+close it with Ctrl+C once the report has been saved. Do not use an unconditional
+process timeout as evidence that all transactions finished.</p>
+<p>For larger workloads, configure <code>RampUpBatchSize</code> and <code>RampUpDelay</code> in the
+workflow JSON. For example, these fields add workers in batches of two with a
+two-second interval:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"RampUpBatchSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RampUpDelay"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Merge these fields into your existing workflow, retaining its <code>Host</code>, <code>Port</code>
+and <code>Steps</code>. Increase concurrency in separate measured runs, with a reset or
+review of test data between them. Use <a href="../basic-usage/">Basic Usage</a> for the
+complete configuration reference.</p>
+<h2 id="interpret-the-result">Interpret the result<a class="headerlink" href="#interpret-the-result" title="Permanent link">&para;</a></h2>
+<p>Read the <a href="../dashboard/">operations console</a> and
+<a href="../metrics/">Prometheus metrics</a> together. Record requested concurrency,
+achieved starts/completions, failed workflows, step latency percentiles and
+runner CPU/memory. Keep the workflow revision and host configuration alongside
+the report so another test is comparable.</p>
+<p>A fast failure is not a fast successful transaction. Check correctness and
+completion totals before comparing latency. A saturated generator can limit
+throughput even while the host has capacity; a data lock can prevent the
+intended load reaching the host. Metrics are evidence from this workload, not
+a capacity certification for every application on the mainframe.</p>
+<p>Bind the example metrics listener to loopback. If a remote collector needs
+access, use a deliberately configured private path rather than broadly
+publishing a metrics or dashboard port. Self-hosting infrastructure is your
+cost; these runs do not require an AI provider.</p>
 
 
 
@@ -1679,7 +1773,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../chaos-mode/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Chaos Mode">
+          <a href="../github-actions/" class="md-footer__link md-footer__link--prev" aria-label="Previous: GitHub Actions Regression Tests">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1689,20 +1783,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Chaos Mode
+                GitHub Actions Regression Tests
               </div>
             </div>
           </a>
         
         
           
-          <a href="../workflow/" class="md-footer__link md-footer__link--next" aria-label="Next: Workflow Actions">
+          <a href="../terminal-ui/" class="md-footer__link md-footer__link--next" aria-label="Next: Terminal UI">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Workflow Actions
+                Terminal UI
               </div>
             </div>
             <div class="md-footer__button md-icon">
