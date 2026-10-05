@@ -893,8 +893,8 @@ func (e *Emulator) Connect() error {
 		}
 
 		if e.ScriptPort == "" {
-			log.Println("ScriptPort not set, using default 5000")
-			e.ScriptPort = "5000"
+			log.Printf("ScriptPort not set, using default %d", defaultScriptPort)
+			e.ScriptPort = strconv.Itoa(defaultScriptPort)
 		}
 
 		if Verbose {
@@ -1309,13 +1309,20 @@ func firstLine(s string) string {
 	return strings.TrimSpace(b.String())
 }
 
+// defaultScriptPort is the script port used when none is configured.
+const defaultScriptPort = 5000
+
+// scriptPortRotationAttempts is how many consecutive ports above the current
+// one are probed before rotateScriptPort gives up and takes the next one blindly.
+const scriptPortRotationAttempts = 20
+
 // rotateScriptPort selects the next available script port to reduce collisions and stuck sessions.
 func (e *Emulator) rotateScriptPort() {
-	current := 5000
+	current := defaultScriptPort
 	if p, err := strconv.Atoi(strings.TrimSpace(e.ScriptPort)); err == nil && p > 0 {
 		current = p
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < scriptPortRotationAttempts; i++ {
 		candidate := current + i + 1
 		if isTCPPortAvailable(candidate) {
 			e.ScriptPort = strconv.Itoa(candidate)
