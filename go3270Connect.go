@@ -3882,6 +3882,7 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		defer injectionFile.Close()
 		injectionTempFile, err := os.CreateTemp("", "3270connect-injection-*.json")
 		if err != nil {
+			os.Remove(tempFilePath)
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
 			return
 		}
@@ -3890,6 +3891,7 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 		if _, err := io.Copy(injectionTempFile, injectionFile); err != nil {
 			os.Remove(injectionConfigPath)
+			os.Remove(tempFilePath)
 			http.Error(w, "Failed to save injection configuration file", http.StatusInternalServerError)
 			return
 		}
@@ -3942,6 +3944,14 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 	go func(args []string, logCommand string, owner audit.Actor) {
+		// The child reads both files at startup and the run is over once it
+		// exits, so nothing needs them afterwards. They hold what the run types
+		// onto the host, which is why they were written 0600 in the first place:
+		// leaving them in the temp directory forever undoes that.
+		defer os.Remove(tempFilePath)
+		if injectionConfigPath != "" {
+			defer os.Remove(injectionConfigPath)
+		}
 		pterm.Info.Printf("Executing command: %s\n", logCommand)
 
 		cmd := exec.Command(args[0], args[1:]...)

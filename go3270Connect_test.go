@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -974,5 +977,54 @@ func TestKillProcessHandlerRefusesNonPositivePID(t *testing.T) {
 		if rr.Code != http.StatusBadRequest {
 			t.Fatalf("pid %s: got status %d, want %d", pid, rr.Code, http.StatusBadRequest)
 		}
+	}
+}
+
+// TestStartProcessHandlerRemovesTempConfigsAfterRun guards the credentials the
+// handler writes to the temp directory for each run: they are created 0600 so
+// other local accounts cannot read them, but nothing ever deleted them, so
+// every run left its workflow and injection data behind for good.
+func TestStartProcessHandlerRemovesTempConfigsAfterRun(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("uses a shell script as the stand-in binary")
+	}
+	work := t.TempDir()
+	tmp := t.TempDir()
+	t.Setenv("TMPDIR", tmp)
+	fake := filepath.Join(work, "3270Connect")
+	if err := os.WriteFile(fake, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(work)
+
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	cfg, _ := mw.CreateFormFile("configFile", "wf.json")
+	cfg.Write([]byte(`{"Host":"localhost","Port":3270,"Steps":[{"Type":"Connect"}]}`))
+	inj, _ := mw.CreateFormFile("injectionConfig", "inj.json")
+	inj.Write([]byte(`[]`))
+	mw.WriteField("concurrent", "1")
+	mw.WriteField("runtime", "1")
+	mw.WriteField("startPort", "5000")
+	mw.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/start-process", &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	rr := httptest.NewRecorder()
+	startProcessHandler(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rr.Code, rr.Body.String())
+	}
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		left, _ := filepath.Glob(filepath.Join(tmp, "3270connect-*"))
+		if len(left) == 0 {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("temp config files left behind: %v", left)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
 }
