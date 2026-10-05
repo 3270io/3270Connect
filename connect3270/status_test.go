@@ -560,3 +560,26 @@ func TestCheckCoordinatesWithoutGeometryDefersToTheEmulator(t *testing.T) {
 		t.Errorf("row 0 is not a 1-based position")
 	}
 }
+
+// A read that runs past the end of a row comes back as one data line per
+// row. Keeping only the first silently shortened the value a CheckValue
+// compared, and reported a match.
+func TestNormalizeAsciiDataJoinsWrappedRows(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"single row", "data: READY\nU F U C(host) I 4 24 80 0 0 0x0 -\nok", "READY"},
+		{"wrapped read joins rows without a separator", "data: SIGN ON TO\ndata: SYSTEM A\nok", "SIGN ON TOSYSTEM A"},
+		{"spacing between the halves survives", "data: ABC \ndata: DEF\nok", "ABC DEF"},
+		{"reply with no data lines is trimmed as is", "  plain text \n", "plain text"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := normalizeAsciiData(tc.raw); got != tc.want {
+				t.Errorf("normalizeAsciiData(%q) = %q, want %q", tc.raw, got, tc.want)
+			}
+		})
+	}
+}
