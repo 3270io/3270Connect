@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -364,28 +365,53 @@ func liveWorkflowStatus(pid int) (string, error) {
 }
 
 // stepLatencies scrapes a run's Prometheus endpoint.
-func stepLatencies(ctx context.Context, url string) (string, error) {
-	if url == "" {
+//
+// The URL is fenced off by MCP_ALLOWED_HOSTS the same way every other
+// outbound target is: without that, a readonly caller could aim the server
+// at arbitrary internal addresses — a load-generator's localhost admin
+// surfaces, a cloud instance's metadata service — and read back whichever
+// tn3270_ lines happened to appear.
+func stepLatencies(ctx context.Context, rawURL string) (string, error) {
+	if rawURL == "" {
 		return "", fmt.Errorf("prometheus_url is required")
 	}
-	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		url = "http://" + url
+	if !strings.HasPrefix(rawURL, "http://") && !strings.HasPrefix(rawURL, "https://") {
+		rawURL = "http://" + rawURL
 	}
-	if !strings.HasSuffix(url, "/metrics") {
-		url = strings.TrimRight(url, "/") + "/metrics"
+	if !strings.HasSuffix(rawURL, "/metrics") {
+		rawURL = strings.TrimRight(rawURL, "/") + "/metrics"
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.Host == "" {
+		return "", fmt.Errorf("prometheus_url is not a valid URL")
+	}
+	if !hostAllowed(parsed.Hostname()) {
+		return "", fmt.Errorf("%s is not in MCP_ALLOWED_HOSTS", parsed.Hostname())
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return "", err
 	}
-	client := &http.Client{Timeout: 10 * time.Second}
+	// A redirect would skip the allow-list check above, so refuse to follow
+	// one rather than resolve it against a host that was not fenced in.
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("could not reach %s: %w. Per-step timings exist only on a run's Prometheus endpoint — "+
-			"start the run with -promListen :9091 (via start_load_test's prometheus_listen) to expose them", url, err)
+			"start the run with -promListen :9091 (via start_load_test's prometheus_listen) to expose them", rawURL, err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		return "", fmt.Errorf("%s redirected (%d); refusing to follow a redirect that would skip the MCP_ALLOWED_HOSTS check",
+			rawURL, resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 512*1024))
 	if err != nil {
@@ -401,7 +427,7 @@ func stepLatencies(ctx context.Context, url string) (string, error) {
 		}
 	}
 	if len(kept) == 0 {
-		return "", fmt.Errorf("%s answered but exported no tn3270_ metrics; it may not be a 3270Connect run", url)
+		return "", fmt.Errorf("%s answered but exported no tn3270_ metrics; it may not be a 3270Connect run", rawURL)
 	}
 	return strings.Join(kept, "\n"), nil
 }
