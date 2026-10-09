@@ -137,37 +137,44 @@ func ReadAll(dir string) ([]Entry, error) {
 
 	out := make([]Entry, 0, len(files))
 	for _, path := range files {
-		info, err := os.Stat(path)
-		if err != nil {
-			continue
+		if e, ok := readEntry(path); ok {
+			out = append(out, e)
 		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		var m Metrics
-		if err := json.Unmarshal(data, &m); err != nil {
-			continue
-		}
-		out = append(out, Entry{Metrics: m.Extend(), Path: path, Modified: info.ModTime()})
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Metrics.PID < out[j].Metrics.PID })
 	return out, nil
 }
 
-// Read returns the snapshot for one process.
-func Read(dir string, pid int) (Entry, bool) {
-	entries, err := ReadAll(dir)
+// readEntry loads one snapshot file, reporting false for one that cannot be
+// read or parsed.
+func readEntry(path string) (Entry, bool) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return Entry{}, false
 	}
-	for _, e := range entries {
-		if e.Metrics.PID == pid {
-			return e, true
-		}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Entry{}, false
 	}
-	return Entry{}, false
+	var m Metrics
+	if err := json.Unmarshal(data, &m); err != nil {
+		return Entry{}, false
+	}
+	return Entry{Metrics: m.Extend(), Path: path, Modified: info.ModTime()}, true
+}
+
+// Read returns the snapshot for one process.
+//
+// Every writer names its file metrics_<pid>.json, so the one file is opened
+// directly instead of reading, parsing and liveness-probing every run's
+// snapshot (one process signal each) just to keep one of them.
+func Read(dir string, pid int) (Entry, bool) {
+	e, ok := readEntry(filepath.Join(dir, fmt.Sprintf("metrics_%d.json", pid)))
+	if !ok || e.Metrics.PID != pid {
+		return Entry{}, false
+	}
+	return e, true
 }
 
 // Extend works out a snapshot's status and remaining time.
