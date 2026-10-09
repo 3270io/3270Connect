@@ -546,6 +546,33 @@ func TestLoadInjectionDataWithUTF8Characters(t *testing.T) {
 	}
 }
 
+func TestLoadInjectionDataKeepsNumbersAsWritten(t *testing.T) {
+	// A bare JSON number used to pass through float64, so an account number
+	// came out as 1.2345678901e+10 and was typed onto the host that way.
+	tmpfile, err := os.CreateTemp("", "injection-number-*.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+	if _, err := tmpfile.WriteString(`[{"{{account}}": 12345678901, "{{rate}}": 1.50, "{{name}}": "X"}]`); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := loadInjectionData(tmpfile.Name())
+	if err != nil {
+		t.Fatalf("Failed to load injection data: %v", err)
+	}
+	if got := data[0]["{{account}}"]; got != "12345678901" {
+		t.Errorf("expected account 12345678901, got %q", got)
+	}
+	if got := data[0]["{{rate}}"]; got != "1.50" {
+		t.Errorf("expected rate 1.50, got %q", got)
+	}
+}
+
 func TestCaptureFailureScreenDisabledByDefault(t *testing.T) {
 	// Save original value
 	oldFlag := verboseScreenCaptureFailures
