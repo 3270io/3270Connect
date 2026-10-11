@@ -69,8 +69,7 @@ func resolveBindHost(flagValue, envName string) string {
 // and a host that reaches the container over IPv6 would find nothing there.
 func listenAddress(host string, port int) string {
 	host = strings.TrimSpace(host)
-	switch strings.ToLower(host) {
-	case "", "all", "any", "*", "0.0.0.0", "::":
+	if isAllInterfaces(host) {
 		host = ""
 	}
 	return net.JoinHostPort(host, strconv.Itoa(port))
@@ -82,12 +81,10 @@ func listenAddress(host string, port int) string {
 // 0.0.0.0. Both mean "every interface", which from the machine running the
 // process includes localhost.
 func browsableHost(host string) string {
-	host = strings.TrimSpace(host)
-	switch strings.ToLower(host) {
-	case "", "all", "any", "*", "0.0.0.0", "::":
+	if isAllInterfaces(host) {
 		return "localhost"
 	}
-	return host
+	return strings.TrimSpace(host)
 }
 
 // dashboardURL is the address to open the console at, given where it bound.
@@ -98,6 +95,13 @@ func dashboardURL(host string, port int) string {
 // bindsEveryInterface reports whether this host leaves the listener reachable
 // from the network, which is worth saying out loud when it happens.
 func bindsEveryInterface(host string) bool {
+	return isAllInterfaces(host)
+}
+
+// isAllInterfaces reports whether a bind host means "every interface". It is
+// the one list of those spellings, so binding, URL printing and the exposure
+// warning cannot disagree about what counts.
+func isAllInterfaces(host string) bool {
 	switch strings.ToLower(strings.TrimSpace(host)) {
 	case "", "all", "any", "*", "0.0.0.0", "::":
 		return true
