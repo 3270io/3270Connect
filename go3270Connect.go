@@ -4202,9 +4202,16 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 		return nil, err
 	}
 
+	// UseNumber keeps a bare number as the digits written; as a float64 a
+	// long account number would be typed as 1.2345678901e+10.
 	var raw interface{}
-	if err := json.Unmarshal(data, &raw); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	if err := dec.Decode(&raw); err != nil {
 		return nil, fmt.Errorf("failed to parse injection data: %w", err)
+	}
+	if dec.More() {
+		return nil, fmt.Errorf("failed to parse injection data: unexpected content after the JSON value")
 	}
 
 	convertEntries := func(items []interface{}) ([]map[string]string, error) {
