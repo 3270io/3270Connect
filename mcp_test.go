@@ -273,6 +273,23 @@ func TestAllowedHostsUnsetAllowsEverything(t *testing.T) {
 	}
 }
 
+// TestStepLatenciesFencedByAllowedHosts closes an SSRF: get_step_latencies
+// made outbound HTTP to any host the caller named, so a readonly caller
+// could aim it at a cloud metadata service or the operator's own localhost
+// surfaces. The URL goes through the same MCP_ALLOWED_HOSTS fence every
+// other outbound target does, before the request is dialled.
+func TestStepLatenciesFencedByAllowedHosts(t *testing.T) {
+	t.Setenv("MCP_ALLOWED_HOSTS", "127.0.0.1")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	_, err := stepLatencies(ctx, "http://169.254.169.254/latest/meta-data/")
+	if err == nil || !strings.Contains(err.Error(), "MCP_ALLOWED_HOSTS") {
+		t.Fatalf("a prometheus_url outside the allow-list must be refused with the setting named, got %v", err)
+	}
+}
+
 // TestSkillsOverTheProtocol covers two-level disclosure and the dedup.
 func TestSkillsOverTheProtocol(t *testing.T) {
 	session := connectMCP(t, TierRead)
