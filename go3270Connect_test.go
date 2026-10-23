@@ -1003,3 +1003,27 @@ func TestKillProcessHandlerRefusesNonPositivePID(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveTokenPlaceholder(t *testing.T) {
+	cases := []struct {
+		name     string
+		original string
+		token    string
+		want     string
+	}{
+		{"substitutes the token", "{{token}}", "123456", "123456"},
+		{"substitutes every occurrence", "{{token}}-{{token}}", "42", "42-42"},
+		{"keeps surrounding text", "PIN{{token}}!", "9876", "PIN9876!"},
+		{"leaves text without a placeholder alone", "SMITH,JOHN", "123456", "SMITH,JOHN"},
+		{"leaves the placeholder in place when no token was supplied", "pw{{token}}", "", "pw{{token}}"},
+		{"does not expand a placeholder inside the token itself", "{{token}}", "a{{token}}b", "a{{token}}b"},
+		{"leaves other placeholders for the injection step", "{{username}}{{token}}", "7", "{{username}}7"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := resolveTokenPlaceholder(tc.original, tc.token); got != tc.want {
+				t.Errorf("resolveTokenPlaceholder(%q, %q) = %q, want %q", tc.original, tc.token, got, tc.want)
+			}
+		})
+	}
+}
