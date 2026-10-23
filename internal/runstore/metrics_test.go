@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -236,5 +237,17 @@ func BenchmarkReadOneOfMany(b *testing.B) {
 		if _, ok := Read(dir, 1025); !ok {
 			b.Fatal("not found")
 		}
+	}
+}
+
+func TestSignalProbeTreatsPermissionDeniedAsAlive(t *testing.T) {
+	if !signalProbeMeansAlive(nil) {
+		t.Fatal("a successful probe must mean alive")
+	}
+	if !signalProbeMeansAlive(&os.SyscallError{Syscall: "kill", Err: syscall.EPERM}) {
+		t.Fatal("EPERM means the pid exists under another account, so the run is alive")
+	}
+	if signalProbeMeansAlive(os.ErrProcessDone) {
+		t.Fatal("a finished process must not count as alive")
 	}
 }
