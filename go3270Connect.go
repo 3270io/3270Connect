@@ -1521,7 +1521,7 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 		timeout := secondsToDuration(workflow.DefaultWaitForFieldDelay)
 		retries := workflow.DefaultWaitForFieldRetries
 		if step.Delay > 0 {
-			timeout = time.Duration(step.Delay * float64(time.Second))
+			timeout = secondsToDuration(step.Delay)
 		}
 		return e.WaitForField(timeout, retries)
 	case "Disconnect":
@@ -2539,7 +2539,7 @@ func resolveGracePeriod(config *Configuration) time.Duration {
 		return time.Duration(gracePeriodSecs) * time.Second
 	}
 	if config != nil && config.GracePeriod > 0 {
-		return time.Duration(config.GracePeriod * float64(time.Second))
+		return secondsToDuration(config.GracePeriod)
 	}
 	return defaultGracePeriod
 }
@@ -2549,7 +2549,7 @@ func resolveAutoShutdownTimeout(config *Configuration) time.Duration {
 		return time.Duration(autoShutdownTimeoutSecs) * time.Second
 	}
 	if config != nil && config.AutoShutdownTimeout > 0 {
-		return time.Duration(config.AutoShutdownTimeout * float64(time.Second))
+		return secondsToDuration(config.AutoShutdownTimeout)
 	}
 	return defaultPromptTimeout
 }
