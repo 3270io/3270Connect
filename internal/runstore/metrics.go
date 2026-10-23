@@ -250,6 +250,29 @@ func PreferRunning(entries []Entry) []Entry {
 // Aggregate sums counters and concatenates samples across processes.
 func Aggregate(entries []Entry) Metrics {
 	var agg Metrics
+	// Presized from one cheap counting pass: every entry carries a few hundred
+	// samples per series, so appending into a nil slice regrew and recopied
+	// them repeatedly on every /dashboard/data poll. A series with no samples
+	// stays nil, so the JSON shape is unchanged.
+	var nd, nc, nm, nl int
+	for _, e := range entries {
+		nd += len(e.Metrics.Durations)
+		nc += len(e.Metrics.CPUUsage)
+		nm += len(e.Metrics.MemoryUsage)
+		nl += len(e.Metrics.LiveSteps)
+	}
+	if nd > 0 {
+		agg.Durations = make([]float64, 0, nd)
+	}
+	if nc > 0 {
+		agg.CPUUsage = make([]float64, 0, nc)
+	}
+	if nm > 0 {
+		agg.MemoryUsage = make([]float64, 0, nm)
+	}
+	if nl > 0 {
+		agg.LiveSteps = make([]WorkflowStatus, 0, nl)
+	}
 	for _, e := range entries {
 		agg.ActiveWorkflows += e.Metrics.ActiveWorkflows
 		agg.TotalWorkflowsStarted += e.Metrics.TotalWorkflowsStarted
