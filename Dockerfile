@@ -34,7 +34,7 @@ RUN GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w" -o /out/3270Conn
 # was asked to make, which is a worse outcome than not publishing one. Pinning
 # the platform here means a `docker build` on an arm64 laptop produces the
 # image that works rather than the image that looks like it should.
-FROM --platform=linux/amd64 public.ecr.aws/ubuntu/ubuntu:24.04 AS runtime
+FROM --platform=linux/amd64 docker.io/library/ubuntu:24.04 AS runtime
 
 # What that extracted s3270 needs to run: glibc, and OpenSSL 3 for TLS to a
 # host. The library package is pulled in through `openssl` rather than named
