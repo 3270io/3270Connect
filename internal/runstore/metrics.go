@@ -16,6 +16,7 @@ package runstore
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -229,7 +230,14 @@ func IsProcessRunning(pid int) bool {
 	if err != nil {
 		return false
 	}
-	return proc.Signal(syscall.Signal(0)) == nil
+	return signalProbeMeansAlive(proc.Signal(syscall.Signal(0)))
+}
+
+// signalProbeMeansAlive reads the result of signal 0. EPERM means the pid
+// exists but belongs to another account, which is a live run started by
+// somebody else, not a dead one.
+func signalProbeMeansAlive(err error) bool {
+	return err == nil || errors.Is(err, syscall.EPERM)
 }
 
 // PreferRunning narrows a list to live processes, unless none are live — in
