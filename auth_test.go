@@ -1014,6 +1014,40 @@ func TestAuditTrailRecordsARefusedToken(t *testing.T) {
 	}
 }
 
+func TestChangePasswordIsThrottledOnWrongCurrentPassword(t *testing.T) {
+	// A stolen session must not be an unlimited guess at the current
+	// password: a correct one lets the attacker set a new one and lock the
+	// owner out.
+	a := newTestAuth(t, authz.ModeLocal)
+	cookie := signIn(t, a, addUser(t, a, "alice", authz.RoleUser))
+	submit := func(current string) int {
+		form := strings.NewReader("currentPassword=" + current + "&newPassword=a-fine-new-pass&confirmPassword=a-fine-new-pass")
+		r := httptest.NewRequest(http.MethodPost, changePasswordPath, form)
+		r.Host = "console.example:9200"
+		r.RemoteAddr = "203.0.113.9:5555"
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Set("Origin", "http://console.example:9200")
+		r.Header.Set("Accept", "application/json")
+		r.AddCookie(&http.Cookie{Name: authCookieName, Value: cookie})
+		w := httptest.NewRecorder()
+		a.Gate(http.HandlerFunc(a.changePasswordHandler)).ServeHTTP(w, r)
+		return w.Code
+	}
+	for i := 0; i < loginFreeAttempts; i++ {
+		if got := submit("wrong"); got != http.StatusUnauthorized {
+			t.Fatalf("attempt %d: got %d, want 401 while the allowance stands", i+1, got)
+		}
+	}
+	if got := submit("wrong"); got != http.StatusTooManyRequests {
+		t.Fatalf("got %d, want 429 once the allowance is spent", got)
+	}
+	// Correct password also 429 while locked: the throttle's cost is what
+	// matters, not telling real guesses apart from stopped ones.
+	if got := submit("correct-horse-battery"); got != http.StatusTooManyRequests {
+		t.Fatalf("got %d while locked out, want 429", got)
+	}
+}
+
 func TestStateDirFallsBackWhenTheConfigDirIsUnknown(t *testing.T) {
 	// os.UserConfigDir fails when neither XDG_CONFIG_HOME nor HOME is set,
 	// which is what a stripped-down container looks like. A panic there would
