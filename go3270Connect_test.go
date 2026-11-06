@@ -573,6 +573,32 @@ func TestLoadInjectionDataKeepsNumbersAsWritten(t *testing.T) {
 	}
 }
 
+func TestLoadInjectionDataTreatsNullAsEmpty(t *testing.T) {
+	// A JSON null went through fmt.Sprint and was typed onto the host as the
+	// literal text "<nil>".
+	for name, body := range map[string]string{
+		"array":  `[{"{{middle}}": null, "{{name}}": "X"}]`,
+		"object": `{"{{middle}}": null, "{{name}}": "X"}`,
+	} {
+		tmpfile, err := os.CreateTemp("", "injection-null-*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpfile.Name())
+		if _, err := tmpfile.WriteString(body); err != nil {
+			t.Fatal(err)
+		}
+		tmpfile.Close()
+		data, err := loadInjectionData(tmpfile.Name())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got := data[0]["{{middle}}"]; got != "" {
+			t.Errorf("%s: expected empty text for null, got %q", name, got)
+		}
+	}
+}
+
 func TestCaptureFailureScreenDisabledByDefault(t *testing.T) {
 	// Save original value
 	oldFlag := verboseScreenCaptureFailures
