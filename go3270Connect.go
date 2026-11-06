@@ -4223,7 +4223,7 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 			}
 			entry := make(map[string]string, len(obj))
 			for key, val := range obj {
-				entry[key] = fmt.Sprint(val)
+				entry[key] = injectionValueText(val)
 			}
 			entries = append(entries, entry)
 		}
@@ -4253,7 +4253,7 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 		// Treat plain object as a single entry.
 		entry := make(map[string]string, len(v))
 		for key, val := range v {
-			entry[key] = fmt.Sprint(val)
+			entry[key] = injectionValueText(val)
 		}
 		if len(entry) == 0 {
 			return nil, fmt.Errorf("injection object is empty")
@@ -4262,6 +4262,16 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 	default:
 		return nil, fmt.Errorf("unsupported injection data format")
 	}
+}
+
+// injectionValueText is the text a decoded injection value is typed as. A
+// JSON null is empty, not fmt.Sprint's "<nil>", which would be keyed onto the
+// host screen as a literal value.
+func injectionValueText(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	return fmt.Sprint(val)
 }
 
 func injectDynamicValues(config *Configuration, injection map[string]string) *Configuration {
