@@ -424,10 +424,16 @@ func proxyClaimsHTTPS(r *http.Request) bool {
 // otherwise the sign-in page is an open redirect, and one that hands somebody
 // a landing page immediately after they typed a password is the most
 // convincing place to have one.
+//
+// Tab, carriage return and line feed are refused anywhere in the value: the
+// WHATWG URL spec strips them when a browser parses a URL, so "/\t//evil"
+// arrives at this function with the leading "/" intact and then navigates to
+// "//evil" once the browser is done with it. Refusing the characters outright
+// is cheaper than trying to normalise the resulting path.
 func safeReturnPath(raw string) string {
 	raw = strings.TrimSpace(raw)
 	if raw == "" || !strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") ||
-		strings.Contains(raw, "\\") {
+		strings.Contains(raw, "\\") || strings.ContainsAny(raw, "\t\r\n") {
 		return defaultLandingPath
 	}
 	return raw

@@ -837,6 +837,13 @@ func TestSafeReturnPath(t *testing.T) {
 		"https://evil.example": "/dashboard",
 		`/\evil.example`:       "/dashboard",
 		"javascript:alert(1)":  "/dashboard",
+		// A browser strips ASCII tab, CR and LF while parsing a URL, so a
+		// Location that carries one is read as the shorter URL it leaves
+		// behind. Without these rejections "/\t//evil.example" lands the
+		// browser on "//evil.example".
+		"/\t//evil.example": "/dashboard",
+		"/\n//evil.example": "/dashboard",
+		"/\r//evil.example": "/dashboard",
 	}
 	for input, want := range cases {
 		if got := safeReturnPath(input); got != want {
