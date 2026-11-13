@@ -83,39 +83,55 @@ func isStatusLine(line string) bool {
 // ParseStatus reads an s3270 status line. A line that does not have the
 // expected shape yields a zero Status, so a future emulator that adds fields
 // degrades to "we do not know" rather than to wrong numbers.
+// Positions of the fields in an s3270 status line. Only the first ten are
+// read; the rest (the command execution time) are ignored.
+const (
+	statusFieldKeyboard = iota
+	statusFieldFormatted
+	statusFieldProtected
+	statusFieldConnection
+	statusFieldMode
+	statusFieldModel
+	statusFieldRows
+	statusFieldCols
+	statusFieldCursorRow
+	statusFieldCursorCol
+	statusFieldsRead // how many fields ParseStatus needs
+)
+
 func ParseStatus(line string) Status {
 	fields := strings.Fields(strings.TrimSpace(line))
-	if len(fields) < 10 {
+	if len(fields) < statusFieldsRead {
 		return Status{}
 	}
 
 	s := Status{Valid: true, Raw: strings.TrimSpace(line)}
 
-	switch fields[0] {
+	switch fields[statusFieldKeyboard] {
 	case "L":
 		s.KeyboardLocked = true
 	case "E":
 		s.KeyboardLocked = true
 		s.KeyboardError = true
 	}
-	s.Formatted = fields[1] == "F"
-	s.Protected = fields[2] == "P"
+	s.Formatted = fields[statusFieldFormatted] == "F"
+	s.Protected = fields[statusFieldProtected] == "P"
 
-	if conn := fields[3]; conn != "N" {
+	if conn := fields[statusFieldConnection]; conn != "N" {
 		s.Connected = true
 		if open := strings.IndexByte(conn, '('); open >= 0 && strings.HasSuffix(conn, ")") {
 			s.Host = conn[open+1 : len(conn)-1]
 		}
 	}
-	s.Mode = fields[4]
+	s.Mode = fields[statusFieldMode]
 
-	s.Model, _ = strconv.Atoi(fields[5])
-	s.Rows, _ = strconv.Atoi(fields[6])
-	s.Cols, _ = strconv.Atoi(fields[7])
-	if row, err := strconv.Atoi(fields[8]); err == nil {
+	s.Model, _ = strconv.Atoi(fields[statusFieldModel])
+	s.Rows, _ = strconv.Atoi(fields[statusFieldRows])
+	s.Cols, _ = strconv.Atoi(fields[statusFieldCols])
+	if row, err := strconv.Atoi(fields[statusFieldCursorRow]); err == nil {
 		s.CursorRow = row + 1
 	}
-	if col, err := strconv.Atoi(fields[9]); err == nil {
+	if col, err := strconv.Atoi(fields[statusFieldCursorCol]); err == nil {
 		s.CursorCol = col + 1
 	}
 
