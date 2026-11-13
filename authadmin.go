@@ -481,9 +481,17 @@ func (a *authState) adminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	self := target.ID == principalOf(r).UserID
 
 	if req.Role != nil {
-		role := authz.RoleUser
-		if strings.EqualFold(*req.Role, string(authz.RoleAdmin)) {
+		// Only the two roles that exist. Anything else used to read as "user",
+		// so a mistyped "administrator" quietly demoted the account.
+		var role authz.Role
+		switch strings.ToLower(strings.TrimSpace(*req.Role)) {
+		case string(authz.RoleAdmin):
 			role = authz.RoleAdmin
+		case string(authz.RoleUser):
+			role = authz.RoleUser
+		default:
+			writeJSONError(w, http.StatusBadRequest, "role must be \"admin\" or \"user\"")
+			return
 		}
 		// Self-demotion is refused rather than merely warned about: it takes
 		// effect immediately, and the administrator would lose the page they

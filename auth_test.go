@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1066,5 +1067,29 @@ func TestStateDirFallsBackWhenTheConfigDirIsUnknown(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Dir(stateDir())); err != nil && !os.IsNotExist(err) {
 		t.Fatalf("unexpected error stating the fallback: %v", err)
+	}
+}
+
+func TestAdminUpdateUserRejectsUnknownRole(t *testing.T) {
+	a := newTestAuth(t, authz.ModeLocal)
+	root := addUser(t, a, "root", authz.RoleAdmin)
+	other := addUser(t, a, "other", authz.RoleAdmin)
+
+	for _, role := range []string{"administrator", "", "root"} {
+		body := strings.NewReader(`{"role":` + strconv.Quote(role) + `}`)
+		r := httptest.NewRequest(http.MethodPatch, "/admin/api/users/"+other.ID, body)
+		r = withIdentity(r, requestIdentity{
+			Principal: authz.Principal{UserID: root.ID, Role: authz.RoleAdmin, Kind: authz.KindWeb},
+			Username:  root.Username,
+		})
+		w := httptest.NewRecorder()
+		a.adminUpdateUser(w, r)
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("role %q: got %d, want 400", role, w.Code)
+		}
+		got, _, _ := a.userStore().ByID(other.ID)
+		if got.Role != authz.RoleAdmin {
+			t.Errorf("role %q demoted the account to %q", role, got.Role)
+		}
 	}
 }
