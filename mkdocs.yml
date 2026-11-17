@@ -72,6 +72,9 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Basic Usage: basic-usage.md
+  - Practical Guides:
+      - GitHub Actions Regression Tests: github-actions.md
+      - Load Testing: load-testing.md
   - Terminal UI: terminal-ui.md
   - Web Dashboard: dashboard.md
   - Accounts and Sign-In: authentication.md

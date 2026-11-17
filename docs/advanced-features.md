@@ -25,7 +25,7 @@ See [AI Chat Mode](ai-chat-mode.md) for sign-in, approvals, model selection, and
 To run `3270Connect` in API mode, use the following command:
 
 ```bash
-3270Connect -api -api-port 8080
+3270connect -api -api-port 8080
 ```
 
 Every request to `/api/execute` carries the workflow it wants run, so `-config`
@@ -113,7 +113,7 @@ from the deployment:
     Set `API_TOKEN`, and every request must present it:
 
     ```bash
-    API_TOKEN=$(openssl rand -hex 32) 3270Connect -api -api-port 8080
+    API_TOKEN=$(openssl rand -hex 32) 3270connect -api -api-port 8080
     curl -H "Authorization: Bearer $API_TOKEN" -X POST http://localhost:8080/api/execute -d @workflow.json
     ```
 
@@ -124,8 +124,8 @@ from the deployment:
     audit trail by name:
 
     ```bash
-    3270Connect token add alice "ci pipeline"
-    3270Connect token add watcher "grafana" --read-only
+    3270connect token add alice "ci pipeline"
+    3270connect token add watcher "grafana" --read-only
     ```
 
     `API_TOKEN` is refused alongside accounts — one credential held by
@@ -183,7 +183,7 @@ and scrape with the sample config in
 
 ### Host Compatibility Profiler
 
-Run `3270Connect -profile -profileHost <host> -profilePort <port>` for a
+Run `3270connect -profile -profileHost <host> -profilePort <port>` for a
 one-shot probe that writes a `CompatibilityProfile` JSON document. The
 document shares its schema with 3270Web's `POST /profile` endpoint, so
 the same JSON drops into 3270Web's chaos mind-map compare workflow for

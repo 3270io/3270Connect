@@ -650,7 +650,7 @@ func wantsJSON(r *http.Request) bool {
 	if r == nil {
 		return false
 	}
-	if strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/admin/api/") {
+	if strings.HasPrefix(r.URL.Path, "/dashboard/") || r.URL.Path == "/start-process" || r.URL.Path == "/test-connection" || r.URL.Path == "/kill" || strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/admin/api/") {
 		return true
 	}
 	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
@@ -1006,6 +1006,11 @@ func (a *authState) selfAdminDependsOnGroup(r *http.Request, group string) bool 
    Periodic housekeeping
    --------------------------------------------------------------------- */
 
+// finishedRunOwnerRetention is how long a finished run's owner is remembered
+// after the run began, so the console can still say whose it was while the row
+// is on screen.
+const finishedRunOwnerRetention = time.Hour
+
 // sweep is the periodic tidy-up: expired logins dropped, logins belonging to
 // accounts that have since been disabled or deleted ended, and the run-owner
 // map pruned.
@@ -1015,7 +1020,7 @@ func (a *authState) selfAdminDependsOnGroup(r *http.Request, group string) bool 
 // directly and cannot reach into this process's memory, so without a sweep a
 // disabled account would keep its session until it expired.
 func (a *authState) sweep() {
-	a.runs.prune(isProcessRunning, time.Hour, time.Now())
+	a.runs.prune(isProcessRunning, finishedRunOwnerRetention, time.Now())
 
 	if a.sessions == nil || !a.separatesUsers() {
 		return

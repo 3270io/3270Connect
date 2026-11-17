@@ -134,7 +134,7 @@
 <div class="auth-alert auth-alert--error" role="alert" aria-live="assertive"><span>{{ .Error }}</span></div>
 {{ end }}
 {{ if .Notice }}
-<div class="auth-alert auth-alert--info"><span>{{ .Notice }}</span></div>
+<div class="auth-alert auth-alert--info" role="status"><span>{{ .Notice }}</span></div>
 {{ end }}
 {{- end -}}
 

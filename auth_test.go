@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -837,6 +838,13 @@ func TestSafeReturnPath(t *testing.T) {
 		"https://evil.example": "/dashboard",
 		`/\evil.example`:       "/dashboard",
 		"javascript:alert(1)":  "/dashboard",
+		// A browser strips ASCII tab, CR and LF while parsing a URL, so a
+		// Location that carries one is read as the shorter URL it leaves
+		// behind. Without these rejections "/\t//evil.example" lands the
+		// browser on "//evil.example".
+		"/\t//evil.example": "/dashboard",
+		"/\n//evil.example": "/dashboard",
+		"/\r//evil.example": "/dashboard",
 	}
 	for input, want := range cases {
 		if got := safeReturnPath(input); got != want {
@@ -1014,6 +1022,40 @@ func TestAuditTrailRecordsARefusedToken(t *testing.T) {
 	}
 }
 
+func TestChangePasswordIsThrottledOnWrongCurrentPassword(t *testing.T) {
+	// A stolen session must not be an unlimited guess at the current
+	// password: a correct one lets the attacker set a new one and lock the
+	// owner out.
+	a := newTestAuth(t, authz.ModeLocal)
+	cookie := signIn(t, a, addUser(t, a, "alice", authz.RoleUser))
+	submit := func(current string) int {
+		form := strings.NewReader("currentPassword=" + current + "&newPassword=a-fine-new-pass&confirmPassword=a-fine-new-pass")
+		r := httptest.NewRequest(http.MethodPost, changePasswordPath, form)
+		r.Host = "console.example:9200"
+		r.RemoteAddr = "203.0.113.9:5555"
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Set("Origin", "http://console.example:9200")
+		r.Header.Set("Accept", "application/json")
+		r.AddCookie(&http.Cookie{Name: authCookieName, Value: cookie})
+		w := httptest.NewRecorder()
+		a.Gate(http.HandlerFunc(a.changePasswordHandler)).ServeHTTP(w, r)
+		return w.Code
+	}
+	for i := 0; i < loginFreeAttempts; i++ {
+		if got := submit("wrong"); got != http.StatusUnauthorized {
+			t.Fatalf("attempt %d: got %d, want 401 while the allowance stands", i+1, got)
+		}
+	}
+	if got := submit("wrong"); got != http.StatusTooManyRequests {
+		t.Fatalf("got %d, want 429 once the allowance is spent", got)
+	}
+	// Correct password also 429 while locked: the throttle's cost is what
+	// matters, not telling real guesses apart from stopped ones.
+	if got := submit("correct-horse-battery"); got != http.StatusTooManyRequests {
+		t.Fatalf("got %d while locked out, want 429", got)
+	}
+}
+
 func TestStateDirFallsBackWhenTheConfigDirIsUnknown(t *testing.T) {
 	// os.UserConfigDir fails when neither XDG_CONFIG_HOME nor HOME is set,
 	// which is what a stripped-down container looks like. A panic there would
@@ -1025,5 +1067,29 @@ func TestStateDirFallsBackWhenTheConfigDirIsUnknown(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Dir(stateDir())); err != nil && !os.IsNotExist(err) {
 		t.Fatalf("unexpected error stating the fallback: %v", err)
+	}
+}
+
+func TestAdminUpdateUserRejectsUnknownRole(t *testing.T) {
+	a := newTestAuth(t, authz.ModeLocal)
+	root := addUser(t, a, "root", authz.RoleAdmin)
+	other := addUser(t, a, "other", authz.RoleAdmin)
+
+	for _, role := range []string{"administrator", "", "root"} {
+		body := strings.NewReader(`{"role":` + strconv.Quote(role) + `}`)
+		r := httptest.NewRequest(http.MethodPatch, "/admin/api/users/"+other.ID, body)
+		r = withIdentity(r, requestIdentity{
+			Principal: authz.Principal{UserID: root.ID, Role: authz.RoleAdmin, Kind: authz.KindWeb},
+			Username:  root.Username,
+		})
+		w := httptest.NewRecorder()
+		a.adminUpdateUser(w, r)
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("role %q: got %d, want 400", role, w.Code)
+		}
+		got, _, _ := a.userStore().ByID(other.ID)
+		if got.Role != authz.RoleAdmin {
+			t.Errorf("role %q demoted the account to %q", role, got.Role)
+		}
 	}
 }

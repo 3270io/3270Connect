@@ -1,6 +1,6 @@
 package main
 
-// `3270Connect user ...` and `3270Connect token ...`.
+// `3270connect user ...` and `3270connect token ...`.
 //
 // Both edit the same files the console reads, so they work whether or not a
 // console is running — a new account can sign in immediately, with no restart.
@@ -34,11 +34,11 @@ import (
 const userUsage = `Manage local 3270Connect accounts.
 
 Usage:
-  3270Connect user add <username> [--admin]   Create an account
-  3270Connect user list                       List accounts
-  3270Connect user passwd <username>          Set an account's password
-  3270Connect user enable <username>          Re-enable a disabled account
-  3270Connect user disable <username>         Disable an account
+  3270connect user add <username> [--admin]   Create an account
+  3270connect user list                       List accounts
+  3270connect user passwd <username>          Set an account's password
+  3270connect user enable <username>          Re-enable a disabled account
+  3270connect user disable <username>         Disable an account
 
 Accounts apply when AUTH_MODE is local or oidc. Passwords are read from the
 terminal, or from stdin when it is not a terminal; they are never taken from
@@ -260,11 +260,11 @@ func validatedPassword(password string) (string, error) {
 const tokenUsage = `Manage API tokens for automated clients.
 
 Usage:
-  3270Connect token add <username> <name> [--read-only] [--expires <duration>]
+  3270connect token add <username> <name> [--read-only] [--expires <duration>]
                                               Issue a token for an account
-  3270Connect token list [username]           List tokens
-  3270Connect token revoke <id>               Stop a token working
-  3270Connect token revoke-all <username>     Stop all of an account's tokens
+  3270connect token list [username]           List tokens
+  3270connect token revoke <id>               Stop a token working
+  3270connect token revoke-all <username>     Stop all of an account's tokens
 
 A token reaches exactly what its owner reaches: their load runs, and nothing
 belonging to anybody else. --read-only issues one that can watch runs but not

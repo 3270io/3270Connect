@@ -197,6 +197,17 @@ func TestValidateRequirements(t *testing.T) {
 		{"inverted delay range", func(c *Configuration) {
 			c.EveryStepDelay = DelayRange{Min: 5, Max: 1}
 		}, "Min cannot be greater than Max"},
+		{"port one past the last TCP port", func(c *Configuration) { c.Port = 65536 }, "Port"},
+		{"negative port", func(c *Configuration) { c.Port = -1 }, "Port"},
+		{"negative end of task delay", func(c *Configuration) {
+			c.EndOfTaskDelay = DelayRange{Min: -1}
+		}, "EndOfTaskDelay"},
+		// Without a Length the step reads zero characters and can never match.
+		{"check value with no length", func(c *Configuration) {
+			s := Step{Type: "CheckValue", Text: "READY"}
+			s.Coordinates.Row, s.Coordinates.Column = 1, 1
+			c.Steps = append(c.Steps, s)
+		}, "Coordinates.Length"},
 	}
 
 	for _, tc := range cases {
@@ -269,4 +280,13 @@ func without(names []string, drop string) []string {
 		}
 	}
 	return out
+}
+
+func TestValidateAcceptsTheEdgesOfTheValidRange(t *testing.T) {
+	for _, port := range []int{1, 65535} {
+		cfg := &Configuration{Host: "h", Port: port, Steps: []Step{{Type: "Connect"}}}
+		if err := Validate(cfg); err != nil {
+			t.Errorf("Port %d is a valid TCP port, got %v", port, err)
+		}
+	}
 }

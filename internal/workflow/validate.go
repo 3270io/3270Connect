@@ -112,8 +112,8 @@ func Validate(config *Configuration) error {
 	if config.Host == "" {
 		return fmt.Errorf("Host is required")
 	}
-	if config.Port <= 0 {
-		return fmt.Errorf("Port must be a positive TCP port number")
+	if config.Port <= 0 || config.Port > 65535 {
+		return fmt.Errorf("Port must be a TCP port number from 1 to 65535")
 	}
 	if config.LegacyDelay > 0 {
 		return fmt.Errorf("the top-level Delay setting was removed; use EveryStepDelay with Min and Max instead")

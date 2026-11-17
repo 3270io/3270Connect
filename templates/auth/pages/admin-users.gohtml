@@ -5,13 +5,7 @@
 {{- define "content" -}}
 <div class="section-head">
   <h2>Accounts</h2>
-  <p>
-    Add accounts, change roles, reset passwords, disable and delete. A few
-    actions are deliberately unavailable — removing your own administrator
-    role, disabling or deleting your own account, and doing any of those to the
-    last enabled administrator — because each would strand you on a page you
-    could no longer use.
-  </p>
+  <p>Create accounts, manage roles and reset temporary passwords. Your own account and the last administrator are protected from removal.</p>
 </div>
 
 <div class="filters">
@@ -98,7 +92,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite" aria-atomic="true"></div>
 {{- end -}}
 
 {{- define "scripts" -}}

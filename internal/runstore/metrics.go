@@ -16,6 +16,7 @@ package runstore
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -30,6 +31,9 @@ import (
 
 // Metrics is the snapshot one 3270Connect process publishes.
 type Metrics struct {
+	WorkflowName            string    `json:"workflowName,omitempty"`
+	Host                    string    `json:"host,omitempty"`
+	Port                    int       `json:"port,omitempty"`
 	PID                     int       `json:"pid"`
 	ActiveWorkflows         int       `json:"activeWorkflows"`
 	TotalWorkflowsStarted   int64     `json:"totalWorkflowsStarted"`
@@ -134,37 +138,44 @@ func ReadAll(dir string) ([]Entry, error) {
 
 	out := make([]Entry, 0, len(files))
 	for _, path := range files {
-		info, err := os.Stat(path)
-		if err != nil {
-			continue
+		if e, ok := readEntry(path); ok {
+			out = append(out, e)
 		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		var m Metrics
-		if err := json.Unmarshal(data, &m); err != nil {
-			continue
-		}
-		out = append(out, Entry{Metrics: m.Extend(), Path: path, Modified: info.ModTime()})
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Metrics.PID < out[j].Metrics.PID })
 	return out, nil
 }
 
-// Read returns the snapshot for one process.
-func Read(dir string, pid int) (Entry, bool) {
-	entries, err := ReadAll(dir)
+// readEntry loads one snapshot file, reporting false for one that cannot be
+// read or parsed.
+func readEntry(path string) (Entry, bool) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return Entry{}, false
 	}
-	for _, e := range entries {
-		if e.Metrics.PID == pid {
-			return e, true
-		}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Entry{}, false
 	}
-	return Entry{}, false
+	var m Metrics
+	if err := json.Unmarshal(data, &m); err != nil {
+		return Entry{}, false
+	}
+	return Entry{Metrics: m.Extend(), Path: path, Modified: info.ModTime()}, true
+}
+
+// Read returns the snapshot for one process.
+//
+// Every writer names its file metrics_<pid>.json, so the one file is opened
+// directly instead of reading, parsing and liveness-probing every run's
+// snapshot (one process signal each) just to keep one of them.
+func Read(dir string, pid int) (Entry, bool) {
+	e, ok := readEntry(filepath.Join(dir, fmt.Sprintf("metrics_%d.json", pid)))
+	if !ok || e.Metrics.PID != pid {
+		return Entry{}, false
+	}
+	return e, true
 }
 
 // Extend works out a snapshot's status and remaining time.
@@ -219,7 +230,14 @@ func IsProcessRunning(pid int) bool {
 	if err != nil {
 		return false
 	}
-	return proc.Signal(syscall.Signal(0)) == nil
+	return signalProbeMeansAlive(proc.Signal(syscall.Signal(0)))
+}
+
+// signalProbeMeansAlive reads the result of signal 0. EPERM means the pid
+// exists but belongs to another account, which is a live run started by
+// somebody else, not a dead one.
+func signalProbeMeansAlive(err error) bool {
+	return err == nil || errors.Is(err, syscall.EPERM)
 }
 
 // PreferRunning narrows a list to live processes, unless none are live — in
@@ -240,6 +258,29 @@ func PreferRunning(entries []Entry) []Entry {
 // Aggregate sums counters and concatenates samples across processes.
 func Aggregate(entries []Entry) Metrics {
 	var agg Metrics
+	// Presized from one cheap counting pass: every entry carries a few hundred
+	// samples per series, so appending into a nil slice regrew and recopied
+	// them repeatedly on every /dashboard/data poll. A series with no samples
+	// stays nil, so the JSON shape is unchanged.
+	var nd, nc, nm, nl int
+	for _, e := range entries {
+		nd += len(e.Metrics.Durations)
+		nc += len(e.Metrics.CPUUsage)
+		nm += len(e.Metrics.MemoryUsage)
+		nl += len(e.Metrics.LiveSteps)
+	}
+	if nd > 0 {
+		agg.Durations = make([]float64, 0, nd)
+	}
+	if nc > 0 {
+		agg.CPUUsage = make([]float64, 0, nc)
+	}
+	if nm > 0 {
+		agg.MemoryUsage = make([]float64, 0, nm)
+	}
+	if nl > 0 {
+		agg.LiveSteps = make([]WorkflowStatus, 0, nl)
+	}
 	for _, e := range entries {
 		agg.ActiveWorkflows += e.Metrics.ActiveWorkflows
 		agg.TotalWorkflowsStarted += e.Metrics.TotalWorkflowsStarted

@@ -546,6 +546,59 @@ func TestLoadInjectionDataWithUTF8Characters(t *testing.T) {
 	}
 }
 
+func TestLoadInjectionDataKeepsNumbersAsWritten(t *testing.T) {
+	// A bare JSON number used to pass through float64, so an account number
+	// came out as 1.2345678901e+10 and was typed onto the host that way.
+	tmpfile, err := os.CreateTemp("", "injection-number-*.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+	if _, err := tmpfile.WriteString(`[{"{{account}}": 12345678901, "{{rate}}": 1.50, "{{name}}": "X"}]`); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := loadInjectionData(tmpfile.Name())
+	if err != nil {
+		t.Fatalf("Failed to load injection data: %v", err)
+	}
+	if got := data[0]["{{account}}"]; got != "12345678901" {
+		t.Errorf("expected account 12345678901, got %q", got)
+	}
+	if got := data[0]["{{rate}}"]; got != "1.50" {
+		t.Errorf("expected rate 1.50, got %q", got)
+	}
+}
+
+func TestLoadInjectionDataTreatsNullAsEmpty(t *testing.T) {
+	// A JSON null went through fmt.Sprint and was typed onto the host as the
+	// literal text "<nil>".
+	for name, body := range map[string]string{
+		"array":  `[{"{{middle}}": null, "{{name}}": "X"}]`,
+		"object": `{"{{middle}}": null, "{{name}}": "X"}`,
+	} {
+		tmpfile, err := os.CreateTemp("", "injection-null-*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpfile.Name())
+		if _, err := tmpfile.WriteString(body); err != nil {
+			t.Fatal(err)
+		}
+		tmpfile.Close()
+		data, err := loadInjectionData(tmpfile.Name())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got := data[0]["{{middle}}"]; got != "" {
+			t.Errorf("%s: expected empty text for null, got %q", name, got)
+		}
+	}
+}
+
 func TestCaptureFailureScreenDisabledByDefault(t *testing.T) {
 	// Save original value
 	oldFlag := verboseScreenCaptureFailures
@@ -974,5 +1027,29 @@ func TestKillProcessHandlerRefusesNonPositivePID(t *testing.T) {
 		if rr.Code != http.StatusBadRequest {
 			t.Fatalf("pid %s: got status %d, want %d", pid, rr.Code, http.StatusBadRequest)
 		}
+	}
+}
+
+func TestResolveTokenPlaceholder(t *testing.T) {
+	cases := []struct {
+		name     string
+		original string
+		token    string
+		want     string
+	}{
+		{"substitutes the token", "{{token}}", "123456", "123456"},
+		{"substitutes every occurrence", "{{token}}-{{token}}", "42", "42-42"},
+		{"keeps surrounding text", "PIN{{token}}!", "9876", "PIN9876!"},
+		{"leaves text without a placeholder alone", "SMITH,JOHN", "123456", "SMITH,JOHN"},
+		{"leaves the placeholder in place when no token was supplied", "pw{{token}}", "", "pw{{token}}"},
+		{"does not expand a placeholder inside the token itself", "{{token}}", "a{{token}}b", "a{{token}}b"},
+		{"leaves other placeholders for the injection step", "{{username}}{{token}}", "7", "{{username}}7"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := resolveTokenPlaceholder(tc.original, tc.token); got != tc.want {
+				t.Errorf("resolveTokenPlaceholder(%q, %q) = %q, want %q", tc.original, tc.token, got, tc.want)
+			}
+		})
 	}
 }

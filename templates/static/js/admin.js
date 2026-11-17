@@ -94,7 +94,22 @@
   /** confirmed asks before something irreversible. window.confirm is plain and
    *  unmissable, which is what is wanted for "delete this account". */
   function confirmed(question) {
-    return window.confirm(question);
+    return new Promise((resolve) => {
+      let back = $('#confirm-action');
+      if (!back) {
+        back = el('div', {id:'confirm-action', class:'modal-back', hidden:true});
+        const card = el('div', {class:'modal', role:'dialog', 'aria-modal':'true', 'aria-labelledby':'confirm-title'});
+        card.append(el('h2',{id:'confirm-title',text:'Confirm action'}),el('p',{id:'confirm-question'}));
+        const actions = el('div',{class:'modal-actions'});
+        actions.append(el('button',{id:'confirm-cancel',class:'btn',type:'button',text:'Cancel'}),el('button',{id:'confirm-proceed',class:'btn btn-danger',type:'button',text:'Confirm'}));
+        card.append(actions); back.append(card); document.body.append(back);
+      }
+      $('#confirm-question').textContent = question;
+      back.__cancel = () => { closeDialog('#confirm-action'); resolve(false); };
+      $('#confirm-cancel').onclick = back.__cancel;
+      $('#confirm-proceed').onclick = () => { closeDialog('#confirm-action'); resolve(true); };
+      openDialog('#confirm-action'); $('#confirm-cancel').focus();
+    });
   }
 
   /** generatePassword invents a temporary password from the browser's
@@ -123,8 +138,40 @@
     }
   }
 
-  function openDialog(id) { const d = $(id); if (d) d.hidden = false; }
-  function closeDialog(id) { const d = $(id); if (d) d.hidden = true; }
+  const dialogStack = [];
+  const focusable = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]';
+  function openDialog(id) {
+    const d = $(id); if (!d || !d.hidden) return;
+    d.__restoreFocus = document.activeElement; d.hidden = false; d.inert = false; dialogStack.push(d);
+    document.body.classList.add('modal-open');
+    for (const child of document.body.children) { if (child !== d && !child.contains(d)) { if (!('__dialogInert' in child)) child.__dialogInert = child.inert; child.inert = true; } }
+    const first = [...d.querySelectorAll(focusable)].find((node) => node.offsetParent !== null); if (first) first.focus();
+  }
+  function closeDialog(id) {
+    const d = $(id); if (!d) return;
+    d.hidden = true; const index = dialogStack.indexOf(d); if (index >= 0) dialogStack.splice(index,1);
+    if (!dialogStack.length) {
+      document.body.classList.remove('modal-open');
+      for (const child of document.body.children) { if ('__dialogInert' in child) { child.inert = child.__dialogInert; delete child.__dialogInert; } }
+    }
+    if (dialogStack.length) dialogStack[dialogStack.length - 1].inert = false;
+    if (d.__restoreFocus && d.__restoreFocus.isConnected) d.__restoreFocus.focus();
+  }
+  document.addEventListener('keydown', (event) => {
+    const d = dialogStack[dialogStack.length - 1]; if (!d) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (d.id === 'secret') return; // One-time token stays until Done.
+      if (d.__cancel) d.__cancel(); else closeDialog('#'+d.id);
+    }
+    if (event.key === 'Tab') {
+      const items = [...d.querySelectorAll(focusable)].filter((node)=>node.offsetParent !== null);
+      if (!items.length) return;
+      const first=items[0],last=items[items.length-1];
+      if (event.shiftKey && document.activeElement===first) {event.preventDefault();last.focus();}
+      else if (!event.shiftKey && document.activeElement===last) {event.preventDefault();first.focus();}
+    }
+  });
 
   function showError(id, message) {
     const box = $(id);
@@ -356,13 +403,13 @@
 
     const setRole = (u, role) => patch(u, { role: role }, `${u.username} is now ${role === "admin" ? "an administrator" : "a user"}.`);
 
-    function setDisabled(u, disabled) {
-      if (disabled && !confirmed(`Disable ${u.username}? They are signed out everywhere immediately and their API tokens stop working.`)) return;
+    async function setDisabled(u, disabled) {
+      if (disabled && !(await confirmed(`Disable ${u.username}? They are signed out everywhere immediately and their API tokens stop working.`))) return;
       patch(u, { disabled: disabled }, `${u.username} is ${disabled ? "disabled" : "enabled"}.`);
     }
 
     async function remove(u) {
-      if (!confirmed(`Delete ${u.username}? This cannot be undone, and every token they hold is revoked.`)) return;
+      if (!(await confirmed(`Delete ${u.username}? This cannot be undone, and every token they hold is revoked.`))) return;
       try {
         await api("/admin/api/users/" + encodeURIComponent(u.id), { method: "DELETE" });
         toast(`${u.username} deleted.`, "ok");
@@ -597,7 +644,7 @@
     }
 
     async function remove(g) {
-      if (!confirmed(`Delete ${g.name}? It is removed from every account in it, and the role it granted goes with it. The accounts themselves are untouched.`)) return;
+      if (!(await confirmed(`Delete ${g.name}? It is removed from every account in it, and the role it granted goes with it. The accounts themselves are untouched.`))) return;
       try {
         await api("/admin/api/groups/" + encodeURIComponent(g.name), { method: "DELETE" });
         toast(`${g.name} deleted.`, "ok");
@@ -680,7 +727,7 @@
     }
 
     async function revoke(t) {
-      if (!confirmed(`Revoke ${t.id}? Whatever is using it stops working immediately.`)) return;
+      if (!(await confirmed(`Revoke ${t.id}? Whatever is using it stops working immediately.`))) return;
       try {
         await api("/admin/api/tokens/" + encodeURIComponent(t.id), { method: "DELETE" });
         toast("Revoked.", "ok");
@@ -785,7 +832,7 @@
 
     async function stop(run) {
       const whose = run.owner ? `${run.owner}'s run` : "this run";
-      if (!confirmed(`Stop ${whose} (pid ${run.pid})? Whatever it is measuring ends now.`)) return;
+      if (!(await confirmed(`Stop ${whose} (pid ${run.pid})? Whatever it is measuring ends now.`))) return;
       try {
         // /kill predates the administration area and answers in plain text, so
         // it is called directly rather than through api().

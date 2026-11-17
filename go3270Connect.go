@@ -324,6 +324,10 @@ var lastMemUsage float64
 var lastCleanupRun time.Time
 
 var showVersion = flag.Bool("version", false, "Show the application version")
+var keepDashboard = flag.Bool("keepDashboard", false, "Keep the console open after a workflow run (interactive terminals only)")
+var sampleWorkflowPath = flag.String("sampleWorkflow", "", "Write a sample workflow JSON file and print the next commands")
+var helpAll = flag.Bool("help-all", false, "Show all flags")
+var plainOutput = flag.Bool("plain", false, "Use plain, non-interactive terminal output")
 var startDashboard = flag.Bool("dashboard", false, "Start the dashboard and open the webpage")
 
 var enableProgressBar bool
@@ -335,6 +339,9 @@ func init() {
 
 var runAppPort int
 var metricsConfigFilePath string
+var metricsHostName string
+var metricsHostPort int
+var workflowDisplayName = flag.String("workflowName", "", "Workflow display name for console launches")
 var metricsOutputFilePath string
 var workflowTimeout int
 var showConnectionErrors bool
@@ -741,6 +748,9 @@ func storeLog(message string) {
 
 // getExecutablePath resolves the most up-to-date 3270Connect binary.
 func getExecutablePath() string {
+	if running, err := os.Executable(); err == nil && !strings.HasSuffix(running, ".test") && !strings.HasSuffix(running, ".test.exe") {
+		return running
+	}
 	exeName := "3270Connect"
 	if runtime.GOOS == "windows" {
 		exeName += ".exe"
@@ -820,7 +830,7 @@ func loadConfiguration(filePath string) *Configuration {
 	configFile, err := os.Open(filePath)
 	if err != nil {
 		pterm.Error.Printf("Error opening config file at %s: %v", filePath, err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 	defer configFile.Close()
 	config := Configuration{
@@ -835,7 +845,7 @@ func loadConfiguration(filePath string) *Configuration {
 		// Configuration on a parse failure — which fails again far downstream
 		// with no obvious link back to the bad file.
 		pterm.Error.Printf("Error decoding config JSON: %v", err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 	if config.RampUpBatchSize <= 0 {
 		config.RampUpBatchSize = 10
@@ -856,7 +866,7 @@ func loadConfiguration(filePath string) *Configuration {
 		// with an unvalidated configuration and fails again later, less
 		// clearly, or not at all.
 		pterm.Error.Printf("Invalid configuration: %v", err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 	//spinner.Success("Config loaded - we’re golden!")
 	return &config
@@ -869,7 +879,7 @@ func loadInputFile(filePath string) ([]Step, error) {
 	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		spinner.Fail("Input file read failed - disk gremlins:", err)
+		spinner.Fail("Input file read failed:", err)
 		return nil, fmt.Errorf("error reading input file: %v", err)
 	}
 	if connect3270.Verbose {
@@ -1511,7 +1521,7 @@ func executeStep(e *connect3270.Emulator, step Step, tmpFileName string, token s
 		timeout := secondsToDuration(workflow.DefaultWaitForFieldDelay)
 		retries := workflow.DefaultWaitForFieldRetries
 		if step.Delay > 0 {
-			timeout = time.Duration(step.Delay * float64(time.Second))
+			timeout = secondsToDuration(step.Delay)
 		}
 		return e.WaitForField(timeout, retries)
 	case "Disconnect":
@@ -1580,7 +1590,7 @@ func LaunchEmbeddedIfDoubleClicked() {
 	//if !isTerminal() {
 	*startDashboard = true
 	flag.Set("dashboard", "true")
-	pterm.Info.Println("Launching dashboard in GUI mode (double-click detected)")
+	pterm.Info.Println("Opening dashboard")
 
 	// Start dashboard in background
 	go runDashboard()
@@ -1623,7 +1633,26 @@ func main() {
 		}
 	}
 
+	flag.Usage = printCLIHelp
 	flag.Parse()
+	if *showVersion {
+		fmt.Fprintln(os.Stdout, version)
+		return
+	}
+	if showHelp || *helpAll {
+		printCLIHelp()
+		return
+	}
+	if *sampleWorkflowPath != "" {
+		if err := writeSampleWorkflow(*sampleWorkflowPath); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		return
+	}
+	if plainTerminal() {
+		enableProgressBar = false
+	}
 
 	// Validated before either listener exists, so a misconfiguration stops
 	// startup rather than surfacing at somebody's first sign-in. Fatal on
@@ -1674,17 +1703,8 @@ func main() {
 	lastUsedPort = startPort
 	mutex.Unlock()
 	programStart = time.Now()
-	if *showVersion {
-		pterm.Info.Printf("3270Connect Version: %s \n", version)
-		os.Exit(0)
-	}
-	if showHelp {
-		pterm.Info.Printf("3270Connect Version: %s - Here’s the manual!\n", version)
-		flag.Usage()
-		os.Exit(0)
-	}
 	setGlobalSettings()
-	if concurrent > 1 || runtimeDuration > 0 {
+	if (concurrent > 1 || runtimeDuration > 0) && !plainTerminal() {
 		go runDashboard()
 	}
 	go monitorSystemUsage()
@@ -1710,6 +1730,8 @@ func main() {
 
 	config := startupConfiguration(configFile, runAPI)
 	metricsOutputFilePath = config.OutputFilePath
+	metricsHostName = config.Host
+	metricsHostPort = config.Port
 	if rsaToken != "" {
 		config.Token = rsaToken
 	}
@@ -1743,12 +1765,16 @@ func main() {
 			runWorkflow(lastUsedPort, config)
 			printSingleWorkflowSummary(configFile, config)
 		}
-		if concurrent > 1 && dashboardStarted {
+		if *keepDashboard && !plainTerminal() && dashboardStarted {
 			pterm.Info.Printf("All workflows completed but the dashboard is still running on port %d. Press Ctrl+C to exit.", dashboardPort)
 			select {}
 		}
 	}
 	showErrors()
+	if !runAPI {
+		os.Exit(workflowExitCode(atomic.LoadInt64(&totalWorkflowsFailed), atomic.LoadInt64(&totalWorkflowsConnectFailed), connect3270.ShutdownRequested()))
+	}
+
 }
 
 func setGlobalSettings() {
@@ -2327,7 +2353,7 @@ func runConcurrentWorkflows(config *Configuration, injectionConfig string, confi
 func loadStatus(pct float64) string {
 	switch {
 	case pct < 50:
-		return "chill"
+		return "low"
 	case pct < 80:
 		return "toasty"
 	default:
@@ -2359,7 +2385,7 @@ func printRunSummary(s runSummary) {
 	outcomeNote := "time for a victory lap"
 	if s.failed > 0 {
 		outcomeTone = ToneBad
-		outcomeNote = fmt.Sprintf("%d workflow(s) hit gremlins", s.failed)
+		outcomeNote = fmt.Sprintf("%d workflow(s) failed", s.failed)
 	} else if s.connectFailed > 0 {
 		// A run that never reached the host has not succeeded, whatever the
 		// failure count says. It used to print a victory lap for a workflow
@@ -2384,7 +2410,7 @@ func printRunSummary(s runSummary) {
 
 	failedTone, failedNote := ToneNeutral, "none"
 	if s.failed > 0 {
-		failedTone, failedNote = ToneBad, "gremlins"
+		failedTone, failedNote = ToneBad, "failed"
 	}
 	pterm.RenderStatRow("workflows failed", fmt.Sprintf("%d", s.failed), "●", failedNote, failedTone)
 
@@ -2405,7 +2431,7 @@ func printRunSummary(s runSummary) {
 	pterm.RenderMeterRow("average memory", fmt.Sprintf("%.1f%%", s.avgMem), s.avgMem, loadStatus(s.avgMem))
 	pterm.Println()
 
-	pterm.RenderStatRow("average workflow time", fmt.Sprintf("%.2fs", s.avgWorkflowTime), "◇", "pace setter", ToneNeutral)
+	pterm.RenderStatRow("average workflow time", fmt.Sprintf("%.2fs", s.avgWorkflowTime), "◇", "average", ToneNeutral)
 	pterm.RenderStatRow("run duration", fmt.Sprintf("%ds", s.elapsed), "◇", "completed", ToneNeutral)
 	pterm.Println()
 }
@@ -2454,6 +2480,9 @@ func formatWorkflowTotalsRows(started, completed, failed int64) []string {
 }
 
 func formatLiveStatsRow(ts time.Time, elapsed, runtimeDuration, active, workerCount int, started, completed, failed int64, cpuUsage, memUsage float64) string {
+	if compactTerminal() {
+		return fmt.Sprintf("%s active=%d/%d started=%d completed=%d failed=%d elapsed=%ds\n  remaining=%ds cpu=%.1f%% memory=%.1f%%", ts.Format("15:04:05"), active, workerCount, started, completed, failed, elapsed, max(0, runtimeDuration-elapsed), cpuUsage, memUsage)
+	}
 	remaining := max(runtimeDuration-elapsed, 0)
 	parts := []string{
 		pterm.FgBlue.Sprintf("%-*s", colWidthTime, ts.Format("15:04:05")),
@@ -2470,6 +2499,9 @@ func formatLiveStatsRow(ts time.Time, elapsed, runtimeDuration, active, workerCo
 }
 
 func formatPowerupRow(ts time.Time, overallStart time.Time, runtimeDuration int, active, workerCount, addedThisBatch int, started, completed, failed int64, cpuUsage, memUsage float64) string {
+	if compactTerminal() {
+		return formatLiveStatsRow(ts, int(time.Since(overallStart).Seconds()), runtimeDuration, active, workerCount, started, completed, failed, cpuUsage, memUsage) + fmt.Sprintf(" added=%d", addedThisBatch)
+	}
 	elapsed := int(time.Since(overallStart).Seconds())
 	remaining := max(runtimeDuration-elapsed, 0)
 	parts := []string{
@@ -2507,7 +2539,7 @@ func resolveGracePeriod(config *Configuration) time.Duration {
 		return time.Duration(gracePeriodSecs) * time.Second
 	}
 	if config != nil && config.GracePeriod > 0 {
-		return time.Duration(config.GracePeriod * float64(time.Second))
+		return secondsToDuration(config.GracePeriod)
 	}
 	return defaultGracePeriod
 }
@@ -2517,7 +2549,7 @@ func resolveAutoShutdownTimeout(config *Configuration) time.Duration {
 		return time.Duration(autoShutdownTimeoutSecs) * time.Second
 	}
 	if config != nil && config.AutoShutdownTimeout > 0 {
-		return time.Duration(config.AutoShutdownTimeout * float64(time.Second))
+		return secondsToDuration(config.AutoShutdownTimeout)
 	}
 	return defaultPromptTimeout
 }
@@ -2574,6 +2606,10 @@ type stdinResult struct {
 }
 
 func promptToContinueWaiting(reader *bufio.Reader, gracePeriod, autoShutdownTimeout time.Duration) bool {
+	if plainTerminal() {
+		pterm.Warning.Println("Grace period elapsed; shutting down outstanding workflows.")
+		return false
+	}
 	for {
 		remaining := int(autoShutdownTimeout.Seconds())
 
@@ -2680,6 +2716,9 @@ func printSingleWorkflowSummary(configPath string, config *Configuration) {
 }
 
 func clear() {
+	if plainTerminal() {
+		return
+	}
 	print("\033[H\033[2J")
 }
 
@@ -2732,26 +2771,12 @@ func isPortAvailable(port int) bool {
 	return true
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // validateConfiguration reports whether a workflow is well-formed.
 // internal/workflow.Validate is the single gate; this wrapper keeps the
 // verbose-mode narration the CLI has always printed.
 func validateConfiguration(config *Configuration) error {
 	if connect3270.Verbose {
-		pterm.Info.Println("Validating config - let’s see if it’s naughty or nice!")
+		pterm.Info.Println("Validating workflow configuration")
 	}
 	return workflow.Validate(config)
 }
@@ -2839,6 +2864,9 @@ func runDashboard() {
 		http.HandleFunc("/start-process", startProcessHandler)
 		http.HandleFunc("/kill", killProcessHandler) // register kill endpoint
 		http.HandleFunc("/test-connection", testConnectionHandler)
+		http.HandleFunc("/dashboard/validate", validateWorkflowHandler)
+		http.HandleFunc("/dashboard/sample", sampleWorkflowHandler)
+		http.HandleFunc("/dashboard/preflight", preflightWorkflowHandler)
 
 		// Signing in, signing out, first-run setup and the administration
 		// area. Registered whatever AUTH_MODE says, so a bookmark saved on an
@@ -2903,31 +2931,10 @@ func runDashboard() {
 	}
 	dashboardStarted = true
 	//openDashboardEmbedded()
-	spinner, _ := pterm.DefaultSpinner.WithRemoveWhenDone(true).Start("Cleaning up old metrics - sweeping the floor!")
 	dashboardDir := dashboardMetricsDir()
-	files, err := filepath.Glob(filepath.Join(dashboardDir, "metrics_*.json"))
-	if err != nil {
-		spinner.Warning("Error listing old metrics - file system’s trolling:", err)
-	} else {
-		for _, f := range files {
-			if err := os.Remove(f); err != nil {
-				pterm.Warning.Printf("Failed to yeet old metrics file %s: %v\n", f, err)
-			} else {
-				//pterm.Info.Printf("Old metrics file %s gone - poof!\n", f)
-			}
-		}
-	}
-	logFiles, err := filepath.Glob(filepath.Join("logs", "logs_*.json"))
-	if err == nil {
-		for _, lf := range logFiles {
-			if err := os.Remove(lf); err != nil {
-				//pterm.Warning.Printf("Failed to nuke old log file %s: %v\n", lf, err)
-			} else {
-				//pterm.Info.Printf("Old log file %s vaporized!\n", lf)
-			}
-		}
-	}
-	spinner.Success("Cleanup done - dashboard’s fresh as a daisy!")
+	// Read-time housekeeping removes only old terminated entries; never erase
+	// another active run or its logs when a console starts.
+	readDashboardMetrics(dashboardDir)
 
 	setupConsoleHandler()
 	setupTerminalConsoleHandler()
@@ -2943,7 +2950,6 @@ func runDashboard() {
 		}
 
 		metricsList, extendedList := readDashboardMetrics(dashboardDir)
-		extendedList = preferRunningMetrics(extendedList)
 		metricsJSON, _ := json.Marshal(metricsList)
 		autoRefresh := r.URL.Query().Get("autoRefresh")
 		refreshPeriod := r.URL.Query().Get("refreshPeriod")
@@ -3038,7 +3044,7 @@ func runDashboard() {
 		_, extendedList := readDashboardMetrics(dashboardDir)
 
 		// Prefer live processes for UI stats; fall back to latest snapshot if nothing running.
-		filtered := preferRunningMetrics(extendedList)
+		filtered := extendedList
 
 		payload := struct {
 			AggregatedMetrics Metrics           `json:"aggregated"`
@@ -3062,7 +3068,7 @@ func runDashboard() {
 			pterm.Warning.Printf("Failed to marshal dashboard data response: %v\n", err)
 		}
 	})
-	pterm.Info.Printf("Dashboard live at %s - check it out!\n", pterm.FgBlue.Sprintf("%s", dashboardURL(bindHost, dashboardPort)))
+	pterm.Info.Printf("Dashboard available at %s\n", pterm.FgBlue.Sprintf("%s", dashboardURL(bindHost, dashboardPort)))
 	if auth.separatesUsers() {
 		pterm.Info.Printf("Sign-in is on (%s=%s). Accounts live in %s.\n",
 			authz.ModeEnv, auth.mode, auth.userStore().Path())
@@ -3189,6 +3195,9 @@ func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
 			pterm.Warning.Printf("Error unmarshaling metrics %s: %v\n", f, err)
 			continue
 		}
+		if m.PID == os.Getpid() && *startDashboard {
+			continue
+		}
 		extendedMetric := m.Extend()
 		if shouldCleanupMetric(extendedMetric, fi.ModTime()) {
 			cleanupProcessArtifacts(extendedMetric.PID, f)
@@ -3205,6 +3214,9 @@ func readDashboardMetrics(baseDir string) ([]Metrics, []ExtendedMetrics) {
 // endpoint use it so the first render and the first refresh agree.
 
 func updateMetricsFile() {
+	if *startDashboard {
+		return
+	}
 	metricsMutex.Lock()
 	cpuCopy := make([]float64, len(cpuHistory))
 	copy(cpuCopy, cpuHistory)
@@ -3247,11 +3259,14 @@ func updateMetricsFile() {
 		}
 	}
 	metrics := Metrics{
+		WorkflowName:            *workflowDisplayName,
+		Host:                    metricsHostName,
+		Port:                    metricsHostPort,
 		PID:                     pid,
 		ActiveWorkflows:         getActiveWorkflows(),
 		TotalWorkflowsStarted:   atomic.LoadInt64(&totalWorkflowsStarted),
 		TotalWorkflowsCompleted: atomic.LoadInt64(&totalWorkflowsCompleted),
-		TotalWorkflowsFailed:    atomic.LoadInt64(&totalWorkflowsFailed),
+		TotalWorkflowsFailed:    atomic.LoadInt64(&totalWorkflowsFailed) + atomic.LoadInt64(&totalWorkflowsConnectFailed),
 		Durations:               durationsCopy,
 		CPUUsage:                cpuCopy,
 		MemoryUsage:             memCopy,
@@ -3752,7 +3767,7 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	if runApp != "" {
 		storeLog("Sample app mode detected")
 		runAppPort := strings.TrimSpace(r.FormValue("runAppPort"))
-		if _, err := strconv.Atoi(runApp); err != nil {
+		if runApp != "1" && runApp != "2" {
 			http.Error(w, "Invalid runApp value", http.StatusBadRequest)
 			return
 		}
@@ -3760,28 +3775,29 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid runAppPort value", http.StatusBadRequest)
 			return
 		}
-		executablePath := getExecutablePath()
+		reservation, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", runAppPort))
+		if err != nil {
+			http.Error(w, "Sample port is already in use. Choose another port.", http.StatusConflict)
+			return
+		}
+		reservation.Close()
 		args := []string{"-runApp", runApp, "-runApp-port", runAppPort}
 		// Recorded before the process exists rather than after: this binds a
 		// port on the machine the console runs on, and that is worth a line
 		// whether or not the child manages to start.
 		auth.auditRequest(r, audit.EventSampleAppStarted, audit.Success, "app"+runApp,
 			map[string]string{"port": runAppPort})
-		go func() {
-			logLine := fmt.Sprintf("%s %s", executablePath, strings.Join(args, " "))
-			pterm.Info.Printf("Executing sample app command: %s\n", logLine)
-			storeLog("Executing sample app command: " + logLine)
+		cmd, err := startOwnedProcess(args, auditActor(r))
+		if err != nil {
+			http.Error(w, "Could not start sample app: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := waitSampleReady(cmd, runAppPort); err != nil {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
+		writeLaunchResult(w, cmd.Process.Pid)
 
-			cmd := exec.Command(executablePath, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				pterm.Error.Printf("Failed to execute sample app command: %v\n", err)
-			}
-		}()
-		storeLog("Sample app started successfully")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Sample app started successfully"))
 		return
 	}
 
@@ -3912,6 +3928,17 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve other form fields
 	concurrent := r.FormValue("concurrent")
 	runtime := r.FormValue("runtime")
+	if r.FormValue("runMode") == "replay" {
+		concurrent = "1"
+		runtime = "0"
+	}
+	for name, value := range map[string]string{"concurrent": concurrent, "runtime": runtime, "startPort": r.FormValue("startPort")} {
+		n, err := strconv.Atoi(value)
+		if err != nil || n < 0 || (name != "runtime" && n == 0) || (name == "startPort" && n > 65000) {
+			http.Error(w, "Invalid "+name, http.StatusBadRequest)
+			return
+		}
+	}
 	startPort := r.FormValue("startPort")
 	headless := r.FormValue("headless") == "on" // use "on" for checked
 	tokenValue := strings.TrimSpace(r.FormValue("token"))
@@ -3919,6 +3946,7 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 	commandArgs := []string{
 		getExecutablePath(),
 		"-config", tempFilePath,
+		"-workflowName", safeConfigName,
 		"-concurrent", concurrent,
 		"-runtime", runtime,
 		"-startPort", startPort,
@@ -3955,27 +3983,14 @@ func startProcessHandler(w http.ResponseWriter, r *http.Request) {
 			"workflow":   safeConfigName,
 		})
 
-	go func(args []string, logCommand string, owner audit.Actor) {
-		pterm.Info.Printf("Executing command: %s\n", logCommand)
+	cmd, err := startOwnedProcess(commandArgs[1:], starter)
+	if err != nil {
+		http.Error(w, "Could not start run: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_ = commandForLog
+	writeLaunchResult(w, cmd.Process.Pid)
 
-		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		// Start and Wait rather than Run, so the process id exists to be
-		// recorded. It is what /kill is addressed by, and therefore the only
-		// thing an ownership check has to compare against.
-		if err := cmd.Start(); err != nil {
-			pterm.Error.Printf("Failed to execute command: %v\n", err)
-			return
-		}
-		auth.runs.claim(cmd.Process.Pid, owner.UserID, owner.Username)
-		if err := cmd.Wait(); err != nil {
-			pterm.Error.Printf("Failed to execute command: %v\n", err)
-		}
-	}(commandArgs, commandForLog, starter)
-	storeLog("Process started successfully")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Process started successfully"))
 }
 
 func testConnectionHandler(w http.ResponseWriter, r *http.Request) {
@@ -3991,7 +4006,10 @@ func testConnectionHandler(w http.ResponseWriter, r *http.Request) {
 		Port int    `json:"port"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	// Cap the body so an authenticated caller cannot run the console out of
+	// memory by streaming an unbounded JSON blob at an endpoint whose payload
+	// is two short fields. 1 MiB mirrors the limit the admin JSON APIs use.
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&payload); err != nil {
 		storeLog("Failed to decode test connection payload: " + err.Error())
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -4184,9 +4202,16 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 		return nil, err
 	}
 
+	// UseNumber keeps a bare number as the digits written; as a float64 a
+	// long account number would be typed as 1.2345678901e+10.
 	var raw interface{}
-	if err := json.Unmarshal(data, &raw); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	if err := dec.Decode(&raw); err != nil {
 		return nil, fmt.Errorf("failed to parse injection data: %w", err)
+	}
+	if dec.More() {
+		return nil, fmt.Errorf("failed to parse injection data: unexpected content after the JSON value")
 	}
 
 	convertEntries := func(items []interface{}) ([]map[string]string, error) {
@@ -4198,7 +4223,7 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 			}
 			entry := make(map[string]string, len(obj))
 			for key, val := range obj {
-				entry[key] = fmt.Sprint(val)
+				entry[key] = injectionValueText(val)
 			}
 			entries = append(entries, entry)
 		}
@@ -4228,7 +4253,7 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 		// Treat plain object as a single entry.
 		entry := make(map[string]string, len(v))
 		for key, val := range v {
-			entry[key] = fmt.Sprint(val)
+			entry[key] = injectionValueText(val)
 		}
 		if len(entry) == 0 {
 			return nil, fmt.Errorf("injection object is empty")
@@ -4237,6 +4262,16 @@ func loadInjectionData(filePath string) ([]map[string]string, error) {
 	default:
 		return nil, fmt.Errorf("unsupported injection data format")
 	}
+}
+
+// injectionValueText is the text a decoded injection value is typed as. A
+// JSON null is empty, not fmt.Sprint's "<nil>", which would be keyed onto the
+// host screen as a literal value.
+func injectionValueText(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	return fmt.Sprint(val)
 }
 
 func injectDynamicValues(config *Configuration, injection map[string]string) *Configuration {

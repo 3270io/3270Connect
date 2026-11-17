@@ -623,10 +623,11 @@ success_binary() {
   printf '\n'
   panel "3270Connect installed" "${RESOLVED_VERSION} ${GLYPH_SEP} binary"
   printf '\n'
-  step "console" "${COMMAND_NAME} -dashboard"
+  step "console" "${COMMAND_NAME} -dashboard -dashboardPort ${PORT}"
   step "open" "http://localhost:${PORT}/dashboard"
-  step "run" "${COMMAND_NAME} -config workflow.json"
-  step "load" "${COMMAND_NAME} -config workflow.json -concurrent 25 -runtime 600"
+  step "sample" "${COMMAND_NAME} -sampleWorkflow sample-workflow.json"
+  step "run" "${COMMAND_NAME} -config sample-workflow.json -headless"
+  step "load" "${COMMAND_NAME} -config sample-workflow.json -headless -concurrent 5 -runtime 60"
   step "try it" "${COMMAND_NAME} -runApp 1 -runApp-port 3270   (a 3270 host to aim at)"
   step "docs" "${DOCS_URL}/installation/"
   printf '\n'

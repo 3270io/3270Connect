@@ -24,7 +24,7 @@ It is the same binary. There is nothing extra to install.
 Before configuring any client, confirm the binary answers:
 
 ```bash
-3270Connect mcp --list-tools
+3270connect mcp --list-tools
 ```
 
 That prints the tool catalogue as JSON and exits. It needs no host, no

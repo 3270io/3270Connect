@@ -116,7 +116,7 @@ command before starting the server. Setup does not arm when an account already
 exists:
 
 ```bash
-3270Connect user add root --admin
+3270connect user add root --admin
 ```
 
 ## Roles
@@ -166,18 +166,18 @@ reads, so it works whether or not the server is running — a new account can
 sign in immediately, without a restart.
 
 ```bash
-3270Connect user add alice              # create a regular account
-3270Connect user add root --admin       # create an administrator
-3270Connect user list
-3270Connect user passwd alice
-3270Connect user disable alice
-3270Connect user enable alice
+3270connect user add alice              # create a regular account
+3270connect user add root --admin       # create an administrator
+3270connect user list
+3270connect user passwd alice
+3270connect user disable alice
+3270connect user enable alice
 ```
 
 Passwords are prompted for on a terminal, or read from stdin when piped:
 
 ```bash
-printf '%s\n' "$NEW_PASSWORD" | 3270Connect user passwd alice
+printf '%s\n' "$NEW_PASSWORD" | 3270connect user passwd alice
 ```
 
 They are never taken as a command-line argument, where they would be visible to
@@ -201,11 +201,11 @@ An automated client — a CI job, a scheduled soak test, a script — presents a
 token instead of signing in.
 
 ```bash
-3270Connect token add alice "nightly soak"
-3270Connect token add ci "pipeline" --read-only --expires 720h
-3270Connect token list
-3270Connect token revoke <id>
-3270Connect token revoke-all alice
+3270connect token add alice "nightly soak"
+3270connect token add ci "pipeline" --read-only --expires 720h
+3270connect token list
+3270connect token revoke <id>
+3270connect token revoke-all alice
 ```
 
 The token is shown once, when it is issued. It is stored as a SHA-256 hash, so

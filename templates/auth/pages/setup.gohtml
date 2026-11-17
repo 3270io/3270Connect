@@ -37,17 +37,15 @@
     <div class="field">
       <label for="password">Password</label>
       <input type="password" id="password" name="password"
-             autocomplete="new-password" minlength="{{ .MinLength }}" required>
+             autocomplete="new-password" aria-describedby="password-hint" minlength="{{ .MinLength }}" required>
     </div>
 
     <div class="field">
       <label for="confirmPassword">Confirm password</label>
       <input type="password" id="confirmPassword" name="confirmPassword"
-             autocomplete="new-password" minlength="{{ .MinLength }}" required>
-      <p class="field-hint">
-        At least {{ .MinLength }} characters. There are no composition rules —
-        required digits and symbols shrink the search space more than they
-        enlarge it, while a length floor does not.
+             autocomplete="new-password" aria-describedby="password-hint" minlength="{{ .MinLength }}" required>
+      <p class="field-hint" id="password-hint">
+        At least {{ .MinLength }} characters.
       </p>
     </div>
 

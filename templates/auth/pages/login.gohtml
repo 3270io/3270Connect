@@ -32,11 +32,7 @@
     <button type="submit" class="auth-submit">Sign in</button>
   </form>
 
-  {{/* Nothing below the button but the connection warning, and that only on a
-       connection that has earned it. Where somebody has no account the answer
-       is an administrator or `3270Connect user add <name>`, and that belongs
-       in the documentation rather than under every sign-in this console ever
-       serves — the card is a door, not a manual. */}}
+  <details class="auth-note"><summary>Need access or a password reset?</summary><p>Contact your instance administrator to create an account or reset your password.</p><a href="https://3270connect.3270.io/authentication/" target="_blank" rel="noopener">Account and recovery help</a></details>
   {{ template "tlsWarning" . }}
 </section>
 {{- end -}}

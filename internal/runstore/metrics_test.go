@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -217,5 +218,36 @@ func TestReadFindsOneProcess(t *testing.T) {
 	}
 	if _, ok := Read(dir, 999); ok {
 		t.Error("an unknown pid should not be found")
+	}
+}
+
+// BenchmarkReadOneOfMany measures looking up a single run among many
+// published snapshots, which is what the MCP run tools do per call.
+func BenchmarkReadOneOfMany(b *testing.B) {
+	dir := b.TempDir()
+	for pid := 1000; pid < 1050; pid++ {
+		data, _ := json.Marshal(Metrics{PID: pid, Durations: make([]float64, 300)})
+		if err := os.WriteFile(filepath.Join(dir, fmt.Sprintf("metrics_%d.json", pid)), data, 0o644); err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, ok := Read(dir, 1025); !ok {
+			b.Fatal("not found")
+		}
+	}
+}
+
+func TestSignalProbeTreatsPermissionDeniedAsAlive(t *testing.T) {
+	if !signalProbeMeansAlive(nil) {
+		t.Fatal("a successful probe must mean alive")
+	}
+	if !signalProbeMeansAlive(&os.SyscallError{Syscall: "kill", Err: syscall.EPERM}) {
+		t.Fatal("EPERM means the pid exists under another account, so the run is alive")
+	}
+	if signalProbeMeansAlive(os.ErrProcessDone) {
+		t.Fatal("a finished process must not count as alive")
 	}
 }

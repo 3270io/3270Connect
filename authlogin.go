@@ -247,9 +247,24 @@ func (a *authState) doChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Throttle on the account and the address. Without this, a stolen session
+	// is also an unlimited guess at the current password — and a correct one
+	// lets the attacker set a new password, locking the owner out. Separate
+	// key prefixes from the login limiter so a password-change bucket does
+	// not lock the same account out of signing in from elsewhere.
+	clientIP := reqsec.ClientIP(r)
+	limitKeys := []string{"change:user:" + lowerASCII(user.Username), "change:ip:" + clientIP}
+	if ok, retryIn := a.limiter.Allow(limitKeys...); !ok {
+		log.Printf("auth: password change throttled for %q from %s (%s remaining)",
+			user.Username, clientIP, retryIn.Round(time.Second))
+		a.failChangePassword(w, r, "Too many attempts. Try again shortly.", http.StatusTooManyRequests)
+		return
+	}
+
 	// Re-authenticate even though the caller is signed in: this is the check
 	// that stops a borrowed session from locking its owner out of the account.
 	if _, err := a.userStore().Authenticate(user.Username, current); err != nil {
+		a.limiter.RecordFailure(limitKeys...)
 		a.failChangePassword(w, r, "Your current password is incorrect.", http.StatusUnauthorized)
 		return
 	}
@@ -271,6 +286,7 @@ func (a *authState) doChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.limiter.Reset(limitKeys...)
 	a.sessions.DeleteAllFor(user.ID)
 	log.Printf("auth: %s changed their password; other sessions ended", user.Username)
 	a.auditRequest(r, audit.EventPasswordChanged, audit.Success, user.Username,
@@ -408,10 +424,16 @@ func proxyClaimsHTTPS(r *http.Request) bool {
 // otherwise the sign-in page is an open redirect, and one that hands somebody
 // a landing page immediately after they typed a password is the most
 // convincing place to have one.
+//
+// Tab, carriage return and line feed are refused anywhere in the value: the
+// WHATWG URL spec strips them when a browser parses a URL, so "/\t//evil"
+// arrives at this function with the leading "/" intact and then navigates to
+// "//evil" once the browser is done with it. Refusing the characters outright
+// is cheaper than trying to normalise the resulting path.
 func safeReturnPath(raw string) string {
 	raw = strings.TrimSpace(raw)
 	if raw == "" || !strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") ||
-		strings.Contains(raw, "\\") {
+		strings.Contains(raw, "\\") || strings.ContainsAny(raw, "\t\r\n") {
 		return defaultLandingPath
 	}
 	return raw

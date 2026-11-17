@@ -801,3 +801,7 @@ label.checkline input { width: auto; }
     --accent-soft: rgba(13, 143, 95, 0.12);
   }
 }
+
+body.modal-open { overflow: hidden; }
+.auth-note summary { cursor: pointer; }
+@media (pointer: coarse) { .btn, .btn-sm, .modal button { min-height: 44px; min-width: 44px; } }
