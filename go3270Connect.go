@@ -3604,6 +3604,18 @@ func outputPreviewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Output file path is not configured for PID "+pid, http.StatusNotFound)
 		return
 	}
+	// A workflow document names its own OutputFilePath, and nothing in the
+	// upload path stops that being "/etc/shadow". The capture file is written
+	// by the child process, but the path travels verbatim into the metrics
+	// file, and this handler would otherwise open and stream back whatever
+	// was named. Anchoring the resolved absolute path inside the working
+	// directory keeps the console serving its own run artefacts and nothing
+	// else. Callers that legitimately write to other directories can still
+	// read those files from the host; this is about the HTTP surface.
+	if !pathWithinWorkingDir(outputPath) {
+		http.Error(w, "refusing to serve an output file outside the working directory", http.StatusForbidden)
+		return
+	}
 	file, err := os.Open(outputPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -3693,6 +3705,36 @@ func setupSummaryHandler() {
 func validNumericPID(s string) bool {
 	n, err := strconv.Atoi(strings.TrimSpace(s))
 	return err == nil && n > 0
+}
+
+// pathWithinWorkingDir reports whether an absolute path, as a metrics file
+// records one, stays inside the server's own working directory. The handler
+// that reads back a run's captured screens trusts the metrics file to name
+// where they were written, and a workflow document gets to choose that path:
+// without this check an uploaded workflow with OutputFilePath pointing at
+// "/etc/shadow" would hand the file straight back over HTTP. The working
+// directory is where legitimate run artefacts live (the Docker image sets
+// WORKDIR, and `./3270Connect -dashboard` runs the same way), so anchoring
+// against it closes the door without narrowing the shape of a legitimate
+// capture path. Returns false when the working directory cannot be read: a
+// fail-closed answer is the right direction to break in.
+func pathWithinWorkingDir(abs string) bool {
+	if abs == "" {
+		return false
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	cleaned := filepath.Clean(abs)
+	if !filepath.IsAbs(cleaned) {
+		return false
+	}
+	rel, err := filepath.Rel(cwd, cleaned)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func loadExtendedMetricByPID(pid string) (*ExtendedMetrics, error) {
