@@ -334,3 +334,31 @@ func TestEmptyStore(t *testing.T) {
 		t.Errorf("Verify on a fresh store = %v, want ErrNotFound", err)
 	}
 }
+
+// A token stops working at the instant it expires, not a moment after: the
+// boundary is where an off-by-one (Before vs After) would quietly extend every
+// credential's life, and the wrong answer on a revoked-and-expired token would
+// misreport why a client was refused.
+func TestActiveAtTheBoundaries(t *testing.T) {
+	expiry := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	revoked := expiry.Add(-time.Hour)
+
+	cases := []struct {
+		name  string
+		token Token
+		now   time.Time
+		want  error
+	}{
+		{"no expiry never lapses", Token{}, expiry.Add(1000 * time.Hour), nil},
+		{"one nanosecond before expiry", Token{ExpiresAt: &expiry}, expiry.Add(-time.Nanosecond), nil},
+		{"exactly at expiry is expired", Token{ExpiresAt: &expiry}, expiry, ErrExpired},
+		{"after expiry", Token{ExpiresAt: &expiry}, expiry.Add(time.Second), ErrExpired},
+		{"revoked beats unexpired", Token{RevokedAt: &revoked, ExpiresAt: &expiry}, revoked, ErrRevoked},
+		{"revoked beats expired", Token{RevokedAt: &revoked, ExpiresAt: &expiry}, expiry.Add(time.Hour), ErrRevoked},
+	}
+	for _, c := range cases {
+		if got := c.token.Active(c.now); !errors.Is(got, c.want) && got != c.want {
+			t.Errorf("%s: Active = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
