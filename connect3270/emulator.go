@@ -111,7 +111,10 @@ const (
 )
 
 const (
-	maxRetries = 10 // Maximum number of retries for the Connect sequence itself
+	// maxRetries is the retry budget for the Connect sequence and for capturing
+	// the screen with AsciiScreenGrab. WaitForField takes its own count as a
+	// parameter, named attempts so it does not shadow this.
+	maxRetries = 10
 	// actionRetries bounds the retry loop of a single scripted action
 	// (MoveCursor, String, Snap, Ascii, ...) that failed for a reason that
 	// might clear on its own. It used to be a local named maxRetries in six
@@ -465,7 +468,7 @@ func (e *Emulator) scriptRequest(command string) (string, error) {
 
 // WaitForField waits until the screen is ready, the cursor has been positioned
 // on a modifiable field, and the keyboard is unlocked.
-func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
+func (e *Emulator) WaitForField(timeout time.Duration, attempts int) error {
 	// The emulator's Wait takes whole seconds, so a sub-second timeout would
 	// truncate to Wait(0, ...). Round up instead of asking for zero.
 	waitSeconds := int(timeout.Seconds())
@@ -502,7 +505,7 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	command := fmt.Sprintf("Wait(%d, InputField)", waitSeconds)
 
 	// Retry the InputField wait operation with a delay in case of failure
-	for retries := 0; retries < maxRetries; retries++ {
+	for retries := 0; retries < attempts; retries++ {
 		_, err := e.execCommand(command)
 		if err == nil {
 			if !e.Status().KeyboardLocked {
@@ -559,9 +562,9 @@ func (e *Emulator) WaitForField(timeout time.Duration, maxRetries int) error {
 	}
 	if status.Raw != "" {
 		return fmt.Errorf("the keyboard did not become ready after %d attempts: %s | status: %s",
-			maxRetries, state, status.Raw)
+			attempts, state, status.Raw)
 	}
-	return fmt.Errorf("the keyboard did not become ready after %d attempts: %s", maxRetries, state)
+	return fmt.Errorf("the keyboard did not become ready after %d attempts: %s", attempts, state)
 }
 
 // moveCursor moves the cursor to the specified row (x) and column (y) with retry logic.
