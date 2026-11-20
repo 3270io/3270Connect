@@ -895,10 +895,13 @@ func TestPIDBearingHandlersRefuseNonNumericPIDs(t *testing.T) {
 	}
 }
 
-// writeCaptureFixture publishes a metrics file pointing at a capture file, and
-// returns the pid the handler should be asked about.
-func writeCaptureFixture(t *testing.T, contents string) string {
-	t.Helper()
+// A workflow document names its own OutputFilePath, and that path lands in
+// the metrics file verbatim. Without a path check, /dashboard/output would
+// open and stream back anything named there — an arbitrary file read on the
+// host, with the dashboard's own HTTP surface as the delivery vehicle. The
+// handler refuses a path that resolves outside the server's working
+// directory; an attacker who can plant a workflow cannot reach beyond it.
+func TestOutputPreviewHandlerRefusesPathOutsideWorkingDir(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 
 	dir := dashboardMetricsDir()
@@ -906,7 +909,57 @@ func writeCaptureFixture(t *testing.T, contents string) string {
 		t.Fatalf("create metrics dir: %v", err)
 	}
 
-	outputPath := filepath.Join(t.TempDir(), "output.html")
+	// A readable file outside the working directory: the exact shape a
+	// workflow with OutputFilePath pointing at something sensitive would
+	// produce. The content is harmless, but what matters is that the handler
+	// never reads it.
+	elsewhere := t.TempDir()
+	victim := filepath.Join(elsewhere, "secret")
+	if err := os.WriteFile(victim, []byte("do not serve this"), 0o644); err != nil {
+		t.Fatalf("write victim file: %v", err)
+	}
+
+	pid := "707070"
+	metric := ExtendedMetrics{Metrics: runstore.Metrics{OutputFilePath: victim}}
+	encoded, err := json.Marshal(metric)
+	if err != nil {
+		t.Fatalf("encode metrics: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "metrics_"+pid+".json"), encoded, 0o644); err != nil {
+		t.Fatalf("write metrics: %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	outputPreviewHandler(recorder, httptest.NewRequest(http.MethodGet,
+		"/dashboard/output?pid="+pid, nil))
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("status %d, want 403; body=%q", recorder.Code, recorder.Body.String())
+	}
+	if strings.Contains(recorder.Body.String(), "do not serve this") {
+		t.Fatalf("handler served file contents outside the working directory: %q", recorder.Body.String())
+	}
+}
+
+// writeCaptureFixture publishes a metrics file pointing at a capture file, and
+// returns the pid the handler should be asked about.
+func writeCaptureFixture(t *testing.T, contents string) string {
+	t.Helper()
+	// The handler refuses an output path outside its working directory (see
+	// pathWithinWorkingDir), so a capture written to an unrelated TempDir
+	// would 403 before the real assertions run. Chdir into a scratch root
+	// and write the capture inside it; the metrics state stays separate
+	// under XDG_CONFIG_HOME, where the handler looks it up.
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	dir := dashboardMetricsDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("create metrics dir: %v", err)
+	}
+
+	outputPath := filepath.Join(workDir, "output.html")
 	if err := os.WriteFile(outputPath, []byte(contents), 0o644); err != nil {
 		t.Fatalf("write capture file: %v", err)
 	}
