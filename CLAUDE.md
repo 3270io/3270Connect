@@ -8,7 +8,7 @@ Automation toolkit for IBM mainframe 3270 terminal systems. Enables scripted wor
 ## Project Structure
 
 ```
-go3270Connect.go          # Main entry point (~3,900 lines) — CLI, API, dashboard, workflow runner
+go3270Connect.go          # Main entry point — CLI, API, dashboard, workflow runner
 connect3270/emulator.go   # Core TN3270 protocol implementation (x3270/s3270 wrapper)
 charmui.go                # Terminal UI rendering (lipgloss/pterm)
 auth*.go                  # Authentication and authorization — see below
@@ -24,24 +24,24 @@ dist/                     # Build output — committed to repo by CI
 ## Build & Run
 
 ```bash
-# Build binaries (outputs to dist/)
+# Build binaries (dist/3270Connect_linux and dist/3270Connect.exe)
 ./build.sh
 
 # Run with a workflow
-./dist/3270Connect -config workflow.json
+./dist/3270Connect_linux -config workflow.json
 
 # Concurrent load test (10 workers, 60s)
-./dist/3270Connect -config workflow.json -concurrent 10 -runtime 60
+./dist/3270Connect_linux -config workflow.json -concurrent 10 -runtime 60
 
 # API server mode
-./dist/3270Connect -api -api-port 8080
+./dist/3270Connect_linux -api -api-port 8080
 
 # Run embedded sample app for testing
-./dist/3270Connect -runApp 1 -runApp-port 3270
+./dist/3270Connect_linux -runApp 1 -runApp-port 3270
 
 # Accounts (only meaningful with AUTH_MODE=local or oidc)
-./dist/3270Connect user add root --admin
-./dist/3270Connect token add root "ci pipeline"
+./dist/3270Connect_linux user add root --admin
+./dist/3270Connect_linux token add root "ci pipeline"
 
 # Tests
 go test -v ./...
@@ -95,9 +95,8 @@ and skips with a reason if the embedded emulator will not unpack here.
 ## Workflow Config Format
 
 A step's keys are `Type`, `Coordinates` and `Text`. They are **not** `Action`,
-`Row`/`Column` at the top level, `Value`, or `FilePath` — an earlier version of
-this file documented that shape and no such workflow has ever run. Coordinates
-are **1-based**. `docs/workflow.md` and `Validate` in `internal/workflow` are
+`Row`/`Column` at the top level, `Value`, or `FilePath`: a workflow written
+with those does not run. Coordinates are **1-based**. `docs/workflow.md` and `Validate` in `internal/workflow` are
 authoritative; regenerate this block from `describe_workflow_schema` rather
 than editing it by hand.
 

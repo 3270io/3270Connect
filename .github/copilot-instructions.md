@@ -10,7 +10,7 @@
 - Keep platform-specific behavior in existing split files (`open_dashboard_windows.go`, `open_dashboard_other.go`) instead of adding OS checks inline.
 
 ## Build, test, docs
-- Toolchain: Go 1.23.x (see `go.mod` toolchain). No repo-specific linter beyond `gofmt`/`go vet`.
+- Toolchain: the Go version in `go.mod`. No repo-specific linter beyond `gofmt`/`go vet`.
 - CI build order: `./build.sh` (or `pwsh ./build.ps1` on Windows) → `go test -v ./...`.
 - `build.sh` writes `resource.syso` and `dist/` binaries; avoid committing `dist/` updates unless intentionally refreshing shipped artifacts.
 - Docs site: `pip install --upgrade mkdocs-material pymdown-extensions mkdocs-video mkdocs-simple-plugin` then `mkdocs build` → `site/`.

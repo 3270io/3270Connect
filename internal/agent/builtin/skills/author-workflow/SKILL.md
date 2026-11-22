@@ -17,10 +17,8 @@ should do rather than handing over the JSON.
 
 Call `describe_workflow_schema`. Do not write a workflow from memory of what
 3270 automation formats usually look like: this one's step keys are `Type`,
-`Coordinates` and `Text`, and a shape using `Action`, `Value` and top-level
-`Row`/`Column` was published in this repository's own notes for long enough
-that it is worth assuming you have seen it. No workflow written that way has
-ever run.
+`Coordinates` and `Text`. `Action`, `Value` and top-level `Row`/`Column` are
+not step keys, and a workflow written with them does not run.
 
 Coordinates are **1-based**. Row 1, Column 1 is the top-left cell.
 
