@@ -1344,6 +1344,12 @@ func runAPIWorkflow() {
 	r.Use(auth.GinAuth())
 	r.POST("/api/execute", func(c *gin.Context) {
 		workflowConfig := Configuration{WaitForField: WaitForFieldConfig{Enabled: true, Delay: 1.0, Retries: 10}}
+		// Cap the body so an authenticated caller - and, in AUTH_MODE=none
+		// with no API_TOKEN, any caller - cannot run the API server out of
+		// memory by streaming an unbounded JSON blob. 1 MiB mirrors the
+		// limit the admin JSON APIs use and comfortably fits any sensible
+		// workflow (the shipped samples are about 1 KiB).
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<20)
 		if err := c.ShouldBindJSON(&workflowConfig); err != nil {
 			sendErrorResponse(c, http.StatusBadRequest, "Invalid request payload - JSON’s drunk", err)
 			return
