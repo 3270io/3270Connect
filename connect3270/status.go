@@ -100,8 +100,23 @@ const (
 )
 
 func ParseStatus(line string) Status {
-	fields := strings.Fields(strings.TrimSpace(line))
-	if len(fields) < statusFieldsRead {
+	// Split into a fixed array rather than strings.Fields: a status line
+	// rides on every reply, and Fields allocated a slice for each one.
+	var fields [statusFieldsRead]string
+	n := 0
+	for rest := line; n < statusFieldsRead; {
+		rest = strings.TrimLeft(rest, " \t\r\n")
+		if rest == "" {
+			break
+		}
+		end := strings.IndexAny(rest, " \t\r\n")
+		if end < 0 {
+			end = len(rest)
+		}
+		fields[n], rest = rest[:end], rest[end:]
+		n++
+	}
+	if n < statusFieldsRead {
 		return Status{}
 	}
 
